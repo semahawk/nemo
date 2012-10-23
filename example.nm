@@ -1,0 +1,7 @@
+/*
+ * comment testing
+ */
+
+x = 5;
+out(5 % 5);
+
