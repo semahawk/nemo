@@ -9,7 +9,7 @@ OBJECTS = nemo.o nodes_gen.o nodes_exec.o handy.o y.tab.o lex.yy.o
 all: nemo clean
 
 nemo: $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o nemo
+	$(CC) $(CFLAGS) $(OBJECTS) -o bin/nemo
 
 nemo.o: nemo.c nemo.h
 	$(CC) $(CFLAGS) -c nemo.c
