@@ -25,7 +25,6 @@ static int execTermExpression(struct ExecEnv *, struct Node *);
 static int execBinExpression(struct ExecEnv *, struct Node *);
 static void execAssignment(struct ExecEnv *, struct Node *);
 static void execStatement(struct ExecEnv *, struct Node *);
-static void execExpression(struct ExecEnv *, struct Node *);
 static void execCall(struct ExecEnv *, struct Node *);
 static void execWhilst(struct ExecEnv *, struct Node *);
 static void execAn(struct ExecEnv *, struct Node *);
