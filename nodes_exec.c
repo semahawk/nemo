@@ -28,12 +28,14 @@ static void execStatement(struct ExecEnv *, struct Node *);
 static void execExpression(struct ExecEnv *, struct Node *);
 static void execCall(struct ExecEnv *, struct Node *);
 static void execWhilst(struct ExecEnv *, struct Node *);
+static void execAn(struct ExecEnv *, struct Node *);
 
 static int(*valExecs[])(struct ExecEnv *, struct Node *) =
 {
   execTermExpression,
   execTermExpression,
   execBinExpression,
+  NULL,
   NULL,
   NULL,
   NULL,
@@ -48,7 +50,8 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   execAssignment,
   execStatement,
   execCall,
-  execWhilst
+  execWhilst,
+  execAn
 };
 
 static int dispatchExpression(struct ExecEnv *e, struct Node *n)
@@ -190,6 +193,22 @@ static void execWhilst(struct ExecEnv *e, struct Node *n)
   assert(s);
 
   while (dispatchExpression(e, c)){
+    dispatchStatement(e, s);
+  }
+}
+
+static void execAn(struct ExecEnv *e, struct Node *n)
+{
+  assert(n);
+  assert(nt_AN == n->kind);
+
+  struct Node * const c = n->data.an.cond;
+  struct Node * const s = n->data.an.statements;
+
+  assert(c);
+  assert(s);
+
+  if (dispatchExpression(e, c)){
     dispatchStatement(e, s);
   }
 }

@@ -80,6 +80,17 @@ struct Node *whilst(struct Node *cond, struct Node *stmt)
   return new;
 }
 
+struct Node *an(struct Node *cond, struct Node *stmt)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  new->kind = nt_AN;
+  new->data.an.cond = cond;
+  new->data.an.statements = stmt;
+
+  return new;
+}
+
 struct Node *call(char *name, struct Node *param)
 {
   struct Node *new = myalloc(sizeof(struct Node));

@@ -37,10 +37,10 @@
 %token <i> INTEGER
 %token <s> IDENTIFIER
 %token <op> OP
-%type <node> source statements statement block assignment whilst call expression
+%type <node> source statements statement block assignment whilst an call expression
 
 %token TYPE_INT TYPE_FLOAT
-%token WHILST
+%token WHILST AN
 
 %start source
 
@@ -64,6 +64,7 @@ statement
     | call                      { $$ = $1; }
     | whilst                    { $$ = $1; }
     | block                     { $$ = $1; }
+    | an                        { $$ = $1; }
     ;
 
 assignment
@@ -77,6 +78,11 @@ call
 whilst
     : WHILST '(' expression ')' statement { $$ = whilst($3, $5); }
     | WHILST     expression     statement { $$ = whilst($2, $3); }
+    ;
+
+an
+    : AN '(' expression ')' statement     { $$ = an($3, $5); }
+    | AN     expression     statement     { $$ = an($2, $3); }
     ;
 
 expression

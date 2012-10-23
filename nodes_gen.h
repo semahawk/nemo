@@ -18,6 +18,7 @@ struct Node {
     nt_STATEMENTS,
     nt_CALL,
     nt_WHILST,
+    nt_AN,
     nt_LASTELEMENT
   } kind;
 
@@ -49,6 +50,11 @@ struct Node {
       char *name;
       struct Node *param;
     } call;
+
+    struct {
+      struct Node *cond;
+      struct Node *statements;
+    } an;
   } data;
 };
 
@@ -57,6 +63,7 @@ struct Node *statement(struct Node *, struct Node *);
 struct Node *expression(struct Node *, struct Node *, char);
 struct Node *call(char *, struct Node *);
 struct Node *whilst(struct Node *, struct Node *);
+struct Node *an(struct Node *, struct Node *);
 struct Node *expByNum(int);
 struct Node *expByName(char *);
 
