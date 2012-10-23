@@ -69,6 +69,17 @@ struct Node *statement(struct Node *res, struct Node *toappend)
   return res;
 }
 
+struct Node *whilst(struct Node *cond, struct Node *stmt)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  new->kind = nt_WHILST;
+  new->data.whilst.cond = cond;
+  new->data.whilst.statements = stmt;
+
+  return new;
+}
+
 struct Node *call(char *name, struct Node *param)
 {
   struct Node *new = myalloc(sizeof(struct Node));

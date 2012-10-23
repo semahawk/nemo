@@ -22,12 +22,14 @@ static void execAssignment(struct ExecEnv *, struct Node *);
 static void execStatement(struct ExecEnv *, struct Node *);
 static void execExpression(struct ExecEnv *, struct Node *);
 static void execCall(struct ExecEnv *, struct Node *);
+static void execWhilst(struct ExecEnv *, struct Node *);
 
 static int(*valExecs[])(struct ExecEnv *, struct Node *) =
 {
   execTermExpression,
   execTermExpression,
   execBinExpression,
+  NULL,
   NULL,
   NULL,
   NULL
@@ -40,7 +42,8 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   NULL, // so is not a binary op
   execAssignment,
   execStatement,
-  execCall
+  execCall,
+  execWhilst
 };
 
 static int dispatchExpression(struct ExecEnv *e, struct Node *n)
@@ -156,6 +159,22 @@ static void execCall(struct ExecEnv *e, struct Node *n)
 void execNodes(struct ExecEnv *e, struct Node *n)
 {
   dispatchStatement(e, n);
+}
+
+static void execWhilst(struct ExecEnv *e, struct Node *n)
+{
+  assert(n);
+  assert(nt_WHILST == n->kind);
+
+  struct Node * const c = n->data.whilst.cond;
+  struct Node * const s = n->data.whilst.statements;
+
+  assert(c);
+  assert(s);
+
+  while (dispatchExpression(e, c)){
+    dispatchStatement(e, s);
+  }
 }
 
 struct ExecEnv *createEnv(void)

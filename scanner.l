@@ -31,6 +31,8 @@ D [0-9]
 "int"                    { count(); return TYPE_INT; }
 "float"                  { count(); return TYPE_FLOAT; }
 
+"whilst"                 { count(); return WHILST; }
+
 "\n"                     { count(); linenum++; }
 
 "+"                      { count(); yylval.op = *yytext; return OP; }
@@ -38,9 +40,13 @@ D [0-9]
 "*"                      { count(); yylval.op = *yytext; return OP; }
 "/"                      { count(); yylval.op = *yytext; return OP; }
 "%"                      { count(); yylval.op = *yytext; return OP; }
+"<"                      { count(); yylval.op = *yytext; return OP; }
+">"                      { count(); yylval.op = *yytext; return OP; }
 
 "("                      { count(); return '('; }
 ")"                      { count(); return ')'; }
+"{"                      { count(); return '{'; }
+"}"                      { count(); return '}'; }
 "="                      { count(); return '='; }
 ";"                      { count(); return ';'; }
 

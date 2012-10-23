@@ -37,9 +37,10 @@
 %token <i> INTEGER
 %token <s> IDENTIFIER
 %token <op> OP
-%type <node> source block statements statement assignment call expression
+%type <node> source statements statement block assignment whilst call expression
 
 %token TYPE_INT TYPE_FLOAT
+%token WHILST
 
 %start source
 
@@ -61,14 +62,21 @@ statements
 statement
     : assignment                { $$ = $1; }
     | call                      { $$ = $1; }
+    | whilst                    { $$ = $1; }
+    | block                     { $$ = $1; }
     ;
 
 assignment
-    : IDENTIFIER '=' expression { $$ = assignment($1, $3); }
+    : IDENTIFIER '=' expression                    { $$ = assignment($1, $3); }
     ;
 
 call
-    : IDENTIFIER '(' expression ')' { $$ = call($1, $3); }
+    : IDENTIFIER '(' expression ')'                { $$ = call($1, $3); }
+    ;
+
+whilst
+    : WHILST '(' expression ')' statement { $$ = whilst($3, $5); }
+    | WHILST     expression     statement { $$ = whilst($2, $3); }
     ;
 
 expression

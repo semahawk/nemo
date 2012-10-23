@@ -52,7 +52,10 @@ int main(int argc, char *argv[])
 
   do {
     yyparse();
-    assert(nodest);
+    if (!nodest){
+      error("compilation failed due to some errors:");
+      exit(1);
+    }
     struct ExecEnv *e = createEnv();
     execNodes(e, nodest);
     freeEnv(e);
