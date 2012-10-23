@@ -126,8 +126,13 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
     case '+': return left + right;
     case '-': return left - right;
     case '*': return left * right;
+    case '/': if (right == 0){
+                error("zero division!");
+                exit(1);
+              } else {
+                return left / right;
+              }
     case '%': return left % right;
-    case '/': return left / right;
     case '>': return left > right;
     case '<': return left < right;
 
