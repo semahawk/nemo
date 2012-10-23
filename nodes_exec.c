@@ -10,10 +10,15 @@
 #include "nodes_exec.h"
 #include "nodes_gen.h"
 
+int varscount = 0;
+
+struct Variable {
+  int value;
+  char *name;
+};
+
 struct ExecEnv {
-  // TODO: make there be moar variables
-  //       that's the value of the 'x' variable
-  int x;
+  struct Variable vars[MAXVARS];
 };
 
 static int execTermExpression(struct ExecEnv *, struct Node *);
@@ -70,9 +75,17 @@ static void onlyName(const char *name, const char *ref, const char *kind)
   }
 }
 
-static void onlyX(const char *name)
-{
-  onlyName(name, "x", "variable");
+static int getVariableValue(struct ExecEnv *e, const char *name){
+  unsigned short i;
+
+  for (i = 0; i < varscount; i++){
+    if (!strcmp(name, e->vars[i].name)){
+      return e->vars[i].value;
+    }
+  }
+
+  error("variable '%s' was not found", name);
+  exit(1);
 }
 
 static void onlyOut(const char *name)
@@ -89,9 +102,8 @@ static int execTermExpression(struct ExecEnv *e, struct Node *n)
     return n->data.i;
   } else {
     if (nt_ID == n->kind){
-      onlyX(n->data.s);
       assert(e);
-      return e->x;
+      return getVariableValue(e, n->data.s);
     } else {
       error("ough: tried to get the value of a non-expression(%d)", n->kind);
       exit(1);
@@ -126,15 +138,20 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
 
 static void execAssignment(struct ExecEnv *e, struct Node *n)
 {
+  if (varscount >= MAXVARS){
+    error("tried to set more variables than you could (being %d a limit)", MAXVARS);
+    exit(1);
+  }
+
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
-
-  onlyX(n->data.assignment.name);
   assert(e);
 
   struct Node *r = n->data.assignment.right;
+  varscount++;
 
-  e->x = dispatchExpression(e, r);
+  e->vars[varscount - 1].name = n->data.s;
+  e->vars[varscount - 1].value = dispatchExpression(e, r);
 }
 
 static void execStatement(struct ExecEnv *e, struct Node *n)

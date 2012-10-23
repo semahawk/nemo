@@ -17,6 +17,6 @@
 
 #define DEBUG 0
 
-#define MAXVARS 255
+#define MAXVARS 20
 
 #endif // NEMO_H
