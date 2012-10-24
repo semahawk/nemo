@@ -38,7 +38,7 @@
 %token <i> INTEGER
 %token <s> IDENTIFIER
 %token <op> OP
-%type <node> source statements statement block declaration assignment whilst an call expression
+%type <node> source statements statement block declaration initialization assignment whilst an call expression
 %type <type> type
 
 %token TYPE_INT
@@ -62,20 +62,25 @@ statements
     ;
 
 statement
-    : assignment                { $$ = $1; }
-    | declaration               { $$ = $1; }
+    : declaration               { $$ = $1; }
+    | initialization            { $$ = $1; }
+    | assignment                { $$ = $1; }
     | call                      { $$ = $1; }
     | whilst                    { $$ = $1; }
     | block                     { $$ = $1; }
     | an                        { $$ = $1; }
     ;
 
-assignment
-    : IDENTIFIER '=' expression                    { $$ = assignment($1, $3); }
+declaration
+    : type IDENTIFIER                              { $$ = declaration($1, $2, NULL); }
     ;
 
-declaration
-    : type IDENTIFIER                              { $$ = declaration($1, $2); }
+initialization
+    : type IDENTIFIER '=' expression               { $$ = declaration($1, $2, $4); }
+    ;
+
+assignment
+    : IDENTIFIER '=' expression                    { $$ = assignment($1, $3); }
     ;
 
 type

@@ -39,6 +39,8 @@ struct Node {
     struct {
       var_t type;
       char *name;
+      // used when initializing a variable
+      struct Node *right;
     } declaration;
 
     struct {
@@ -68,7 +70,7 @@ struct Node {
   } data;
 };
 
-struct Node *declaration(var_t, char *);
+struct Node *declaration(var_t, char *, struct Node *);
 struct Node *assignment(char *, struct Node *);
 struct Node *statement(struct Node *, struct Node *);
 struct Node *expression(struct Node *, struct Node *, char);

@@ -190,11 +190,18 @@ static void execDeclaration(struct ExecEnv *e, struct Node *n)
     exit(1);
   }
 
+  struct Node *r = n->data.declaration.right;
+
   varscount++;
 
   e->vars[varscount - 1].type  = n->data.declaration.type;
   e->vars[varscount - 1].name  = n->data.declaration.name;
-  e->vars[varscount - 1].value = 0;
+
+  if (n->data.declaration.right == NULL){
+    e->vars[varscount - 1].value = 0;
+  } else {
+    e->vars[varscount - 1].value = dispatchExpression(e, r);
+  }
 }
 
 static void execAssignment(struct ExecEnv *e, struct Node *n)
