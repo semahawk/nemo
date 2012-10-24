@@ -72,12 +72,13 @@ static void dispatchStatement(struct ExecEnv *e, struct Node *n)
 static void onlyName(const char *name, const char *ref, const char *kind)
 {
   if (strcmp(ref, name)){
-    cerror("Nemo only knows the %s '%s', not %s ", kind, ref, name);
+    cerror("Nemo only knows the %s '%s', not '%s' ", kind, ref, name);
     exit(1);
   }
 }
 
-static int getVariableValue(struct ExecEnv *e, const char *name){
+static int getVariableValue(struct ExecEnv *e, const char *name)
+{
   unsigned short i;
 
   for (i = 0; i < varscount; i++){
@@ -88,6 +89,19 @@ static int getVariableValue(struct ExecEnv *e, const char *name){
 
   cerror("variable '%s' was not found", name);
   exit(1);
+}
+
+static bool variableAlreadySet(struct ExecEnv *e, const char *name)
+{
+  unsigned short i;
+
+  for (i = 0; i < varscount; i++){
+    if (!strcmp(name, e->vars[i].name)){
+      return true;
+    }
+  }
+
+  return false;
 }
 
 static void onlyOut(const char *name)
@@ -153,6 +167,11 @@ static void execAssignment(struct ExecEnv *e, struct Node *n)
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
   assert(e);
+
+  /*if (variableAlreadySet(e, n->data.s)){*/
+    /*cerror("variable '%s' already set");*/
+    /*exit(1);*/
+  /*}*/
 
   struct Node *r = n->data.assignment.right;
   varscount++;
