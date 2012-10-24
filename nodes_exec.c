@@ -72,7 +72,7 @@ static void dispatchStatement(struct ExecEnv *e, struct Node *n)
 static void onlyName(const char *name, const char *ref, const char *kind)
 {
   if (strcmp(ref, name)){
-    error("Nemo only knows the %s '%s', not %s ", kind, ref, name);
+    cerror("Nemo only knows the %s '%s', not %s ", kind, ref, name);
     exit(1);
   }
 }
@@ -86,7 +86,7 @@ static int getVariableValue(struct ExecEnv *e, const char *name){
     }
   }
 
-  error("variable '%s' was not found", name);
+  cerror("variable '%s' was not found", name);
   exit(1);
 }
 
@@ -107,7 +107,7 @@ static int execTermExpression(struct ExecEnv *e, struct Node *n)
       assert(e);
       return getVariableValue(e, n->data.s);
     } else {
-      error("ough: tried to get the value of a non-expression(%d)", n->kind);
+      cerror("ough: tried to get the value of a non-expression(%d)", n->kind);
       exit(1);
      }
   }
@@ -127,7 +127,7 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
     case '-': return left - right;
     case '*': return left * right;
     case '/': if (right == 0){
-                error("zero division!");
+                cerror("zero division!");
                 exit(1);
               } else {
                 return left / right;
@@ -136,7 +136,7 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
     case '>': return left > right;
     case '<': return left < right;
 
-    default: error("unknown operator '%c'", n->data.expression.op);
+    default: cerror("unknown operator '%c'", n->data.expression.op);
              exit(1);
   }
 
@@ -146,7 +146,7 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
 static void execAssignment(struct ExecEnv *e, struct Node *n)
 {
   if (varscount >= MAXVARS){
-    error("tried to set more variables than you could (being %d a limit)", MAXVARS);
+    cerror("tried to set more variables than you could (being %d a limit)", MAXVARS);
     exit(1);
   }
 

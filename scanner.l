@@ -18,7 +18,8 @@
   void count();
   extern char *stdup(const char *);
 
-  int linenum = 1;
+  extern int linenum;
+  extern int column;
 
 %}
 
@@ -34,7 +35,7 @@ D [0-9]
 "an"                     { count(); return AN; }
 "whilst"                 { count(); return WHILST; }
 
-"\n"                     { count(); linenum++; }
+"\n"                     { count(); ++linenum; }
 
 "+"                      { count(); yylval.op = *yytext; return OP; }
 "-"                      { count(); yylval.op = *yytext; return OP; }
@@ -73,8 +74,6 @@ int yywrap()
 {
   return 1;
 }
-
-int column = 0;
 
 void count()
 {

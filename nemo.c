@@ -23,6 +23,10 @@ extern FILE *yyout;
 struct Node *nodest;
 // name of the source file to be interpreted
 char source[255];
+// keep track of what line is it in the source
+int linenum = 0;
+// keep track of what column is it in the source
+int column = 0;
 
 int main(int argc, char *argv[])
 {

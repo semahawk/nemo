@@ -11,6 +11,7 @@
 
 void debug(char *, ...);
 void error(char *, ...);
+void cerror(char *, ...);
 
 void *myalloc(size_t);
 

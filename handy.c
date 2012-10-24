@@ -43,6 +43,20 @@ void error(char *string, ...)
   va_end(ap);
 }
 
+void cerror(char *string, ...)
+{
+  va_list ap;
+  extern char source[];
+  extern int linenum;
+  extern int column;
+
+  fprintf(stderr, "%s:%d:%d: error: ", source, linenum, column);
+  va_start(ap, string);
+  vfprintf(stderr, string, ap);
+  fprintf(stderr, "\n");
+  va_end(ap);
+}
+
 void *myalloc(size_t size)
 {
   void *p = malloc(size);
