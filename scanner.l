@@ -30,7 +30,6 @@ D [0-9]
 %%
 
 "int"                    { count(); return TYPE_INT; }
-"float"                  { count(); return TYPE_FLOAT; }
 
 "an"                     { count(); return AN; }
 "whilst"                 { count(); return WHILST; }

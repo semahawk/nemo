@@ -15,6 +15,7 @@ int varscount = 0;
 struct Variable {
   int value;
   char *name;
+  var_t type;
 };
 
 struct ExecEnv {
@@ -23,6 +24,7 @@ struct ExecEnv {
 
 static int execTermExpression(struct ExecEnv *, struct Node *);
 static int execBinExpression(struct ExecEnv *, struct Node *);
+static void execDeclaration(struct ExecEnv *, struct Node *);
 static void execAssignment(struct ExecEnv *, struct Node *);
 static void execStatement(struct ExecEnv *, struct Node *);
 static void execCall(struct ExecEnv *, struct Node *);
@@ -38,6 +40,7 @@ static int(*valExecs[])(struct ExecEnv *, struct Node *) =
   NULL,
   NULL,
   NULL,
+  NULL,
   NULL
 };
 
@@ -46,6 +49,7 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   NULL, // ID and numbers are canonical and
   NULL, // don't need to be executed
   NULL, // so is not a binary op
+  execDeclaration,
   execAssignment,
   execStatement,
   execCall,
@@ -89,6 +93,19 @@ static int getVariableValue(struct ExecEnv *e, const char *name)
 
   cerror("variable '%s' was not found", name);
   exit(1);
+}
+
+static int getVariableIndex(struct ExecEnv *e, const char *name)
+{
+  unsigned short i;
+
+  for (i = 0; i < varscount; i++){
+    if (!strcmp(name, e->vars[i].name)){
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 static bool variableAlreadySet(struct ExecEnv *e, const char *name)
@@ -157,7 +174,7 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
   return -1;
 }
 
-static void execAssignment(struct ExecEnv *e, struct Node *n)
+static void execDeclaration(struct ExecEnv *e, struct Node *n)
 {
   if (varscount >= MAXVARS){
     cerror("tried to set more variables than you could (being %d a limit)", MAXVARS);
@@ -165,19 +182,42 @@ static void execAssignment(struct ExecEnv *e, struct Node *n)
   }
 
   assert(n);
+  assert(nt_DECLARATION == n->kind);
+  assert(e);
+
+  if (variableAlreadySet(e, n->data.declaration.name)){
+    cerror("variable '%s' already declared");
+    exit(1);
+  }
+
+  varscount++;
+
+  e->vars[varscount - 1].type  = n->data.declaration.type;
+  e->vars[varscount - 1].name  = n->data.declaration.name;
+  e->vars[varscount - 1].value = 0;
+}
+
+static void execAssignment(struct ExecEnv *e, struct Node *n)
+{
+  int i;
+
+  assert(n);
   assert(nt_ASSIGNMENT == n->kind);
   assert(e);
 
-  /*if (variableAlreadySet(e, n->data.s)){*/
-    /*cerror("variable '%s' already set");*/
-    /*exit(1);*/
-  /*}*/
+  if (!variableAlreadySet(e, n->data.s)){
+    cerror("tried to change value of variable '%s' without declaring it first", n->data.s);
+    exit(1);
+  }
 
   struct Node *r = n->data.assignment.right;
-  varscount++;
 
-  e->vars[varscount - 1].name = n->data.s;
-  e->vars[varscount - 1].value = dispatchExpression(e, r);
+  if ((i = getVariableIndex(e, n->data.s)) != -1){
+    e->vars[i].value = dispatchExpression(e, r);
+  } else {
+    cerror("couldn't find variable '%s'", n->data.s);
+    exit(1);
+  }
 }
 
 static void execStatement(struct ExecEnv *e, struct Node *n)

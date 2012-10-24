@@ -31,15 +31,17 @@
   int i;
   char *s;
   char op;
+  int type;
   struct Node *node;
 }
 
 %token <i> INTEGER
 %token <s> IDENTIFIER
 %token <op> OP
-%type <node> source statements statement block assignment whilst an call expression
+%type <node> source statements statement block declaration assignment whilst an call expression
+%type <type> type
 
-%token TYPE_INT TYPE_FLOAT
+%token TYPE_INT
 %token WHILST AN
 
 %start source
@@ -61,6 +63,7 @@ statements
 
 statement
     : assignment                { $$ = $1; }
+    | declaration               { $$ = $1; }
     | call                      { $$ = $1; }
     | whilst                    { $$ = $1; }
     | block                     { $$ = $1; }
@@ -69,6 +72,14 @@ statement
 
 assignment
     : IDENTIFIER '=' expression                    { $$ = assignment($1, $3); }
+    ;
+
+declaration
+    : type IDENTIFIER                              { $$ = declaration($1, $2); }
+    ;
+
+type
+    : TYPE_INT { $$ = TYPE_INTEGER; }
     ;
 
 call

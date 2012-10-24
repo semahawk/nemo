@@ -9,11 +9,16 @@
 
 #include "nemo.h"
 
+typedef enum {
+  TYPE_INTEGER
+} var_t;
+
 struct Node {
   enum {
     nt_ID,
     nt_INTEGER,
     nt_BINARYOP,
+    nt_DECLARATION,
     nt_ASSIGNMENT,
     nt_STATEMENTS,
     nt_CALL,
@@ -30,6 +35,11 @@ struct Node {
       struct Node *left, *right;
       char op;
     } expression;
+
+    struct {
+      var_t type;
+      char *name;
+    } declaration;
 
     struct {
       char *name;
@@ -58,6 +68,7 @@ struct Node {
   } data;
 };
 
+struct Node *declaration(var_t, char *);
 struct Node *assignment(char *, struct Node *);
 struct Node *statement(struct Node *, struct Node *);
 struct Node *expression(struct Node *, struct Node *, char);

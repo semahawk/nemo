@@ -8,6 +8,17 @@
 #include "handy.h"
 #include "nodes_gen.h"
 
+struct Node *declaration(var_t type, char *name)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  new->kind = nt_DECLARATION;
+  new->data.declaration.type = type;
+  new->data.declaration.name = name;
+
+  return new;
+}
+
 struct Node *assignment(char *name, struct Node *val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
