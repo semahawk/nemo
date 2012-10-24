@@ -10,6 +10,7 @@
 #include "nodes_exec.h"
 #include "nodes_gen.h"
 
+// keep track of how many vars we've declared
 int varscount = 0;
 
 struct Variable {
@@ -18,8 +19,14 @@ struct Variable {
   var_t type;
 };
 
+struct VariableList {
+  struct Variable *var;
+  struct VariableList *next;
+};
+
 struct ExecEnv {
-  struct Variable vars[MAXVARS];
+  // pointer to our first element
+  struct VariableList *vars;
 };
 
 static int execTermExpression(struct ExecEnv *, struct Node *);
@@ -83,11 +90,11 @@ static void onlyName(const char *name, const char *ref, const char *kind)
 
 static int getVariableValue(struct ExecEnv *e, const char *name)
 {
-  unsigned short i;
+  struct VariableList *p;
 
-  for (i = 0; i < varscount; i++){
-    if (!strcmp(name, e->vars[i].name)){
-      return e->vars[i].value;
+  for (p = e->vars; p != NULL; p = p->next){
+    if (!strcmp(name, p->var->name)){
+      return p->var->value;
     }
   }
 
@@ -95,25 +102,23 @@ static int getVariableValue(struct ExecEnv *e, const char *name)
   exit(1);
 }
 
-static int getVariableIndex(struct ExecEnv *e, const char *name)
+static void setVariableValue(struct ExecEnv *e, const char *name, int value)
 {
-  unsigned short i;
+  struct VariableList *p;
 
-  for (i = 0; i < varscount; i++){
-    if (!strcmp(name, e->vars[i].name)){
-      return i;
+  for (p = e->vars; p != NULL; p = p->next){
+    if (!strcmp(name, p->var->name)){
+      p->var->value = value;
     }
   }
-
-  return -1;
 }
 
 static bool variableAlreadySet(struct ExecEnv *e, const char *name)
 {
-  unsigned short i;
+  struct VariableList *p;
 
-  for (i = 0; i < varscount; i++){
-    if (!strcmp(name, e->vars[i].name)){
+  for (p = e->vars; p != NULL; p = p->next){
+    if (!strcmp(name, p->var->name)){
       return true;
     }
   }
@@ -176,11 +181,6 @@ static int execBinExpression(struct ExecEnv *e, struct Node *n)
 
 static void execDeclaration(struct ExecEnv *e, struct Node *n)
 {
-  if (varscount >= MAXVARS){
-    cerror("tried to set more variables than you could (being %d a limit)", MAXVARS);
-    exit(1);
-  }
-
   assert(n);
   assert(nt_DECLARATION == n->kind);
   assert(e);
@@ -190,24 +190,29 @@ static void execDeclaration(struct ExecEnv *e, struct Node *n)
     exit(1);
   }
 
+  struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+  struct Variable *var = myalloc(sizeof(struct Variable));
+
   struct Node *r = n->data.declaration.right;
 
   varscount++;
 
-  e->vars[varscount - 1].type  = n->data.declaration.type;
-  e->vars[varscount - 1].name  = n->data.declaration.name;
+  varlist->var = var;
+  varlist->var->type = n->data.declaration.type;
+  varlist->var->name = n->data.declaration.name;
 
   if (n->data.declaration.right == NULL){
-    e->vars[varscount - 1].value = 0;
+    varlist->var->value = 0;
   } else {
-    e->vars[varscount - 1].value = dispatchExpression(e, r);
+    varlist->var->value = dispatchExpression(e, r);
   }
+
+  varlist->next = e->vars;
+  e->vars = varlist;
 }
 
 static void execAssignment(struct ExecEnv *e, struct Node *n)
 {
-  int i;
-
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
   assert(e);
@@ -219,12 +224,7 @@ static void execAssignment(struct ExecEnv *e, struct Node *n)
 
   struct Node *r = n->data.assignment.right;
 
-  if ((i = getVariableIndex(e, n->data.s)) != -1){
-    e->vars[i].value = dispatchExpression(e, r);
-  } else {
-    cerror("couldn't find variable '%s'", n->data.s);
-    exit(1);
-  }
+  setVariableValue(e, n->data.s, dispatchExpression(e, r));
 }
 
 static void execStatement(struct ExecEnv *e, struct Node *n)
@@ -288,7 +288,11 @@ struct ExecEnv *createEnv(void)
   assert(nt_LASTELEMENT == (ARRAY_SIZE(valExecs)));
   assert(nt_LASTELEMENT == (ARRAY_SIZE(runExecs)));
 
-  return calloc(1, sizeof(struct ExecEnv));
+  struct ExecEnv *new = calloc(1, sizeof(struct ExecEnv));
+
+  new->vars = NULL;
+  
+  return new;
 }
 
 void freeEnv(struct ExecEnv *e)

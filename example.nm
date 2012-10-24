@@ -2,6 +2,7 @@
  * comment testing
  */
 
-x = 5;
-out(5 % 5);
+int x = 5;
+
+out(x * 5);
 
