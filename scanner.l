@@ -36,13 +36,13 @@ D [0-9]
 
 "\n"                     { count(); ++linenum; }
 
-"+"                      { count(); yylval.op = *yytext; return OP; }
-"-"                      { count(); yylval.op = *yytext; return OP; }
-"*"                      { count(); yylval.op = *yytext; return OP; }
-"/"                      { count(); yylval.op = *yytext; return OP; }
-"%"                      { count(); yylval.op = *yytext; return OP; }
-"<"                      { count(); yylval.op = *yytext; return OP; }
-">"                      { count(); yylval.op = *yytext; return OP; }
+"+"                      { count(); return '+'; }
+"-"                      { count(); return '-'; }
+"*"                      { count(); return '*'; }
+"/"                      { count(); return '/'; }
+"%"                      { count(); return '%'; }
+"<"                      { count(); return '<'; }
+">"                      { count(); return '>'; }
 
 "("                      { count(); return '('; }
 ")"                      { count(); return ')'; }

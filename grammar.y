@@ -37,74 +37,96 @@
 
 %token <i> INTEGER
 %token <s> IDENTIFIER
-%token <op> OP
-%type <node> source statements statement block declaration initialization assignment whilst an call expression
+%type <node> source stmts stmt
+%type <node> expr_stmt iter_stmt select_stmt comp_stmt
+%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr
 %type <type> type
 
 %token TYPE_INT
 %token WHILST AN
+
+%right '='
+%left  '<' '>'
+%left  '+' '-'
+%left  '*' '/' '%'
 
 %start source
 
 %%
 
 source
-    : statements                { nodest = $1; }
+    : stmts                { nodest = $1; }
     ;
 
-block
-    : '{' statements '}'        { $$ = $2; }
+stmts
+    : stmt                 { $$ = statement(NULL, $1); }
+    | stmts stmt           { $$ = statement($1, $2);   }
     ;
 
-statements
-    :                           { $$ = 0; }
-    | statements statement ';'  { $$ = statement($1, $2); }
+stmt
+    : expr_stmt            { $$ = $1; }
+    | iter_stmt            { $$ = $1; }
+    | select_stmt          { $$ = $1; }
+    | comp_stmt            { $$ = $1; }
     ;
 
-statement
-    : declaration               { $$ = $1; }
-    | initialization            { $$ = $1; }
-    | assignment                { $$ = $1; }
-    | call                      { $$ = $1; }
-    | whilst                    { $$ = $1; }
-    | block                     { $$ = $1; }
-    | an                        { $$ = $1; }
+expr_stmt
+    : ';'      { $$ = 0;  }
+    | expr ';' { $$ = $1; }
     ;
 
-declaration
-    : type IDENTIFIER                              { $$ = declaration($1, $2, NULL); }
+expr
+    : binary_expr     { $$ = $1; }
+    | assign_expr     { $$ = $1; }
+    | call_expr       { $$ = $1; }
+    | decl_expr       { $$ = $1; }
+    | init_expr       { $$ = $1; }
+    | IDENTIFIER      { $$ = expByName($1); }
+    | INTEGER         { $$ = expByNum($1); }
+    | '(' expr ')'    { $$ = $2; }
     ;
 
-initialization
-    : type IDENTIFIER '=' expression               { $$ = declaration($1, $2, $4); }
+comp_stmt
+    : '{' '}'         { $$ = 0; }
+    | '{' stmts '}'   { $$ = $2; }
     ;
 
-assignment
-    : IDENTIFIER '=' expression                    { $$ = assignment($1, $3); }
+decl_expr
+    : type IDENTIFIER                { $$ = declaration($1, $2, NULL); }
+    ;
+
+init_expr
+    : type IDENTIFIER '=' expr       { $$ = declaration($1, $2, $4); }
+    ;
+
+assign_expr
+    : IDENTIFIER '=' expr            { $$ = assignment($1, $3); }
+    ;
+
+call_expr
+    : IDENTIFIER '(' expr ')'         { $$ = call($1, $3); }
+    ;
+
+iter_stmt
+    : WHILST '(' expr ')' stmt { $$ = whilst($3, $5); }
+    ;
+
+select_stmt
+    : AN '(' expr ')' stmt     { $$ = an($3, $5); }
+    ;
+
+binary_expr
+    : expr '+' expr  { $$ = expression($1, $3, '+'); }
+    | expr '-' expr  { $$ = expression($1, $3, '-'); }
+    | expr '*' expr  { $$ = expression($1, $3, '*'); }
+    | expr '/' expr  { $$ = expression($1, $3, '/'); }
+    | expr '%' expr  { $$ = expression($1, $3, '%'); }
+    | expr '>' expr  { $$ = expression($1, $3, '>'); }
+    | expr '<' expr  { $$ = expression($1, $3, '<'); }
     ;
 
 type
     : TYPE_INT { $$ = TYPE_INTEGER; }
-    ;
-
-call
-    : IDENTIFIER '(' expression ')'                { $$ = call($1, $3); }
-    ;
-
-whilst
-    : WHILST '(' expression ')' statement { $$ = whilst($3, $5); }
-    | WHILST     expression     statement { $$ = whilst($2, $3); }
-    ;
-
-an
-    : AN '(' expression ')' statement     { $$ = an($3, $5); }
-    | AN     expression     statement     { $$ = an($2, $3); }
-    ;
-
-expression
-    : IDENTIFIER                { $$ = expByName($1); }
-    | INTEGER                   { $$ = expByNum($1); }
-    | expression OP expression  { $$ = expression($1, $3, $2); }
     ;
 
 %%
