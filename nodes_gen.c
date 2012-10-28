@@ -36,7 +36,7 @@ struct Node *expByNum(int val)
   struct Node *new = myalloc(sizeof(struct Node));
 
   new->kind = nt_INTEGER;
-  new->data.i = val;
+  new->data.value.i = val;
 
   return new;
 }

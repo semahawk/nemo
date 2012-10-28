@@ -9,6 +9,10 @@
 
 #include "nemo.h"
 
+typedef union {
+  int i;
+} Value;
+
 typedef enum {
   TYPE_INTEGER
 } var_t;
@@ -28,7 +32,7 @@ struct Node {
   } kind;
 
   union {
-    int i;
+    Value value;
     char *s;
 
     struct {

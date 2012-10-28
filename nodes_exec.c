@@ -14,7 +14,7 @@
 int varscount = 0;
 
 struct Variable {
-  int value;
+  Value value;
   char *name;
   var_t type;
 };
@@ -29,8 +29,8 @@ struct ExecEnv {
   struct VariableList *vars;
 };
 
-static int execTermExpression(struct ExecEnv *, struct Node *);
-static int execBinExpression(struct ExecEnv *, struct Node *);
+static Value execTermExpression(struct ExecEnv *, struct Node *);
+static Value execBinExpression(struct ExecEnv *, struct Node *);
 static void execDeclaration(struct ExecEnv *, struct Node *);
 static void execAssignment(struct ExecEnv *, struct Node *);
 static void execStatement(struct ExecEnv *, struct Node *);
@@ -38,7 +38,7 @@ static void execCall(struct ExecEnv *, struct Node *);
 static void execWhilst(struct ExecEnv *, struct Node *);
 static void execAn(struct ExecEnv *, struct Node *);
 
-static int(*valExecs[])(struct ExecEnv *, struct Node *) =
+static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
 {
   execTermExpression,
   execTermExpression,
@@ -64,7 +64,7 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   execAn
 };
 
-static int dispatchExpression(struct ExecEnv *e, struct Node *n)
+static Value dispatchExpression(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(valExecs[n->kind]);
@@ -88,7 +88,7 @@ static void onlyName(const char *name, const char *ref, const char *kind)
   }
 }
 
-static int getVariableValue(struct ExecEnv *e, const char *name)
+static Value getVariableValue(struct ExecEnv *e, const char *name)
 {
   struct VariableList *p;
 
@@ -102,13 +102,14 @@ static int getVariableValue(struct ExecEnv *e, const char *name)
   exit(1);
 }
 
-static void setVariableValue(struct ExecEnv *e, const char *name, int value)
+static void setVariableValue(struct ExecEnv *e, const char *name, Value value)
 {
   struct VariableList *p;
 
   for (p = e->vars; p != NULL; p = p->next){
     if (!strcmp(name, p->var->name)){
-      p->var->value = value;
+      if (p->var->type == TYPE_INTEGER)
+        p->var->value = value;
     }
   }
 }
@@ -131,13 +132,13 @@ static void onlyOut(const char *name)
   onlyName(name, "out", "function");
 }
 
-static int execTermExpression(struct ExecEnv *e, struct Node *n)
+static Value execTermExpression(struct ExecEnv *e, struct Node *n)
 {
   // TODO: refactor to an execNameExp and execVal functions
   assert(n);
 
   if (nt_INTEGER == n->kind){
-    return n->data.i;
+    return n->data.value;
   } else {
     if (nt_ID == n->kind){
       assert(e);
@@ -147,36 +148,41 @@ static int execTermExpression(struct ExecEnv *e, struct Node *n)
       exit(1);
      }
   }
-
-  return -1;
 }
 
-static int execBinExpression(struct ExecEnv *e, struct Node *n)
+static Value execBinExpression(struct ExecEnv *e, struct Node *n)
 {
   assert(nt_BINARYOP == n->kind);
 
-  const int left = dispatchExpression(e, n->data.expression.left);
-  const int right = dispatchExpression(e, n->data.expression.right);
+  const Value left = dispatchExpression(e, n->data.expression.left);
+  const Value right = dispatchExpression(e, n->data.expression.right);
+  Value ret;
 
   switch (n->data.expression.op){
-    case '+': return left + right;
-    case '-': return left - right;
-    case '*': return left * right;
-    case '/': if (right == 0){
+    case '+': ret.i = left.i + right.i;
+              break;
+    case '-': ret.i = left.i - right.i;
+              break;
+    case '*': ret.i = left.i * right.i;
+              break;
+    case '/': if (right.i == 0){
                 cerror("zero division!");
                 exit(1);
               } else {
-                return left / right;
+                ret.i = left.i / right.i;
               }
-    case '%': return left % right;
-    case '>': return left > right;
-    case '<': return left < right;
+    case '%': ret.i = left.i % right.i;
+              break;
+    case '>': ret.i = left.i > right.i;
+              break;
+    case '<': ret.i = left.i < right.i;
+              break;
 
     default: cerror("unknown operator '%c'", n->data.expression.op);
              exit(1);
   }
 
-  return -1;
+  return ret;
 }
 
 static void execDeclaration(struct ExecEnv *e, struct Node *n)
@@ -202,7 +208,7 @@ static void execDeclaration(struct ExecEnv *e, struct Node *n)
   varlist->var->name = n->data.declaration.name;
 
   if (n->data.declaration.right == NULL){
-    varlist->var->value = 0;
+    varlist->var->value.i = 0;
   } else {
     varlist->var->value = dispatchExpression(e, r);
   }
@@ -243,7 +249,7 @@ static void execCall(struct ExecEnv *e, struct Node *n)
   assert(nt_CALL == n->kind);
 
   onlyOut(n->data.call.name);
-  printf("%d\n", dispatchExpression(e, n->data.call.param));
+  printf("%d\n", dispatchExpression(e, n->data.call.param).i);
 }
 
 void execNodes(struct ExecEnv *e, struct Node *n)
@@ -262,7 +268,7 @@ static void execWhilst(struct ExecEnv *e, struct Node *n)
   assert(c);
   assert(s);
 
-  while (dispatchExpression(e, c)){
+  while (dispatchExpression(e, c).i){
     dispatchStatement(e, s);
   }
 }
@@ -278,7 +284,7 @@ static void execAn(struct ExecEnv *e, struct Node *n)
   assert(c);
   assert(s);
 
-  if (dispatchExpression(e, c)){
+  if (dispatchExpression(e, c).i){
     dispatchStatement(e, s);
   }
 }
