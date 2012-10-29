@@ -32,13 +32,37 @@ int main(int argc, char *argv[])
 {
   FILE *fp;
 
-  if (argc > 1){
+  int c;
+
+  while (true){
+    static struct option long_options[] = {
+      { "version", no_argument, 0, 'v' },
+      { 0, 0, 0, 0 }
+    };
+
+    int option_index = 0;
+
+    c = getopt_long(argc, argv, "v", long_options, &option_index);
+
+    if (c == -1)
+      break;
+
+    switch (c){
+      case 'v': version();
+                exit(0);
+
+      case '?': break;
+      default: abort();
+    }
+  }
+
+  if (optind < argc){
     strcpy(source, argv[1]);
   }
   
 #if DEBUG
   else {
-    strcpy(source, "example.nm");
+    strcpy(source, "testing.nm");
   }
 #else
   else {
@@ -67,5 +91,10 @@ int main(int argc, char *argv[])
   } while (!feof(yyin));
 
   return 0;
+}
+
+void version(void)
+{
+  printf("Nemo v%s\n", VERSION);
 }
 

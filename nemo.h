@@ -13,8 +13,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <getopt.h>
 #include <assert.h>
 
-#define DEBUG 0
+#define VERSION "0.4.2"
+
+void version(void);
 
 #endif // NEMO_H
