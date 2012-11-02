@@ -14,13 +14,14 @@
 #include "nemo.h"
 #include "handy.h"
 #include "nodes_exec.h"
+#include "nodes_gen.h"
 
 extern int yyparse(void);
 extern FILE *yyin;
 extern FILE *yyout;
 
 // struct pointer to our nodes
-struct Node *nodest;
+struct Node *nodest = NULL;
 // name of the source file to be interpreted
 char source[255];
 // keep track of what line is it in the source
@@ -87,7 +88,13 @@ int main(int argc, char *argv[])
     struct ExecEnv *e = createEnv();
     execNodes(e, nodest);
     freeEnv(e);
-    // TODO: destroy the AST
+    // destroy the AST
+    for (int i = 0; i < nodest->data.statements.count; i++){
+      debug("deleting node #%d");
+      free(nodest->data.statements.statements[i]);
+    }
+    debug("deleting nodest");
+    free(nodest);
   } while (!feof(yyin));
 
   return 0;
