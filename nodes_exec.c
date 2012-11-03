@@ -31,24 +31,24 @@ struct ExecEnv {
 
 static Value execTermExpression(struct ExecEnv *, struct Node *);
 static Value execBinExpression(struct ExecEnv *, struct Node *);
-static void execDeclaration(struct ExecEnv *, struct Node *);
-static void execAssignment(struct ExecEnv *, struct Node *);
+static Value execDeclaration(struct ExecEnv *, struct Node *);
+static Value execAssignment(struct ExecEnv *, struct Node *);
 static void execStatement(struct ExecEnv *, struct Node *);
-static void execCall(struct ExecEnv *, struct Node *);
-static void execWhilst(struct ExecEnv *, struct Node *);
-static void execAn(struct ExecEnv *, struct Node *);
+static Value execCall(struct ExecEnv *, struct Node *);
+static Value execWhilst(struct ExecEnv *, struct Node *);
+static Value execAn(struct ExecEnv *, struct Node *);
 
 static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
 {
   execTermExpression,
   execTermExpression,
   execBinExpression,
+  execDeclaration,
+  execAssignment,
   NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  execCall,
+  execWhilst,
+  execAn
 };
 
 static void(*runExecs[])(struct ExecEnv *, struct Node *) =
@@ -56,12 +56,12 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   NULL, // ID and numbers are canonical and
   NULL, // don't need to be executed
   NULL, // so is not a binary op
-  execDeclaration,
-  execAssignment,
+  NULL,
+  NULL,
   execStatement,
-  execCall,
-  execWhilst,
-  execAn
+  NULL,
+  NULL,
+  NULL,
 };
 
 static Value dispatchExpression(struct ExecEnv *e, struct Node *n)
@@ -185,7 +185,7 @@ static Value execBinExpression(struct ExecEnv *e, struct Node *n)
   return ret;
 }
 
-static void execDeclaration(struct ExecEnv *e, struct Node *n)
+static Value execDeclaration(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(nt_DECLARATION == n->kind);
@@ -217,11 +217,13 @@ static void execDeclaration(struct ExecEnv *e, struct Node *n)
   e->vars = varlist;
 }
 
-static void execAssignment(struct ExecEnv *e, struct Node *n)
+static Value execAssignment(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
   assert(e);
+
+  Value val;
 
   if (!variableAlreadySet(e, n->data.s)){
     cerror("tried to change value of variable '%s' without declaring it first", n->data.s);
@@ -231,6 +233,10 @@ static void execAssignment(struct ExecEnv *e, struct Node *n)
   struct Node *r = n->data.assignment.right;
 
   setVariableValue(e, n->data.s, dispatchExpression(e, r));
+
+  val.i = 0;
+
+  return val;
 }
 
 static void execStatement(struct ExecEnv *e, struct Node *n)
@@ -239,17 +245,23 @@ static void execStatement(struct ExecEnv *e, struct Node *n)
   assert(nt_STATEMENTS == n->kind);
 
   for (int i = 0; i < n->data.statements.count; i++){
-    dispatchStatement(e, n->data.statements.statements[i]);
+    dispatchExpression(e, n->data.statements.statements[i]);
   }
 }
 
-static void execCall(struct ExecEnv *e, struct Node *n)
+static Value execCall(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(nt_CALL == n->kind);
 
+  Value val;
+
   onlyOut(n->data.call.name);
   printf("%d\n", dispatchExpression(e, n->data.call.param).i);
+
+  val.i = 0;
+
+  return val;
 }
 
 void execNodes(struct ExecEnv *e, struct Node *n)
@@ -257,10 +269,12 @@ void execNodes(struct ExecEnv *e, struct Node *n)
   dispatchStatement(e, n);
 }
 
-static void execWhilst(struct ExecEnv *e, struct Node *n)
+static Value execWhilst(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(nt_WHILST == n->kind);
+
+  Value val;
 
   struct Node * const c = n->data.whilst.cond;
   struct Node * const s = n->data.whilst.statements;
@@ -271,12 +285,18 @@ static void execWhilst(struct ExecEnv *e, struct Node *n)
   while (dispatchExpression(e, c).i){
     dispatchStatement(e, s);
   }
+
+  val.i = 0;
+
+  return val;
 }
 
-static void execAn(struct ExecEnv *e, struct Node *n)
+static Value execAn(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(nt_AN == n->kind);
+
+  Value val;
 
   struct Node * const c = n->data.an.cond;
   struct Node * const s = n->data.an.statements;
@@ -287,6 +307,10 @@ static void execAn(struct ExecEnv *e, struct Node *n)
   if (dispatchExpression(e, c).i){
     dispatchStatement(e, s);
   }
+
+  val.i = 0;
+
+  return val;
 }
 
 struct ExecEnv *createEnv(void)
