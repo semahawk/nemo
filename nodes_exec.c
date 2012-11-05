@@ -16,7 +16,7 @@ int varscount = 0;
 struct Variable {
   Value value;
   char *name;
-  var_t type;
+  Type type;
 };
 
 struct VariableList {

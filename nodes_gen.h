@@ -15,7 +15,7 @@ typedef union {
 
 typedef enum {
   TYPE_INTEGER
-} var_t;
+} Type;
 
 struct Node {
   enum {
@@ -41,7 +41,7 @@ struct Node {
     } expression;
 
     struct {
-      var_t type;
+      Type type;
       char *name;
       // used when initializing a variable
       struct Node *right;
@@ -74,7 +74,7 @@ struct Node {
   } data;
 };
 
-struct Node *declaration(var_t, char *, struct Node *);
+struct Node *declaration(Type, char *, struct Node *);
 struct Node *assignment(char *, struct Node *);
 struct Node *statement(struct Node *, struct Node *);
 struct Node *expression(struct Node *, struct Node *, char);

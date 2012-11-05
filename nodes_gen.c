@@ -8,7 +8,7 @@
 #include "handy.h"
 #include "nodes_gen.h"
 
-struct Node *declaration(var_t type, char *name, struct Node *val)
+struct Node *declaration(Type type, char *name, struct Node *val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
