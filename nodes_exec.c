@@ -192,7 +192,7 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
   assert(e);
 
   if (variableAlreadySet(e, n->data.declaration.name)){
-    cerror("variable '%s' already declared");
+    cerror("variable '%s' already declared", n->data.declaration.name);
     exit(1);
   }
 
