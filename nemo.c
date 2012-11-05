@@ -28,6 +28,8 @@ char source[255];
 int linenum = 0;
 // keep track of what column is it in the source
 int column = 0;
+// --debug
+bool debugflag = false;
 
 int main(int argc, char *argv[])
 {
@@ -37,18 +39,22 @@ int main(int argc, char *argv[])
 
   while (true){
     static struct option long_options[] = {
+      { "debug",   no_argument, 0, 'd' },
       { "version", no_argument, 0, 'v' },
       { 0, 0, 0, 0 }
     };
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "v", long_options, &option_index);
+    c = getopt_long(argc, argv, "dv", long_options, &option_index);
 
     if (c == -1)
       break;
 
     switch (c){
+      case 'd': debugflag = true;
+                break;
+
       case 'v': version();
                 exit(0);
 
@@ -58,19 +64,12 @@ int main(int argc, char *argv[])
   }
 
   if (optind < argc){
-    strcpy(source, argv[1]);
+    strcpy(source, argv[optind++]);
   }
-  
-#if DEBUG
-  else {
-    strcpy(source, "testing.nm");
-  }
-#else
   else {
     error("no input files");
     return 1;
   }
-#endif
 
   if ((fp = fopen(source, "r")) != NULL){
     yyin = fp;
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
     freeEnv(e);
     // destroy the AST
     for (int i = 0; i < nodest->data.statements.count; i++){
-      debug("deleting node #%d");
+      debug("deleting node at 0x%x", nodest->data.statements.statements[i]);
       free(nodest->data.statements.statements[i]);
     }
     debug("deleting nodest");

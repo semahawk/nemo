@@ -7,9 +7,11 @@
 #include "nemo.h"
 #include "handy.h"
 
-#if DEBUG
-  void debug(char *string, ...)
-  {
+extern bool debugflag;
+
+void debug(char *string, ...)
+{
+  if (debugflag){
     va_list ap;
 
     fprintf(stderr, "** DEBUG: ");
@@ -18,24 +20,16 @@
     fprintf(stderr, "\n");
     va_end(ap);
   }
-#else
-  void debug(char *string, ...){
-    /* do nothing, and do not complain about unused parameter */
-    string;
-  }
-#endif
+}
 
 void error(char *string, ...)
 {
   va_list ap;
-#if DEBUG
   static int error_num = 1;
-#endif
 
   fprintf(stderr, "nemo: error");
-#if DEBUG
-  fprintf(stderr, " #%d", error_num);
-#endif
+  if (debugflag)
+    fprintf(stderr, " #%d", error_num);
   fprintf(stderr, ": ");
   va_start(ap, string);
   vfprintf(stderr, string, ap);
