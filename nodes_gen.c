@@ -59,7 +59,7 @@ struct Node *expByName(char *name)
   return new;
 }
 
-struct Node *expression(struct Node *left, struct Node *right, char op)
+struct Node *binaryop(struct Node *left, struct Node *right, char op)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 

@@ -116,13 +116,13 @@ select_stmt
     ;
 
 binary_expr
-    : expr '+' expr  { $$ = expression($1, $3, '+'); }
-    | expr '-' expr  { $$ = expression($1, $3, '-'); }
-    | expr '*' expr  { $$ = expression($1, $3, '*'); }
-    | expr '/' expr  { $$ = expression($1, $3, '/'); }
-    | expr '%' expr  { $$ = expression($1, $3, '%'); }
-    | expr '>' expr  { $$ = expression($1, $3, '>'); }
-    | expr '<' expr  { $$ = expression($1, $3, '<'); }
+    : expr '+' expr  { $$ = binaryop($1, $3, '+'); }
+    | expr '-' expr  { $$ = binaryop($1, $3, '-'); }
+    | expr '*' expr  { $$ = binaryop($1, $3, '*'); }
+    | expr '/' expr  { $$ = binaryop($1, $3, '/'); }
+    | expr '%' expr  { $$ = binaryop($1, $3, '%'); }
+    | expr '>' expr  { $$ = binaryop($1, $3, '>'); }
+    | expr '<' expr  { $$ = binaryop($1, $3, '<'); }
     ;
 
 type
