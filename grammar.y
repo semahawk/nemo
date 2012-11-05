@@ -36,7 +36,7 @@
 }
 
 %token <i> INTEGER
-%token <s> IDENTIFIER
+%token <s> VAR_IDENT IDENT
 %type <node> source stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt
 %type <node> expr decl_expr init_expr assign_expr call_expr binary_expr
@@ -81,7 +81,7 @@ expr
     | call_expr       { $$ = $1; }
     | decl_expr       { $$ = $1; }
     | init_expr       { $$ = $1; }
-    | IDENTIFIER      { $$ = expByName($1); }
+    | VAR_IDENT       { $$ = expByName($1); }
     | INTEGER         { $$ = expByNum($1); }
     | '(' expr ')'    { $$ = $2; }
     ;
@@ -92,19 +92,19 @@ comp_stmt
     ;
 
 decl_expr
-    : type IDENTIFIER                { $$ = declaration($1, $2, NULL); }
+    : type VAR_IDENT                 { $$ = declaration($1, $2, NULL); }
     ;
 
 init_expr
-    : type IDENTIFIER '=' expr       { $$ = declaration($1, $2, $4); }
+    : type VAR_IDENT  '=' expr       { $$ = declaration($1, $2, $4); }
     ;
 
 assign_expr
-    : IDENTIFIER '=' expr            { $$ = assignment($1, $3); }
+    : VAR_IDENT  '=' expr            { $$ = assignment($1, $3); }
     ;
 
 call_expr
-    : IDENTIFIER '(' expr ')'         { $$ = call($1, $3); }
+    : IDENT '(' expr ')'         { $$ = call($1, $3); }
     ;
 
 iter_stmt
