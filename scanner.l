@@ -29,14 +29,14 @@ D [0-9]
 
 %%
 
-"/"{2,}.*                { /* one line comments */ linenum++; }
+"/"{2,}.*                { /* one line comments */ ++linenum; }
 
 "int"                    { count(); return TYPE_INT; }
 
 "an"                     { count(); return AN; }
 "whilst"                 { count(); return WHILST; }
 
-"\n"                     { count(); linenum++; }
+"\n"                     { count(); ++linenum; }
 
 "+"                      { count(); return '+'; }
 "-"                      { count(); return '-'; }
@@ -64,10 +64,10 @@ D [0-9]
   "/*"                   BEGIN(IN_COMMENT);
 }
 <IN_COMMENT>{
-  "*/"\n*                BEGIN(INITIAL);
+  "*/"                   BEGIN(INITIAL);
   [^*\n]+                // eat comment in chunks
   "*"                    // eat the lone star
-  \n                     linenum++;
+  \n                     ++linenum;
 }
 
 %%
