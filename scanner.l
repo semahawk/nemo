@@ -29,12 +29,14 @@ D [0-9]
 
 %%
 
+"/"{2,}.*                { /* one line comments */ linenum++; }
+
 "int"                    { count(); return TYPE_INT; }
 
 "an"                     { count(); return AN; }
 "whilst"                 { count(); return WHILST; }
 
-"\n"                     { count(); ++linenum; }
+"\n"                     { count(); linenum++; }
 
 "+"                      { count(); return '+'; }
 "-"                      { count(); return '-'; }
