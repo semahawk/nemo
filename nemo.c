@@ -87,13 +87,7 @@ int main(int argc, char *argv[])
     struct ExecEnv *e = createEnv();
     execNodes(e, nodest);
     freeEnv(e);
-    // destroy the AST
-    for (int i = 0; i < nodest->data.statements.count; i++){
-      debug("deleting node at 0x%x", nodest->data.statements.statements[i]);
-      free(nodest->data.statements.statements[i]);
-    }
-    debug("deleting nodest");
-    free(nodest);
+    // TODO: destroy the AST
   } while (!feof(yyin));
 
   return 0;
