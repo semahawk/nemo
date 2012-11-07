@@ -201,6 +201,10 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
 
   struct Node *r = n->data.declaration.right;
 
+  Value val;
+
+  val.i = 0;
+
   varscount++;
 
   varlist->var = var;
@@ -215,6 +219,8 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
 
   varlist->next = e->vars;
   e->vars = varlist;
+
+  return val;
 }
 
 static Value execAssignment(struct ExecEnv *e, struct Node *n)
@@ -244,8 +250,8 @@ static void execStatement(struct ExecEnv *e, struct Node *n)
   assert(n);
   assert(nt_STATEMENTS == n->kind);
 
-  for (int i = 0; i < n->data.statements.count; i++){
-    dispatchExpression(e, n->data.statements.statements[i]);
+  for (int i = 0; i < n->data.block.count; i++){
+    dispatchExpression(e, n->data.block.statements[i]);
   }
 }
 

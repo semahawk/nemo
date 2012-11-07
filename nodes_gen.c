@@ -79,16 +79,16 @@ struct Node *statement(struct Node *res, struct Node *toappend)
     res = myalloc(sizeof(struct Node));
 
     res->kind = nt_STATEMENTS;
-    res->data.statements.count = 0;
-    res->data.statements.statements = 0;
+    res->data.block.count = 0;
+    res->data.block.statements = 0;
   }
 
   debug("creating statement node at 0x%x", res);
 
   assert(nt_STATEMENTS == res->kind);
-  res->data.statements.count++;
-  res->data.statements.statements = realloc(res->data.statements.statements, res->data.statements.count * sizeof(*res->data.statements.statements));
-  res->data.statements.statements[res->data.statements.count - 1] = toappend;
+  res->data.block.count++;
+  res->data.block.statements = realloc(res->data.block.statements, res->data.block.count * sizeof(*res->data.block.statements));
+  res->data.block.statements[res->data.block.count - 1] = toappend;
 
   return res;
 }

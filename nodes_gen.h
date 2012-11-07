@@ -54,8 +54,11 @@ struct Node {
 
     struct {
       int count;
+      struct Node *prev;
+      struct Node *next;
+      struct VariableList *vars;
       struct Node **statements;
-    } statements;
+    } block;
 
     struct {
       struct Node *cond;
