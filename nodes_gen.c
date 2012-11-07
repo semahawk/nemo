@@ -73,19 +73,19 @@ struct Node *binaryop(struct Node *left, struct Node *right, char op)
   return new;
 }
 
-struct Node *statement(struct Node *res, struct Node *toappend)
+struct Node *block(struct Node *res, struct Node *toappend)
 {
   if (!res){
     res = myalloc(sizeof(struct Node));
 
-    res->kind = nt_STATEMENTS;
+    res->kind = nt_BLOCK;
     res->data.block.count = 0;
     res->data.block.statements = 0;
   }
 
   debug("creating statement node at 0x%x", res);
 
-  assert(nt_STATEMENTS == res->kind);
+  assert(nt_BLOCK == res->kind);
   res->data.block.count++;
   res->data.block.statements = realloc(res->data.block.statements, res->data.block.count * sizeof(*res->data.block.statements));
   res->data.block.statements[res->data.block.count - 1] = toappend;

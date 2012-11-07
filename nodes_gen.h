@@ -24,7 +24,7 @@ struct Node {
     nt_BINARYOP,
     nt_DECLARATION,
     nt_ASSIGNMENT,
-    nt_STATEMENTS,
+    nt_BLOCK,
     nt_CALL,
     nt_WHILST,
     nt_AN,
@@ -79,7 +79,7 @@ struct Node {
 
 struct Node *declaration(Type, char *, struct Node *);
 struct Node *assignment(char *, struct Node *);
-struct Node *statement(struct Node *, struct Node *);
+struct Node *block(struct Node *, struct Node *);
 struct Node *binaryop(struct Node *, struct Node *, char);
 struct Node *call(char *, struct Node *);
 struct Node *whilst(struct Node *, struct Node *);
