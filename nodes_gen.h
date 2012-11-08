@@ -25,6 +25,7 @@ struct Node {
     nt_DECLARATION,
     nt_ASSIGNMENT,
     nt_BLOCK,
+    nt_STATEMENT,
     nt_CALL,
     nt_WHILST,
     nt_AN,
@@ -59,6 +60,11 @@ struct Node {
       struct VariableList *vars;
       struct Node **statements;
     } block;
+
+    struct {
+      int count;
+      struct Node **nodes;
+    } statement;
 
     struct {
       struct Node *cond;

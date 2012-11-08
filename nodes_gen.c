@@ -73,24 +73,44 @@ struct Node *binaryop(struct Node *left, struct Node *right, char op)
   return new;
 }
 
-struct Node *block(struct Node *res, struct Node *toappend)
+struct Node *block(struct Node *new, struct Node *toappend)
 {
-  if (!res){
-    res = myalloc(sizeof(struct Node));
+  if (!new){
+    new = myalloc(sizeof(struct Node));
 
-    res->kind = nt_BLOCK;
-    res->data.block.count = 0;
-    res->data.block.statements = 0;
+    new->kind = nt_BLOCK;
+    new->data.block.count = 0;
+    new->data.block.statements = 0;
   }
 
-  debug("creating statement node at 0x%x", res);
+  debug("creating block node at 0x%x", new);
+  assert(nt_BLOCK == new->kind);
 
-  assert(nt_BLOCK == res->kind);
-  res->data.block.count++;
-  res->data.block.statements = realloc(res->data.block.statements, res->data.block.count * sizeof(*res->data.block.statements));
-  res->data.block.statements[res->data.block.count - 1] = toappend;
+  new->data.block.count++;
+  new->data.block.statements = realloc(new->data.block.statements, new->data.block.count * sizeof(*new->data.block.statements));
+  new->data.block.statements[new->data.block.count - 1] = toappend;
 
-  return res;
+  return new;
+}
+
+struct Node *statement(struct Node *new, struct Node *toappend)
+{
+  if (!new){
+    new = myalloc(sizeof(struct Node));
+
+    new->kind = nt_STATEMENT;
+    new->data.statement.count = 0;
+    new->data.statement.nodes = 0;
+  }
+
+  debug("creating statement node at 0x%x", new);
+  assert(nt_STATEMENT == new->kind);
+
+  new->data.statement.count++;
+  new->data.statement.nodes = realloc(new->data.statement.nodes, new->data.statement.count * sizeof(*new->data.statement.nodes));
+  new->data.statement.nodes[new->data.statement.count - 1] = toappend;
+
+  return new;
 }
 
 struct Node *whilst(struct Node *cond, struct Node *stmt)

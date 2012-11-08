@@ -33,10 +33,11 @@ static Value execTermExpression(struct ExecEnv *, struct Node *);
 static Value execBinExpression(struct ExecEnv *, struct Node *);
 static Value execDeclaration(struct ExecEnv *, struct Node *);
 static Value execAssignment(struct ExecEnv *, struct Node *);
-static void execBlock(struct ExecEnv *, struct Node *);
 static Value execCall(struct ExecEnv *, struct Node *);
 static Value execWhilst(struct ExecEnv *, struct Node *);
 static Value execAn(struct ExecEnv *, struct Node *);
+static void execBlock(struct ExecEnv *, struct Node *);
+static void execStatement(struct ExecEnv *, struct Node *);
 
 static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
 {
@@ -45,6 +46,7 @@ static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
   execBinExpression,
   execDeclaration,
   execAssignment,
+  NULL,
   NULL,
   execCall,
   execWhilst,
@@ -59,6 +61,7 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   NULL,
   NULL,
   execBlock,
+  execStatement,
   NULL,
   NULL,
   NULL,
@@ -251,7 +254,17 @@ static void execBlock(struct ExecEnv *e, struct Node *n)
   assert(nt_BLOCK == n->kind);
 
   for (int i = 0; i < n->data.block.count; i++){
-    dispatchExpression(e, n->data.block.statements[i]);
+    dispatchStatement(e, n->data.block.statements[i]);
+  }
+}
+
+static void execStatement(struct ExecEnv *e, struct Node *n)
+{
+  assert(n);
+  assert(nt_STATEMENT == n->kind);
+
+  for (int i = 0; i < n->data.statement.count; i++){
+    dispatchExpression(e, n->data.statement.nodes[i]);
   }
 }
 

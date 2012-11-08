@@ -59,8 +59,8 @@ source
     ;
 
 stmts
-    : stmt                 { $$ = block(NULL, $1); }
-    | stmts stmt           { $$ = block($1, $2);   }
+    : stmt                 { $$ = statement(NULL, $1); }
+    | stmts stmt           { $$ = statement($1, $2);   }
     ;
 
 stmt
