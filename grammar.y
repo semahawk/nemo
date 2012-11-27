@@ -88,7 +88,7 @@ expr
 
 comp_stmt
     : '{' '}'         { $$ = 0; }
-    | '{' stmts '}'   { $$ = $2; }
+    | '{' stmts '}'   { $$ = block(NULL, $2); }
     ;
 
 decl_expr

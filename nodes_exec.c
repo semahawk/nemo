@@ -36,7 +36,7 @@ static Value execAssignment(struct ExecEnv *, struct Node *);
 static Value execCall(struct ExecEnv *, struct Node *);
 static Value execWhilst(struct ExecEnv *, struct Node *);
 static Value execAn(struct ExecEnv *, struct Node *);
-static void execBlock(struct ExecEnv *, struct Node *);
+static Value execBlock(struct ExecEnv *, struct Node *);
 static void execStatement(struct ExecEnv *, struct Node *);
 
 static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
@@ -46,7 +46,7 @@ static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
   execBinExpression,
   execDeclaration,
   execAssignment,
-  NULL,
+  execBlock,
   NULL,
   execCall,
   execWhilst,
@@ -60,7 +60,7 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   NULL, // so is not a binary op
   NULL,
   NULL,
-  execBlock,
+  NULL,
   execStatement,
   NULL,
   NULL,
@@ -248,14 +248,20 @@ static Value execAssignment(struct ExecEnv *e, struct Node *n)
   return val;
 }
 
-static void execBlock(struct ExecEnv *e, struct Node *n)
+static Value execBlock(struct ExecEnv *e, struct Node *n)
 {
   assert(n);
   assert(nt_BLOCK == n->kind);
 
+  Value val;
+
   for (int i = 0; i < n->data.block.count; i++){
     dispatchStatement(e, n->data.block.statements[i]);
   }
+
+  val.i = 0;
+
+  return val;
 }
 
 static void execStatement(struct ExecEnv *e, struct Node *n)
