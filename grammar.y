@@ -55,7 +55,7 @@
 %%
 
 source
-    : stmts                { nodest = $1; }
+    : stmts                { nodest = block(NULL, $1); }
     ;
 
 stmts

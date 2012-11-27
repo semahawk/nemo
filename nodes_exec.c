@@ -291,7 +291,7 @@ static Value execCall(struct ExecEnv *e, struct Node *n)
 
 void execNodes(struct ExecEnv *e, struct Node *n)
 {
-  dispatchStatement(e, n);
+  execBlock(e, n);
 }
 
 static Value execWhilst(struct ExecEnv *e, struct Node *n)
