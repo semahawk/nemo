@@ -88,9 +88,7 @@ static Value getVariableValue(struct ExecEnv *e, const char *name, struct Node *
   struct VariableList *p;
 
   for (b = block; b != NULL; b = b->data.block.parent){
-    debug("searching for variable %s in block at %p", name, b);
     for (p = b->data.block.vars; p != NULL; p = p->next){
-      debug("found variable %s in block at %p", p->var->name, block);
       if (!strcmp(name, p->var->name)){
         return p->var->value;
       }
@@ -320,7 +318,6 @@ static Value execWhilst(struct ExecEnv *e, struct Node *n)
   assert(c);
   assert(s);
 
-  debug("s kind = %d", s->kind);
   while (dispatchExpression(e, c).i){
     dispatchExpression(e, s);
   }
