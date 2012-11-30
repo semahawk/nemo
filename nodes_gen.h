@@ -46,15 +46,11 @@ struct Node {
       char *name;
       // used when initializing a variable
       struct Node *right;
-      // block in which the variable was declared
-      struct Node *block;
     } declaration;
 
     struct {
       char *name;
       struct Node *right;
-      // block in which the variable was assigned
-      struct Node *block;
     } assignment;
 
     struct {
@@ -78,8 +74,6 @@ struct Node {
     struct {
       char *name;
       struct Node *param;
-      // block in which the call was made
-      struct Node *block;
     } call;
 
     struct {
@@ -95,7 +89,6 @@ struct Node {
 
 struct Node *declaration(Type, char *, struct Node *, struct Node *);
 struct Node *assignment(char *, struct Node *, struct Node *);
-//struct Node *block(struct Node *, struct Node *);
 struct Node *emptyblock(struct Node *);
        void  blockappend(struct Node *, struct Node *);
 struct Node *statement(struct Node *, struct Node *);

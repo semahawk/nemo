@@ -88,9 +88,7 @@ static Value getVariableValue(struct ExecEnv *e, const char *name, struct Node *
   struct VariableList *p;
 
   for (b = block; b != NULL; b = b->data.block.parent){
-    debug("searching for variable %s in block at %p", name, b);
     for (p = b->data.block.vars; p != NULL; p = p->next){
-      debug("found variable %s in block at %p", p->var->name, block);
       if (!strcmp(name, p->var->name)){
         return p->var->value;
       }
@@ -209,7 +207,7 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
 
   struct Node *r = n->data.declaration.right;
 
-  debug("declaration node is in block at %p", n->data.declaration.block);
+  debug("declaration node is in block at %p", n->block);
 
   Value val;
 
