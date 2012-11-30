@@ -20,7 +20,6 @@ struct Node *declaration(Type type, char *name, struct Node *val, struct Node *b
   new->data.declaration.right = val;
   new->data.declaration.block = block;
   new->block = block;
-  debug("declaration in block at %p", block);
 
   return new;
 }
@@ -48,6 +47,7 @@ struct Node *expByNum(int val)
 
   new->kind = nt_INTEGER;
   new->data.value.i = val;
+  new->block = NULL;
 
   return new;
 }
@@ -69,36 +69,16 @@ struct Node *binaryop(struct Node *left, struct Node *right, char op)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating binary operation node <op: %c> at 0x%x", op, new);
+  debug("creating binary operation node <op: '%c'> at 0x%x", op, new);
 
   new->kind = nt_BINARYOP;
   new->data.expression.left = left;
   new->data.expression.right = right;
   new->data.expression.op = op;
+  new->block = NULL;
 
   return new;
 }
-
-/*struct Node *block(struct Node *new, struct Node *toappend)*/
-/*{*/
-  /*if (!new){*/
-    /*new = myalloc(sizeof(struct Node));*/
-
-    /*new->kind = nt_BLOCK;*/
-    /*new->data.block.count = 0;*/
-    /*new->data.block.statements = 0;*/
-    /*new->block = NULL;*/
-  /*}*/
-
-  /*debug("creating block node at 0x%x", new);*/
-  /*assert(nt_BLOCK == new->kind);*/
-
-  /*new->data.block.count++;*/
-  /*new->data.block.statements = realloc(new->data.block.statements, new->data.block.count * sizeof(*new->data.block.statements));*/
-  /*new->data.block.statements[new->data.block.count - 1] = toappend;*/
-
-  /*return new;*/
-/*}*/
 
 struct Node *emptyblock(struct Node *parent)
 {
@@ -109,6 +89,7 @@ struct Node *emptyblock(struct Node *parent)
   new->data.block.statements = 0;
   new->data.block.vars = NULL;
   new->data.block.parent = parent;
+  new->block = NULL;
 
   debug("creating empty block node at 0x%x with parent at %p", new, parent);
 
@@ -153,6 +134,7 @@ struct Node *whilst(struct Node *cond, struct Node *stmt)
   new->kind = nt_WHILST;
   new->data.whilst.cond = cond;
   new->data.whilst.statements = stmt;
+  new->block = NULL;
 
   return new;
 }
@@ -166,6 +148,7 @@ struct Node *an(struct Node *cond, struct Node *stmt)
   new->kind = nt_AN;
   new->data.an.cond = cond;
   new->data.an.statements = stmt;
+  new->block = NULL;
 
   return new;
 }
@@ -180,7 +163,7 @@ struct Node *call(char *name, struct Node *param)
   new->data.call.name = name;
   new->data.call.param = param;
   // TODO: it will be needed later on
-  new->data.call.block = NULL;
+  new->block = NULL;
 
   return new;
 }

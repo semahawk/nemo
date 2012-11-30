@@ -89,7 +89,6 @@ struct Node {
 
 struct Node *declaration(Type, char *, struct Node *, struct Node *);
 struct Node *assignment(char *, struct Node *, struct Node *);
-//struct Node *block(struct Node *, struct Node *);
 struct Node *emptyblock(struct Node *);
        void  blockappend(struct Node *, struct Node *);
 struct Node *statement(struct Node *, struct Node *);
