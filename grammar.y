@@ -24,6 +24,7 @@
   extern char source[255];
 
   extern struct Node *nodest;
+  struct Node *currentblock;
 
 %}
 
@@ -55,12 +56,12 @@
 %%
 
 source
-    : stmts                { nodest = block(NULL, $1); }
+    : { currentblock = nodest = emptyblock(NULL); } stmts
     ;
 
 stmts
-    : stmt                 { $$ = statement(NULL, $1); }
-    | stmts stmt           { $$ = statement($1, $2);   }
+    : /* empty */          { $$ = 0; }
+    | stmts stmt           { blockappend(currentblock, $2);   }
     ;
 
 stmt
@@ -81,26 +82,27 @@ expr
     | call_expr       { $$ = $1; }
     | decl_expr       { $$ = $1; }
     | init_expr       { $$ = $1; }
-    | VAR_IDENT       { $$ = expByName($1); }
+    | VAR_IDENT       { $$ = expByName($1, currentblock); }
     | INTEGER         { $$ = expByNum($1); }
     | '(' expr ')'    { $$ = $2; }
     ;
 
 comp_stmt
     : '{' '}'         { $$ = 0; }
-    | '{' stmts '}'   { $$ = block(NULL, $2); }
+    | '{' { $<node>$ = currentblock; currentblock = emptyblock(currentblock); } stmts '}'
+          { $<node>$ = currentblock; currentblock = $<node>2; }
     ;
 
 decl_expr
-    : type VAR_IDENT                 { $$ = declaration($1, $2, NULL); }
+    : type VAR_IDENT                 { $$ = declaration($1, $2, NULL, currentblock); }
     ;
 
 init_expr
-    : type VAR_IDENT  '=' expr       { $$ = declaration($1, $2, $4); }
+    : type VAR_IDENT  '=' expr       { $$ = declaration($1, $2, $4, currentblock); }
     ;
 
 assign_expr
-    : VAR_IDENT  '=' expr            { $$ = assignment($1, $3); }
+    : VAR_IDENT  '=' expr            { $$ = assignment($1, $3, currentblock); }
     ;
 
 call_expr
