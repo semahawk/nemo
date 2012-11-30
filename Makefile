@@ -6,7 +6,7 @@ LEX     =  flex
 
 OBJECTS = nemo.o nodes_gen.o nodes_exec.o handy.o y.tab.o lex.yy.o
 
-all: nemo clean
+all: nemo
 
 nemo: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o bin/nemo

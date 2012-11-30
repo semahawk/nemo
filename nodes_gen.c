@@ -8,7 +8,7 @@
 #include "handy.h"
 #include "nodes_gen.h"
 
-struct Node *declaration(Type type, char *name, struct Node *val)
+struct Node *declaration(Type type, char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -18,11 +18,14 @@ struct Node *declaration(Type type, char *name, struct Node *val)
   new->data.declaration.type = type;
   new->data.declaration.name = name;
   new->data.declaration.right = val;
+  new->data.declaration.block = block;
+  new->block = block;
+  debug("declaration in block at %p", block);
 
   return new;
 }
 
-struct Node *assignment(char *name, struct Node *val)
+struct Node *assignment(char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -31,6 +34,8 @@ struct Node *assignment(char *name, struct Node *val)
   new->kind = nt_ASSIGNMENT;
   new->data.assignment.name = name;
   new->data.assignment.right = val;
+  new->data.assignment.block = block;
+  new->block = block;
 
   return new;
 }
@@ -47,7 +52,7 @@ struct Node *expByNum(int val)
   return new;
 }
 
-struct Node *expByName(char *name)
+struct Node *expByName(char *name, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -55,6 +60,7 @@ struct Node *expByName(char *name)
 
   new->kind = nt_ID;
   new->data.s = name;
+  new->block = block;
 
   return new;
 }
@@ -73,24 +79,69 @@ struct Node *binaryop(struct Node *left, struct Node *right, char op)
   return new;
 }
 
-struct Node *statement(struct Node *res, struct Node *toappend)
-{
-  if (!res){
-    res = myalloc(sizeof(struct Node));
+/*struct Node *block(struct Node *new, struct Node *toappend)*/
+/*{*/
+  /*if (!new){*/
+    /*new = myalloc(sizeof(struct Node));*/
 
-    res->kind = nt_STATEMENTS;
-    res->data.statements.count = 0;
-    res->data.statements.statements = 0;
+    /*new->kind = nt_BLOCK;*/
+    /*new->data.block.count = 0;*/
+    /*new->data.block.statements = 0;*/
+    /*new->block = NULL;*/
+  /*}*/
+
+  /*debug("creating block node at 0x%x", new);*/
+  /*assert(nt_BLOCK == new->kind);*/
+
+  /*new->data.block.count++;*/
+  /*new->data.block.statements = realloc(new->data.block.statements, new->data.block.count * sizeof(*new->data.block.statements));*/
+  /*new->data.block.statements[new->data.block.count - 1] = toappend;*/
+
+  /*return new;*/
+/*}*/
+
+struct Node *emptyblock(struct Node *parent)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  new->kind = nt_BLOCK;
+  new->data.block.count = 0;
+  new->data.block.statements = 0;
+  new->data.block.vars = NULL;
+  new->data.block.parent = parent;
+
+  debug("creating empty block node at 0x%x with parent at %p", new, parent);
+
+  return new;
+}
+
+void blockappend(struct Node *currentblock, struct Node *toappend)
+{
+  currentblock->data.block.count++;
+  currentblock->data.block.statements = realloc(currentblock->data.block.statements, currentblock->data.block.count * sizeof(*currentblock->data.block.statements));
+  currentblock->data.block.statements[currentblock->data.block.count - 1] = toappend;
+
+  debug("appending statement (%p) to block node (%p)", toappend, currentblock);
+}
+
+struct Node *statement(struct Node *new, struct Node *toappend)
+{
+  if (!new){
+    new = myalloc(sizeof(struct Node));
+
+    new->kind = nt_STATEMENT;
+    new->data.statement.count = 0;
+    new->data.statement.nodes = 0;
   }
 
-  debug("creating statement node at 0x%x", res);
+  debug("creating statement node at 0x%x", new);
+  assert(nt_STATEMENT == new->kind);
 
-  assert(nt_STATEMENTS == res->kind);
-  res->data.statements.count++;
-  res->data.statements.statements = realloc(res->data.statements.statements, res->data.statements.count * sizeof(*res->data.statements.statements));
-  res->data.statements.statements[res->data.statements.count - 1] = toappend;
+  new->data.statement.count++;
+  new->data.statement.nodes = realloc(new->data.statement.nodes, new->data.statement.count * sizeof(*new->data.statement.nodes));
+  new->data.statement.nodes[new->data.statement.count - 1] = toappend;
 
-  return res;
+  return new;
 }
 
 struct Node *whilst(struct Node *cond, struct Node *stmt)
@@ -128,6 +179,8 @@ struct Node *call(char *name, struct Node *param)
   new->kind = nt_CALL;
   new->data.call.name = name;
   new->data.call.param = param;
+  // TODO: it will be needed later on
+  new->data.call.block = NULL;
 
   return new;
 }
