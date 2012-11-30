@@ -18,7 +18,6 @@ struct Node *declaration(Type type, char *name, struct Node *val, struct Node *b
   new->data.declaration.type = type;
   new->data.declaration.name = name;
   new->data.declaration.right = val;
-  new->data.declaration.block = block;
   new->block = block;
 
   return new;
@@ -33,7 +32,6 @@ struct Node *assignment(char *name, struct Node *val, struct Node *block)
   new->kind = nt_ASSIGNMENT;
   new->data.assignment.name = name;
   new->data.assignment.right = val;
-  new->data.assignment.block = block;
   new->block = block;
 
   return new;

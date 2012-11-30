@@ -209,7 +209,7 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
 
   struct Node *r = n->data.declaration.right;
 
-  debug("declaration node is in block at %p", n->data.declaration.block);
+  debug("declaration node is in block at %p", n->block);
 
   Value val;
 
@@ -320,6 +320,7 @@ static Value execWhilst(struct ExecEnv *e, struct Node *n)
   assert(c);
   assert(s);
 
+  debug("s kind = %d", s->kind);
   while (dispatchExpression(e, c).i){
     dispatchExpression(e, s);
   }
