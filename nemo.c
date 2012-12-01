@@ -84,9 +84,7 @@ int main(int argc, char *argv[])
       error("compilation failed due to some errors:");
       exit(1);
     }
-    struct ExecEnv *e = createEnv();
-    execNodes(e, nodest);
-    freeEnv(e);
+    execNodes(nodest);
     // TODO: destroy the AST
   } while (!feof(yyin));
 

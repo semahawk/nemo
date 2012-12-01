@@ -24,21 +24,17 @@ struct VariableList {
   struct VariableList *next;
 };
 
-struct ExecEnv {
-  // nothing here
-};
+static Value execTermExpression(struct Node *);
+static Value execBinExpression(struct Node *);
+static Value execDeclaration(struct Node *);
+static Value execAssignment(struct Node *);
+static Value execCall(struct Node *);
+static Value execWhilst(struct Node *);
+static Value execAn(struct Node *);
+static Value execBlock(struct Node *);
+static Value execStatement(struct Node *);
 
-static Value execTermExpression(struct ExecEnv *, struct Node *);
-static Value execBinExpression(struct ExecEnv *, struct Node *);
-static Value execDeclaration(struct ExecEnv *, struct Node *);
-static Value execAssignment(struct ExecEnv *, struct Node *);
-static Value execCall(struct ExecEnv *, struct Node *);
-static Value execWhilst(struct ExecEnv *, struct Node *);
-static Value execAn(struct ExecEnv *, struct Node *);
-static Value execBlock(struct ExecEnv *, struct Node *);
-static Value execStatement(struct ExecEnv *, struct Node *);
-
-static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
+static Value(*valExecs[])(struct Node *) =
 {
   execTermExpression,
   execTermExpression,
@@ -52,7 +48,7 @@ static Value(*valExecs[])(struct ExecEnv *, struct Node *) =
   execAn
 };
 
-static void(*runExecs[])(struct ExecEnv *, struct Node *) =
+static void(*runExecs[])(struct Node *) =
 {
   NULL, // ID and numbers are canonical and
   NULL, // don't need to be executed
@@ -66,12 +62,12 @@ static void(*runExecs[])(struct ExecEnv *, struct Node *) =
   NULL,
 };
 
-static Value dispatchExpression(struct ExecEnv *e, struct Node *n)
+static Value dispatchExpression( struct Node *n)
 {
   assert(n);
   assert(valExecs[n->kind]);
 
-  return valExecs[n->kind](e, n);
+  return valExecs[n->kind](n);
 }
 
 static void onlyName(const char *name, const char *ref, const char *kind)
@@ -82,7 +78,7 @@ static void onlyName(const char *name, const char *ref, const char *kind)
   }
 }
 
-static Value getVariableValue(struct ExecEnv *e, const char *name, struct Node *block)
+static Value getVariableValue(const char *name, struct Node *block)
 {
   struct Node *b;
   struct VariableList *p;
@@ -99,7 +95,7 @@ static Value getVariableValue(struct ExecEnv *e, const char *name, struct Node *
   exit(1);
 }
 
-static void setVariableValue(struct ExecEnv *e, const char *name, Value value, struct Node *block)
+static void setVariableValue(const char *name, Value value, struct Node *block)
 {
   struct Node *b;
   struct VariableList *p;
@@ -113,7 +109,7 @@ static void setVariableValue(struct ExecEnv *e, const char *name, Value value, s
   }
 }
 
-static bool variableAlreadySet(struct ExecEnv *e, const char *name, struct Node *block)
+static bool variableAlreadySet(const char *name, struct Node *block)
 {
   struct Node *b;
   struct VariableList *p;
@@ -134,7 +130,7 @@ static void onlyOut(const char *name)
   onlyName(name, "out", "function");
 }
 
-static Value execTermExpression(struct ExecEnv *e, struct Node *n)
+static Value execTermExpression(struct Node *n)
 {
   // TODO: refactor to an execNameExp and execVal functions
   assert(n);
@@ -143,9 +139,8 @@ static Value execTermExpression(struct ExecEnv *e, struct Node *n)
     return n->data.value;
   } else {
     if (nt_ID == n->kind){
-      assert(e);
-      if (variableAlreadySet(e, n->data.s, n->block))
-        return getVariableValue(e, n->data.s, n->block);
+      if (variableAlreadySet(n->data.s, n->block))
+        return getVariableValue(n->data.s, n->block);
       else
         cerror("variable '%s' doesn't exist", n->data.s);
         exit(1);
@@ -156,12 +151,12 @@ static Value execTermExpression(struct ExecEnv *e, struct Node *n)
   }
 }
 
-static Value execBinExpression(struct ExecEnv *e, struct Node *n)
+static Value execBinExpression(struct Node *n)
 {
   assert(nt_BINARYOP == n->kind);
 
-  const Value left = dispatchExpression(e, n->data.expression.left);
-  const Value right = dispatchExpression(e, n->data.expression.right);
+  const Value left = dispatchExpression(n->data.expression.left);
+  const Value right = dispatchExpression(n->data.expression.right);
   Value ret;
 
   switch (n->data.expression.op){
@@ -191,13 +186,12 @@ static Value execBinExpression(struct ExecEnv *e, struct Node *n)
   return ret;
 }
 
-static Value execDeclaration(struct ExecEnv *e, struct Node *n)
+static Value execDeclaration(struct Node *n)
 {
   assert(n);
   assert(nt_DECLARATION == n->kind);
-  assert(e);
 
-  if (variableAlreadySet(e, n->data.declaration.name, n->block)){
+  if (variableAlreadySet(n->data.declaration.name, n->block)){
     cerror("variable '%s' already declared", n->data.declaration.name);
     exit(1);
   }
@@ -222,7 +216,7 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
   if (n->data.declaration.right == NULL){
     varlist->var->value.i = 0;
   } else {
-    varlist->var->value = dispatchExpression(e, r);
+    varlist->var->value = dispatchExpression(r);
   }
 
   varlist->next = n->block->data.block.vars;
@@ -231,29 +225,28 @@ static Value execDeclaration(struct ExecEnv *e, struct Node *n)
   return val;
 }
 
-static Value execAssignment(struct ExecEnv *e, struct Node *n)
+static Value execAssignment(struct Node *n)
 {
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
-  assert(e);
 
   Value val;
 
-  if (!variableAlreadySet(e, n->data.s, n->block)){
+  if (!variableAlreadySet(n->data.s, n->block)){
     cerror("tried to change value of variable '%s' without declaring it first", n->data.s);
     exit(1);
   }
 
   struct Node *r = n->data.assignment.right;
 
-  setVariableValue(e, n->data.s, dispatchExpression(e, r), n->block);
+  setVariableValue(n->data.s, dispatchExpression(r), n->block);
 
   val.i = 0;
 
   return val;
 }
 
-static Value execBlock(struct ExecEnv *e, struct Node *n)
+static Value execBlock(struct Node *n)
 {
   assert(n);
   assert(nt_BLOCK == n->kind);
@@ -261,7 +254,7 @@ static Value execBlock(struct ExecEnv *e, struct Node *n)
   Value val;
 
   for (int i = 0; i < n->data.block.count; i++){
-    dispatchExpression(e, n->data.block.statements[i]);
+    dispatchExpression(n->data.block.statements[i]);
   }
 
   val.i = 0;
@@ -269,7 +262,7 @@ static Value execBlock(struct ExecEnv *e, struct Node *n)
   return val;
 }
 
-static Value execStatement(struct ExecEnv *e, struct Node *n)
+static Value execStatement(struct Node *n)
 {
   assert(n);
   assert(nt_STATEMENT == n->kind);
@@ -277,7 +270,7 @@ static Value execStatement(struct ExecEnv *e, struct Node *n)
   Value val;
 
   for (int i = 0; i < n->data.statement.count; i++){
-    dispatchExpression(e, n->data.statement.nodes[i]);
+    dispatchExpression(n->data.statement.nodes[i]);
   }
   
   val.i = 0;
@@ -285,7 +278,7 @@ static Value execStatement(struct ExecEnv *e, struct Node *n)
   return val;
 }
 
-static Value execCall(struct ExecEnv *e, struct Node *n)
+static Value execCall(struct Node *n)
 {
   assert(n);
   assert(nt_CALL == n->kind);
@@ -293,19 +286,19 @@ static Value execCall(struct ExecEnv *e, struct Node *n)
   Value val;
 
   onlyOut(n->data.call.name);
-  printf("%d\n", dispatchExpression(e, n->data.call.param).i);
+  printf("%d\n", dispatchExpression(n->data.call.param).i);
 
   val.i = 0;
 
   return val;
 }
 
-void execNodes(struct ExecEnv *e, struct Node *n)
+void execNodes(struct Node *n)
 {
-  execBlock(e, n);
+  execBlock(n);
 }
 
-static Value execWhilst(struct ExecEnv *e, struct Node *n)
+static Value execWhilst(struct Node *n)
 {
   assert(n);
   assert(nt_WHILST == n->kind);
@@ -318,8 +311,8 @@ static Value execWhilst(struct ExecEnv *e, struct Node *n)
   assert(c);
   assert(s);
 
-  while (dispatchExpression(e, c).i){
-    dispatchExpression(e, s);
+  while (dispatchExpression(c).i){
+    dispatchExpression(s);
   }
 
   val.i = 0;
@@ -327,7 +320,7 @@ static Value execWhilst(struct ExecEnv *e, struct Node *n)
   return val;
 }
 
-static Value execAn(struct ExecEnv *e, struct Node *n)
+static Value execAn(struct Node *n)
 {
   assert(n);
   assert(nt_AN == n->kind);
@@ -340,27 +333,12 @@ static Value execAn(struct ExecEnv *e, struct Node *n)
   assert(c);
   assert(s);
 
-  if (dispatchExpression(e, c).i){
-    dispatchExpression(e, s);
+  if (dispatchExpression(c).i){
+    dispatchExpression(s);
   }
 
   val.i = 0;
 
   return val;
-}
-
-struct ExecEnv *createEnv(void)
-{
-  assert(nt_LASTELEMENT == (ARRAY_SIZE(valExecs)));
-  assert(nt_LASTELEMENT == (ARRAY_SIZE(runExecs)));
-
-  struct ExecEnv *new = calloc(1, sizeof(struct ExecEnv));
-  
-  return new;
-}
-
-void freeEnv(struct ExecEnv *e)
-{
-  free(e);
 }
 

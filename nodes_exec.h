@@ -9,15 +9,8 @@
 #define NODES_EXEC_H
 
 struct Node;
-struct ExecEnv;
-
-// creates the execution engine
-struct ExecEnv *createEnv(void);
-
-// removes the ExecEnviron
-void freeEnv(struct ExecEnv *);
 
 // executes the nodes
-void execNodes(struct ExecEnv *, struct Node *);
+void execNodes(struct Node *);
 
 #endif // NODES_EXEC_H
