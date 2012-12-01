@@ -34,7 +34,7 @@ static Value execAn(struct Node *);
 static Value execBlock(struct Node *);
 static Value execStatement(struct Node *);
 
-static Value(*valExecs[])(struct Node *) =
+static Value(*nodeExecs[])(struct Node *) =
 {
   execTermExpression,
   execTermExpression,
@@ -48,26 +48,12 @@ static Value(*valExecs[])(struct Node *) =
   execAn
 };
 
-static void(*runExecs[])(struct Node *) =
-{
-  NULL, // ID and numbers are canonical and
-  NULL, // don't need to be executed
-  NULL, // so is not a binary op
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-};
-
-static Value dispatchExpression( struct Node *n)
+static Value dispatchNode( struct Node *n)
 {
   assert(n);
-  assert(valExecs[n->kind]);
+  assert(nodeExecs[n->kind]);
 
-  return valExecs[n->kind](n);
+  return nodeExecs[n->kind](n);
 }
 
 static void onlyName(const char *name, const char *ref, const char *kind)
@@ -155,8 +141,8 @@ static Value execBinExpression(struct Node *n)
 {
   assert(nt_BINARYOP == n->kind);
 
-  const Value left = dispatchExpression(n->data.expression.left);
-  const Value right = dispatchExpression(n->data.expression.right);
+  const Value left = dispatchNode(n->data.expression.left);
+  const Value right = dispatchNode(n->data.expression.right);
   Value ret;
 
   switch (n->data.expression.op){
@@ -216,7 +202,7 @@ static Value execDeclaration(struct Node *n)
   if (n->data.declaration.right == NULL){
     varlist->var->value.i = 0;
   } else {
-    varlist->var->value = dispatchExpression(r);
+    varlist->var->value = dispatchNode(r);
   }
 
   varlist->next = n->block->data.block.vars;
@@ -239,7 +225,7 @@ static Value execAssignment(struct Node *n)
 
   struct Node *r = n->data.assignment.right;
 
-  setVariableValue(n->data.s, dispatchExpression(r), n->block);
+  setVariableValue(n->data.s, dispatchNode(r), n->block);
 
   val.i = 0;
 
@@ -254,7 +240,7 @@ static Value execBlock(struct Node *n)
   Value val;
 
   for (int i = 0; i < n->data.block.count; i++){
-    dispatchExpression(n->data.block.statements[i]);
+    dispatchNode(n->data.block.statements[i]);
   }
 
   val.i = 0;
@@ -270,7 +256,7 @@ static Value execStatement(struct Node *n)
   Value val;
 
   for (int i = 0; i < n->data.statement.count; i++){
-    dispatchExpression(n->data.statement.nodes[i]);
+    dispatchNode(n->data.statement.nodes[i]);
   }
   
   val.i = 0;
@@ -286,7 +272,7 @@ static Value execCall(struct Node *n)
   Value val;
 
   onlyOut(n->data.call.name);
-  printf("%d\n", dispatchExpression(n->data.call.param).i);
+  printf("%d\n", dispatchNode(n->data.call.param).i);
 
   val.i = 0;
 
@@ -311,8 +297,8 @@ static Value execWhilst(struct Node *n)
   assert(c);
   assert(s);
 
-  while (dispatchExpression(c).i){
-    dispatchExpression(s);
+  while (dispatchNode(c).i){
+    dispatchNode(s);
   }
 
   val.i = 0;
@@ -333,8 +319,8 @@ static Value execAn(struct Node *n)
   assert(c);
   assert(s);
 
-  if (dispatchExpression(c).i){
-    dispatchExpression(s);
+  if (dispatchNode(c).i){
+    dispatchNode(s);
   }
 
   val.i = 0;
