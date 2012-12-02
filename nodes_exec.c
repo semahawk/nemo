@@ -35,17 +35,6 @@ static Value execIf(struct Node *);
 static Value execBlock(struct Node *);
 static Value execStatement(struct Node *);
 
-static void freeTermExpression(struct Node *);
-static void freeBinExpression(struct Node *);
-static void freeUnExpression(struct Node *);
-static void freeDeclaration(struct Node *);
-static void freeAssignment(struct Node *);
-static void freeCall(struct Node *);
-static void freeWhile(struct Node *);
-static void freeIf(struct Node *);
-static void freeBlock(struct Node *);
-static void freeStatement(struct Node *);
-
 static Value(*nodeExecs[])(struct Node *) =
 {
   execTermExpression,
@@ -61,36 +50,12 @@ static Value(*nodeExecs[])(struct Node *) =
   execIf
 };
 
-static void(*nodeFrees[])(struct Node *) =
-{
-  freeTermExpression,
-  freeTermExpression,
-  freeBinExpression,
-  freeUnExpression,
-  freeDeclaration,
-  freeAssignment,
-  freeBlock,
-  freeStatement,
-  freeCall,
-  freeWhile,
-  freeIf
-};
-
 static Value dispatchNode(struct Node *n)
 {
   assert(n);
   assert(nodeExecs[n->kind]);
 
   return nodeExecs[n->kind](n);
-}
-
-static void freeNode(struct Node *n)
-{
-  assert(n);
-  assert(nodeFrees[n->kind]);
-
-  nodeFrees[n->kind](n);
-  n = NULL;
 }
 
 static void onlyName(const char *name, const char *ref, const char *kind)
@@ -390,139 +355,5 @@ static Value execIf(struct Node *n)
 void execNodes(struct Node *nodest)
 {
   execBlock(nodest);
-}
-
-void freeNodes(struct Node *nodest)
-{
-  assert(nodest);
-  assert(nt_BLOCK == nodest->kind);
-
-  freeNode(nodest);
-
-  nodest = NULL;
-}
-
-void freeTermExpression(struct Node *n)
-{
-  assert(n);
-
-  debug("freeing id/integer node at %p", n);
-
-  free(n);
-}
-
-void freeBinExpression(struct Node *n)
-{
-  assert(n);
-  assert(nt_BINARYOP == n->kind);
-
-  debug("freeing binary operation node at %p", n);
-
-  freeNode(n->data.binaryop.left);
-  freeNode(n->data.binaryop.right);
-
-  free(n);
-}
-
-void freeUnExpression(struct Node *n)
-{
-  assert(n);
-  assert(nt_UNARYOP == n->kind);
-
-  debug("freeing unary operation node at %p", n);
-
-  freeNode(n->data.unaryop.expression);
-
-  free(n);
-}
-
-void freeDeclaration(struct Node *n)
-{
-  assert(n);
-  assert(nt_DECLARATION == n->kind);
-
-  debug("freeing declaration node at %p", n);
-
-  freeNode(n->data.declaration.right);
-
-  free(n);
-}
-
-void freeAssignment(struct Node *n)
-{
-  assert(n);
-  assert(nt_ASSIGNMENT == n->kind);
-
-  debug("freeing assignment node at %p", n);
-
-  freeNode(n->data.assignment.right);
-
-  free(n);
-}
-
-void freeCall(struct Node *n)
-{
-  assert(n);
-  assert(nt_CALL == n->kind);
-
-  debug("freeing call node at %p", n);
-
-  freeNode(n->data.call.param);
-
-  free(n);
-}
-
-void freeWhile(struct Node *n)
-{
-  assert(n);
-  assert(nt_WHILE == n->kind);
-
-  debug("freeing whilst node at %p", n);
-
-  freeNode(n->data.whilee.cond);
-  freeNode(n->data.whilee.statements);
-
-  free(n);
-}
-
-void freeIf(struct Node *n)
-{
-  assert(n);
-  assert(nt_IF == n->kind);
-
-  debug("freeing an node at %p", n);
-
-  freeNode(n->data.iff.cond);
-  freeNode(n->data.iff.statements);
-
-  free(n);
-}
-
-void freeBlock(struct Node *n)
-{
-  assert(n);
-  assert(nt_BLOCK == n->kind);
-
-  debug("freeing block node at %p", n);
-
-  for (int i = 0; i < n->data.block.count; i++){
-    freeNode(n->data.block.statements[i]);
-  }
-
-  free(n);
-}
-
-void freeStatement(struct Node *n)
-{
-  assert(n);
-  assert(nt_STATEMENT == n->kind);
-
-  debug("freeing statement node at %p", n);
-
-  for (int i = 0; i < n->data.statement.count; i++){
-    freeNode(n->data.statement.nodes[i]);
-  }
-
-  free(n);
 }
 
