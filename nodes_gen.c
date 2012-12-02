@@ -70,10 +70,29 @@ struct Node *binaryop(struct Node *left, struct Node *right, char op)
   debug("creating binary operation node <op: '%c'> at 0x%x", op, new);
 
   new->kind = nt_BINARYOP;
-  new->data.expression.left = left;
-  new->data.expression.right = right;
-  new->data.expression.op = op;
+  new->data.binaryop.left = left;
+  new->data.binaryop.right = right;
+  new->data.binaryop.op = op;
   new->block = NULL;
+
+  return new;
+}
+
+struct Node *unaryop(struct Node *left, Unary op, struct Node *currentblock)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("creating unary operation node <op: '%d'> at 0x%x", op, new);
+
+  if (left->kind != nt_ID){
+    cerror("trying to change value of a constant object");
+    exit(1);
+  }
+
+  new->kind = nt_UNARYOP;
+  new->data.unaryop.expression = left;
+  new->data.unaryop.op = op;
+  new->block = currentblock;
 
   return new;
 }

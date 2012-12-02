@@ -9,6 +9,11 @@
 
 #include "nemo.h"
 
+typedef enum {
+  UNARY_POSTINC,
+  UNARY_POSTDEC
+} Unary;
+
 typedef union {
   int i;
 } Value;
@@ -22,6 +27,7 @@ struct Node {
     nt_ID,
     nt_INTEGER,
     nt_BINARYOP,
+    nt_UNARYOP,
     nt_DECLARATION,
     nt_ASSIGNMENT,
     nt_BLOCK,
@@ -39,7 +45,12 @@ struct Node {
     struct {
       struct Node *left, *right;
       char op;
-    } expression;
+    } binaryop;
+
+    struct {
+      struct Node *expression;
+      Unary op;
+    } unaryop;
 
     struct {
       Type type;
@@ -93,6 +104,7 @@ struct Node *emptyblock(struct Node *);
        void  blockappend(struct Node *, struct Node *);
 struct Node *statement(struct Node *, struct Node *);
 struct Node *binaryop(struct Node *, struct Node *, char);
+struct Node *unaryop(struct Node *, Unary, struct Node *);
 struct Node *call(char *, struct Node *);
 struct Node *whilst(struct Node *, struct Node *);
 struct Node *an(struct Node *, struct Node *);

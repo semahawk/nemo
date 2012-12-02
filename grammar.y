@@ -40,11 +40,12 @@
 %token <s> VAR_IDENT IDENT
 %type <node> source stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt
-%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr
+%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr
 %type <type> type
 
 %token TYPE_INT
 %token WHILST AN
+%token PLUSPLUS MINUSMINUS
 
 %right '='
 %left  '<' '>'
@@ -78,6 +79,7 @@ expr_stmt
 
 expr
     : binary_expr     { $$ = $1; }
+    | unary_expr      { $$ = $1; }
     | assign_expr     { $$ = $1; }
     | call_expr       { $$ = $1; }
     | decl_expr       { $$ = $1; }
@@ -118,13 +120,18 @@ select_stmt
     ;
 
 binary_expr
-    : expr '+' expr  { $$ = binaryop($1, $3, '+'); }
-    | expr '-' expr  { $$ = binaryop($1, $3, '-'); }
-    | expr '*' expr  { $$ = binaryop($1, $3, '*'); }
-    | expr '/' expr  { $$ = binaryop($1, $3, '/'); }
-    | expr '%' expr  { $$ = binaryop($1, $3, '%'); }
-    | expr '>' expr  { $$ = binaryop($1, $3, '>'); }
-    | expr '<' expr  { $$ = binaryop($1, $3, '<'); }
+    : expr '+' expr    { $$ = binaryop($1, $3, '+'); }
+    | expr '-' expr    { $$ = binaryop($1, $3, '-'); }
+    | expr '*' expr    { $$ = binaryop($1, $3, '*'); }
+    | expr '/' expr    { $$ = binaryop($1, $3, '/'); }
+    | expr '%' expr    { $$ = binaryop($1, $3, '%'); }
+    | expr '>' expr    { $$ = binaryop($1, $3, '>'); }
+    | expr '<' expr    { $$ = binaryop($1, $3, '<'); }
+    ;
+
+unary_expr
+    : expr PLUSPLUS    { $$ = unaryop($1, UNARY_POSTINC, currentblock); }
+    | expr MINUSMINUS  { $$ = unaryop($1, UNARY_POSTDEC, currentblock); }
     ;
 
 type

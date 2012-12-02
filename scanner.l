@@ -38,6 +38,8 @@ D [0-9]
 
 "\n"                     { count(); ++linenum; }
 
+"++"                     { count(); return PLUSPLUS; }
+"--"                     { count(); return MINUSMINUS; }
 "+"                      { count(); return '+'; }
 "-"                      { count(); return '-'; }
 "*"                      { count(); return '*'; }

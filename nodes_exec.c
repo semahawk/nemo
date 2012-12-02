@@ -26,6 +26,7 @@ struct VariableList {
 
 static Value execTermExpression(struct Node *);
 static Value execBinExpression(struct Node *);
+static Value execUnExpression(struct Node *);
 static Value execDeclaration(struct Node *);
 static Value execAssignment(struct Node *);
 static Value execCall(struct Node *);
@@ -39,6 +40,7 @@ static Value(*nodeExecs[])(struct Node *) =
   execTermExpression,
   execTermExpression,
   execBinExpression,
+  execUnExpression,
   execDeclaration,
   execAssignment,
   execBlock,
@@ -141,11 +143,11 @@ static Value execBinExpression(struct Node *n)
 {
   assert(nt_BINARYOP == n->kind);
 
-  const Value left = dispatchNode(n->data.expression.left);
-  const Value right = dispatchNode(n->data.expression.right);
+  const Value left = dispatchNode(n->data.binaryop.left);
+  const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
 
-  switch (n->data.expression.op){
+  switch (n->data.binaryop.op){
     case '+': ret.i = left.i + right.i;
               break;
     case '-': ret.i = left.i - right.i;
@@ -165,7 +167,32 @@ static Value execBinExpression(struct Node *n)
     case '<': ret.i = left.i < right.i;
               break;
 
-    default: cerror("unknown operator '%c'", n->data.expression.op);
+    default: cerror("unknown operator '%c'", n->data.binaryop.op);
+             exit(1);
+  }
+
+  return ret;
+}
+
+static Value execUnExpression(struct Node *n)
+{
+  assert(nt_UNARYOP == n->kind);
+
+  const Value expr = dispatchNode(n->data.unaryop.expression);
+  const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
+
+  Value ret;
+
+  switch (n->data.unaryop.op){
+    case UNARY_POSTINC:
+      ret.i = currval.i + 1;
+      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+      break;
+    case UNARY_POSTDEC:
+      ret.i = currval.i - 1;
+      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+      break;
+    default: cerror("unknown unary expression");
              exit(1);
   }
 
