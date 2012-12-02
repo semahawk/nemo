@@ -38,7 +38,7 @@
 
 %token <i> INTEGER
 %token <s> VAR_IDENT IDENT
-%type <node> source stmts stmt
+%type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt
 %type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr
 %type <type> type
@@ -51,6 +51,8 @@
 %left  '<' '>'
 %left  '+' '-'
 %left  '*' '/' '%'
+%nonassoc PLUSPLUS MINUSMINUS
+%left  '('
 
 %start source
 
@@ -132,6 +134,8 @@ binary_expr
 unary_expr
     : expr PLUSPLUS    { $$ = unaryop($1, UNARY_POSTINC, currentblock); }
     | expr MINUSMINUS  { $$ = unaryop($1, UNARY_POSTDEC, currentblock); }
+    | PLUSPLUS expr    { $$ = unaryop($2, UNARY_PREINC, currentblock); }
+    | MINUSMINUS expr  { $$ = unaryop($2, UNARY_PREDEC, currentblock); }
     ;
 
 type

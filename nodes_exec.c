@@ -178,25 +178,29 @@ static Value execUnExpression(struct Node *n)
 {
   assert(nt_UNARYOP == n->kind);
 
-  const Value expr = dispatchNode(n->data.unaryop.expression);
   const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
-
   Value ret;
 
   switch (n->data.unaryop.op){
     case UNARY_POSTINC:
       ret.i = currval.i + 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-      break;
+      return ret;
     case UNARY_POSTDEC:
       ret.i = currval.i - 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-      break;
+      return ret;
+    case UNARY_PREINC:
+      ret.i = currval.i + 1;
+      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+      return currval;
+    case UNARY_PREDEC:
+      ret.i = currval.i - 1;
+      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+      return currval;
     default: cerror("unknown unary expression");
              exit(1);
   }
-
-  return ret;
 }
 
 static Value execDeclaration(struct Node *n)

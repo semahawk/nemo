@@ -11,7 +11,9 @@
 
 typedef enum {
   UNARY_POSTINC,
-  UNARY_POSTDEC
+  UNARY_POSTDEC,
+  UNARY_PREINC,
+  UNARY_PREDEC,
 } Unary;
 
 typedef union {
