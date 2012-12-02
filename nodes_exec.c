@@ -11,19 +11,7 @@
 #include "nodes_gen.h"
 #include "vars.h"
 
-// keep track of how many vars we've declared
-int varscount = 0;
-
-/*struct Variable {*/
-  /*Value value;*/
-  /*char *name;*/
-  /*Type type;*/
-/*};*/
-
-/*struct VariableList {*/
-  /*struct Variable *var;*/
-  /*struct VariableList *next;*/
-/*};*/
+extern int varscount = 0;
 
 Value(*nodeExecs[])(struct Node *) =
 {
