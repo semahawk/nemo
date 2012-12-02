@@ -81,11 +81,11 @@ int main(int argc, char *argv[])
   do {
     yyparse();
     if (!nodest){
-      error("compilation failed due to some errors:");
+      error("execution failed due to some errors");
       exit(1);
     }
     execNodes(nodest);
-    // TODO: destroy the AST
+    freeNodes(nodest);
   } while (!feof(yyin));
 
   return 0;

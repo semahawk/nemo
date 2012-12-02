@@ -12,5 +12,7 @@ struct Node;
 
 // executes the nodes
 void execNodes(struct Node *);
+// frees the nodes
+void freeNodes(struct Node *);
 
 #endif // NODES_EXEC_H
