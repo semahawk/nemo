@@ -24,18 +24,7 @@ struct VariableList {
   struct VariableList *next;
 };
 
-static Value execTermExpression(struct Node *);
-static Value execBinExpression(struct Node *);
-static Value execUnExpression(struct Node *);
-static Value execDeclaration(struct Node *);
-static Value execAssignment(struct Node *);
-static Value execCall(struct Node *);
-static Value execWhile(struct Node *);
-static Value execIf(struct Node *);
-static Value execBlock(struct Node *);
-static Value execStatement(struct Node *);
-
-static Value(*nodeExecs[])(struct Node *) =
+Value(*nodeExecs[])(struct Node *) =
 {
   execTermExpression,
   execTermExpression,
@@ -50,7 +39,7 @@ static Value(*nodeExecs[])(struct Node *) =
   execIf
 };
 
-static Value dispatchNode(struct Node *n)
+Value dispatchNode(struct Node *n)
 {
   assert(n);
   assert(nodeExecs[n->kind]);
@@ -58,7 +47,12 @@ static Value dispatchNode(struct Node *n)
   return nodeExecs[n->kind](n);
 }
 
-static void onlyName(const char *name, const char *ref, const char *kind)
+void execNodes(struct Node *nodest)
+{
+  execBlock(nodest);
+}
+
+void onlyName(const char *name, const char *ref, const char *kind)
 {
   if (strcmp(ref, name)){
     cerror("Nemo only knows the %s '%s', not '%s' ", kind, ref, name);
@@ -66,7 +60,7 @@ static void onlyName(const char *name, const char *ref, const char *kind)
   }
 }
 
-static Value getVariableValue(const char *name, struct Node *block)
+Value getVariableValue(const char *name, struct Node *block)
 {
   struct Node *b;
   struct VariableList *p;
@@ -83,7 +77,7 @@ static Value getVariableValue(const char *name, struct Node *block)
   exit(1);
 }
 
-static void setVariableValue(const char *name, Value value, struct Node *block)
+void setVariableValue(const char *name, Value value, struct Node *block)
 {
   struct Node *b;
   struct VariableList *p;
@@ -97,7 +91,7 @@ static void setVariableValue(const char *name, Value value, struct Node *block)
   }
 }
 
-static bool variableAlreadySet(const char *name, struct Node *block)
+bool variableAlreadySet(const char *name, struct Node *block)
 {
   struct Node *b;
   struct VariableList *p;
@@ -113,12 +107,12 @@ static bool variableAlreadySet(const char *name, struct Node *block)
   return false;
 }
 
-static void onlyOut(const char *name)
+void onlyOut(const char *name)
 {
   onlyName(name, "out", "function");
 }
 
-static Value execTermExpression(struct Node *n)
+Value execTermExpression(struct Node *n)
 {
   // TODO: refactor to an execNameExp and execVal functions
   assert(n);
@@ -139,7 +133,7 @@ static Value execTermExpression(struct Node *n)
   }
 }
 
-static Value execBinExpression(struct Node *n)
+Value execBinExpression(struct Node *n)
 {
   assert(nt_BINARYOP == n->kind);
 
@@ -174,7 +168,7 @@ static Value execBinExpression(struct Node *n)
   return ret;
 }
 
-static Value execUnExpression(struct Node *n)
+Value execUnExpression(struct Node *n)
 {
   assert(nt_UNARYOP == n->kind);
 
@@ -203,7 +197,7 @@ static Value execUnExpression(struct Node *n)
   }
 }
 
-static Value execDeclaration(struct Node *n)
+Value execDeclaration(struct Node *n)
 {
   assert(n);
   assert(nt_DECLARATION == n->kind);
@@ -240,7 +234,7 @@ static Value execDeclaration(struct Node *n)
   return val;
 }
 
-static Value execAssignment(struct Node *n)
+Value execAssignment(struct Node *n)
 {
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
@@ -261,7 +255,7 @@ static Value execAssignment(struct Node *n)
   return val;
 }
 
-static Value execBlock(struct Node *n)
+Value execBlock(struct Node *n)
 {
   assert(n);
   assert(nt_BLOCK == n->kind);
@@ -277,7 +271,7 @@ static Value execBlock(struct Node *n)
   return val;
 }
 
-static Value execStatement(struct Node *n)
+Value execStatement(struct Node *n)
 {
   assert(n);
   assert(nt_STATEMENT == n->kind);
@@ -293,7 +287,7 @@ static Value execStatement(struct Node *n)
   return val;
 }
 
-static Value execCall(struct Node *n)
+Value execCall(struct Node *n)
 {
   assert(n);
   assert(nt_CALL == n->kind);
@@ -308,7 +302,7 @@ static Value execCall(struct Node *n)
   return val;
 }
 
-static Value execWhile(struct Node *n)
+Value execWhile(struct Node *n)
 {
   assert(n);
   assert(nt_WHILE == n->kind);
@@ -330,7 +324,7 @@ static Value execWhile(struct Node *n)
   return val;
 }
 
-static Value execIf(struct Node *n)
+Value execIf(struct Node *n)
 {
   assert(n);
   assert(nt_IF == n->kind);
@@ -350,10 +344,5 @@ static Value execIf(struct Node *n)
   val.i = 0;
 
   return val;
-}
-
-void execNodes(struct Node *nodest)
-{
-  execBlock(nodest);
 }
 

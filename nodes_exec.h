@@ -8,11 +8,20 @@
 #ifndef NODES_EXEC_H
 #define NODES_EXEC_H
 
-struct Node;
+#include "nodes_gen.h"
 
-// executes the nodes
+Value execTermExpression(struct Node *);
+Value execBinExpression(struct Node *);
+Value execUnExpression(struct Node *);
+Value execDeclaration(struct Node *);
+Value execAssignment(struct Node *);
+Value execCall(struct Node *);
+Value execWhile(struct Node *);
+Value execIf(struct Node *);
+Value execBlock(struct Node *);
+Value execStatement(struct Node *);
+
 void execNodes(struct Node *);
-// frees the nodes
 void freeNodes(struct Node *);
 
 #endif // NODES_EXEC_H
