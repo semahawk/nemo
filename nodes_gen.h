@@ -35,8 +35,8 @@ struct Node {
     nt_BLOCK,
     nt_STATEMENT,
     nt_CALL,
-    nt_WHILST,
-    nt_AN,
+    nt_WHILE,
+    nt_IF,
     nt_LASTELEMENT
   } kind;
 
@@ -82,7 +82,7 @@ struct Node {
     struct {
       struct Node *cond;
       struct Node *statements;
-    } whilst;
+    } whilee;
 
     struct {
       char *name;
@@ -92,7 +92,7 @@ struct Node {
     struct {
       struct Node *cond;
       struct Node *statements;
-    } an;
+    } iff;
   } data;
 
   // block in which the node was created in
@@ -100,17 +100,17 @@ struct Node {
   struct Node *block;
 };
 
-struct Node *declaration(Type, char *, struct Node *, struct Node *);
-struct Node *assignment(char *, struct Node *, struct Node *);
-struct Node *emptyblock(struct Node *);
+struct Node *genDeclaration(Type, char *, struct Node *, struct Node *);
+struct Node *genAssignment(char *, struct Node *, struct Node *);
+struct Node *genEmptyBlock(struct Node *);
        void  blockappend(struct Node *, struct Node *);
-struct Node *statement(struct Node *, struct Node *);
-struct Node *binaryop(struct Node *, struct Node *, char);
-struct Node *unaryop(struct Node *, Unary, struct Node *);
-struct Node *call(char *, struct Node *);
-struct Node *whilst(struct Node *, struct Node *);
-struct Node *an(struct Node *, struct Node *);
-struct Node *expByNum(int);
-struct Node *expByName(char *, struct Node *);
+struct Node *genStatement(struct Node *, struct Node *);
+struct Node *genBinaryop(struct Node *, struct Node *, char);
+struct Node *genUnaryop(struct Node *, Unary, struct Node *);
+struct Node *genCall(char *, struct Node *);
+struct Node *genWhile(struct Node *, struct Node *);
+struct Node *genIf(struct Node *, struct Node *);
+struct Node *genExpByNum(int);
+struct Node *genExpByName(char *, struct Node *);
 
 #endif // NODES_GEN_H

@@ -8,7 +8,7 @@
 #include "handy.h"
 #include "nodes_gen.h"
 
-struct Node *declaration(Type type, char *name, struct Node *val, struct Node *block)
+struct Node *genDeclaration(Type type, char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -23,7 +23,7 @@ struct Node *declaration(Type type, char *name, struct Node *val, struct Node *b
   return new;
 }
 
-struct Node *assignment(char *name, struct Node *val, struct Node *block)
+struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -37,7 +37,7 @@ struct Node *assignment(char *name, struct Node *val, struct Node *block)
   return new;
 }
 
-struct Node *expByNum(int val)
+struct Node *genExpByNum(int val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -50,7 +50,7 @@ struct Node *expByNum(int val)
   return new;
 }
 
-struct Node *expByName(char *name, struct Node *block)
+struct Node *genExpByName(char *name, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -63,7 +63,7 @@ struct Node *expByName(char *name, struct Node *block)
   return new;
 }
 
-struct Node *binaryop(struct Node *left, struct Node *right, char op)
+struct Node *genBinaryop(struct Node *left, struct Node *right, char op)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -78,7 +78,7 @@ struct Node *binaryop(struct Node *left, struct Node *right, char op)
   return new;
 }
 
-struct Node *unaryop(struct Node *left, Unary op, struct Node *currentblock)
+struct Node *genUnaryop(struct Node *left, Unary op, struct Node *currentblock)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -97,7 +97,7 @@ struct Node *unaryop(struct Node *left, Unary op, struct Node *currentblock)
   return new;
 }
 
-struct Node *emptyblock(struct Node *parent)
+struct Node *genEmptyBlock(struct Node *parent)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -122,7 +122,7 @@ void blockappend(struct Node *currentblock, struct Node *toappend)
   debug("appending statement (%p) to block node (%p)", toappend, currentblock);
 }
 
-struct Node *statement(struct Node *new, struct Node *toappend)
+struct Node *genStatement(struct Node *new, struct Node *toappend)
 {
   if (!new){
     new = myalloc(sizeof(struct Node));
@@ -142,35 +142,35 @@ struct Node *statement(struct Node *new, struct Node *toappend)
   return new;
 }
 
-struct Node *whilst(struct Node *cond, struct Node *stmt)
+struct Node *genWhile(struct Node *cond, struct Node *stmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
   debug("creating whilst node at 0x%x", new);
 
-  new->kind = nt_WHILST;
-  new->data.whilst.cond = cond;
-  new->data.whilst.statements = stmt;
+  new->kind = nt_WHILE;
+  new->data.whilee.cond = cond;
+  new->data.whilee.statements = stmt;
   new->block = NULL;
 
   return new;
 }
 
-struct Node *an(struct Node *cond, struct Node *stmt)
+struct Node *genIf(struct Node *cond, struct Node *stmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
   debug("creating an node at 0x%x", new);
 
-  new->kind = nt_AN;
-  new->data.an.cond = cond;
-  new->data.an.statements = stmt;
+  new->kind = nt_IF;
+  new->data.iff.cond = cond;
+  new->data.iff.statements = stmt;
   new->block = NULL;
 
   return new;
 }
 
-struct Node *call(char *name, struct Node *param)
+struct Node *genCall(char *name, struct Node *param)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 

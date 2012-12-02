@@ -44,7 +44,7 @@
 %type <type> type
 
 %token TYPE_INT
-%token WHILST AN
+%token WHILE IF
 %token PLUSPLUS MINUSMINUS
 
 %right '='
@@ -59,7 +59,7 @@
 %%
 
 source
-    : { currentblock = nodest = emptyblock(NULL); } stmts
+    : { currentblock = nodest = genEmptyBlock(NULL); } stmts
     ;
 
 stmts
@@ -86,56 +86,56 @@ expr
     | call_expr       { $$ = $1; }
     | decl_expr       { $$ = $1; }
     | init_expr       { $$ = $1; }
-    | VAR_IDENT       { $$ = expByName($1, currentblock); }
-    | INTEGER         { $$ = expByNum($1); }
+    | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
+    | INTEGER         { $$ = genExpByNum($1); }
     | '(' expr ')'    { $$ = $2; }
     ;
 
 comp_stmt
     : '{' '}'         { $$ = 0; }
-    | '{' { $<node>$ = currentblock; currentblock = emptyblock(currentblock); } stmts '}'
+    | '{' { $<node>$ = currentblock; currentblock = genEmptyBlock(currentblock); } stmts '}'
           { $<node>$ = currentblock; currentblock = $<node>2; }
     ;
 
 decl_expr
-    : type VAR_IDENT                 { $$ = declaration($1, $2, NULL, currentblock); }
+    : type VAR_IDENT                 { $$ = genDeclaration($1, $2, NULL, currentblock); }
     ;
 
 init_expr
-    : type VAR_IDENT  '=' expr       { $$ = declaration($1, $2, $4, currentblock); }
+    : type VAR_IDENT  '=' expr       { $$ = genDeclaration($1, $2, $4, currentblock); }
     ;
 
 assign_expr
-    : VAR_IDENT  '=' expr            { $$ = assignment($1, $3, currentblock); }
+    : VAR_IDENT  '=' expr            { $$ = genAssignment($1, $3, currentblock); }
     ;
 
 call_expr
-    : IDENT '(' expr ')'         { $$ = call($1, $3); }
+    : IDENT '(' expr ')'         { $$ = genCall($1, $3); }
     ;
 
 iter_stmt
-    : WHILST '(' expr ')' stmt { $$ = whilst($3, $5); }
+    : WHILE '(' expr ')' stmt { $$ = genWhile($3, $5); }
     ;
 
 select_stmt
-    : AN '(' expr ')' stmt     { $$ = an($3, $5); }
+    : IF '(' expr ')' stmt     { $$ = genIf($3, $5); }
     ;
 
 binary_expr
-    : expr '+' expr    { $$ = binaryop($1, $3, '+'); }
-    | expr '-' expr    { $$ = binaryop($1, $3, '-'); }
-    | expr '*' expr    { $$ = binaryop($1, $3, '*'); }
-    | expr '/' expr    { $$ = binaryop($1, $3, '/'); }
-    | expr '%' expr    { $$ = binaryop($1, $3, '%'); }
-    | expr '>' expr    { $$ = binaryop($1, $3, '>'); }
-    | expr '<' expr    { $$ = binaryop($1, $3, '<'); }
+    : expr '+' expr    { $$ = genBinaryop($1, $3, '+'); }
+    | expr '-' expr    { $$ = genBinaryop($1, $3, '-'); }
+    | expr '*' expr    { $$ = genBinaryop($1, $3, '*'); }
+    | expr '/' expr    { $$ = genBinaryop($1, $3, '/'); }
+    | expr '%' expr    { $$ = genBinaryop($1, $3, '%'); }
+    | expr '>' expr    { $$ = genBinaryop($1, $3, '>'); }
+    | expr '<' expr    { $$ = genBinaryop($1, $3, '<'); }
     ;
 
 unary_expr
-    : expr PLUSPLUS    { $$ = unaryop($1, UNARY_POSTINC, currentblock); }
-    | expr MINUSMINUS  { $$ = unaryop($1, UNARY_POSTDEC, currentblock); }
-    | PLUSPLUS expr    { $$ = unaryop($2, UNARY_PREINC, currentblock); }
-    | MINUSMINUS expr  { $$ = unaryop($2, UNARY_PREDEC, currentblock); }
+    : expr PLUSPLUS    { $$ = genUnaryop($1, UNARY_POSTINC, currentblock); }
+    | expr MINUSMINUS  { $$ = genUnaryop($1, UNARY_POSTDEC, currentblock); }
+    | PLUSPLUS expr    { $$ = genUnaryop($2, UNARY_PREINC, currentblock); }
+    | MINUSMINUS expr  { $$ = genUnaryop($2, UNARY_PREDEC, currentblock); }
     ;
 
 type

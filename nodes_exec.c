@@ -30,8 +30,8 @@ static Value execUnExpression(struct Node *);
 static Value execDeclaration(struct Node *);
 static Value execAssignment(struct Node *);
 static Value execCall(struct Node *);
-static Value execWhilst(struct Node *);
-static Value execAn(struct Node *);
+static Value execWhile(struct Node *);
+static Value execIf(struct Node *);
 static Value execBlock(struct Node *);
 static Value execStatement(struct Node *);
 
@@ -41,8 +41,8 @@ static void freeUnExpression(struct Node *);
 static void freeDeclaration(struct Node *);
 static void freeAssignment(struct Node *);
 static void freeCall(struct Node *);
-static void freeWhilst(struct Node *);
-static void freeAn(struct Node *);
+static void freeWhile(struct Node *);
+static void freeIf(struct Node *);
 static void freeBlock(struct Node *);
 static void freeStatement(struct Node *);
 
@@ -57,8 +57,8 @@ static Value(*nodeExecs[])(struct Node *) =
   execBlock,
   execStatement,
   execCall,
-  execWhilst,
-  execAn
+  execWhile,
+  execIf
 };
 
 static void(*nodeFrees[])(struct Node *) =
@@ -72,8 +72,8 @@ static void(*nodeFrees[])(struct Node *) =
   freeBlock,
   freeStatement,
   freeCall,
-  freeWhilst,
-  freeAn
+  freeWhile,
+  freeIf
 };
 
 static Value dispatchNode(struct Node *n)
@@ -343,15 +343,15 @@ static Value execCall(struct Node *n)
   return val;
 }
 
-static Value execWhilst(struct Node *n)
+static Value execWhile(struct Node *n)
 {
   assert(n);
-  assert(nt_WHILST == n->kind);
+  assert(nt_WHILE == n->kind);
 
   Value val;
 
-  struct Node * const c = n->data.whilst.cond;
-  struct Node * const s = n->data.whilst.statements;
+  struct Node * const c = n->data.whilee.cond;
+  struct Node * const s = n->data.whilee.statements;
 
   assert(c);
   assert(s);
@@ -365,15 +365,15 @@ static Value execWhilst(struct Node *n)
   return val;
 }
 
-static Value execAn(struct Node *n)
+static Value execIf(struct Node *n)
 {
   assert(n);
-  assert(nt_AN == n->kind);
+  assert(nt_IF == n->kind);
 
   Value val;
 
-  struct Node * const c = n->data.an.cond;
-  struct Node * const s = n->data.an.statements;
+  struct Node * const c = n->data.iff.cond;
+  struct Node * const s = n->data.iff.statements;
 
   assert(c);
   assert(s);
@@ -472,28 +472,28 @@ void freeCall(struct Node *n)
   free(n);
 }
 
-void freeWhilst(struct Node *n)
+void freeWhile(struct Node *n)
 {
   assert(n);
-  assert(nt_WHILST == n->kind);
+  assert(nt_WHILE == n->kind);
 
   debug("freeing whilst node at %p", n);
 
-  freeNode(n->data.whilst.cond);
-  freeNode(n->data.whilst.statements);
+  freeNode(n->data.whilee.cond);
+  freeNode(n->data.whilee.statements);
 
   free(n);
 }
 
-void freeAn(struct Node *n)
+void freeIf(struct Node *n)
 {
   assert(n);
-  assert(nt_AN == n->kind);
+  assert(nt_IF == n->kind);
 
   debug("freeing an node at %p", n);
 
-  freeNode(n->data.an.cond);
-  freeNode(n->data.an.statements);
+  freeNode(n->data.iff.cond);
+  freeNode(n->data.iff.statements);
 
   free(n);
 }

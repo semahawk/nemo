@@ -33,8 +33,8 @@ D [0-9]
 
 "int"                    { count(); return TYPE_INT; }
 
-"an"                     { count(); return AN; }
-"whilst"                 { count(); return WHILST; }
+"if"                     { count(); return IF; }
+"while"                  { count(); return WHILE; }
 
 "\n"                     { count(); ++linenum; }
 
