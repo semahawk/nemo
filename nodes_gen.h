@@ -34,6 +34,11 @@ struct ArgList {
   struct ArgList *next;
 };
 
+struct ParamList {
+  struct Node *param;
+  struct ParamList *next;
+};
+
 struct Node {
   enum {
     nt_ID,
@@ -97,7 +102,7 @@ struct Node {
 
     struct {
       char *name;
-      struct Node *param;
+      struct ParamList *params;
     } call;
 
     struct {
@@ -126,7 +131,7 @@ struct Node *genEmptyBlock(struct Node *);
 struct Node *genStatement(struct Node *, struct Node *);
 struct Node *genBinaryop(struct Node *, struct Node *, char);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
-struct Node *genCall(char *, struct Node *);
+struct Node *genCall(char *, struct ParamList *);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *);
 struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
@@ -134,5 +139,6 @@ struct Node *genExpByNum(int);
 struct Node *genExpByName(char *, struct Node *);
 
 struct ArgList *genArgList(Type, char *, struct ArgList *);
+struct ParamList *genParamList(struct Node *, struct ParamList *);
 
 #endif // NODES_GEN_H

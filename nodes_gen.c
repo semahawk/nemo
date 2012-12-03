@@ -202,7 +202,20 @@ struct ArgList *genArgList(Type type, char *name, struct ArgList *head)
   return arglist;
 }
 
-struct Node *genCall(char *name, struct Node *param)
+struct ParamList *genParamList(struct Node *param, struct ParamList *head)
+{
+  struct ParamList *new = myalloc(sizeof(struct ParamList));
+
+  debug("creating parameter list at %p", new);
+
+  new->param = param;
+  new->next = head;
+  head = new;
+
+  return new;
+}
+
+struct Node *genCall(char *name, struct ParamList *params)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -210,8 +223,7 @@ struct Node *genCall(char *name, struct Node *param)
 
   new->kind = nt_CALL;
   new->data.call.name = name;
-  new->data.call.param = param;
-  // TODO: it will be needed later on
+  new->data.call.params = params;
   new->block = NULL;
 
   return new;
