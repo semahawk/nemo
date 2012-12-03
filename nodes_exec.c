@@ -55,6 +55,8 @@ Value execTermExpression(struct Node *n)
   // TODO: refactor to an execNameExp and execVal functions
   assert(n);
 
+  debug("executing id/integer expression node at %p", n);
+
   if (nt_INTEGER == n->kind){
     return n->data.value;
   } else {
@@ -78,6 +80,8 @@ Value execBinExpression(struct Node *n)
   const Value left = dispatchNode(n->data.binaryop.left);
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
+
+  debug("executing binary operation node at %p", n);
 
   switch (n->data.binaryop.op){
     case '+': ret.i = left.i + right.i;
@@ -110,6 +114,8 @@ Value execUnExpression(struct Node *n)
 {
   assert(nt_UNARYOP == n->kind);
 
+  debug("executing unary operation node at %p", n);
+
   const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
   Value ret;
 
@@ -139,6 +145,8 @@ Value execDeclaration(struct Node *n)
 {
   assert(n);
   assert(nt_DECLARATION == n->kind);
+
+  debug("executing declaration node at %p", n);
 
   if (variableAlreadySet(n->data.declaration.name, n->block)){
     cerror("variable '%s' already declared", n->data.declaration.name);
@@ -177,6 +185,8 @@ Value execAssignment(struct Node *n)
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
 
+  debug("executing assignment node at %p", n);
+
   Value val;
 
   if (!variableAlreadySet(n->data.s, n->block)){
@@ -198,6 +208,8 @@ Value execBlock(struct Node *n)
   assert(n);
   assert(nt_BLOCK == n->kind);
 
+  debug("executing block node at %p", n);
+
   Value val;
 
   for (int i = 0; i < n->data.block.count; i++){
@@ -214,6 +226,8 @@ Value execStatement(struct Node *n)
   assert(n);
   assert(nt_STATEMENT == n->kind);
 
+  debug("executing statement node at %p", n);
+
   Value val;
 
   for (int i = 0; i < n->data.statement.count; i++){
@@ -229,6 +243,8 @@ Value execCall(struct Node *n)
 {
   assert(n);
   assert(nt_CALL == n->kind);
+
+  debug("executing call node at %p", n);
 
   Value val;
 
@@ -255,6 +271,8 @@ Value execWhile(struct Node *n)
   assert(n);
   assert(nt_WHILE == n->kind);
 
+  debug("executing while node at %p", n);
+
   Value val;
 
   struct Node * const c = n->data.whilee.cond;
@@ -277,6 +295,8 @@ Value execIf(struct Node *n)
   assert(n);
   assert(nt_IF == n->kind);
 
+  debug("executing if node at %p", n);
+
   Value val;
 
   struct Node * const c = n->data.iff.cond;
@@ -298,6 +318,8 @@ Value execFuncDef(struct Node *n)
 {
   assert(n);
   assert(nt_FUNCDEF == n->kind);
+
+  debug("executing function definiton node at %p", n);
 
   Value val;
 
