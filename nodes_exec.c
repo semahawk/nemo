@@ -11,7 +11,10 @@
 #include "nodes_gen.h"
 #include "vars.h"
 
-extern int varscount = 0;
+extern int varscount;
+int functionscount = 0;
+
+struct Node *FunctionTable[MAXFUNCS] = { NULL };
 
 Value(*nodeExecs[])(struct Node *) =
 {
@@ -25,7 +28,8 @@ Value(*nodeExecs[])(struct Node *) =
   execStatement,
   execCall,
   execWhile,
-  execIf
+  execIf,
+  execFuncDef
 };
 
 Value dispatchNode(struct Node *n)
@@ -223,7 +227,7 @@ Value execStatement(struct Node *n)
   for (int i = 0; i < n->data.statement.count; i++){
     dispatchNode(n->data.statement.nodes[i]);
   }
-  
+
   val.i = 0;
 
   return val;
@@ -236,8 +240,20 @@ Value execCall(struct Node *n)
 
   Value val;
 
-  onlyOut(n->data.call.name);
-  printf("%d\n", dispatchNode(n->data.call.param).i);
+  if (!strcmp(n->data.call.name, "out")){
+    printf("%d\n", dispatchNode(n->data.call.param).i);
+  } else {
+    for (int i = 0; i < MAXFUNCS; i++){
+      if (FunctionTable[i]){
+        if (!strcmp(n->data.call.name, FunctionTable[i]->data.funcdef.name)){
+          dispatchNode(FunctionTable[i]->data.funcdef.body);
+        } else {
+          cerror("couldn't find a function called '%s'", n->data.call.name);
+          exit(1);
+        }
+      }
+    }
+  }
 
   val.i = 0;
 
@@ -281,6 +297,37 @@ Value execIf(struct Node *n)
 
   if (dispatchNode(c).i){
     dispatchNode(s);
+  }
+
+  val.i = 0;
+
+  return val;
+}
+
+Value execFuncDef(struct Node *n)
+{
+  assert(n);
+  assert(nt_FUNCDEF == n->kind);
+
+  Value val;
+
+  /*struct VariableList *varlist = myalloc(sizeof(struct VariableList));*/
+  /*struct Variable *var = myalloc(sizeof(struct Variable));*/
+
+  /*varlist->var = var;*/
+  /*varlist->var->type = TYPE_INTEGER;*/
+  /*varlist->var->name = "$bekon";*/
+  /*varlist->var->value.i = 1234;*/
+
+  /*varlist->next = n->data.funcdef.body->data.block.vars;*/
+  /*n->data.funcdef.body->data.block.vars = varlist;*/
+
+  if (functionscount < MAXFUNCS){
+    FunctionTable[functionscount] = n;
+    functionscount++;
+  } else {
+    error("exceeded limit of defined functions (%d)", MAXFUNCS);
+    exit(1);
   }
 
   val.i = 0;

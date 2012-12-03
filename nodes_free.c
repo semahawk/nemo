@@ -22,7 +22,8 @@ void(*nodeFrees[])(struct Node *) =
   freeStatement,
   freeCall,
   freeWhile,
-  freeIf
+  freeIf,
+  freeFuncDef
 };
 
 void freeNode(struct Node *n)
@@ -164,6 +165,18 @@ void freeStatement(struct Node *n)
   for (int i = 0; i < n->data.statement.count; i++){
     freeNode(n->data.statement.nodes[i]);
   }
+
+  free(n);
+}
+
+void freeFuncDef(struct Node *n)
+{
+  assert(n);
+  assert(nt_FUNCDEF == n->kind);
+
+  debug("freeing funcion declaration node at %p", n);
+
+  freeNode(n->data.funcdef.body);
 
   free(n);
 }

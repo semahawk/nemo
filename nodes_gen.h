@@ -37,6 +37,7 @@ struct Node {
     nt_CALL,
     nt_WHILE,
     nt_IF,
+    nt_FUNCDEF,
     nt_LASTELEMENT
   } kind;
 
@@ -93,6 +94,13 @@ struct Node {
       struct Node *cond;
       struct Node *statements;
     } iff;
+
+    struct {
+      Type returntype;
+      char *name;
+      // TODO: arguments
+      struct Node *body;
+    } funcdef;
   } data;
 
   // block in which the node was created in
@@ -110,6 +118,7 @@ struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct Node *);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *);
+struct Node *genFuncDef(Type, char *, struct Node *);
 struct Node *genExpByNum(int);
 struct Node *genExpByName(char *, struct Node *);
 

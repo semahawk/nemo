@@ -7,9 +7,9 @@
 // License: MIT
 //
 // Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
-// 
+//
 // Date: Sat Sep 15, 16:05:12
-// 
+//
 
 #include "nemo.h"
 #include "handy.h"

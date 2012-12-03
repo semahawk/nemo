@@ -18,6 +18,7 @@ void freeAssignment(struct Node *);
 void freeCall(struct Node *);
 void freeWhile(struct Node *);
 void freeIf(struct Node *);
+void freeFuncDef(struct Node *);
 void freeBlock(struct Node *);
 void freeStatement(struct Node *);
 

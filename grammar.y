@@ -39,12 +39,13 @@
 %token <i> INTEGER
 %token <s> VAR_IDENT IDENT
 %type <node> stmts stmt
-%type <node> expr_stmt iter_stmt select_stmt comp_stmt
+%type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
 %type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr
 %type <type> type
 
 %token TYPE_INT
 %token WHILE IF
+%token NONE
 %token PLUSPLUS MINUSMINUS
 
 %right '='
@@ -72,6 +73,7 @@ stmt
     | iter_stmt            { $$ = $1; }
     | select_stmt          { $$ = $1; }
     | comp_stmt            { $$ = $1; }
+    | funcdef_stmt         { $$ = $1; }
     ;
 
 expr_stmt
@@ -95,6 +97,16 @@ comp_stmt
     : '{' '}'         { $$ = 0; }
     | '{' { $<node>$ = currentblock; currentblock = genEmptyBlock(currentblock); } stmts '}'
           { $<node>$ = currentblock; currentblock = $<node>2; }
+    ;
+
+funcdef_stmt
+    : type IDENT ';' arg_list comp_stmt   { $$ = genFuncDef($1, $2, $5); }
+    ;
+
+arg_list
+    : NONE
+    | type VAR_IDENT
+    | type VAR_IDENT ',' arg_list
     ;
 
 decl_expr
