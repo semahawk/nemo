@@ -14,7 +14,12 @@
 extern int varscount;
 int functionscount = 0;
 
-struct Node *FunctionTable[MAXFUNCS] = { NULL };
+struct FunctionTable {
+  struct Node *function;
+  struct FunctionTable *next;
+};
+// pointer to first element in FunctionTable
+struct FunctionTable *funchead = NULL;
 
 Value(*nodeExecs[])(struct Node *) =
 {
@@ -227,24 +232,22 @@ Value execCall(struct Node *n)
 
   Value val;
 
+  struct FunctionTable *t;
+
   if (!strcmp(n->data.call.name, "out")){
     printf("%d\n", dispatchNode(n->data.call.param).i);
+    val.i = dispatchNode(n->data.call.param).i;
+    return val;
   } else {
-    for (int i = 0; i < MAXFUNCS; i++){
-      if (FunctionTable[i]){
-        if (!strcmp(n->data.call.name, FunctionTable[i]->data.funcdef.name)){
-          dispatchNode(FunctionTable[i]->data.funcdef.body);
-        } else {
-          cerror("couldn't find a function called '%s'", n->data.call.name);
-          exit(1);
-        }
+    for (t = funchead; t != NULL; t = t->next){
+      if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
+        return dispatchNode(t->function->data.funcdef.body);
       }
     }
   }
 
-  val.i = 0;
-
-  return val;
+  cerror("couldn't find a function called '%s'", n->data.call.name);
+  exit(1);
 }
 
 Value execWhile(struct Node *n)
@@ -298,8 +301,10 @@ Value execFuncDef(struct Node *n)
 
   Value val;
 
-  for (int i = 0; i < functionscount; i++){
-    if (!strcmp(FunctionTable[i]->data.funcdef.name, n->data.funcdef.name)){
+  struct FunctionTable *t;
+
+  for (t = funchead; t != NULL; t = t->next){
+    if (!strcmp(t->function->data.funcdef.name, n->data.funcdef.name)){
       cerror("function '%s' already defined", n->data.funcdef.name);
       exit(1);
     }
@@ -316,13 +321,11 @@ Value execFuncDef(struct Node *n)
   /*varlist->next = n->data.funcdef.body->data.block.vars;*/
   /*n->data.funcdef.body->data.block.vars = varlist;*/
 
-  if (functionscount < MAXFUNCS){
-    FunctionTable[functionscount] = n;
-    functionscount++;
-  } else {
-    error("exceeded limit of defined functions (%d)", MAXFUNCS);
-    exit(1);
-  }
+  struct FunctionTable *functable = myalloc(sizeof(struct FunctionTable));
+
+  functable->function = n;
+  functable->next = funchead;
+  funchead = functable;
 
   val.i = 0;
 

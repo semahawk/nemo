@@ -99,6 +99,7 @@ struct Node {
       Type returntype;
       char *name;
       // TODO: arguments
+      // struct Node *args[10];
       struct Node *body;
     } funcdef;
   } data;

@@ -86,7 +86,8 @@ void freeDeclaration(struct Node *n)
 
   debug("freeing declaration node at %p", n);
 
-  freeNode(n->data.declaration.right);
+  if (n->data.declaration.right)
+    freeNode(n->data.declaration.right);
 
   free(n);
 }
