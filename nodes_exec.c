@@ -257,6 +257,19 @@ Value execCall(struct Node *n)
   } else {
     for (t = funchead; t != NULL; t = t->next){
       if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
+        for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){
+          struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+          struct Variable *var = myalloc(sizeof(struct Variable));
+
+          varlist->var = var;
+          varlist->var->type = a->arg->type;
+          varlist->var->name = a->arg->name;
+          varlist->var->value.i = 134;
+
+          varlist->next = t->function->data.funcdef.body->data.block.vars;
+          t->function->data.funcdef.body->data.block.vars = varlist;
+        }
+
         return dispatchNode(t->function->data.funcdef.body);
       }
     }
@@ -330,19 +343,6 @@ Value execFuncDef(struct Node *n)
       cerror("function '%s' already defined", n->data.funcdef.name);
       exit(1);
     }
-  }
-
-  for (struct ArgList *a = n->data.funcdef.args; a != NULL; a = a->next){
-    struct VariableList *varlist = myalloc(sizeof(struct VariableList));
-    struct Variable *var = myalloc(sizeof(struct Variable));
-
-    varlist->var = var;
-    varlist->var->type = a->arg->type;
-    varlist->var->name = a->arg->name;
-    varlist->var->value.i = 134;
-
-    varlist->next = n->data.funcdef.body->data.block.vars;
-    n->data.funcdef.body->data.block.vars = varlist;
   }
 
   struct FunctionTable *functable = myalloc(sizeof(struct FunctionTable));
