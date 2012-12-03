@@ -25,6 +25,7 @@
 
   extern struct Node *nodest;
   struct Node *currentblock;
+  int argcount = 0;
 
 %}
 
@@ -34,6 +35,7 @@
   char op;
   int type;
   struct Node *node;
+  struct ArgList *arglist;
 }
 
 %token <i> INTEGER
@@ -42,6 +44,7 @@
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
 %type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr
 %type <type> type
+%type <arglist> arg_list;
 
 %token TYPE_INT
 %token WHILE IF
@@ -100,13 +103,13 @@ comp_stmt
     ;
 
 funcdef_stmt
-    : type IDENT ';' arg_list comp_stmt   { $$ = genFuncDef($1, $2, $5); }
+    : type IDENT ';' arg_list comp_stmt   { $$ = genFuncDef($1, $2, $4, argcount, $5); argcount = 0; }
     ;
 
 arg_list
-    : NONE
-    | type VAR_IDENT
-    | type VAR_IDENT ',' arg_list
+    : NONE                         { $$ = NULL; argcount = 0; }
+    | type VAR_IDENT               { $$ = genArgList($1, $2, NULL); argcount = 1; }
+    | arg_list ',' type VAR_IDENT  { $$ = genArgList($3, $4, $1); argcount++;   }
     ;
 
 decl_expr

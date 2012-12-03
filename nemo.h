@@ -17,7 +17,6 @@
 #include <assert.h>
 
 #define VERSION "0.6.2"
-#define MAXFUNCS 10
 
 void version(void);
 

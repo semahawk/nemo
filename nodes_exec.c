@@ -332,16 +332,18 @@ Value execFuncDef(struct Node *n)
     }
   }
 
-  /*struct VariableList *varlist = myalloc(sizeof(struct VariableList));*/
-  /*struct Variable *var = myalloc(sizeof(struct Variable));*/
+  for (struct ArgList *a = n->data.funcdef.args; a != NULL; a = a->next){
+    struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+    struct Variable *var = myalloc(sizeof(struct Variable));
 
-  /*varlist->var = var;*/
-  /*varlist->var->type = TYPE_INTEGER;*/
-  /*varlist->var->name = "$bekon";*/
-  /*varlist->var->value.i = 1234;*/
+    varlist->var = var;
+    varlist->var->type = a->arg->type;
+    varlist->var->name = a->arg->name;
+    varlist->var->value.i = 134;
 
-  /*varlist->next = n->data.funcdef.body->data.block.vars;*/
-  /*n->data.funcdef.body->data.block.vars = varlist;*/
+    varlist->next = n->data.funcdef.body->data.block.vars;
+    n->data.funcdef.body->data.block.vars = varlist;
+  }
 
   struct FunctionTable *functable = myalloc(sizeof(struct FunctionTable));
 

@@ -170,7 +170,7 @@ struct Node *genIf(struct Node *cond, struct Node *stmt)
   return new;
 }
 
-struct Node *genFuncDef(Type returntype, char *name, struct Node *body)
+struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int argcount, struct Node *body)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -180,8 +180,26 @@ struct Node *genFuncDef(Type returntype, char *name, struct Node *body)
   new->data.funcdef.returntype = returntype;
   new->data.funcdef.name = name;
   new->data.funcdef.body = body;
+  new->data.funcdef.args = args;
+  new->data.funcdef.argcount = argcount;
 
   return new;
+}
+
+struct ArgList *genArgList(Type type, char *name, struct ArgList *head)
+{
+  struct ArgList *arglist = myalloc(sizeof(struct ArgList));
+  struct Arg *arg = myalloc(sizeof(struct Arg));
+
+  debug("creating argument list at %p", arglist);
+
+  arglist->arg = arg;
+  arglist->arg->type = type;
+  arglist->arg->name = name;
+  arglist->next = head;
+  head = arglist;
+
+  return arglist;
 }
 
 struct Node *genCall(char *name, struct Node *param)

@@ -24,6 +24,16 @@ typedef enum {
   TYPE_INTEGER
 } Type;
 
+struct Arg {
+  Type type;
+  char *name;
+};
+
+struct ArgList {
+  struct Arg *arg;
+  struct ArgList *next;
+};
+
 struct Node {
   enum {
     nt_ID,
@@ -98,8 +108,8 @@ struct Node {
     struct {
       Type returntype;
       char *name;
-      // TODO: arguments
-      // struct Node *args[10];
+      int argcount;
+      struct ArgList *args;
       struct Node *body;
     } funcdef;
   } data;
@@ -119,8 +129,10 @@ struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct Node *);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *);
-struct Node *genFuncDef(Type, char *, struct Node *);
+struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
 struct Node *genExpByNum(int);
 struct Node *genExpByName(char *, struct Node *);
+
+struct ArgList *genArgList(Type, char *, struct ArgList *);
 
 #endif // NODES_GEN_H
