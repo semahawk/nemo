@@ -45,19 +45,6 @@ void execNodes(struct Node *nodest)
   execBlock(nodest);
 }
 
-void onlyName(const char *name, const char *ref, const char *kind)
-{
-  if (strcmp(ref, name)){
-    cerror("Nemo only knows the %s '%s', not '%s' ", kind, ref, name);
-    exit(1);
-  }
-}
-
-void onlyOut(const char *name)
-{
-  onlyName(name, "out", "function");
-}
-
 Value execTermExpression(struct Node *n)
 {
   // TODO: refactor to an execNameExp and execVal functions
@@ -310,6 +297,13 @@ Value execFuncDef(struct Node *n)
   assert(nt_FUNCDEF == n->kind);
 
   Value val;
+
+  for (int i = 0; i < functionscount; i++){
+    if (!strcmp(FunctionTable[i]->data.funcdef.name, n->data.funcdef.name)){
+      cerror("function '%s' already defined", n->data.funcdef.name);
+      exit(1);
+    }
+  }
 
   /*struct VariableList *varlist = myalloc(sizeof(struct VariableList));*/
   /*struct Variable *var = myalloc(sizeof(struct Variable));*/
