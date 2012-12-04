@@ -33,6 +33,8 @@ D [0-9]
 
 "int"                    { count(); return TYPE_INT; }
 
+"none"                   { count(); return NONE; }
+
 "if"                     { count(); return IF; }
 "while"                  { count(); return WHILE; }
 
@@ -54,6 +56,7 @@ D [0-9]
 "}"                      { count(); return '}'; }
 "="                      { count(); return '='; }
 ";"                      { count(); return ';'; }
+","                      { count(); return ','; }
 
 \$[a-zA-Z][a-zA-Z0-9_']* { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]*   { count(); yylval.s = strdup(yytext); return IDENT; }

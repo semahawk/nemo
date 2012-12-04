@@ -20,6 +20,7 @@ Value execWhile(struct Node *);
 Value execIf(struct Node *);
 Value execBlock(struct Node *);
 Value execStatement(struct Node *);
+Value execFuncDef(struct Node *);
 
 void execNodes(struct Node *);
 void freeNodes(struct Node *);

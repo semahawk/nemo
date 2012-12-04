@@ -11,7 +11,15 @@
 #include "nodes_gen.h"
 #include "vars.h"
 
-extern int varscount = 0;
+extern int varscount;
+int functionscount = 0;
+
+struct FunctionTable {
+  struct Node *function;
+  struct FunctionTable *next;
+};
+// pointer to first element in FunctionTable
+struct FunctionTable *funchead = NULL;
 
 Value(*nodeExecs[])(struct Node *) =
 {
@@ -25,7 +33,8 @@ Value(*nodeExecs[])(struct Node *) =
   execStatement,
   execCall,
   execWhile,
-  execIf
+  execIf,
+  execFuncDef
 };
 
 Value dispatchNode(struct Node *n)
@@ -41,23 +50,12 @@ void execNodes(struct Node *nodest)
   execBlock(nodest);
 }
 
-void onlyName(const char *name, const char *ref, const char *kind)
-{
-  if (strcmp(ref, name)){
-    cerror("Nemo only knows the %s '%s', not '%s' ", kind, ref, name);
-    exit(1);
-  }
-}
-
-void onlyOut(const char *name)
-{
-  onlyName(name, "out", "function");
-}
-
 Value execTermExpression(struct Node *n)
 {
   // TODO: refactor to an execNameExp and execVal functions
   assert(n);
+
+  debug("executing id/integer expression node at %p", n);
 
   if (nt_INTEGER == n->kind){
     return n->data.value;
@@ -82,6 +80,8 @@ Value execBinExpression(struct Node *n)
   const Value left = dispatchNode(n->data.binaryop.left);
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
+
+  debug("executing binary operation node at %p", n);
 
   switch (n->data.binaryop.op){
     case '+': ret.i = left.i + right.i;
@@ -114,6 +114,8 @@ Value execUnExpression(struct Node *n)
 {
   assert(nt_UNARYOP == n->kind);
 
+  debug("executing unary operation node at %p", n);
+
   const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
   Value ret;
 
@@ -143,6 +145,8 @@ Value execDeclaration(struct Node *n)
 {
   assert(n);
   assert(nt_DECLARATION == n->kind);
+
+  debug("executing declaration node at %p", n);
 
   if (variableAlreadySet(n->data.declaration.name, n->block)){
     cerror("variable '%s' already declared", n->data.declaration.name);
@@ -181,6 +185,8 @@ Value execAssignment(struct Node *n)
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
 
+  debug("executing assignment node at %p", n);
+
   Value val;
 
   if (!variableAlreadySet(n->data.s, n->block)){
@@ -202,6 +208,8 @@ Value execBlock(struct Node *n)
   assert(n);
   assert(nt_BLOCK == n->kind);
 
+  debug("executing block node at %p", n);
+
   Value val;
 
   for (int i = 0; i < n->data.block.count; i++){
@@ -218,12 +226,14 @@ Value execStatement(struct Node *n)
   assert(n);
   assert(nt_STATEMENT == n->kind);
 
+  debug("executing statement node at %p", n);
+
   Value val;
 
   for (int i = 0; i < n->data.statement.count; i++){
     dispatchNode(n->data.statement.nodes[i]);
   }
-  
+
   val.i = 0;
 
   return val;
@@ -234,20 +244,69 @@ Value execCall(struct Node *n)
   assert(n);
   assert(nt_CALL == n->kind);
 
+  debug("executing call node at %p", n);
+
   Value val;
 
-  onlyOut(n->data.call.name);
-  printf("%d\n", dispatchNode(n->data.call.param).i);
+  struct FunctionTable *t;
 
-  val.i = 0;
+  if (!strcmp(n->data.call.name, "out")){
+    val.i = 0;
+    if (n->data.call.params)
+      for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
+        // the node is the last one
+        if (p->next == NULL)
+          printf("%d\n", dispatchNode(p->param).i);
+        // that one ain't
+        else
+          printf("%d, ", dispatchNode(p->param).i);
+        val.i = dispatchNode(p->param).i;
+      }
+    return val;
+  } else {
+    for (t = funchead; t != NULL; t = t->next){
+      if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
+        // checking for argument/param lenghts
+        if (n->data.call.paramcount > t->function->data.funcdef.argcount){
+          cerror("too many arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+          exit(1);
+        } else if (n->data.call.paramcount < t->function->data.funcdef.argcount){
+          cerror("too few arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+          exit(1);
+        } else {
+          for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){
+            struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+            struct Variable *var = myalloc(sizeof(struct Variable));
 
-  return val;
+            varlist->var = var;
+            varlist->var->type = a->arg->type;
+            varlist->var->name = a->arg->name;
+
+            for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
+              if (p->pos == a->pos)
+                varlist->var->value = dispatchNode(p->param);
+            }
+
+            varlist->next = t->function->data.funcdef.body->data.block.vars;
+            t->function->data.funcdef.body->data.block.vars = varlist;
+          }
+
+        return dispatchNode(t->function->data.funcdef.body);
+        }
+      }
+    }
+  }
+
+  cerror("couldn't find a function called '%s'", n->data.call.name);
+  exit(1);
 }
 
 Value execWhile(struct Node *n)
 {
   assert(n);
   assert(nt_WHILE == n->kind);
+
+  debug("executing while node at %p", n);
 
   Value val;
 
@@ -271,6 +330,8 @@ Value execIf(struct Node *n)
   assert(n);
   assert(nt_IF == n->kind);
 
+  debug("executing if node at %p", n);
+
   Value val;
 
   struct Node * const c = n->data.iff.cond;
@@ -282,6 +343,35 @@ Value execIf(struct Node *n)
   if (dispatchNode(c).i){
     dispatchNode(s);
   }
+
+  val.i = 0;
+
+  return val;
+}
+
+Value execFuncDef(struct Node *n)
+{
+  assert(n);
+  assert(nt_FUNCDEF == n->kind);
+
+  debug("executing function definiton node at %p", n);
+
+  Value val;
+
+  struct FunctionTable *t;
+
+  for (t = funchead; t != NULL; t = t->next){
+    if (!strcmp(t->function->data.funcdef.name, n->data.funcdef.name)){
+      cerror("function '%s' already defined", n->data.funcdef.name);
+      exit(1);
+    }
+  }
+
+  struct FunctionTable *functable = myalloc(sizeof(struct FunctionTable));
+
+  functable->function = n;
+  functable->next = funchead;
+  funchead = functable;
 
   val.i = 0;
 

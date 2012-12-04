@@ -12,7 +12,7 @@ struct Node *genDeclaration(Type type, char *name, struct Node *val, struct Node
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating declaration node <type: %d, name: %s> at 0x%x", type, name, new);
+  debug("creating declaration node <type: %d, name: %s> at %p", type, name, new);
 
   new->kind = nt_DECLARATION;
   new->data.declaration.type = type;
@@ -27,7 +27,7 @@ struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating assignment node <name: %s> at 0x%x", name, new);
+  debug("creating assignment node <name: %s> at %p", name, new);
 
   new->kind = nt_ASSIGNMENT;
   new->data.assignment.name = name;
@@ -41,7 +41,7 @@ struct Node *genExpByNum(int val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating integer node <val: %d> at 0x%x", val, new);
+  debug("creating integer node <val: %d> at %p", val, new);
 
   new->kind = nt_INTEGER;
   new->data.value.i = val;
@@ -54,7 +54,7 @@ struct Node *genExpByName(char *name, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating identifier node <name: %s> at 0x%x", name, new);
+  debug("creating identifier node <name: %s> at %p", name, new);
 
   new->kind = nt_ID;
   new->data.s = name;
@@ -67,7 +67,7 @@ struct Node *genBinaryop(struct Node *left, struct Node *right, char op)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating binary operation node <op: '%c'> at 0x%x", op, new);
+  debug("creating binary operation node <op: '%c'> at %p", op, new);
 
   new->kind = nt_BINARYOP;
   new->data.binaryop.left = left;
@@ -82,7 +82,7 @@ struct Node *genUnaryop(struct Node *left, Unary op, struct Node *currentblock)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating unary operation node <op: '%d'> at 0x%x", op, new);
+  debug("creating unary operation node <op: '%d'> at %p", op, new);
 
   if (left->kind != nt_ID){
     cerror("trying to change value of a constant object");
@@ -108,7 +108,7 @@ struct Node *genEmptyBlock(struct Node *parent)
   new->data.block.parent = parent;
   new->block = NULL;
 
-  debug("creating empty block node at 0x%x with parent at %p", new, parent);
+  debug("creating empty block node at %p with parent at %p", new, parent);
 
   return new;
 }
@@ -132,7 +132,7 @@ struct Node *genStatement(struct Node *new, struct Node *toappend)
     new->data.statement.nodes = 0;
   }
 
-  debug("creating statement node at 0x%x", new);
+  debug("creating statement node at %p", new);
   assert(nt_STATEMENT == new->kind);
 
   new->data.statement.count++;
@@ -146,7 +146,7 @@ struct Node *genWhile(struct Node *cond, struct Node *stmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating whilst node at 0x%x", new);
+  debug("creating whilst node at %p", new);
 
   new->kind = nt_WHILE;
   new->data.whilee.cond = cond;
@@ -160,7 +160,7 @@ struct Node *genIf(struct Node *cond, struct Node *stmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating an node at 0x%x", new);
+  debug("creating an node at %p", new);
 
   new->kind = nt_IF;
   new->data.iff.cond = cond;
@@ -170,16 +170,63 @@ struct Node *genIf(struct Node *cond, struct Node *stmt)
   return new;
 }
 
-struct Node *genCall(char *name, struct Node *param)
+struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int argcount, struct Node *body)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating call node <name: %s> at 0x%x", name, new);
+  debug("creating function definiton <name: %s> at %p", name, new);
+
+  new->kind = nt_FUNCDEF;
+  new->data.funcdef.returntype = returntype;
+  new->data.funcdef.name = name;
+  new->data.funcdef.body = body;
+  new->data.funcdef.args = args;
+  new->data.funcdef.argcount = argcount;
+
+  return new;
+}
+
+struct ArgList *genArgList(Type type, char *name, struct ArgList *head, int pos)
+{
+  struct ArgList *arglist = myalloc(sizeof(struct ArgList));
+  struct Arg *arg = myalloc(sizeof(struct Arg));
+
+  debug("creating argument list at %p", arglist);
+
+  arglist->arg = arg;
+  arglist->pos = pos;
+  arglist->arg->type = type;
+  arglist->arg->name = name;
+  arglist->next = head;
+  head = arglist;
+
+  return arglist;
+}
+
+struct ParamList *genParamList(struct Node *param, struct ParamList *head, int pos)
+{
+  struct ParamList *new = myalloc(sizeof(struct ParamList));
+
+  debug("creating parameter list at %p", new);
+
+  new->param = param;
+  new->pos = pos;
+  new->next = head;
+  head = new;
+
+  return new;
+}
+
+struct Node *genCall(char *name, struct ParamList *params, int paramcount)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("creating call node <name: %s> at %p", name, new);
 
   new->kind = nt_CALL;
   new->data.call.name = name;
-  new->data.call.param = param;
-  // TODO: it will be needed later on
+  new->data.call.params = params;
+  new->data.call.paramcount = paramcount;
   new->block = NULL;
 
   return new;
