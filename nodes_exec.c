@@ -251,26 +251,45 @@ Value execCall(struct Node *n)
   struct FunctionTable *t;
 
   if (!strcmp(n->data.call.name, "out")){
-    printf("%d\n", dispatchNode(n->data.call.param).i);
-    val.i = dispatchNode(n->data.call.param).i;
+    val.i = 0;
+    if (n->data.call.params)
+      for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
+        // the node is the last one
+        if (p->next == NULL)
+          printf("%d\n", dispatchNode(p->param).i);
+        // that one ain't
+        else
+          printf("%d, ", dispatchNode(p->param).i);
+        val.i = dispatchNode(p->param).i;
+      }
     return val;
   } else {
     for (t = funchead; t != NULL; t = t->next){
       if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
-        for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){
-          struct VariableList *varlist = myalloc(sizeof(struct VariableList));
-          struct Variable *var = myalloc(sizeof(struct Variable));
+        // checking for argument/param lenghts
+        if (n->data.call.paramcount > t->function->data.funcdef.argcount){
+          cerror("too many arguments for function %s (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+          exit(1);
+        } else if (n->data.call.paramcount < t->function->data.funcdef.argcount){
+          cerror("too few arguments for function %s (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+          exit(1);
+        } else {
+          for (int i = 0; i < n->data.call.paramcount; i++){
+          /*for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){*/
+            struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+            struct Variable *var = myalloc(sizeof(struct Variable));
 
-          varlist->var = var;
-          varlist->var->type = a->arg->type;
-          varlist->var->name = a->arg->name;
-          varlist->var->value.i = 134;
+            varlist->var = var;
+            varlist->var->type = (t->function->data.funcdef.args + i)->arg->type;
+            varlist->var->name = (t->function->data.funcdef.args + i)->arg->name;
+            varlist->var->value = dispatchNode((n->data.call.params + i)->param);
 
-          varlist->next = t->function->data.funcdef.body->data.block.vars;
-          t->function->data.funcdef.body->data.block.vars = varlist;
-        }
+            varlist->next = t->function->data.funcdef.body->data.block.vars;
+            t->function->data.funcdef.body->data.block.vars = varlist;
+          }
 
         return dispatchNode(t->function->data.funcdef.body);
+        }
       }
     }
   }

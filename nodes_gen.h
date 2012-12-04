@@ -103,6 +103,7 @@ struct Node {
     struct {
       char *name;
       struct ParamList *params;
+      int paramcount;
     } call;
 
     struct {
@@ -131,7 +132,7 @@ struct Node *genEmptyBlock(struct Node *);
 struct Node *genStatement(struct Node *, struct Node *);
 struct Node *genBinaryop(struct Node *, struct Node *, char);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
-struct Node *genCall(char *, struct ParamList *);
+struct Node *genCall(char *, struct ParamList *, int);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *);
 struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);

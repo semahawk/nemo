@@ -111,7 +111,9 @@ void freeCall(struct Node *n)
 
   debug("freeing call node at %p", n);
 
-  freeNode(n->data.call.param);
+  if (n->data.call.params)
+    for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next)
+      freeNode(p->param);
 
   free(n);
 }

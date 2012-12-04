@@ -116,7 +116,7 @@ arg_list
 
 param_list
     : /* empty */                  { $$ = NULL; paramcount = 0; }
-    | expr                         { $$ = $1; paramcount = 1; }
+    | expr                         { $$ = genParamList($1, NULL); paramcount = 1; }
     | param_list ',' expr          { $$ = genParamList($3, $1); paramcount++; }
     ;
 
@@ -133,7 +133,7 @@ assign_expr
     ;
 
 call_expr
-    : IDENT '(' param_list ')'       { $$ = genCall($1, $3); paramcount = 0; }
+    : IDENT '(' param_list ')'       { $$ = genCall($1, $3, paramcount); paramcount = 0; }
     ;
 
 iter_stmt

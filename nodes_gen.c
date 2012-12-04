@@ -215,7 +215,7 @@ struct ParamList *genParamList(struct Node *param, struct ParamList *head)
   return new;
 }
 
-struct Node *genCall(char *name, struct ParamList *params)
+struct Node *genCall(char *name, struct ParamList *params, int paramcount)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -224,6 +224,7 @@ struct Node *genCall(char *name, struct ParamList *params)
   new->kind = nt_CALL;
   new->data.call.name = name;
   new->data.call.params = params;
+  new->data.call.paramcount = paramcount;
   new->block = NULL;
 
   return new;
