@@ -268,21 +268,24 @@ Value execCall(struct Node *n)
       if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
         // checking for argument/param lenghts
         if (n->data.call.paramcount > t->function->data.funcdef.argcount){
-          cerror("too many arguments for function %s (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+          cerror("too many arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
           exit(1);
         } else if (n->data.call.paramcount < t->function->data.funcdef.argcount){
-          cerror("too few arguments for function %s (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+          cerror("too few arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
           exit(1);
         } else {
-          for (int i = 0; i < n->data.call.paramcount; i++){
-          /*for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){*/
+          for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){
             struct VariableList *varlist = myalloc(sizeof(struct VariableList));
             struct Variable *var = myalloc(sizeof(struct Variable));
 
             varlist->var = var;
-            varlist->var->type = (t->function->data.funcdef.args + i)->arg->type;
-            varlist->var->name = (t->function->data.funcdef.args + i)->arg->name;
-            varlist->var->value = dispatchNode((n->data.call.params + i)->param);
+            varlist->var->type = a->arg->type;
+            varlist->var->name = a->arg->name;
+
+            for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
+              if (p->pos == a->pos)
+                varlist->var->value = dispatchNode(p->param);
+            }
 
             varlist->next = t->function->data.funcdef.body->data.block.vars;
             t->function->data.funcdef.body->data.block.vars = varlist;

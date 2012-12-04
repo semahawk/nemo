@@ -186,7 +186,7 @@ struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int a
   return new;
 }
 
-struct ArgList *genArgList(Type type, char *name, struct ArgList *head)
+struct ArgList *genArgList(Type type, char *name, struct ArgList *head, int pos)
 {
   struct ArgList *arglist = myalloc(sizeof(struct ArgList));
   struct Arg *arg = myalloc(sizeof(struct Arg));
@@ -194,6 +194,7 @@ struct ArgList *genArgList(Type type, char *name, struct ArgList *head)
   debug("creating argument list at %p", arglist);
 
   arglist->arg = arg;
+  arglist->pos = pos;
   arglist->arg->type = type;
   arglist->arg->name = name;
   arglist->next = head;
@@ -202,13 +203,14 @@ struct ArgList *genArgList(Type type, char *name, struct ArgList *head)
   return arglist;
 }
 
-struct ParamList *genParamList(struct Node *param, struct ParamList *head)
+struct ParamList *genParamList(struct Node *param, struct ParamList *head, int pos)
 {
   struct ParamList *new = myalloc(sizeof(struct ParamList));
 
   debug("creating parameter list at %p", new);
 
   new->param = param;
+  new->pos = pos;
   new->next = head;
   head = new;
 

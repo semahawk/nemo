@@ -179,6 +179,10 @@ void freeFuncDef(struct Node *n)
 
   debug("freeing funcion declaration node at %p", n);
 
+  if (n->data.funcdef.args)
+    for (struct ArgList *a = n->data.funcdef.args; a != NULL; a = a->next)
+      free(a->arg);
+
   freeNode(n->data.funcdef.body);
 
   free(n);

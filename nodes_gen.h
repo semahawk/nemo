@@ -30,11 +30,13 @@ struct Arg {
 };
 
 struct ArgList {
+  int pos;
   struct Arg *arg;
   struct ArgList *next;
 };
 
 struct ParamList {
+  int pos;
   struct Node *param;
   struct ParamList *next;
 };
@@ -139,7 +141,7 @@ struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
 struct Node *genExpByNum(int);
 struct Node *genExpByName(char *, struct Node *);
 
-struct ArgList *genArgList(Type, char *, struct ArgList *);
-struct ParamList *genParamList(struct Node *, struct ParamList *);
+struct ArgList *genArgList(Type, char *, struct ArgList *, int);
+struct ParamList *genParamList(struct Node *, struct ParamList *, int);
 
 #endif // NODES_GEN_H

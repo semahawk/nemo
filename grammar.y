@@ -110,14 +110,14 @@ funcdef_stmt
 
 arg_list
     : NONE                         { $$ = NULL; argcount = 0; }
-    | type VAR_IDENT               { $$ = genArgList($1, $2, NULL); argcount = 1; }
-    | arg_list ',' type VAR_IDENT  { $$ = genArgList($3, $4, $1); argcount++;   }
+    | type VAR_IDENT               { $$ = genArgList($1, $2, NULL, argcount); argcount = 1; }
+    | arg_list ',' type VAR_IDENT  { $$ = genArgList($3, $4, $1, argcount); argcount++;   }
     ;
 
 param_list
     : /* empty */                  { $$ = NULL; paramcount = 0; }
-    | expr                         { $$ = genParamList($1, NULL); paramcount = 1; }
-    | param_list ',' expr          { $$ = genParamList($3, $1); paramcount++; }
+    | expr                         { $$ = genParamList($1, NULL, paramcount); paramcount = 1; }
+    | param_list ',' expr          { $$ = genParamList($3, $1, paramcount); paramcount++; }
     ;
 
 decl_expr
