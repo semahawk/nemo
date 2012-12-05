@@ -351,12 +351,17 @@ Value execIf(struct Node *n)
 
   struct Node * const c = n->data.iff.cond;
   struct Node * const s = n->data.iff.statements;
+  struct Node * const e = n->data.iff.elsestmt;
 
   assert(c);
   assert(s);
 
   if (dispatchNode(c).i){
     dispatchNode(s);
+  } else {
+    if (n->data.iff.elsestmt){
+      dispatchNode(e);
+    }
   }
 
   val.i = 0;

@@ -49,7 +49,7 @@
 %type <paramlist> param_list
 
 %token TYPE_INT
-%token WHILE IF
+%token WHILE IF ELSE
 %token NONE
 %token PLUSPLUS MINUSMINUS
 
@@ -59,6 +59,9 @@
 %left  '*' '/' '%'
 %nonassoc PLUSPLUS MINUSMINUS
 %left  '('
+
+%nonassoc LOWERTHANELSE
+%nonassoc ELSE
 
 %start source
 
@@ -141,7 +144,8 @@ iter_stmt
     ;
 
 select_stmt
-    : IF '(' expr ')' stmt     { $$ = genIf($3, $5); }
+    : IF '(' expr ')' stmt %prec LOWERTHANELSE  { $$ = genIf($3, $5, NULL); }
+    | IF '(' expr ')' stmt ELSE stmt            { $$ = genIf($3, $5, $7); }
     ;
 
 binary_expr

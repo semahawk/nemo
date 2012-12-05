@@ -36,6 +36,7 @@ D [0-9]
 "none"                   { count(); return NONE; }
 
 "if"                     { count(); return IF; }
+"else"                   { count(); return ELSE; }
 "while"                  { count(); return WHILE; }
 
 "\n"                     { count(); ++linenum; }

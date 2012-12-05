@@ -111,6 +111,7 @@ struct Node {
     struct {
       struct Node *cond;
       struct Node *statements;
+      struct Node *elsestmt;
     } iff;
 
     struct {
@@ -136,7 +137,7 @@ struct Node *genBinaryop(struct Node *, struct Node *, char);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct ParamList *, int);
 struct Node *genWhile(struct Node *, struct Node *);
-struct Node *genIf(struct Node *, struct Node *);
+struct Node *genIf(struct Node *, struct Node *, struct Node *);
 struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
 struct Node *genExpByNum(int);
 struct Node *genExpByName(char *, struct Node *);

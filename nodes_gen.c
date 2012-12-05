@@ -156,7 +156,7 @@ struct Node *genWhile(struct Node *cond, struct Node *stmt)
   return new;
 }
 
-struct Node *genIf(struct Node *cond, struct Node *stmt)
+struct Node *genIf(struct Node *cond, struct Node *stmt, struct Node *elsestmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -165,6 +165,7 @@ struct Node *genIf(struct Node *cond, struct Node *stmt)
   new->kind = nt_IF;
   new->data.iff.cond = cond;
   new->data.iff.statements = stmt;
+  new->data.iff.elsestmt = elsestmt;
   new->block = NULL;
 
   return new;

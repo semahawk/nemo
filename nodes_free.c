@@ -141,6 +141,9 @@ void freeIf(struct Node *n)
   freeNode(n->data.iff.cond);
   freeNode(n->data.iff.statements);
 
+  if (n->data.iff.elsestmt)
+    freeNode(n->data.iff.elsestmt);
+
   free(n);
 }
 
