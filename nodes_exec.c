@@ -216,6 +216,17 @@ Value execBlock(struct Node *n)
     dispatchNode(n->data.block.statements[i]);
   }
 
+  for (int i = 0; i < n->data.block.count; i++){
+    if (n->data.block.vars){
+      for (struct VariableList *v = n->data.block.vars; v != NULL; v = v->next){
+        free(v->var);
+        v->var = NULL;
+      }
+      free(n->data.block.vars);
+      n->data.block.vars = NULL;
+    }
+  }
+
   val.i = 0;
 
   return val;
