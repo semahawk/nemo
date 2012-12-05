@@ -263,16 +263,19 @@ Value execCall(struct Node *n)
 
   if (!strcmp(n->data.call.name, "out")){
     val.i = 0;
-    if (n->data.call.params)
-      for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
-        // the node is the last one
-        if (p->next == NULL)
-          printf("%d\n", dispatchNode(p->param).i);
-        // that one ain't
-        else
-          printf("%d, ", dispatchNode(p->param).i);
-        val.i = dispatchNode(p->param).i;
+    if (n->data.call.params){
+      for (int i = 0; i < n->data.call.paramcount; i++){
+        for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
+          if (p->pos == i){
+            if (p->pos == n->data.call.paramcount - 1)
+              printf("%d\n", dispatchNode(p->param).i);
+            else
+              printf("%d, ", dispatchNode(p->param).i);
+            val.i = dispatchNode(p->param).i;
+          }
+        }
       }
+    }
     return val;
   } else {
     for (t = funchead; t != NULL; t = t->next){
