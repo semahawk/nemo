@@ -219,6 +219,7 @@ Value execBlock(struct Node *n)
   for (int i = 0; i < n->data.block.count; i++){
     if (n->data.block.vars){
       for (struct VariableList *v = n->data.block.vars; v != NULL; v = v->next){
+        debug("freeing variable at %p at the end executing block at %p", v->var, n);
         free(v->var);
         v->var = NULL;
       }
