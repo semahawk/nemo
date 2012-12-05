@@ -16,7 +16,7 @@
 #include <getopt.h>
 #include <assert.h>
 
-#define VERSION "0.6.3"
+#define VERSION "0.6.5"
 
 void version(void);
 
