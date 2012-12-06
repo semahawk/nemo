@@ -146,7 +146,7 @@ struct Node *genWhile(struct Node *cond, struct Node *stmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating whilst node at %p", new);
+  debug("creating while node at %p", new);
 
   new->kind = nt_WHILE;
   new->data.whilee.cond = cond;
@@ -160,13 +160,29 @@ struct Node *genIf(struct Node *cond, struct Node *stmt, struct Node *elsestmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating an node at %p", new);
+  debug("creating if node at %p", new);
 
   new->kind = nt_IF;
   new->data.iff.cond = cond;
-  new->data.iff.statements = stmt;
+  new->data.iff.stmt = stmt;
   new->data.iff.elsestmt = elsestmt;
   new->block = NULL;
+
+  return new;
+}
+
+struct Node *genFor(struct Node *init, struct Node *cond, struct Node *action, struct Node *stmt, struct Node *block)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("creating for node at %p", new);
+
+  new->kind = nt_FOR;
+  new->data.forr.init = init;
+  new->data.forr.cond = cond;
+  new->data.forr.action = action;
+  new->data.forr.stmt = stmt;
+  new->block = block;
 
   return new;
 }

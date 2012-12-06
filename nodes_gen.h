@@ -54,6 +54,7 @@ struct Node {
     nt_CALL,
     nt_WHILE,
     nt_IF,
+    nt_FOR,
     nt_FUNCDEF,
     nt_LASTELEMENT
   } kind;
@@ -110,9 +111,16 @@ struct Node {
 
     struct {
       struct Node *cond;
-      struct Node *statements;
+      struct Node *stmt;
       struct Node *elsestmt;
     } iff;
+
+    struct {
+      struct Node *init;
+      struct Node *cond;
+      struct Node *action;
+      struct Node *stmt;
+    } forr;
 
     struct {
       Type returntype;
@@ -138,6 +146,7 @@ struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct ParamList *, int);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *, struct Node *);
+struct Node *genFor(struct Node *, struct Node *, struct Node *, struct Node *, struct Node *);
 struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
 struct Node *genExpByNum(int);
 struct Node *genExpByName(char *, struct Node *);

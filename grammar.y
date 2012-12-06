@@ -49,8 +49,7 @@
 %type <paramlist> param_list
 
 %token TYPE_INT
-%token WHILE IF ELSE
-%token NONE
+%token WHILE IF ELSE FOR NONE
 %token PLUSPLUS MINUSMINUS
 
 %right '='
@@ -140,7 +139,9 @@ call_expr
     ;
 
 iter_stmt
-    : WHILE '(' expr ')' stmt { $$ = genWhile($3, $5); }
+    : WHILE '(' expr ')' stmt                     { $$ = genWhile($3, $5); }
+    | FOR '(' expr_stmt expr_stmt expr ')' stmt   { $$ = genFor($3, $4, $5, $7, currentblock); }
+    | FOR '(' expr_stmt expr_stmt ')' stmt        { $$ = genFor($3, $4, NULL, $6, currentblock); }
     ;
 
 select_stmt

@@ -34,6 +34,7 @@ Value(*nodeExecs[])(struct Node *) =
   execCall,
   execWhile,
   execIf,
+  execFor,
   execFuncDef
 };
 
@@ -350,7 +351,7 @@ Value execIf(struct Node *n)
   Value val;
 
   struct Node * const c = n->data.iff.cond;
-  struct Node * const s = n->data.iff.statements;
+  struct Node * const s = n->data.iff.stmt;
   struct Node * const e = n->data.iff.elsestmt;
 
   assert(c);
@@ -367,6 +368,56 @@ Value execIf(struct Node *n)
   val.i = 0;
 
   return val;
+}
+
+Value execFor(struct Node *n)
+{
+  assert(n);
+  assert(nt_FOR == n->kind);
+
+  debug("executing for node at %p", n);
+
+  Value ret;
+
+  ret.i = 1;
+
+  struct Node * const i = n->data.forr.init;
+  struct Node * const c = n->data.forr.cond;
+  struct Node * const a = n->data.forr.action;
+  struct Node * const s = n->data.forr.stmt;
+
+  if (i){
+    if (i->kind == nt_ASSIGNMENT){
+      setVariableValue(i->data.assignment.name, dispatchNode(i->data.assignment.right), n->block);
+      // TODO: make it could be a declaration
+    } else {
+      cerror("wrong expression kind at first fortion");
+      exit(1);
+    }
+  }
+
+  if (c){
+    if (c->kind != nt_BINARYOP && c->kind != nt_UNARYOP){
+      cerror("wrong expression kind at second forition");
+      exit(1);
+    }
+  }
+
+  if (a){
+    if (a->kind != nt_ASSIGNMENT && a->kind != nt_UNARYOP){
+      cerror("wrong expression kind at third fortion");
+      exit(1);
+    }
+  }
+
+  while (c ? dispatchNode(c).i : 1){
+    if (s)
+      dispatchNode(s);
+    if (a)
+      dispatchNode(a);
+  }
+
+  return ret;
 }
 
 Value execFuncDef(struct Node *n)

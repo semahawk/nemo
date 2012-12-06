@@ -23,6 +23,7 @@ void(*nodeFrees[])(struct Node *) =
   freeCall,
   freeWhile,
   freeIf,
+  freeFor,
   freeFuncDef
 };
 
@@ -123,7 +124,7 @@ void freeWhile(struct Node *n)
   assert(n);
   assert(nt_WHILE == n->kind);
 
-  debug("freeing whilst node at %p", n);
+  debug("freeing while node at %p", n);
 
   freeNode(n->data.whilee.cond);
   freeNode(n->data.whilee.statements);
@@ -136,13 +137,35 @@ void freeIf(struct Node *n)
   assert(n);
   assert(nt_IF == n->kind);
 
-  debug("freeing an node at %p", n);
+  debug("freeing if node at %p", n);
 
   freeNode(n->data.iff.cond);
-  freeNode(n->data.iff.statements);
+  freeNode(n->data.iff.stmt);
 
   if (n->data.iff.elsestmt)
     freeNode(n->data.iff.elsestmt);
+
+  free(n);
+}
+
+void freeFor(struct Node *n)
+{
+  assert(n);
+  assert(nt_FOR == n->kind);
+
+  debug("freeing for node at %p", n);
+
+  if (n->data.forr.init)
+    freeNode(n->data.forr.init);
+
+  if (n->data.forr.cond)
+    freeNode(n->data.forr.cond);
+
+  if (n->data.forr.action)
+    freeNode(n->data.forr.action);
+
+  if (n->data.forr.stmt)
+    freeNode(n->data.forr.stmt);
 
   free(n);
 }
