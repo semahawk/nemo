@@ -16,6 +16,7 @@ Value execUnExpression(struct Node *);
 Value execDeclaration(struct Node *);
 Value execAssignment(struct Node *);
 Value execCall(struct Node *);
+Value execReturn(struct Node *);
 Value execWhile(struct Node *);
 Value execIf(struct Node *);
 Value execFor(struct Node *);
@@ -23,7 +24,7 @@ Value execBlock(struct Node *);
 Value execStatement(struct Node *);
 Value execFuncDef(struct Node *);
 
-void execNodes(struct Node *);
+Value execNodes(struct Node *);
 void freeNodes(struct Node *);
 
 #endif // NODES_EXEC_H

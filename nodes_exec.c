@@ -32,6 +32,7 @@ Value(*nodeExecs[])(struct Node *) =
   execBlock,
   execStatement,
   execCall,
+  execReturn,
   execWhile,
   execIf,
   execFor,
@@ -46,9 +47,9 @@ Value dispatchNode(struct Node *n)
   return nodeExecs[n->kind](n);
 }
 
-void execNodes(struct Node *nodest)
+Value execNodes(struct Node *nodest)
 {
-  execBlock(nodest);
+  return execBlock(nodest);
 }
 
 Value execTermExpression(struct Node *n)
@@ -212,9 +213,15 @@ Value execBlock(struct Node *n)
   debug("executing block node at %p", n);
 
   Value val;
+  val.i = 0;
 
   for (int i = 0; i < n->data.block.count; i++){
-    dispatchNode(n->data.block.statements[i]);
+    if (n->data.block.statements[i]->kind == nt_RETURN){
+      val = execReturn(n->data.block.statements[i]);
+      break;
+    } else {
+      dispatchNode(n->data.block.statements[i]);
+    }
   }
 
   for (int i = 0; i < n->data.block.count; i++){
@@ -228,8 +235,6 @@ Value execBlock(struct Node *n)
       n->data.block.vars = NULL;
     }
   }
-
-  val.i = 0;
 
   return val;
 }
@@ -307,7 +312,7 @@ Value execCall(struct Node *n)
             t->function->data.funcdef.body->data.block.vars = varlist;
           }
 
-        return dispatchNode(t->function->data.funcdef.body);
+          return dispatchNode(t->function->data.funcdef.body);
         }
       }
     }
@@ -315,6 +320,17 @@ Value execCall(struct Node *n)
 
   cerror("couldn't find a function called '%s'", n->data.call.name);
   exit(1);
+}
+
+Value execReturn(struct Node *n)
+{
+  Value ret;
+  ret.i = 0;
+
+  if (n->data.returnn.expr)
+    return dispatchNode(n->data.returnn.expr);
+  else
+    return ret;
 }
 
 Value execWhile(struct Node *n)

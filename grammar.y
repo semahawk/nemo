@@ -43,13 +43,13 @@
 %token <s> VAR_IDENT IDENT
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
-%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr
+%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr return_expr
 %type <type> type
 %type <arglist> arg_list
 %type <paramlist> param_list
 
 %token TYPE_INT
-%token WHILE IF ELSE FOR NONE
+%token WHILE IF ELSE FOR NONE RETURN
 %token PLUSPLUS MINUSMINUS
 
 %right '='
@@ -94,6 +94,7 @@ expr
     | assign_expr     { $$ = $1; }
     | call_expr       { $$ = $1; }
     | decl_expr       { $$ = $1; }
+    | return_expr     { $$ = $1; }
     | init_expr       { $$ = $1; }
     | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
     | INTEGER         { $$ = genExpByNum($1); }
@@ -136,6 +137,11 @@ assign_expr
 
 call_expr
     : IDENT '(' param_list ')'       { $$ = genCall($1, $3, paramcount); paramcount = 0; }
+    ;
+
+return_expr
+    : RETURN expr                    { $$ = genReturn($2); }
+    | RETURN                         { $$ = genReturn(NULL); }
     ;
 
 iter_stmt

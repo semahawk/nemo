@@ -249,3 +249,15 @@ struct Node *genCall(char *name, struct ParamList *params, int paramcount)
   return new;
 }
 
+struct Node *genReturn(struct Node *expr)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("creating return node at %p", new);
+
+  new->kind = nt_RETURN;
+  new->data.returnn.expr = expr;
+  new->block = NULL;
+
+  return new;
+}

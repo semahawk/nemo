@@ -52,6 +52,7 @@ struct Node {
     nt_BLOCK,
     nt_STATEMENT,
     nt_CALL,
+    nt_RETURN,
     nt_WHILE,
     nt_IF,
     nt_FOR,
@@ -110,6 +111,10 @@ struct Node {
     } call;
 
     struct {
+      struct Node *expr;
+    } returnn;
+
+    struct {
       struct Node *cond;
       struct Node *stmt;
       struct Node *elsestmt;
@@ -144,6 +149,7 @@ struct Node *genStatement(struct Node *, struct Node *);
 struct Node *genBinaryop(struct Node *, struct Node *, char);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct ParamList *, int);
+struct Node *genReturn(struct Node *);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *, struct Node *);
 struct Node *genFor(struct Node *, struct Node *, struct Node *, struct Node *, struct Node *);

@@ -21,6 +21,7 @@ void(*nodeFrees[])(struct Node *) =
   freeBlock,
   freeStatement,
   freeCall,
+  freeReturn,
   freeWhile,
   freeIf,
   freeFor,
@@ -115,6 +116,19 @@ void freeCall(struct Node *n)
   if (n->data.call.params)
     for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next)
       freeNode(p->param);
+
+  free(n);
+}
+
+void freeReturn(struct Node *n)
+{
+  assert(n);
+  assert(nt_RETURN == n->kind);
+
+  debug("freeing return node at %p", n);
+
+  if (n->data.returnn.expr)
+    freeNode(n->data.returnn.expr);
 
   free(n);
 }

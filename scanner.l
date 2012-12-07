@@ -39,6 +39,7 @@ D [0-9]
 "else"                   { count(); return ELSE; }
 "for"                    { count(); return FOR; }
 "while"                  { count(); return WHILE; }
+"return"                 { count(); return RETURN; }
 
 "\n"                     { count(); ++linenum; }
 

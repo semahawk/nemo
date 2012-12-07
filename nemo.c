@@ -35,6 +35,8 @@ bool debugflag = false;
 int main(int argc, char *argv[])
 {
   FILE *fp;
+  // value to be returned (from executing the main block)
+  int ret = 0;
 
   int c;
 
@@ -85,11 +87,11 @@ int main(int argc, char *argv[])
       error("execution failed due to some errors");
       exit(1);
     }
-    execNodes(nodest);
+    ret = execNodes(nodest).i;
     freeNodes(nodest);
   } while (!feof(yyin));
 
-  return 0;
+  return ret;
 }
 
 void version(void)

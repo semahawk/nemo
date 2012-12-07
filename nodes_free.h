@@ -16,6 +16,7 @@ void freeUnExpression(struct Node *);
 void freeDeclaration(struct Node *);
 void freeAssignment(struct Node *);
 void freeCall(struct Node *);
+void freeReturn(struct Node *);
 void freeWhile(struct Node *);
 void freeIf(struct Node *);
 void freeFor(struct Node *);
