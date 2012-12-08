@@ -14,6 +14,7 @@ void(*nodeFrees[])(struct Node *) =
 {
   freeTermExpression,
   freeTermExpression,
+  freeTermExpression,
   freeBinExpression,
   freeUnExpression,
   freeDeclaration,
@@ -51,7 +52,7 @@ void freeTermExpression(struct Node *n)
 {
   assert(n);
 
-  debug("freeing id/integer node at %p", n);
+  debug("freeing id/integer/floating node at %p", n);
 
   free(n);
 }

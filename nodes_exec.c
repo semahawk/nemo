@@ -10,9 +10,7 @@
 #include "nodes_exec.h"
 #include "nodes_gen.h"
 #include "vars.h"
-
-extern int varscount;
-int functionscount = 0;
+#include "cast.h"
 
 struct FunctionTable {
   struct Node *function;
@@ -25,6 +23,7 @@ Value(*nodeExecs[])(struct Node *) =
 {
   execID,
   execInteger,
+  execFloating,
   execBinExpression,
   execUnExpression,
   execDeclaration,
@@ -72,7 +71,17 @@ Value execInteger(struct Node *n)
   assert(n);
   assert(nt_INTEGER == n->kind);
 
-  debug("executing integer node <val: %d> at %p", n->data.value.i, n);
+  debug("executing integer node <val: %d> at %p", n->data.value.v.i, n);
+
+  return n->data.value;
+}
+
+Value execFloating(struct Node *n)
+{
+  assert(n);
+  assert(nt_FLOATING == n->kind);
+
+  debug("executing floating node <val: %f> at %p", n->data.value.v.f, n);
 
   return n->data.value;
 }
@@ -88,23 +97,230 @@ Value execBinExpression(struct Node *n)
   debug("executing binary operation node <op: '%c'> at %p", n->data.binaryop.op, n);
 
   switch (n->data.binaryop.op){
-    case '+': ret.i = left.i + right.i;
-              break;
-    case '-': ret.i = left.i - right.i;
-              break;
-    case '*': ret.i = left.i * right.i;
-              break;
-    case '/': if (right.i == 0){
-                cerror("zero division!");
-                exit(1);
+    // binary PLUS
+    case '+': if (left.type == TYPE_INTEGER){
+                // int + int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = left.v.i + right.v.i;
+                  ret.type = TYPE_INTEGER;
+                // int + float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.i + right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float + int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.f = left.v.f + right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float + float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.f + right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
               } else {
-                ret.i = left.i / right.i;
+                cerror("right operand in binary is of unknown type");
+                exit(1);
               }
-    case '%': ret.i = left.i % right.i;
               break;
-    case '>': ret.i = left.i > right.i;
+
+    // binary MINUS
+    case '-': if (left.type == TYPE_INTEGER){
+                // int - int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = left.v.i - right.v.i;
+                  ret.type = TYPE_INTEGER;
+                // int - float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.i - right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float - int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.f = left.v.f - right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float - float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.f - right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
               break;
-    case '<': ret.i = left.i < right.i;
+
+    // binary MULTIPLE
+    case '*': if (left.type == TYPE_INTEGER){
+                // int * int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = left.v.i * right.v.i;
+                  ret.type = TYPE_INTEGER;
+                // int * float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.i * right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float * int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.f = left.v.f * right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float * float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.f * right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary DIVIDE
+    case '/': if (left.type == TYPE_INTEGER){
+                // int / int
+                if (right.type == TYPE_INTEGER){
+                  if (right.v.i == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.i = left.v.i / right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // int / float
+                } else if (right.type == TYPE_FLOATING){
+                  if (right.v.f == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.f = left.v.i / right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float / int
+                if (right.type == TYPE_INTEGER){
+                  if (right.v.i == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.f = left.v.f / right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float / float
+                } else if (right.type == TYPE_FLOATING){
+                  if (right.v.f == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.f = left.v.f / right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary MODULO
+    case '%': if (left.type == TYPE_INTEGER){
+                // int % int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (int)(left.v.i % right.v.i);
+                  ret.type = TYPE_INTEGER;
+                // int % float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (int)(left.v.i % (int)right.v.f);
+                  ret.type = TYPE_INTEGER;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float % int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (int)((int)left.v.f % right.v.i);
+                  ret.type = TYPE_INTEGER;
+                // float % float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (int)((int)left.v.f % (int)right.v.f);
+                  ret.type = TYPE_INTEGER;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary GT
+    case '>': if (left.type == TYPE_INTEGER){
+                // int > int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.i > right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // int > float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.i > right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float > int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.f > right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // float > float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.f > right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary GT
+    case '<': if (left.type == TYPE_INTEGER){
+                // int < int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.i < right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // int < float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.i < right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float < int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.f < right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // float < float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.f < right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
               break;
 
     default: cerror("unknown operator '%c'", n->data.binaryop.op);
@@ -125,19 +341,19 @@ Value execUnExpression(struct Node *n)
 
   switch (n->data.unaryop.op){
     case UNARY_POSTINC:
-      ret.i = currval.i + 1;
+      ret.v.i = currval.v.i + 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return ret;
     case UNARY_POSTDEC:
-      ret.i = currval.i - 1;
+      ret.v.i = currval.v.i - 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return ret;
     case UNARY_PREINC:
-      ret.i = currval.i + 1;
+      ret.v.i = currval.v.i + 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return currval;
     case UNARY_PREDEC:
-      ret.i = currval.i - 1;
+      ret.v.i = currval.v.i - 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return currval;
     default: cerror("unknown unary expression");
@@ -162,26 +378,37 @@ Value execDeclaration(struct Node *n)
 
   struct Node *r = n->data.declaration.right;
 
-  Value val;
+  Value ret;
 
-  val.i = 0;
-
-  varscount++;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
   varlist->var = var;
   varlist->var->type = n->data.declaration.type;
   varlist->var->name = n->data.declaration.name;
 
   if (n->data.declaration.right == NULL){
-    varlist->var->value.i = 0;
+    if (n->data.declaration.type == TYPE_INTEGER){
+      varlist->var->value.v.i = 0;
+      varlist->var->value.type = TYPE_INTEGER;
+    } else if (n->data.declaration.type == TYPE_FLOATING){
+      varlist->var->value.v.f = 0.0f;
+      varlist->var->value.type = TYPE_FLOATING;
+    }
   } else {
-    varlist->var->value = dispatchNode(r);
+    if (n->data.declaration.type == TYPE_INTEGER){
+      varlist->var->value.v.i = vtoi(dispatchNode(r));
+      varlist->var->value.type = TYPE_INTEGER;
+    } else if (n->data.declaration.type == TYPE_FLOATING){
+      varlist->var->value.v.f = vtof(dispatchNode(r));
+      varlist->var->value.type = TYPE_FLOATING;
+    }
   }
 
   varlist->next = n->block->data.block.vars;
   n->block->data.block.vars = varlist;
 
-  return val;
+  return ret;
 }
 
 Value execAssignment(struct Node *n)
@@ -191,7 +418,7 @@ Value execAssignment(struct Node *n)
 
   debug("executing assignment node <name: %s> at %p", n->data.s, n);
 
-  Value val;
+  Value ret;
 
   if (!variableAlreadySet(n->data.s, n->block)){
     cerror("tried to change value of variable '%s' without declaring it first", n->data.s);
@@ -202,9 +429,10 @@ Value execAssignment(struct Node *n)
 
   setVariableValue(n->data.s, dispatchNode(r), n->block);
 
-  val.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execBlock(struct Node *n)
@@ -214,12 +442,13 @@ Value execBlock(struct Node *n)
 
   debug("executing block node at %p", n);
 
-  Value val;
-  val.i = 0;
+  Value ret;
+  ret.v.i = 0;
+  ret.type = TYPE_INTEGER;
 
   for (int i = 0; i < n->data.block.count; i++){
     if (n->data.block.statements[i]->kind == nt_RETURN){
-      val = execReturn(n->data.block.statements[i]);
+      ret = execReturn(n->data.block.statements[i]);
       break;
     } else {
       dispatchNode(n->data.block.statements[i]);
@@ -238,7 +467,7 @@ Value execBlock(struct Node *n)
     }
   }
 
-  return val;
+  return ret;
 }
 
 Value execStatement(struct Node *n)
@@ -248,15 +477,16 @@ Value execStatement(struct Node *n)
 
   debug("executing statement node at %p", n);
 
-  Value val;
+  Value ret;
 
   for (int i = 0; i < n->data.statement.count; i++){
     dispatchNode(n->data.statement.nodes[i]);
   }
 
-  val.i = 0;
+  ret.v.i = 0;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execCall(struct Node *n)
@@ -266,26 +496,26 @@ Value execCall(struct Node *n)
 
   debug("executing call node <name: %s> at %p", n->data.call.name, n);
 
-  Value val;
+  Value ret;
 
   struct FunctionTable *t;
 
   if (!strcmp(n->data.call.name, "out")){
-    val.i = 0;
+    ret.v.i = 0;
     if (n->data.call.params){
       for (int i = 0; i < n->data.call.paramcount; i++){
         for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
           if (p->pos == i){
             if (p->pos == n->data.call.paramcount - 1)
-              printf("%d\n", dispatchNode(p->param).i);
+              printf("%s\n", vtos(dispatchNode(p->param)));
             else
-              printf("%d, ", dispatchNode(p->param).i);
-            val.i = dispatchNode(p->param).i;
+              printf("%s, ", vtos(dispatchNode(p->param)));
+            ret.v.i = dispatchNode(p->param).v.i;
           }
         }
       }
     }
-    return val;
+    return ret;
   } else {
     for (t = funchead; t != NULL; t = t->next){
       if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
@@ -314,7 +544,16 @@ Value execCall(struct Node *n)
             t->function->data.funcdef.body->data.block.vars = varlist;
           }
 
-          return dispatchNode(t->function->data.funcdef.body);
+          if (t->function->data.funcdef.returntype == TYPE_INTEGER){
+            ret.v.i = vtoi(dispatchNode(t->function->data.funcdef.body));
+            ret.type = TYPE_INTEGER;
+          }
+          else if (t->function->data.funcdef.returntype == TYPE_FLOATING){
+            ret.v.f = vtof(dispatchNode(t->function->data.funcdef.body));
+            ret.type = TYPE_FLOATING;
+          }
+
+          return ret;
         }
       }
     }
@@ -327,7 +566,9 @@ Value execCall(struct Node *n)
 Value execReturn(struct Node *n)
 {
   Value ret;
-  ret.i = 0;
+
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
   if (n->data.returnn.expr)
     return dispatchNode(n->data.returnn.expr);
@@ -342,7 +583,7 @@ Value execWhile(struct Node *n)
 
   debug("executing while node at %p", n);
 
-  Value val;
+  Value ret;
 
   struct Node * const c = n->data.whilee.cond;
   struct Node * const s = n->data.whilee.statements;
@@ -350,13 +591,14 @@ Value execWhile(struct Node *n)
   assert(c);
   assert(s);
 
-  while (dispatchNode(c).i){
+  while (vtob(dispatchNode(c))){
     dispatchNode(s);
   }
 
-  val.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execIf(struct Node *n)
@@ -366,7 +608,7 @@ Value execIf(struct Node *n)
 
   debug("executing if node at %p", n);
 
-  Value val;
+  Value ret;
 
   struct Node * const c = n->data.iff.cond;
   struct Node * const s = n->data.iff.stmt;
@@ -375,7 +617,7 @@ Value execIf(struct Node *n)
   assert(c);
   assert(s);
 
-  if (dispatchNode(c).i){
+  if (vtob(dispatchNode(c))){
     dispatchNode(s);
   } else {
     if (n->data.iff.elsestmt){
@@ -383,9 +625,10 @@ Value execIf(struct Node *n)
     }
   }
 
-  val.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execFor(struct Node *n)
@@ -397,7 +640,8 @@ Value execFor(struct Node *n)
 
   Value ret;
 
-  ret.i = 1;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
   struct Node * const i = n->data.forr.init;
   struct Node * const c = n->data.forr.cond;
@@ -428,7 +672,7 @@ Value execFor(struct Node *n)
     }
   }
 
-  while (c ? dispatchNode(c).i : 1){
+  while (c ? vtob(dispatchNode(c)) : 1){
     if (s)
       dispatchNode(s);
     if (a)
@@ -445,7 +689,7 @@ Value execFuncDef(struct Node *n)
 
   debug("executing function definiton node <name: %s> at %p", n->data.funcdef.name, n);
 
-  Value val;
+  Value ret;
 
   struct FunctionTable *t;
 
@@ -462,8 +706,9 @@ Value execFuncDef(struct Node *n)
   functable->next = funchead;
   funchead = functable;
 
-  val.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 

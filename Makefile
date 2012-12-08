@@ -4,7 +4,7 @@ YACC    =  bison
 YFLAGS += -d
 LEX     =  flex
 
-OBJECTS = nemo.o nodes_gen.o nodes_exec.o nodes_free.o vars.o handy.o y.tab.o lex.yy.o
+OBJECTS = nemo.o nodes_gen.o nodes_exec.o nodes_free.o vars.o cast.o handy.o y.tab.o lex.yy.o
 
 all: nemo
 
@@ -25,6 +25,9 @@ nodes_free.o: nodes_free.c nodes_free.h
 
 vars.o: vars.c vars.h
 	$(CC) $(CFLAGS) -c vars.c
+
+cast.o: cast.c cast.h
+	$(CC) $(CFLAGS) -c cast.c
 
 handy.o: handy.c handy.h
 	$(CC) $(CFLAGS) -c handy.c

@@ -37,14 +37,29 @@ struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
   return new;
 }
 
-struct Node *genExpByNum(int val)
+struct Node *genExpByInt(int val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
   debug("creating integer node <val: %d> at %p", val, new);
 
   new->kind = nt_INTEGER;
-  new->data.value.i = val;
+  new->data.value.type = TYPE_INTEGER;
+  new->data.value.v.i = val;
+  new->block = NULL;
+
+  return new;
+}
+
+struct Node *genExpByFloat(float val)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("creating float node <val: %f> at %p", val, new);
+
+  new->kind = nt_FLOATING;
+  new->data.value.type = TYPE_FLOATING;
+  new->data.value.v.f = val;
   new->block = NULL;
 
   return new;
