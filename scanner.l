@@ -32,6 +32,7 @@ D [0-9]
 "/"{2,}.*                { /* one line comments */ ++linenum; }
 
 "int"                    { count(); return TYPE_INT; }
+"float"                  { count(); return TYPE_FLOAT; }
 
 "none"                   { count(); return NONE; }
 
