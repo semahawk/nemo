@@ -378,9 +378,10 @@ Value execDeclaration(struct Node *n)
 
   struct Node *r = n->data.declaration.right;
 
-  Value val;
+  Value ret;
 
-  val.v.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
   varlist->var = var;
   varlist->var->type = n->data.declaration.type;
@@ -407,7 +408,7 @@ Value execDeclaration(struct Node *n)
   varlist->next = n->block->data.block.vars;
   n->block->data.block.vars = varlist;
 
-  return val;
+  return ret;
 }
 
 Value execAssignment(struct Node *n)
@@ -417,7 +418,7 @@ Value execAssignment(struct Node *n)
 
   debug("executing assignment node <name: %s> at %p", n->data.s, n);
 
-  Value val;
+  Value ret;
 
   if (!variableAlreadySet(n->data.s, n->block)){
     cerror("tried to change value of variable '%s' without declaring it first", n->data.s);
@@ -428,9 +429,10 @@ Value execAssignment(struct Node *n)
 
   setVariableValue(n->data.s, dispatchNode(r), n->block);
 
-  val.v.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execBlock(struct Node *n)
@@ -440,12 +442,13 @@ Value execBlock(struct Node *n)
 
   debug("executing block node at %p", n);
 
-  Value val;
-  val.v.i = 0;
+  Value ret;
+  ret.v.i = 0;
+  ret.type = TYPE_INTEGER;
 
   for (int i = 0; i < n->data.block.count; i++){
     if (n->data.block.statements[i]->kind == nt_RETURN){
-      val = execReturn(n->data.block.statements[i]);
+      ret = execReturn(n->data.block.statements[i]);
       break;
     } else {
       dispatchNode(n->data.block.statements[i]);
@@ -464,7 +467,7 @@ Value execBlock(struct Node *n)
     }
   }
 
-  return val;
+  return ret;
 }
 
 Value execStatement(struct Node *n)
@@ -474,15 +477,16 @@ Value execStatement(struct Node *n)
 
   debug("executing statement node at %p", n);
 
-  Value val;
+  Value ret;
 
   for (int i = 0; i < n->data.statement.count; i++){
     dispatchNode(n->data.statement.nodes[i]);
   }
 
-  val.v.i = 0;
+  ret.v.i = 0;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execCall(struct Node *n)
@@ -492,12 +496,12 @@ Value execCall(struct Node *n)
 
   debug("executing call node <name: %s> at %p", n->data.call.name, n);
 
-  Value val;
+  Value ret;
 
   struct FunctionTable *t;
 
   if (!strcmp(n->data.call.name, "out")){
-    val.v.i = 0;
+    ret.v.i = 0;
     if (n->data.call.params){
       for (int i = 0; i < n->data.call.paramcount; i++){
         for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
@@ -506,12 +510,12 @@ Value execCall(struct Node *n)
               printf("%s\n", vtos(dispatchNode(p->param)));
             else
               printf("%s, ", vtos(dispatchNode(p->param)));
-            val.v.i = dispatchNode(p->param).v.i;
+            ret.v.i = dispatchNode(p->param).v.i;
           }
         }
       }
     }
-    return val;
+    return ret;
   } else {
     for (t = funchead; t != NULL; t = t->next){
       if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
@@ -553,7 +557,9 @@ Value execCall(struct Node *n)
 Value execReturn(struct Node *n)
 {
   Value ret;
-  ret.v.i = 0;
+
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
   if (n->data.returnn.expr)
     return dispatchNode(n->data.returnn.expr);
@@ -568,7 +574,7 @@ Value execWhile(struct Node *n)
 
   debug("executing while node at %p", n);
 
-  Value val;
+  Value ret;
 
   struct Node * const c = n->data.whilee.cond;
   struct Node * const s = n->data.whilee.statements;
@@ -580,9 +586,10 @@ Value execWhile(struct Node *n)
     dispatchNode(s);
   }
 
-  val.v.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execIf(struct Node *n)
@@ -592,7 +599,7 @@ Value execIf(struct Node *n)
 
   debug("executing if node at %p", n);
 
-  Value val;
+  Value ret;
 
   struct Node * const c = n->data.iff.cond;
   struct Node * const s = n->data.iff.stmt;
@@ -609,9 +616,10 @@ Value execIf(struct Node *n)
     }
   }
 
-  val.v.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
 Value execFor(struct Node *n)
@@ -624,6 +632,7 @@ Value execFor(struct Node *n)
   Value ret;
 
   ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
   struct Node * const i = n->data.forr.init;
   struct Node * const c = n->data.forr.cond;
@@ -671,7 +680,7 @@ Value execFuncDef(struct Node *n)
 
   debug("executing function definiton node <name: %s> at %p", n->data.funcdef.name, n);
 
-  Value val;
+  Value ret;
 
   struct FunctionTable *t;
 
@@ -688,8 +697,9 @@ Value execFuncDef(struct Node *n)
   functable->next = funchead;
   funchead = functable;
 
-  val.v.i = 0;
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
 
-  return val;
+  return ret;
 }
 
