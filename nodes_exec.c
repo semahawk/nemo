@@ -544,7 +544,16 @@ Value execCall(struct Node *n)
             t->function->data.funcdef.body->data.block.vars = varlist;
           }
 
-          return dispatchNode(t->function->data.funcdef.body);
+          if (t->function->data.funcdef.returntype == TYPE_INTEGER){
+            ret.v.i = vtoi(dispatchNode(t->function->data.funcdef.body));
+            ret.type = TYPE_INTEGER;
+          }
+          else if (t->function->data.funcdef.returntype == TYPE_FLOATING){
+            ret.v.f = vtof(dispatchNode(t->function->data.funcdef.body));
+            ret.type = TYPE_FLOATING;
+          }
+
+          return ret;
         }
       }
     }
