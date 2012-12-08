@@ -48,7 +48,13 @@ Value dispatchNode(struct Node *n)
 
 Value execNodes(struct Node *nodest)
 {
-  return execBlock(nodest);
+  Value ret;
+
+  ret.v.i = vtoi(execBlock(nodest));
+  // we probably don't even need that but screw
+  ret.type = TYPE_INTEGER;
+
+  return ret;
 }
 
 Value execID(struct Node *n)
