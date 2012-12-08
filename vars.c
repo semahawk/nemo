@@ -8,8 +8,6 @@
 #include "handy.h"
 #include "vars.h"
 
-int varscount = 0;
-
 Value getVariableValue(const char *name, struct Node *block)
 {
   struct Node *b;

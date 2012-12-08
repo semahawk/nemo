@@ -12,9 +12,6 @@
 #include "vars.h"
 #include "cast.h"
 
-extern int varscount;
-int functionscount = 0;
-
 struct FunctionTable {
   struct Node *function;
   struct FunctionTable *next;
@@ -385,16 +382,26 @@ Value execDeclaration(struct Node *n)
 
   val.v.i = 0;
 
-  varscount++;
-
   varlist->var = var;
   varlist->var->type = n->data.declaration.type;
   varlist->var->name = n->data.declaration.name;
 
   if (n->data.declaration.right == NULL){
-    varlist->var->value.v.i = 0;
+    if (n->data.declaration.type == TYPE_INTEGER){
+      varlist->var->value.v.i = 0;
+      varlist->var->value.type = TYPE_INTEGER;
+    } else if (n->data.declaration.type == TYPE_FLOATING){
+      varlist->var->value.v.f = 0.0f;
+      varlist->var->value.type = TYPE_FLOATING;
+    }
   } else {
-    varlist->var->value = dispatchNode(r);
+    if (n->data.declaration.type == TYPE_INTEGER){
+      varlist->var->value.v.i = vtoi(dispatchNode(r));
+      varlist->var->value.type = TYPE_INTEGER;
+    } else if (n->data.declaration.type == TYPE_FLOATING){
+      varlist->var->value.v.f = vtof(dispatchNode(r));
+      varlist->var->value.type = TYPE_FLOATING;
+    }
   }
 
   varlist->next = n->block->data.block.vars;
