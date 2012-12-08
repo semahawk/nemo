@@ -23,8 +23,8 @@ struct FunctionTable *funchead = NULL;
 
 Value(*nodeExecs[])(struct Node *) =
 {
-  execTermExpression,
-  execTermExpression,
+  execID,
+  execInteger,
   execBinExpression,
   execUnExpression,
   execDeclaration,
@@ -52,27 +52,29 @@ Value execNodes(struct Node *nodest)
   return execBlock(nodest);
 }
 
-Value execTermExpression(struct Node *n)
+Value execID(struct Node *n)
 {
-  // TODO: refactor to an execNameExp and execVal functions
   assert(n);
+  assert(nt_ID == n->kind);
 
-  debug("executing id/integer expression node at %p", n);
+  debug("executing id node <name: %s> at %p", n->data.s, n);
 
-  if (nt_INTEGER == n->kind){
-    return n->data.value;
+  if (variableAlreadySet(n->data.s, n->block)){
+    return getVariableValue(n->data.s, n->block);
   } else {
-    if (nt_ID == n->kind){
-      if (variableAlreadySet(n->data.s, n->block))
-        return getVariableValue(n->data.s, n->block);
-      else
-        cerror("variable '%s' doesn't exist", n->data.s);
-        exit(1);
-    } else {
-      cerror("ough: tried to get the value of a non-expression(%d)", n->kind);
-      exit(1);
-     }
+    cerror("variable '%s' was not found", n->data.s);
+    exit(1);
   }
+}
+
+Value execInteger(struct Node *n)
+{
+  assert(n);
+  assert(nt_INTEGER == n->kind);
+
+  debug("executing integer node <val: %d> at %p", n->data.value.i, n);
+
+  return n->data.value;
 }
 
 Value execBinExpression(struct Node *n)
@@ -83,7 +85,7 @@ Value execBinExpression(struct Node *n)
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
 
-  debug("executing binary operation node at %p", n);
+  debug("executing binary operation node <op: '%c'> at %p", n->data.binaryop.op, n);
 
   switch (n->data.binaryop.op){
     case '+': ret.i = left.i + right.i;
@@ -148,7 +150,7 @@ Value execDeclaration(struct Node *n)
   assert(n);
   assert(nt_DECLARATION == n->kind);
 
-  debug("executing declaration node at %p", n);
+  debug("executing declaration node <name: %s> at %p", n->data.declaration.name, n);
 
   if (variableAlreadySet(n->data.declaration.name, n->block)){
     cerror("variable '%s' already declared", n->data.declaration.name);
@@ -187,7 +189,7 @@ Value execAssignment(struct Node *n)
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
 
-  debug("executing assignment node at %p", n);
+  debug("executing assignment node <name: %s> at %p", n->data.s, n);
 
   Value val;
 
@@ -262,7 +264,7 @@ Value execCall(struct Node *n)
   assert(n);
   assert(nt_CALL == n->kind);
 
-  debug("executing call node at %p", n);
+  debug("executing call node <name: %s> at %p", n->data.call.name, n);
 
   Value val;
 
@@ -441,7 +443,7 @@ Value execFuncDef(struct Node *n)
   assert(n);
   assert(nt_FUNCDEF == n->kind);
 
-  debug("executing function definiton node at %p", n);
+  debug("executing function definiton node <name: %s> at %p", n->data.funcdef.name, n);
 
   Value val;
 

@@ -10,7 +10,8 @@
 
 #include "nodes_gen.h"
 
-Value execTermExpression(struct Node *);
+Value execID(struct Node *);
+Value execInteger(struct Node *);
 Value execBinExpression(struct Node *);
 Value execUnExpression(struct Node *);
 Value execDeclaration(struct Node *);
