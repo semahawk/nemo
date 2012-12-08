@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
       error("execution failed due to some errors");
       exit(1);
     }
-    ret = execNodes(nodest).i;
+    ret = execNodes(nodest).v.i;
     freeNodes(nodest);
   } while (!feof(yyin));
 

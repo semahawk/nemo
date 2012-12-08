@@ -31,6 +31,7 @@
 
 %union {
   int i;
+  float f;
   char *s;
   char op;
   int type;
@@ -40,15 +41,16 @@
 }
 
 %token <i> INTEGER
+%token <f> FLOAT
 %token <s> VAR_IDENT IDENT
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
-%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr return_expr
+%type <node> expr decl_expr init_expr assign_expr call_expr binary_expr unary_expr return_expr constant
 %type <type> type
 %type <arglist> arg_list
 %type <paramlist> param_list
 
-%token TYPE_INT
+%token TYPE_INT TYPE_FLOAT
 %token WHILE IF ELSE FOR NONE RETURN
 %token PLUSPLUS MINUSMINUS
 
@@ -97,8 +99,13 @@ expr
     | return_expr     { $$ = $1; }
     | init_expr       { $$ = $1; }
     | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
-    | INTEGER         { $$ = genExpByNum($1); }
+    | constant        { $$ = $1; }
     | '(' expr ')'    { $$ = $2; }
+    ;
+
+constant
+    : INTEGER         { $$ = genExpByInt($1); }
+    | FLOAT           { $$ = genExpByFloat($1); }
     ;
 
 comp_stmt
@@ -173,7 +180,8 @@ unary_expr
     ;
 
 type
-    : TYPE_INT { $$ = TYPE_INTEGER; }
+    : TYPE_INT   { $$ = TYPE_INTEGER; }
+    | TYPE_FLOAT { $$ = TYPE_FLOATING; }
     ;
 
 %%

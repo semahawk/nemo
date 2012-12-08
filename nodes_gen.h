@@ -16,13 +16,18 @@ typedef enum {
   UNARY_PREDEC,
 } Unary;
 
-typedef union {
-  int i;
-} Value;
-
 typedef enum {
-  TYPE_INTEGER
+  TYPE_INTEGER,
+  TYPE_FLOATING
 } Type;
+
+typedef struct {
+  Type type;
+  union {
+    int i;
+    float f;
+  } v;
+} Value;
 
 struct Arg {
   Type type;
@@ -45,6 +50,7 @@ struct Node {
   enum {
     nt_ID,
     nt_INTEGER,
+    nt_FLOATING,
     nt_BINARYOP,
     nt_UNARYOP,
     nt_DECLARATION,
@@ -154,7 +160,8 @@ struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *, struct Node *);
 struct Node *genFor(struct Node *, struct Node *, struct Node *, struct Node *, struct Node *);
 struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
-struct Node *genExpByNum(int);
+struct Node *genExpByInt(int);
+struct Node *genExpByFloat(float);
 struct Node *genExpByName(char *, struct Node *);
 
 struct ArgList *genArgList(Type, char *, struct ArgList *, int);

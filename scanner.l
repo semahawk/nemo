@@ -64,6 +64,7 @@ D [0-9]
 \$[a-zA-Z][a-zA-Z0-9_']* { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]*   { count(); yylval.s = strdup(yytext); return IDENT; }
 {D}{D}*                  { count(); yylval.i = atoi(yytext); return INTEGER; }
+{D}*\.{D}+               { count(); yylval.f = atof(yytext); return FLOAT; }
 
 [ \t]                    { count(); }
 .                        { /* ignooar */ }

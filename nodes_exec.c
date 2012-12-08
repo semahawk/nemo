@@ -10,6 +10,7 @@
 #include "nodes_exec.h"
 #include "nodes_gen.h"
 #include "vars.h"
+#include "cast.h"
 
 extern int varscount;
 int functionscount = 0;
@@ -25,6 +26,7 @@ Value(*nodeExecs[])(struct Node *) =
 {
   execID,
   execInteger,
+  execFloating,
   execBinExpression,
   execUnExpression,
   execDeclaration,
@@ -72,7 +74,17 @@ Value execInteger(struct Node *n)
   assert(n);
   assert(nt_INTEGER == n->kind);
 
-  debug("executing integer node <val: %d> at %p", n->data.value.i, n);
+  debug("executing integer node <val: %d> at %p", n->data.value.v.i, n);
+
+  return n->data.value;
+}
+
+Value execFloating(struct Node *n)
+{
+  assert(n);
+  assert(nt_FLOATING == n->kind);
+
+  debug("executing floating node <val: %f> at %p", n->data.value.v.f, n);
 
   return n->data.value;
 }
@@ -88,23 +100,230 @@ Value execBinExpression(struct Node *n)
   debug("executing binary operation node <op: '%c'> at %p", n->data.binaryop.op, n);
 
   switch (n->data.binaryop.op){
-    case '+': ret.i = left.i + right.i;
-              break;
-    case '-': ret.i = left.i - right.i;
-              break;
-    case '*': ret.i = left.i * right.i;
-              break;
-    case '/': if (right.i == 0){
-                cerror("zero division!");
-                exit(1);
+    // binary PLUS
+    case '+': if (left.type == TYPE_INTEGER){
+                // int + int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = left.v.i + right.v.i;
+                  ret.type = TYPE_INTEGER;
+                // int + float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.i + right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float + int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.f = left.v.f + right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float + float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.f + right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
               } else {
-                ret.i = left.i / right.i;
+                cerror("right operand in binary is of unknown type");
+                exit(1);
               }
-    case '%': ret.i = left.i % right.i;
               break;
-    case '>': ret.i = left.i > right.i;
+
+    // binary MINUS
+    case '-': if (left.type == TYPE_INTEGER){
+                // int - int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = left.v.i - right.v.i;
+                  ret.type = TYPE_INTEGER;
+                // int - float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.i - right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float - int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.f = left.v.f - right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float - float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.f - right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
               break;
-    case '<': ret.i = left.i < right.i;
+
+    // binary MULTIPLE
+    case '*': if (left.type == TYPE_INTEGER){
+                // int * int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = left.v.i * right.v.i;
+                  ret.type = TYPE_INTEGER;
+                // int * float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.i * right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float * int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.f = left.v.f * right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float * float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.f = left.v.f * right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary DIVIDE
+    case '/': if (left.type == TYPE_INTEGER){
+                // int / int
+                if (right.type == TYPE_INTEGER){
+                  if (right.v.i == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.i = left.v.i / right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // int / float
+                } else if (right.type == TYPE_FLOATING){
+                  if (right.v.f == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.f = left.v.i / right.v.f;
+                  ret.type = TYPE_FLOATING;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float / int
+                if (right.type == TYPE_INTEGER){
+                  if (right.v.i == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.f = left.v.f / right.v.i;
+                  ret.type = TYPE_FLOATING;
+                // float / float
+                } else if (right.type == TYPE_FLOATING){
+                  if (right.v.f == 0){
+                    cerror("zero divison!");
+                    exit(1);
+                  }
+                  ret.v.f = left.v.f / right.v.f;
+                  ret.type = TYPE_FLOATING;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary MODULO
+    case '%': if (left.type == TYPE_INTEGER){
+                // int % int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (int)(left.v.i % right.v.i);
+                  ret.type = TYPE_INTEGER;
+                // int % float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (int)(left.v.i % (int)right.v.f);
+                  ret.type = TYPE_INTEGER;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float % int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (int)((int)left.v.f % right.v.i);
+                  ret.type = TYPE_INTEGER;
+                // float % float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (int)((int)left.v.f % (int)right.v.f);
+                  ret.type = TYPE_INTEGER;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary GT
+    case '>': if (left.type == TYPE_INTEGER){
+                // int > int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.i > right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // int > float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.i > right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float > int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.f > right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // float > float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.f > right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
+              break;
+
+    // binary GT
+    case '<': if (left.type == TYPE_INTEGER){
+                // int < int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.i < right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // int < float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.i < right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                } else {
+                  cerror("right operand in binary is of unknown type");
+                  exit(1);
+                }
+              } else if (left.type == TYPE_FLOATING){
+                // float < int
+                if (right.type == TYPE_INTEGER){
+                  ret.v.i = (left.v.f < right.v.i) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                // float < float
+                } else if (right.type == TYPE_FLOATING){
+                  ret.v.i = (left.v.f < right.v.f) ? 1 : 0;
+                  ret.type = TYPE_INTEGER;
+                }
+              } else {
+                cerror("right operand in binary is of unknown type");
+                exit(1);
+              }
               break;
 
     default: cerror("unknown operator '%c'", n->data.binaryop.op);
@@ -125,19 +344,19 @@ Value execUnExpression(struct Node *n)
 
   switch (n->data.unaryop.op){
     case UNARY_POSTINC:
-      ret.i = currval.i + 1;
+      ret.v.i = currval.v.i + 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return ret;
     case UNARY_POSTDEC:
-      ret.i = currval.i - 1;
+      ret.v.i = currval.v.i - 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return ret;
     case UNARY_PREINC:
-      ret.i = currval.i + 1;
+      ret.v.i = currval.v.i + 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return currval;
     case UNARY_PREDEC:
-      ret.i = currval.i - 1;
+      ret.v.i = currval.v.i - 1;
       setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
       return currval;
     default: cerror("unknown unary expression");
@@ -164,7 +383,7 @@ Value execDeclaration(struct Node *n)
 
   Value val;
 
-  val.i = 0;
+  val.v.i = 0;
 
   varscount++;
 
@@ -173,7 +392,7 @@ Value execDeclaration(struct Node *n)
   varlist->var->name = n->data.declaration.name;
 
   if (n->data.declaration.right == NULL){
-    varlist->var->value.i = 0;
+    varlist->var->value.v.i = 0;
   } else {
     varlist->var->value = dispatchNode(r);
   }
@@ -202,7 +421,7 @@ Value execAssignment(struct Node *n)
 
   setVariableValue(n->data.s, dispatchNode(r), n->block);
 
-  val.i = 0;
+  val.v.i = 0;
 
   return val;
 }
@@ -215,7 +434,7 @@ Value execBlock(struct Node *n)
   debug("executing block node at %p", n);
 
   Value val;
-  val.i = 0;
+  val.v.i = 0;
 
   for (int i = 0; i < n->data.block.count; i++){
     if (n->data.block.statements[i]->kind == nt_RETURN){
@@ -254,7 +473,7 @@ Value execStatement(struct Node *n)
     dispatchNode(n->data.statement.nodes[i]);
   }
 
-  val.i = 0;
+  val.v.i = 0;
 
   return val;
 }
@@ -271,16 +490,16 @@ Value execCall(struct Node *n)
   struct FunctionTable *t;
 
   if (!strcmp(n->data.call.name, "out")){
-    val.i = 0;
+    val.v.i = 0;
     if (n->data.call.params){
       for (int i = 0; i < n->data.call.paramcount; i++){
         for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
           if (p->pos == i){
             if (p->pos == n->data.call.paramcount - 1)
-              printf("%d\n", dispatchNode(p->param).i);
+              printf("%s\n", vtos(dispatchNode(p->param)));
             else
-              printf("%d, ", dispatchNode(p->param).i);
-            val.i = dispatchNode(p->param).i;
+              printf("%s, ", vtos(dispatchNode(p->param)));
+            val.v.i = dispatchNode(p->param).v.i;
           }
         }
       }
@@ -327,7 +546,7 @@ Value execCall(struct Node *n)
 Value execReturn(struct Node *n)
 {
   Value ret;
-  ret.i = 0;
+  ret.v.i = 0;
 
   if (n->data.returnn.expr)
     return dispatchNode(n->data.returnn.expr);
@@ -350,11 +569,11 @@ Value execWhile(struct Node *n)
   assert(c);
   assert(s);
 
-  while (dispatchNode(c).i){
+  while (vtob(dispatchNode(c))){
     dispatchNode(s);
   }
 
-  val.i = 0;
+  val.v.i = 0;
 
   return val;
 }
@@ -375,7 +594,7 @@ Value execIf(struct Node *n)
   assert(c);
   assert(s);
 
-  if (dispatchNode(c).i){
+  if (vtob(dispatchNode(c))){
     dispatchNode(s);
   } else {
     if (n->data.iff.elsestmt){
@@ -383,7 +602,7 @@ Value execIf(struct Node *n)
     }
   }
 
-  val.i = 0;
+  val.v.i = 0;
 
   return val;
 }
@@ -397,7 +616,7 @@ Value execFor(struct Node *n)
 
   Value ret;
 
-  ret.i = 1;
+  ret.v.i = 1;
 
   struct Node * const i = n->data.forr.init;
   struct Node * const c = n->data.forr.cond;
@@ -428,7 +647,7 @@ Value execFor(struct Node *n)
     }
   }
 
-  while (c ? dispatchNode(c).i : 1){
+  while (c ? vtob(dispatchNode(c)) : 1){
     if (s)
       dispatchNode(s);
     if (a)
@@ -462,7 +681,7 @@ Value execFuncDef(struct Node *n)
   functable->next = funchead;
   funchead = functable;
 
-  val.i = 0;
+  val.v.i = 0;
 
   return val;
 }
