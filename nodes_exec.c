@@ -567,7 +567,7 @@ Value execReturn(struct Node *n)
 {
   Value ret;
 
-  ret.v.i = 1;
+  ret.v.i = 0;
   ret.type = TYPE_INTEGER;
 
   if (n->data.returnn.expr)
