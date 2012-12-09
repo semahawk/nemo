@@ -62,3 +62,21 @@ inline bool vtob(Value value)
   }
 }
 
+inline Value vtov(Value value, Type type)
+{
+  Value ret;
+
+  switch (type){
+    case TYPE_INTEGER:
+      ret.v.i = vtoi(value);
+      ret.type = TYPE_INTEGER;
+      break;
+    case TYPE_FLOATING:
+      ret.v.f = vtof(value);
+      ret.type = TYPE_FLOATING;
+      break;
+  }
+
+  return ret;
+}
+

@@ -402,13 +402,7 @@ Value execDeclaration(struct Node *n)
       varlist->var->value.type = TYPE_FLOATING;
     }
   } else {
-    if (n->data.declaration.type == TYPE_INTEGER){
-      varlist->var->value.v.i = vtoi(dispatchNode(r));
-      varlist->var->value.type = TYPE_INTEGER;
-    } else if (n->data.declaration.type == TYPE_FLOATING){
-      varlist->var->value.v.f = vtof(dispatchNode(r));
-      varlist->var->value.type = TYPE_FLOATING;
-    }
+    varlist->var->value = vtov(dispatchNode(r), n->data.declaration.type);
   }
 
   varlist->next = n->block->data.block.vars;
@@ -550,16 +544,7 @@ Value execCall(struct Node *n)
             t->function->data.funcdef.body->data.block.vars = varlist;
           }
 
-          if (t->function->data.funcdef.returntype == TYPE_INTEGER){
-            ret.v.i = vtoi(dispatchNode(t->function->data.funcdef.body));
-            ret.type = TYPE_INTEGER;
-          }
-          else if (t->function->data.funcdef.returntype == TYPE_FLOATING){
-            ret.v.f = vtof(dispatchNode(t->function->data.funcdef.body));
-            ret.type = TYPE_FLOATING;
-          }
-
-          return ret;
+          return vtov(dispatchNode(t->function->data.funcdef.body), t->function->data.funcdef.returntype);
         }
       }
     }
