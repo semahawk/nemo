@@ -539,7 +539,8 @@ Value execCall(struct Node *n)
   struct FunctionTable *t;
 
   if (!strcmp(n->data.call.name, "out")){
-    ret.v.i = 0;
+    ret.v.i = 1;
+    ret.type = TYPE_INTEGER;
     if (n->data.call.params){
       for (int i = 0; i < n->data.call.paramcount; i++){
         for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
@@ -548,7 +549,6 @@ Value execCall(struct Node *n)
               printf("%s\n", vtos(dispatchNode(p->param)));
             else
               printf("%s, ", vtos(dispatchNode(p->param)));
-            ret.v.i = dispatchNode(p->param).v.i;
           }
         }
       }
