@@ -7,6 +7,8 @@
 #ifndef HANDY_H
 #define HANDY_H
 
+#include "nodes_gen.h"
+
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof *(x))
 
 void debug(char *, ...);
@@ -16,5 +18,7 @@ void cerror(char *, ...);
 void *myalloc(size_t);
 
 char *strdup(const char *);
+
+const char *unarytos(Unary);
 
 #endif // HANDY_H

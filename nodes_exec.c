@@ -342,7 +342,7 @@ Value execUnExpression(struct Node *n)
   assert(n);
   assert(nt_UNARYOP == n->kind);
 
-  debug("executing unary operation node at %p", n);
+  debug("executing unary operation node <op: '%s'> at %p", unarytos(n->data.unaryop.op), n);
 
   const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
   Value ret;

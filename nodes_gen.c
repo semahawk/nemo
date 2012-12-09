@@ -97,7 +97,7 @@ struct Node *genUnaryop(struct Node *left, Unary op, struct Node *currentblock)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating unary operation node <op: '%d'> at %p", op, new);
+  debug("creating unary operation node <op: '%s'> at %p", unarytos(op), new);
 
   if (left->kind != nt_ID){
     cerror("trying to change value of a constant object");

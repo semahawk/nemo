@@ -6,6 +6,7 @@
 
 #include "nemo.h"
 #include "handy.h"
+#include "nodes_gen.h"
 
 extern bool debugflag;
 
@@ -67,5 +68,21 @@ char *strdup(const char *p)
   char *np = malloc(strlen(p) + 1);
 
   return np ? strcpy(np, p) : np;
+}
+
+const char *unarytos(Unary type)
+{
+  switch (type){
+    case UNARY_POSTINC:
+      return "$v++";
+    case UNARY_POSTDEC:
+      return "$v--";
+    case UNARY_PREINC:
+      return "++$v";
+    case UNARY_PREDEC:
+      return "--$v";
+  }
+
+  return "#UNKUT#";
 }
 
