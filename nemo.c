@@ -76,6 +76,8 @@ int main(int argc, char *argv[])
 
   if ((fp = fopen(source, "r")) != NULL){
     yyin = fp;
+  } else if (!strcmp(source, "-")){
+    yyin = stdin;
   } else {
     perror(source);
     return 1;
