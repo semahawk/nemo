@@ -22,8 +22,8 @@ struct FunctionTable *funchead = NULL;
 Value(*nodeExecs[])(struct Node *) =
 {
   execID,
-  execInteger,
-  execFloating,
+  execConstant,
+  execConstant,
   execBinExpression,
   execUnExpression,
   execDeclaration,
@@ -72,22 +72,13 @@ Value execID(struct Node *n)
   }
 }
 
-Value execInteger(struct Node *n)
+Value execConstant(struct Node *n)
 {
   assert(n);
-  assert(nt_INTEGER == n->kind);
+  assert(nt_INTEGER  == n->kind ||
+         nt_FLOATING == n->kind);
 
-  debug("executing integer node <val: %d> at %p", n->data.value.v.i, n);
-
-  return n->data.value;
-}
-
-Value execFloating(struct Node *n)
-{
-  assert(n);
-  assert(nt_FLOATING == n->kind);
-
-  debug("executing floating node <val: %f> at %p", n->data.value.v.f, n);
+  debug("executing constant node <val: %s> at %p", vtos(n->data.value), n);
 
   return n->data.value;
 }

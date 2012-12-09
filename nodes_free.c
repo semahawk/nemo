@@ -52,7 +52,7 @@ void freeTermExpression(struct Node *n)
 {
   assert(n);
 
-  debug("freeing id/integer/floating node at %p", n);
+  debug("freeing id/constant node at %p", n);
 
   free(n);
 }

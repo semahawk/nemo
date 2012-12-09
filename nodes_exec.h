@@ -11,8 +11,7 @@
 #include "nodes_gen.h"
 
 Value execID(struct Node *);
-Value execInteger(struct Node *);
-Value execFloating(struct Node *);
+Value execConstant(struct Node *);
 Value execBinExpression(struct Node *);
 Value execUnExpression(struct Node *);
 Value execDeclaration(struct Node *);
