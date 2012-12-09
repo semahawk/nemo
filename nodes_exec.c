@@ -94,6 +94,7 @@ Value execFloating(struct Node *n)
 
 Value execBinExpression(struct Node *n)
 {
+  assert(n);
   assert(nt_BINARYOP == n->kind);
 
   const Value left = dispatchNode(n->data.binaryop.left);
@@ -338,6 +339,7 @@ Value execBinExpression(struct Node *n)
 
 Value execUnExpression(struct Node *n)
 {
+  assert(n);
   assert(nt_UNARYOP == n->kind);
 
   debug("executing unary operation node at %p", n);
@@ -347,21 +349,57 @@ Value execUnExpression(struct Node *n)
 
   switch (n->data.unaryop.op){
     case UNARY_POSTINC:
-      ret.v.i = currval.v.i + 1;
-      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-      return ret;
+      switch (currval.type){
+        case TYPE_INTEGER:
+          ret.v.i = currval.v.i + 1;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return ret;
+        case TYPE_FLOATING:
+          ret.v.f = currval.v.f + 1.0f;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return ret;
+      }
     case UNARY_POSTDEC:
-      ret.v.i = currval.v.i - 1;
-      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-      return ret;
+      switch (currval.type){
+        case TYPE_INTEGER:
+          ret.v.i = currval.v.i - 1;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return ret;
+        case TYPE_FLOATING:
+          ret.v.f = currval.v.f - 1.0f;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return ret;
+      }
     case UNARY_PREINC:
-      ret.v.i = currval.v.i + 1;
-      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-      return currval;
+      switch (currval.type){
+        case TYPE_INTEGER:
+          ret.v.i = currval.v.i + 1;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return currval;
+        case TYPE_FLOATING:
+          ret.v.f = currval.v.f + 1.0f;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return currval;
+      }
     case UNARY_PREDEC:
-      ret.v.i = currval.v.i - 1;
-      setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-      return currval;
+      switch (currval.type){
+        case TYPE_INTEGER:
+          ret.v.i = currval.v.i - 1;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return currval;
+        case TYPE_FLOATING:
+          ret.v.f = currval.v.f - 1.0f;
+          ret.type = currval.type;
+          setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return currval;
+      }
     default: cerror("unknown unary expression");
              exit(1);
   }
@@ -556,6 +594,9 @@ Value execCall(struct Node *n)
 
 Value execReturn(struct Node *n)
 {
+  assert(n);
+  assert(nt_RETURN == n->kind);
+
   Value ret;
 
   ret.v.i = 0;
