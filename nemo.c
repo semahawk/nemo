@@ -101,3 +101,9 @@ void version(void)
   printf("Nemo v%s\n", VERSION);
 }
 
+/*
+ * Megadeth, Running Wild, Gamma Ray
+ * Within Temptation, Nightwish
+ *
+ */
+

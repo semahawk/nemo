@@ -15,6 +15,10 @@
   #include "handy.h"
   #include "y.tab.h"
 
+  #define MAX_INCLUDE_DEPTH 10
+  YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
+  int include_stack_ptr = 0;
+
   void count();
   extern char *stdup(const char *);
 
@@ -25,11 +29,14 @@
 
 D [0-9]
 
+%x USE
 %x IN_COMMENT
 
 %%
 
 "/"{2,}.*                { /* one line comments */ ++linenum; }
+
+"use"                    { BEGIN(USE); }
 
 "int"                    { count(); return TYPE_INT; }
 "float"                  { count(); return TYPE_FLOAT; }
@@ -78,6 +85,37 @@ D [0-9]
   [^*\n]+                // eat comment in chunks
   "*"                    // eat the lone star
   \n                     ++linenum;
+}
+
+<USE>{
+  [ \t]*                 { /* eat the whitespace */ }
+  [^ \t\n\;]+ {
+    if (include_stack_ptr >= MAX_INCLUDE_DEPTH){
+      error("includes nested too deeply");
+      exit(1);
+    }
+
+    include_stack[include_stack_ptr++] = YY_CURRENT_BUFFER;
+    yyin = fopen(yytext, "r");
+
+    if (!yyin){
+      fprintf(stderr, "nemo: error in 'use': ");
+      perror(yytext);
+      exit(1);
+    }
+
+    yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+    BEGIN(INITIAL);
+  }
+}
+
+<<EOF>> {
+  if (--include_stack_ptr < 0){
+    yyterminate();
+  } else {
+    yy_switch_to_buffer(include_stack[include_stack_ptr]);
+  }
 }
 
 %%
