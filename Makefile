@@ -1,5 +1,5 @@
 CC      =  gcc
-CFLAGS += -g -W -Wall -std=c99 -march=i686 -O2 -D_POSIX_SOURCE
+CFLAGS += -g -W -Wall -std=c99 -O2 -D_POSIX_SOURCE
 YACC    =  bison
 YFLAGS += -d
 LEX     =  flex
