@@ -45,7 +45,7 @@
 %token <s> VAR_IDENT IDENT
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
-%type <node> expr /*decl_expr init_expr*/ assign_expr call_expr binary_expr unary_expr return_expr constant
+%type <node> expr assign_expr call_expr binary_expr unary_expr return_expr constant
 %type <type> type
 %type <arglist> arg_list
 %type <paramlist> param_list
@@ -95,8 +95,6 @@ expr
     | unary_expr      { $$ = $1; }
     | assign_expr     { $$ = $1; }
     | call_expr       { $$ = $1; }
-    /*| decl_expr       { $$ = $1; }*/
-    /*| init_expr       { $$ = $1; }*/
     | return_expr     { $$ = $1; }
     | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
     | constant        { $$ = $1; }
@@ -129,14 +127,6 @@ param_list
     | expr                         { $$ = genParamList($1, NULL, paramcount); paramcount = 1; }
     | param_list ',' expr          { $$ = genParamList($3, $1, paramcount); paramcount++; }
     ;
-
-/*decl_expr*/
-    /*: type VAR_IDENT                 { $$ = genDeclaration($1, $2, NULL, currentblock); }*/
-    /*;*/
-
-/*init_expr*/
-    /*: type VAR_IDENT  '=' expr       { $$ = genDeclaration($1, $2, $4, currentblock); }*/
-    /*;*/
 
 assign_expr
     : VAR_IDENT '=' expr             { $$ = genAssignment($1, $3, currentblock); }
