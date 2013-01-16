@@ -139,7 +139,8 @@ init_expr
     ;
 
 assign_expr
-    : VAR_IDENT  '=' expr            { $$ = genAssignment($1, $3, currentblock); }
+    : VAR_IDENT '=' expr             { $$ = genAssignment($1, $3, currentblock); }
+    | constant  '=' expr             { cerror("cannot change value of a constant"); exit(1); }
     ;
 
 call_expr
