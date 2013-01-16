@@ -344,12 +344,12 @@ Value execUnExpression(struct Node *n)
           ret.v.i = currval.v.i + 1;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return ret;
+          return currval;
         case TYPE_FLOATING:
           ret.v.f = currval.v.f + 1.0f;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return ret;
+          return currval;
       }
     case UNARY_POSTDEC:
       switch (currval.type){
@@ -357,12 +357,12 @@ Value execUnExpression(struct Node *n)
           ret.v.i = currval.v.i - 1;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return ret;
+          return currval;
         case TYPE_FLOATING:
           ret.v.f = currval.v.f - 1.0f;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return ret;
+          return currval;
       }
     case UNARY_PREINC:
       switch (currval.type){
@@ -370,12 +370,12 @@ Value execUnExpression(struct Node *n)
           ret.v.i = currval.v.i + 1;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return currval;
+          return ret;
         case TYPE_FLOATING:
           ret.v.f = currval.v.f + 1.0f;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return currval;
+          return ret;
       }
     case UNARY_PREDEC:
       switch (currval.type){
@@ -383,12 +383,12 @@ Value execUnExpression(struct Node *n)
           ret.v.i = currval.v.i - 1;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return currval;
+          return ret;
         case TYPE_FLOATING:
           ret.v.f = currval.v.f - 1.0f;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
-          return currval;
+          return ret;
       }
     default: cerror("unknown unary expression");
              exit(1);
