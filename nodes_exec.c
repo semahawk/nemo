@@ -26,7 +26,6 @@ Value(*nodeExecs[])(struct Node *) =
   execConstant,
   execBinExpression,
   execUnExpression,
-  execDeclaration,
   execAssignment,
   execBlock,
   execStatement,
@@ -396,50 +395,6 @@ Value execUnExpression(struct Node *n)
   }
 }
 
-Value execDeclaration(struct Node *n)
-{
-  assert(n);
-  assert(nt_DECLARATION == n->kind);
-
-  debug("executing declaration node <name: %s> at %p", n->data.declaration.name, n);
-
-  if (variableAlreadySet(n->data.declaration.name, n->block)){
-    cerror("variable '%s' already declared", n->data.declaration.name);
-    exit(1);
-  }
-
-  struct VariableList *varlist = myalloc(sizeof(struct VariableList));
-  struct Variable *var = myalloc(sizeof(struct Variable));
-
-  struct Node *r = n->data.declaration.right;
-
-  Value ret;
-
-  ret.v.i = 1;
-  ret.type = TYPE_INTEGER;
-
-  varlist->var = var;
-  varlist->var->type = n->data.declaration.type;
-  varlist->var->name = n->data.declaration.name;
-
-  if (n->data.declaration.right == NULL){
-    if (n->data.declaration.type == TYPE_INTEGER){
-      varlist->var->value.v.i = 0;
-      varlist->var->value.type = TYPE_INTEGER;
-    } else if (n->data.declaration.type == TYPE_FLOATING){
-      varlist->var->value.v.f = 0.0f;
-      varlist->var->value.type = TYPE_FLOATING;
-    }
-  } else {
-    varlist->var->value = vtov(dispatchNode(r), n->data.declaration.type);
-  }
-
-  varlist->next = n->block->data.block.vars;
-  n->block->data.block.vars = varlist;
-
-  return ret;
-}
-
 Value execAssignment(struct Node *n)
 {
   assert(n);
@@ -450,8 +405,15 @@ Value execAssignment(struct Node *n)
   Value ret;
 
   if (!variableAlreadySet(n->data.s, n->block)){
-    cerror("tried to change value of variable '%s' without declaring it first", n->data.s);
-    exit(1);
+    struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+    struct Variable *var = myalloc(sizeof(struct Variable));
+
+    varlist->var = var;
+    varlist->var->type = TYPE_INTEGER;//n->data.assignment.type;
+    varlist->var->name = n->data.assignment.name;
+
+    varlist->next = n->block->data.block.vars;
+    n->block->data.block.vars = varlist;
   }
 
   struct Node *r = n->data.assignment.right;

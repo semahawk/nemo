@@ -14,7 +14,6 @@ Value execID(struct Node *);
 Value execConstant(struct Node *);
 Value execBinExpression(struct Node *);
 Value execUnExpression(struct Node *);
-Value execDeclaration(struct Node *);
 Value execAssignment(struct Node *);
 Value execCall(struct Node *);
 Value execReturn(struct Node *);

@@ -53,7 +53,6 @@ struct Node {
     nt_FLOATING,
     nt_BINARYOP,
     nt_UNARYOP,
-    nt_DECLARATION,
     nt_ASSIGNMENT,
     nt_BLOCK,
     nt_STATEMENT,
@@ -79,13 +78,6 @@ struct Node {
       struct Node *expression;
       Unary op;
     } unaryop;
-
-    struct {
-      Type type;
-      char *name;
-      // used when initializing a variable
-      struct Node *right;
-    } declaration;
 
     struct {
       char *name;
@@ -151,7 +143,6 @@ struct Node *genDeclaration(Type, char *, struct Node *, struct Node *);
 struct Node *genAssignment(char *, struct Node *, struct Node *);
 struct Node *genEmptyBlock(struct Node *);
        void  blockappend(struct Node *, struct Node *);
-struct Node *genStatement(struct Node *, struct Node *);
 struct Node *genBinaryop(struct Node *, struct Node *, char);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct ParamList *, int);

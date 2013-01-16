@@ -13,7 +13,6 @@ void freeNodes(struct Node *);
 void freeTermExpression(struct Node *);
 void freeBinExpression(struct Node *);
 void freeUnExpression(struct Node *);
-void freeDeclaration(struct Node *);
 void freeAssignment(struct Node *);
 void freeCall(struct Node *);
 void freeReturn(struct Node *);

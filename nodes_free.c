@@ -17,7 +17,7 @@ void(*nodeFrees[])(struct Node *) =
   freeTermExpression,
   freeBinExpression,
   freeUnExpression,
-  freeDeclaration,
+  /*freeDeclaration,*/
   freeAssignment,
   freeBlock,
   freeStatement,
@@ -78,19 +78,6 @@ void freeUnExpression(struct Node *n)
   debug("freeing unary operation node at %p", n);
 
   freeNode(n->data.unaryop.expression);
-
-  free(n);
-}
-
-void freeDeclaration(struct Node *n)
-{
-  assert(n);
-  assert(nt_DECLARATION == n->kind);
-
-  debug("freeing declaration node at %p", n);
-
-  if (n->data.declaration.right)
-    freeNode(n->data.declaration.right);
 
   free(n);
 }

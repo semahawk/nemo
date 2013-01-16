@@ -8,21 +8,6 @@
 #include "handy.h"
 #include "nodes_gen.h"
 
-struct Node *genDeclaration(Type type, char *name, struct Node *val, struct Node *block)
-{
-  struct Node *new = myalloc(sizeof(struct Node));
-
-  debug("creating declaration node <type: %d, name: %s> at %p", type, name, new);
-
-  new->kind = nt_DECLARATION;
-  new->data.declaration.type = type;
-  new->data.declaration.name = name;
-  new->data.declaration.right = val;
-  new->block = block;
-
-  return new;
-}
-
 struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
