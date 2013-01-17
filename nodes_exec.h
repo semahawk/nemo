@@ -24,6 +24,8 @@ Value execBlock(struct Node *);
 Value execStatement(struct Node *);
 Value execFuncDef(struct Node *);
 
+Value dispatchNode(struct Node *);
+
 Value execNodes(struct Node *);
 void freeNodes(struct Node *);
 

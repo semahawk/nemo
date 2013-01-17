@@ -46,11 +46,9 @@
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
 %type <node> expr assign_expr call_expr binary_expr unary_expr return_expr constant
-%type <type> type
 %type <arglist> arg_list
 %type <paramlist> param_list
 
-%token TYPE_INT TYPE_FLOAT
 %token WHILE IF ELSE FOR NONE RETURN
 %token FUN
 %token PLUSPLUS MINUSMINUS
@@ -170,11 +168,6 @@ unary_expr
     | expr MINUSMINUS  { $$ = genUnaryop($1, UNARY_POSTDEC, currentblock); }
     | PLUSPLUS expr    { $$ = genUnaryop($2, UNARY_PREINC, currentblock); }
     | MINUSMINUS expr  { $$ = genUnaryop($2, UNARY_PREDEC, currentblock); }
-    ;
-
-type
-    : TYPE_INT   { $$ = TYPE_INTEGER; }
-    | TYPE_FLOAT { $$ = TYPE_FLOATING; }
     ;
 
 %%

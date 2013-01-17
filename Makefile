@@ -4,7 +4,7 @@ YACC    =  bison
 YFLAGS += -d
 LEX     =  flex
 
-OBJECTS = nemo.o nodes_gen.o nodes_exec.o nodes_free.o vars.o cast.o handy.o y.tab.o lex.yy.o
+OBJECTS = nemo.o nodes_gen.o nodes_exec.o nodes_free.o vars.o cast.o handy.o predef.o y.tab.o lex.yy.o
 
 all: nemo
 
@@ -31,6 +31,9 @@ cast.o: cast.c cast.h
 
 handy.o: handy.c handy.h
 	$(CC) $(CFLAGS) -c handy.c
+
+predef.o: predef.c predef.h
+	$(CC) $(CFLAGS) -c predef.c
 
 y.tab.o: grammar.y
 	$(YACC) $(YFLAGS) grammar.y

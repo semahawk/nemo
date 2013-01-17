@@ -11,6 +11,7 @@
 #include "nodes_gen.h"
 #include "vars.h"
 #include "cast.h"
+#include "predef.h"
 
 struct FunctionTable {
   struct Node *function;
@@ -489,54 +490,45 @@ Value execCall(struct Node *n)
 
   Value ret;
 
-  struct FunctionTable *t;
-
-  if (!strcmp(n->data.call.name, "out")){
-    ret.v.i = 1;
-    ret.type = TYPE_INTEGER;
-    if (n->data.call.params){
-      for (int i = 0; i < n->data.call.paramcount; i++){
-        for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
-          if (p->pos == i){
-            if (p->pos == n->data.call.paramcount - 1)
-              printf("%s\n", vtos(dispatchNode(p->param)));
-            else
-              printf("%s, ", vtos(dispatchNode(p->param)));
-          }
-        }
-      }
+  // check if that function is a predefined one
+  // if so, execute it, and return value of that executed function
+  for (unsigned int i = 0; i < predefs_size; i++){
+    if (!strcmp(n->data.call.name, predefs[i].name)){
+      ret = predefs[i].fn(n->data.call.params, n->data.call.paramcount);
+      return ret;
     }
-    return ret;
-  } else {
-    for (t = funchead; t != NULL; t = t->next){
-      if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
-        // checking for argument/param lenghts
-        if (n->data.call.paramcount > t->function->data.funcdef.argcount){
-          cerror("too many arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
-          exit(1);
-        } else if (n->data.call.paramcount < t->function->data.funcdef.argcount){
-          cerror("too few arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
-          exit(1);
-        } else {
-          for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){
-            struct VariableList *varlist = myalloc(sizeof(struct VariableList));
-            struct Variable *var = myalloc(sizeof(struct Variable));
+  }
 
-            varlist->var = var;
-            varlist->var->type = a->arg->type;
-            varlist->var->name = a->arg->name;
+  // if it's not a predefined function, we search for it
+  // and exec
+  for (struct FunctionTable *t = funchead; t != NULL; t = t->next){
+    if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
+      // checking for argument/param lenghts
+      if (n->data.call.paramcount > t->function->data.funcdef.argcount){
+        cerror("too many arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+        exit(1);
+      } else if (n->data.call.paramcount < t->function->data.funcdef.argcount){
+        cerror("too few arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
+        exit(1);
+      } else {
+        for (struct ArgList *a = t->function->data.funcdef.args; a != NULL; a = a->next){
+          struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+          struct Variable *var = myalloc(sizeof(struct Variable));
 
-            for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
-              if (p->pos == a->pos)
-                varlist->var->value = dispatchNode(p->param);
-            }
+          varlist->var = var;
+          varlist->var->type = a->arg->type;
+          varlist->var->name = a->arg->name;
 
-            varlist->next = t->function->data.funcdef.body->data.block.vars;
-            t->function->data.funcdef.body->data.block.vars = varlist;
+          for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next){
+            if (p->pos == a->pos)
+              varlist->var->value = dispatchNode(p->param);
           }
 
-          return dispatchNode(t->function->data.funcdef.body);
+          varlist->next = t->function->data.funcdef.body->data.block.vars;
+          t->function->data.funcdef.body->data.block.vars = varlist;
         }
+
+        return dispatchNode(t->function->data.funcdef.body);
       }
     }
   }

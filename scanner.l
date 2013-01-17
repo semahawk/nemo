@@ -39,9 +39,6 @@ D [0-9]
 "use"                    { BEGIN(USE); }
 "fun"                    { count(); return FUN; }
 
-"int"                    { count(); return TYPE_INT; }
-"float"                  { count(); return TYPE_FLOAT; }
-
 "none"                   { count(); return NONE; }
 
 "if"                     { count(); return IF; }
