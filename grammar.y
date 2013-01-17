@@ -135,6 +135,7 @@ assign_expr
 
 call_expr
     : IDENT '(' param_list ')'       { $$ = genCall($1, $3, paramcount); paramcount = 0; }
+    | IDENT     param_list           { $$ = genCall($1, $2, paramcount); paramcount = 0; }
     ;
 
 return_expr
