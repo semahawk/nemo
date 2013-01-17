@@ -2,7 +2,7 @@
  * comment testing
  */
 
-int $x = 5;
+$x = 5;
 
-out($x * 5);
+out $x * 5;
 

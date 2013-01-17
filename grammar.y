@@ -52,6 +52,7 @@
 
 %token TYPE_INT TYPE_FLOAT
 %token WHILE IF ELSE FOR NONE RETURN
+%token FUN
 %token PLUSPLUS MINUSMINUS
 
 %right '='
@@ -113,13 +114,13 @@ comp_stmt
     ;
 
 funcdef_stmt
-    : type IDENT ';' arg_list comp_stmt   { $$ = genFuncDef($1, $2, $4, argcount, $5); argcount = 0; }
+    : FUN IDENT ';' arg_list comp_stmt   { $$ = genFuncDef(TYPE_INTEGER, $2, $4, argcount, $5); argcount = 0; }
     ;
 
 arg_list
     : NONE                         { $$ = NULL; argcount = 0; }
-    | type VAR_IDENT               { $$ = genArgList($1, $2, NULL, argcount); argcount = 1; }
-    | arg_list ',' type VAR_IDENT  { $$ = genArgList($3, $4, $1, argcount); argcount++;   }
+    | VAR_IDENT                    { $$ = genArgList(TYPE_INTEGER, $1, NULL, argcount); argcount = 1; }
+    | arg_list ',' VAR_IDENT       { $$ = genArgList(TYPE_INTEGER, $3, $1, argcount); argcount++;   }
     ;
 
 param_list
@@ -144,14 +145,14 @@ return_expr
     ;
 
 iter_stmt
-    : WHILE '(' expr ')' stmt                     { $$ = genWhile($3, $5); }
-    | FOR '(' expr_stmt expr_stmt expr ')' stmt   { $$ = genFor($3, $4, $5, $7, currentblock); }
-    | FOR '(' expr_stmt expr_stmt ')' stmt        { $$ = genFor($3, $4, NULL, $6, currentblock); }
+    : WHILE expr stmt                     { $$ = genWhile($2, $3); }
+    | FOR expr_stmt expr_stmt expr stmt   { $$ = genFor($2, $3, $4, $5, currentblock); }
+    | FOR expr_stmt expr_stmt stmt        { $$ = genFor($2, $3, NULL, $4, currentblock); }
     ;
 
 select_stmt
-    : IF '(' expr ')' stmt %prec LOWERTHANELSE  { $$ = genIf($3, $5, NULL); }
-    | IF '(' expr ')' stmt ELSE stmt            { $$ = genIf($3, $5, $7); }
+    : IF expr stmt %prec LOWERTHANELSE  { $$ = genIf($2, $3, NULL); }
+    | IF expr stmt ELSE stmt            { $$ = genIf($2, $3, $5); }
     ;
 
 binary_expr

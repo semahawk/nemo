@@ -37,6 +37,7 @@ D [0-9]
 "/"{2,}.*                { /* one line comments */ ++linenum; }
 
 "use"                    { BEGIN(USE); }
+"fun"                    { count(); return FUN; }
 
 "int"                    { count(); return TYPE_INT; }
 "float"                  { count(); return TYPE_FLOAT; }
