@@ -535,7 +535,7 @@ Value execCall(struct Node *n)
             t->function->data.funcdef.body->data.block.vars = varlist;
           }
 
-          return vtov(dispatchNode(t->function->data.funcdef.body), t->function->data.funcdef.returntype);
+          return dispatchNode(t->function->data.funcdef.body);
         }
       }
     }
