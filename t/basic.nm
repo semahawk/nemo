@@ -1,0 +1,33 @@
+// Don't fall on easy things
+assert 1, 1;
+assert 1.0, 1.0;
+
+// Basic boolean
+assert 1;
+
+// Basic arithmetic
+assert 2, 1 + 1;
+assert 1 + 1, 2;
+assert 5 - 1, 4;
+assert 1, 4 - 3;
+assert 2 * 2, 4;
+assert 2.5 * 2, 5;
+assert 10 * 2, 20;
+assert 12 % 5, 2;
+assert 3 % 2, 1;
+
+// Correct precedence
+assert 2 + 2 * 2, 6;
+assert 2 * 2 + 2, 6;
+assert (2 + 2) * 2, 8;
+assert 2 * (2 + 2), 8;
+
+// Assignment
+$a = 10;
+assert $a, 10;
+assert $a;
+
+//$a = $b = 20;
+//assert $a, 20;
+//assert $b, 20;
+//assert $a, $b;
