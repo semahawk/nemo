@@ -62,6 +62,7 @@ struct Node {
     nt_IF,
     nt_FOR,
     nt_FUNCDEF,
+    nt_ITER,
     nt_LASTELEMENT
   } kind;
 
@@ -132,6 +133,12 @@ struct Node {
       struct ArgList *args;
       struct Node *body;
     } funcdef;
+
+    struct {
+      char *type;
+      struct Node *count;
+      struct Node *stmt;
+    } iter;
   } data;
 
   // block in which the node was created in

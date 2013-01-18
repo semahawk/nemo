@@ -261,3 +261,17 @@ struct Node *genReturn(struct Node *expr)
 
   return new;
 }
+
+struct Node *genIter(char *type, struct Node *count, struct Node *stmt, struct Node *block)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("creating iter node <type: '%s'> at %p", type, new);
+
+  new->kind = nt_ITER;
+  new->data.iter.count = count;
+  new->data.iter.stmt = stmt;
+  new->block = block;
+
+  return new;
+}

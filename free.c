@@ -25,7 +25,8 @@ void(*nodeFrees[])(struct Node *) =
   freeWhile,
   freeIf,
   freeFor,
-  freeFuncDef
+  freeFuncDef,
+  freeIter
 };
 
 void freeNode(struct Node *n)
@@ -211,6 +212,19 @@ void freeFuncDef(struct Node *n)
       free(a->arg);
 
   freeNode(n->data.funcdef.body);
+
+  free(n);
+}
+
+void freeIter(struct Node *n)
+{
+  assert(n);
+  assert(nt_ITER == n->kind);
+
+  debug("freeing iteration node at %p", n);
+
+  freeNode(n->data.iter.count);
+  freeNode(n->data.iter.stmt);
 
   free(n);
 }

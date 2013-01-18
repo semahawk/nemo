@@ -24,6 +24,7 @@ struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
 struct Node *genExpByInt(int);
 struct Node *genExpByFloat(float);
 struct Node *genExpByName(char *, struct Node *);
+struct Node *genIter(char *, struct Node *, struct Node *, struct Node *);
 
 struct ArgList *genArgList(Type, char *, struct ArgList *, int);
 struct ParamList *genParamList(struct Node *, struct ParamList *, int);

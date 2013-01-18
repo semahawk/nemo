@@ -38,6 +38,7 @@ D [0-9]
 
 "use"                    { BEGIN(USE); }
 "fun"                    { count(); return FUN; }
+"times"                  { count(); return TIMES; }
 
 "none"                   { count(); return NONE; }
 

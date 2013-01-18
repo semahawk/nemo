@@ -23,6 +23,7 @@ Value execFor(struct Node *);
 Value execBlock(struct Node *);
 Value execStatement(struct Node *);
 Value execFuncDef(struct Node *);
+Value execIter(struct Node *);
 
 Value dispatchNode(struct Node *);
 

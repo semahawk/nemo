@@ -51,7 +51,7 @@
 %type <paramlist> param_list
 
 %token WHILE IF ELSE FOR NONE RETURN
-%token FUN
+%token FUN TIMES
 %token PLUSPLUS MINUSMINUS
 
 %right '='
@@ -147,6 +147,7 @@ iter_stmt
     : WHILE expr stmt                     { $$ = genWhile($2, $3); }
     | FOR expr_stmt expr_stmt expr stmt   { $$ = genFor($2, $3, $4, $5, currentblock); }
     | FOR expr_stmt expr_stmt stmt        { $$ = genFor($2, $3, NULL, $4, currentblock); }
+    | expr TIMES  stmt                    { $$ = genIter("times", $1, $3, currentblock); }
     ;
 
 select_stmt

@@ -35,7 +35,8 @@ Value(*nodeExecs[])(struct Node *) =
   execWhile,
   execIf,
   execFor,
-  execFuncDef
+  execFuncDef,
+  execIter
 };
 
 Value dispatchNode(struct Node *n)
@@ -682,6 +683,27 @@ Value execFuncDef(struct Node *n)
   functable->function = n;
   functable->next = funchead;
   funchead = functable;
+
+  ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
+
+  return ret;
+}
+
+Value execIter(struct Node *n)
+{
+  assert(n);
+  assert(nt_ITER == n->kind);
+
+  Value ret;
+  Value count = dispatchNode(n->data.iter.count);
+  int times;
+
+  times = vtoi(count);
+
+  for (int i = 0; i < times; i++){
+    dispatchNode(n->data.iter.stmt);
+  }
 
   ret.v.i = 1;
   ret.type = TYPE_INTEGER;
