@@ -695,6 +695,24 @@ Value execIter(struct Node *n)
   int times = vtoi(count);
 
   for (int i = 0; i < times; i++){
+    if (nt_BLOCK == n->data.iter.stmt->kind){
+      // adding two variables to that block
+      //
+      // $+  will get bigger as the loops go (say: 0->9)
+      // $-  will get smaller (say: 9->0)
+      //
+      Value plus_val;
+      plus_val.v.i = i;
+      plus_val.type = TYPE_INTEGER;
+      Value minus_val;
+      minus_val.v.i = (times - 1) - i;
+      minus_val.type = TYPE_INTEGER;
+      addVariableToBlock("$+", n->data.iter.stmt);
+      setVariableValue("$+", plus_val, n->data.iter.stmt);
+      addVariableToBlock("$-", n->data.iter.stmt);
+      setVariableValue("$-", minus_val, n->data.iter.stmt);
+    }
+
     dispatchNode(n->data.iter.stmt);
   }
 
