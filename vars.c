@@ -40,6 +40,7 @@ void setVariableValue(const char *name, Value value, struct Node *block)
           if (p->var->first_use){
             p->var->value = value;
             p->var->first_use = false;
+            return;
           } else {
             cerror("cannot change value of a read-only variable '%s'", name);
             exit(1);
@@ -47,6 +48,7 @@ void setVariableValue(const char *name, Value value, struct Node *block)
         // just a regular variable
         } else {
           p->var->value = value;
+          return;
         }
       }
     }
