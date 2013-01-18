@@ -25,5 +25,6 @@ struct VariableList {
 Value getVariableValue(const char *, struct Node *);
 void setVariableValue(const char *, Value, struct Node *);
 bool variableAlreadySet(const char *, struct Node *);
+void addVariableToBlock(const char *, struct Node *);
 
 #endif // VARS_H

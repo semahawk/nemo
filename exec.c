@@ -407,15 +407,7 @@ Value execAssignment(struct Node *n)
   Value ret;
 
   if (!variableAlreadySet(n->data.s, n->block)){
-    struct VariableList *varlist = myalloc(sizeof(struct VariableList));
-    struct Variable *var = myalloc(sizeof(struct Variable));
-
-    varlist->var = var;
-    varlist->var->type = TYPE_INTEGER;//n->data.assignment.type;
-    varlist->var->name = n->data.assignment.name;
-
-    varlist->next = n->block->data.block.vars;
-    n->block->data.block.vars = varlist;
+    addVariableToBlock(n->data.assignment.name, n->block);
   }
 
   struct Node *r = n->data.assignment.right;
@@ -695,11 +687,12 @@ Value execIter(struct Node *n)
   assert(n);
   assert(nt_ITER == n->kind);
 
+  debug("executing '%s' iter node at %p", n->data.iter.type, n);
+
   Value ret;
   Value count = dispatchNode(n->data.iter.count);
-  int times;
 
-  times = vtoi(count);
+  int times = vtoi(count);
 
   for (int i = 0; i < times; i++){
     dispatchNode(n->data.iter.stmt);

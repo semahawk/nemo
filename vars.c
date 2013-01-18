@@ -55,3 +55,16 @@ bool variableAlreadySet(const char *name, struct Node *block)
   return false;
 }
 
+void addVariableToBlock(const char *name, struct Node *block)
+{
+  struct VariableList *varlist = myalloc(sizeof(struct VariableList));
+  struct Variable *var = myalloc(sizeof(struct Variable));
+
+  varlist->var = var;
+  varlist->var->type = TYPE_INTEGER;
+  varlist->var->name = name;
+
+  varlist->next = block->data.block.vars;
+  block->data.block.vars = varlist;
+}
+
