@@ -194,7 +194,7 @@ Value execBinExpression(struct Node *n)
                     cerror("zero divison!");
                     exit(1);
                   }
-                  ret.v.i = left.v.i / right.v.i;
+                  ret.v.f = left.v.i / right.v.i;
                   ret.type = TYPE_FLOATING;
                 // int / float
                 } else if (right.type == TYPE_FLOATING){
