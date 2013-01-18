@@ -10,7 +10,8 @@
 %{
 
   #include "nemo.h"
-  #include "nodes_gen.h"
+  #include "nodes.h"
+  #include "gen.h"
   #include "handy.h"
 
   #define YYERROR_VERBOSE

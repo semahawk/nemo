@@ -8,8 +8,8 @@
 #define VARS_H
 
 #include "nemo.h"
-#include "nodes_gen.h"
-#include "nodes_exec.h"
+#include "nodes.h"
+#include "exec.h"
 
 struct Variable {
   Value value;

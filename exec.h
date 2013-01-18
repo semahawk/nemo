@@ -5,10 +5,10 @@
  *
  */
 
-#ifndef NODES_EXEC_H
-#define NODES_EXEC_H
+#ifndef EXEC_H
+#define EXEC_H
 
-#include "nodes_gen.h"
+#include "nodes.h"
 
 Value execID(struct Node *);
 Value execConstant(struct Node *);
@@ -29,4 +29,4 @@ Value dispatchNode(struct Node *);
 Value execNodes(struct Node *);
 void freeNodes(struct Node *);
 
-#endif // NODES_EXEC_H
+#endif // EXEC_H

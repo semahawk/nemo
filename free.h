@@ -1,11 +1,13 @@
 //
-// nodes_free.h
+// free.h
 //
 // Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
 //
 
-#ifndef NODES_FREE_H
-#define NODES_FREE_H
+#ifndef FREE_H
+#define FREE_H
+
+#include "nodes.h"
 
 void freeNode(struct Node *);
 void freeNodes(struct Node *);
@@ -23,4 +25,4 @@ void freeFuncDef(struct Node *);
 void freeBlock(struct Node *);
 void freeStatement(struct Node *);
 
-#endif // NODES_FREE_H
+#endif // FREE_H

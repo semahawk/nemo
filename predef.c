@@ -12,8 +12,8 @@
 
 #include "nemo.h"
 #include "predef.h"
-#include "nodes_exec.h"
-#include "nodes_gen.h"
+#include "exec.h"
+#include "nodes.h"
 #include "cast.h"
 
 struct PredefFunction predefs[] =

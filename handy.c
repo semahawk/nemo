@@ -6,7 +6,7 @@
 
 #include "nemo.h"
 #include "handy.h"
-#include "nodes_gen.h"
+#include "nodes.h"
 
 extern bool debugflag;
 

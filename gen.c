@@ -1,12 +1,12 @@
 //
-// nodes.c
+// gen.c
 //
 // Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
 //
 
 #include "nemo.h"
 #include "handy.h"
-#include "nodes_gen.h"
+#include "gen.h"
 
 struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {

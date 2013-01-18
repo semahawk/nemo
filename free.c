@@ -1,5 +1,5 @@
 /*
- * nodes_free.c
+ * free.c
  *
  * Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -7,8 +7,8 @@
 
 #include "nemo.h"
 #include "handy.h"
-#include "nodes_gen.h"
-#include "nodes_free.h"
+#include "nodes.h"
+#include "free.h"
 
 void(*nodeFrees[])(struct Node *) =
 {
@@ -17,7 +17,6 @@ void(*nodeFrees[])(struct Node *) =
   freeTermExpression,
   freeBinExpression,
   freeUnExpression,
-  /*freeDeclaration,*/
   freeAssignment,
   freeBlock,
   freeStatement,

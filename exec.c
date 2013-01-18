@@ -1,5 +1,5 @@
 /*
- * nodes_exec.c
+ * exec.c
  *
  * Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -7,8 +7,8 @@
 
 #include "nemo.h"
 #include "handy.h"
-#include "nodes_exec.h"
-#include "nodes_gen.h"
+#include "exec.h"
+#include "nodes.h"
 #include "vars.h"
 #include "cast.h"
 #include "predef.h"

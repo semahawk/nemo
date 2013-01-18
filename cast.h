@@ -8,7 +8,7 @@
 #ifndef CAST_H
 #define CAST_H
 
-#include "nodes_gen.h"
+#include "nodes.h"
 
 int   vtoi(Value);
 float vtof(Value);

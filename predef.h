@@ -11,7 +11,7 @@
  */
 
 #include "nemo.h"
-#include "nodes_gen.h"
+#include "nodes.h"
 
 struct PredefFunction {
   char *name;

@@ -7,7 +7,7 @@
 #ifndef HANDY_H
 #define HANDY_H
 
-#include "nodes_gen.h"
+#include "nodes.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof *(x))
 

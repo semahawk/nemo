@@ -13,9 +13,9 @@
 
 #include "nemo.h"
 #include "handy.h"
-#include "nodes_exec.h"
-#include "nodes_gen.h"
-#include "nodes_free.h"
+#include "exec.h"
+#include "nodes.h"
+#include "free.h"
 
 extern int yyparse(void);
 extern FILE *yyin;

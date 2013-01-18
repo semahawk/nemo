@@ -6,7 +6,7 @@
  */
 
 #include "cast.h"
-#include "nodes_gen.h"
+#include "nodes.h"
 #include "handy.h"
 
 inline int vtoi(Value value)
