@@ -27,7 +27,7 @@ $a = 10;
 assert $a, 10;
 assert $a;
 
-//$a = $b = 20;
-//assert $a, 20;
-//assert $b, 20;
-//assert $a, $b;
+$a = $b = 20;
+assert $a, 20;
+assert $b, 20;
+assert $a, $b;

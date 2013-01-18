@@ -407,15 +407,15 @@ Value execAssignment(struct Node *n)
   Value ret;
 
   struct Node *r = n->data.assignment.right;
+  Value r_val = dispatchNode(r);
 
   if (!variableAlreadySet(n->data.s, n->block)){
     addVariableToBlock(n->data.assignment.name, n->block);
   }
 
-  setVariableValue(n->data.s, dispatchNode(r), n->block);
+  setVariableValue(n->data.s, r_val, n->block);
 
-  ret.v.i = 1;
-  ret.type = TYPE_INTEGER;
+  ret = vtov(r_val, r_val.type);
 
   return ret;
 }
