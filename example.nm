@@ -1,8 +1,0 @@
-/*
- * comment testing
- */
-
-$x = 5;
-
-out $x * 5;
-

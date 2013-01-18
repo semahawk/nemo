@@ -15,6 +15,8 @@ struct Variable {
   Value value;
   char *name;
   Type type;
+  // used for read-only variables
+  bool first_use;
 };
 
 struct VariableList {
@@ -25,6 +27,6 @@ struct VariableList {
 Value getVariableValue(const char *, struct Node *);
 void setVariableValue(const char *, Value, struct Node *);
 bool variableAlreadySet(const char *, struct Node *);
-void addVariableToBlock(const char *, struct Node *);
+void addVariableToBlock(char *, struct Node *);
 
 #endif // VARS_H

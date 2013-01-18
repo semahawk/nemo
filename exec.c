@@ -406,11 +406,11 @@ Value execAssignment(struct Node *n)
 
   Value ret;
 
+  struct Node *r = n->data.assignment.right;
+
   if (!variableAlreadySet(n->data.s, n->block)){
     addVariableToBlock(n->data.assignment.name, n->block);
   }
-
-  struct Node *r = n->data.assignment.right;
 
   setVariableValue(n->data.s, dispatchNode(r), n->block);
 
