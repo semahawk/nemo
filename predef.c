@@ -28,15 +28,11 @@ Value predef_print(struct ParamList *params, int paramcount)
   Value ret;
 
   if (params){
-    for (int i = 0; i < paramcount; i++){
-      for (struct ParamList *p = params; p != NULL; p = p->next){
-        if (p->pos == i){
-          if (p->pos == paramcount - 1)
-            printf("%s\n", vtos(dispatchNode(p->param)));
-          else
-            printf("%s, ", vtos(dispatchNode(p->param)));
-        }
-      }
+    for (struct ParamList *p = params; p != NULL; p = p->next){
+      if (p->pos == paramcount - 1)
+        printf("%s\n", vtos(dispatchNode(p->param)));
+      else
+        printf("%s, ", vtos(dispatchNode(p->param)));
     }
   }
 

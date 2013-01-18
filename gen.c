@@ -240,9 +240,21 @@ struct Node *genCall(char *name, struct ParamList *params, int paramcount)
 
   debug("create", "call node <name: %s> at %p", name, new);
 
+  // reversing the params list
+  struct ParamList *next;
+  struct ParamList *current = params;
+  struct ParamList *reversed = NULL;
+
+  while (current != NULL){
+    next = current->next;
+    current->next = reversed;
+    reversed = current;
+    current = next;
+  }
+
   new->kind = nt_CALL;
   new->data.call.name = name;
-  new->data.call.params = params;
+  new->data.call.params = reversed;
   new->data.call.paramcount = paramcount;
   new->block = NULL;
 
