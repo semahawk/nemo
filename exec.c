@@ -63,7 +63,7 @@ Value execID(struct Node *n)
   assert(n);
   assert(nt_ID == n->kind);
 
-  debug("executing id node <name: %s> at %p", n->data.s, n);
+  debug("exec", "id node <name: %s> at %p", n->data.s, n);
 
   if (variableAlreadySet(n->data.s, n->block)){
     return getVariableValue(n->data.s, n->block);
@@ -79,7 +79,7 @@ Value execConstant(struct Node *n)
   assert(nt_INTEGER  == n->kind ||
          nt_FLOATING == n->kind);
 
-  debug("executing constant node <val: %s> at %p", vtos(n->data.value), n);
+  debug("exec", "constant node <val: %s> at %p", vtos(n->data.value), n);
 
   return n->data.value;
 }
@@ -93,7 +93,7 @@ Value execBinExpression(struct Node *n)
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
 
-  debug("executing binary operation node <op: '%c'> at %p", n->data.binaryop.op, n);
+  debug("exec", "binary operation node <op: '%c'> at %p", n->data.binaryop.op, n);
 
   switch (n->data.binaryop.op){
     // binary PLUS
@@ -334,7 +334,7 @@ Value execUnExpression(struct Node *n)
   assert(n);
   assert(nt_UNARYOP == n->kind);
 
-  debug("executing unary operation node <op: '%s'> at %p", unarytos(n->data.unaryop.op), n);
+  debug("exec", "unary operation node <op: '%s'> at %p", unarytos(n->data.unaryop.op), n);
 
   const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
   Value ret;
@@ -402,7 +402,7 @@ Value execAssignment(struct Node *n)
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
 
-  debug("executing assignment node <name: %s> at %p", n->data.s, n);
+  debug("exec", "assignment node <name: %s> at %p", n->data.s, n);
 
   Value ret;
 
@@ -425,7 +425,7 @@ Value execBlock(struct Node *n)
   assert(n);
   assert(nt_BLOCK == n->kind);
 
-  debug("executing block node at %p", n);
+  debug("exec", "block node at %p", n);
 
   Value ret;
   ret.v.i = 0;
@@ -443,7 +443,7 @@ Value execBlock(struct Node *n)
   for (int i = 0; i < n->data.block.count; i++){
     if (n->data.block.vars){
       for (struct VariableList *v = n->data.block.vars; v != NULL; v = v->next){
-        debug("freeing variable at %p at the end executing block at %p", v->var, n);
+        debug("free", "variable at %p at the end executing block at %p", v->var, n);
         free(v->var);
         v->var = NULL;
       }
@@ -460,7 +460,7 @@ Value execStatement(struct Node *n)
   assert(n);
   assert(nt_STATEMENT == n->kind);
 
-  debug("executing statement node at %p", n);
+  debug("exec", "statement node at %p", n);
 
   Value ret;
 
@@ -479,7 +479,7 @@ Value execCall(struct Node *n)
   assert(n);
   assert(nt_CALL == n->kind);
 
-  debug("executing call node <name: %s> at %p", n->data.call.name, n);
+  debug("exec", "call node <name: %s> at %p", n->data.call.name, n);
 
   Value ret;
 
@@ -551,7 +551,7 @@ Value execWhile(struct Node *n)
   assert(n);
   assert(nt_WHILE == n->kind);
 
-  debug("executing while node at %p", n);
+  debug("exec", "while node at %p", n);
 
   Value ret;
 
@@ -576,7 +576,7 @@ Value execIf(struct Node *n)
   assert(n);
   assert(nt_IF == n->kind);
 
-  debug("executing if node at %p", n);
+  debug("exec", "if node at %p", n);
 
   Value ret;
 
@@ -606,7 +606,7 @@ Value execFor(struct Node *n)
   assert(n);
   assert(nt_FOR == n->kind);
 
-  debug("executing for node at %p", n);
+  debug("exec", "for node at %p", n);
 
   Value ret;
 
@@ -657,7 +657,7 @@ Value execFuncDef(struct Node *n)
   assert(n);
   assert(nt_FUNCDEF == n->kind);
 
-  debug("executing function definiton node <name: %s> at %p", n->data.funcdef.name, n);
+  debug("exec", "function definiton node <name: %s> at %p", n->data.funcdef.name, n);
 
   Value ret;
 
@@ -687,7 +687,7 @@ Value execIter(struct Node *n)
   assert(n);
   assert(nt_ITER == n->kind);
 
-  debug("executing '%s' iter node at %p", n->data.iter.type, n);
+  debug("exec", "'%s' iter node at %p", n->data.iter.type, n);
 
   Value ret;
   Value count = dispatchNode(n->data.iter.count);

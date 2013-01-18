@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     ret = execNodes(nodest).v.i;
     freeNodes(nodest);
   } while (!feof(yyin));
+  debug("", "debug test");
 
   return ret;
 }

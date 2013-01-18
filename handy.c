@@ -10,12 +10,25 @@
 
 extern bool debugflag;
 
-void debug(char *string, ...)
+void debug(const char *type, char *string, ...)
 {
   if (debugflag){
     va_list ap;
 
-    fprintf(stderr, "** DEBUG: ");
+    fprintf(stderr, " * ");
+
+    if (!strcmp(type, "free")){
+      fprintf(stderr, "\e[1;34mFREE:\e[0;0m ");
+    } else if (!strcmp(type, "create")){
+      fprintf(stderr, "\e[1;32mCREATE:\e[0;0m ");
+    } else if (!strcmp(type, "exec")){
+      fprintf(stderr, "\e[1;33mEXEC:\e[0;0m ");
+    } else if (!strcmp(type, "append")){
+      fprintf(stderr, "\e[1;32mAPPEND:\e[0;0m ");
+    } else {
+      fprintf(stderr, "\e[1;35mDEBUG:\e[0;0m ");
+    }
+
     va_start(ap, string);
     vfprintf(stderr, string, ap);
     fprintf(stderr, "\n");

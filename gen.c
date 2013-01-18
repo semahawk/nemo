@@ -12,7 +12,7 @@ struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating assignment node <name: %s> at %p", name, new);
+  debug("create", "assignment node <name: %s> at %p", name, new);
 
   new->kind = nt_ASSIGNMENT;
   new->data.assignment.name = name;
@@ -26,7 +26,7 @@ struct Node *genExpByInt(int val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating integer node <val: %d> at %p", val, new);
+  debug("create", "integer node <val: %d> at %p", val, new);
 
   new->kind = nt_INTEGER;
   new->data.value.type = TYPE_INTEGER;
@@ -40,7 +40,7 @@ struct Node *genExpByFloat(float val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating float node <val: %f> at %p", val, new);
+  debug("create", "float node <val: %f> at %p", val, new);
 
   new->kind = nt_FLOATING;
   new->data.value.type = TYPE_FLOATING;
@@ -54,7 +54,7 @@ struct Node *genExpByName(char *name, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating identifier node <name: %s> at %p", name, new);
+  debug("create", "identifier node <name: %s> at %p", name, new);
 
   new->kind = nt_ID;
   new->data.s = name;
@@ -67,7 +67,7 @@ struct Node *genBinaryop(struct Node *left, struct Node *right, char op)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating binary operation node <op: '%c'> at %p", op, new);
+  debug("create", "binary operation node <op: '%c'> at %p", op, new);
 
   new->kind = nt_BINARYOP;
   new->data.binaryop.left = left;
@@ -82,7 +82,7 @@ struct Node *genUnaryop(struct Node *left, Unary op, struct Node *currentblock)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating unary operation node <op: '%s'> at %p", unarytos(op), new);
+  debug("create", "unary operation node <op: '%s'> at %p", unarytos(op), new);
 
   if (left->kind != nt_ID){
     cerror("trying to change value of a constant object");
@@ -108,7 +108,7 @@ struct Node *genEmptyBlock(struct Node *parent)
   new->data.block.parent = parent;
   new->block = NULL;
 
-  debug("creating empty block node at %p with parent at %p", new, parent);
+  debug("create", "empty block node at %p with parent at %p", new, parent);
 
   return new;
 }
@@ -119,7 +119,7 @@ void blockappend(struct Node *currentblock, struct Node *toappend)
   currentblock->data.block.statements = realloc(currentblock->data.block.statements, currentblock->data.block.count * sizeof(*currentblock->data.block.statements));
   currentblock->data.block.statements[currentblock->data.block.count - 1] = toappend;
 
-  debug("appending statement (%p) to block node (%p)", toappend, currentblock);
+  debug("append", "statement (%p) to block node (%p)", toappend, currentblock);
 }
 
 struct Node *genStatement(struct Node *new, struct Node *toappend)
@@ -132,7 +132,7 @@ struct Node *genStatement(struct Node *new, struct Node *toappend)
     new->data.statement.nodes = 0;
   }
 
-  debug("creating statement node at %p", new);
+  debug("create", "statement node at %p", new);
   assert(nt_STATEMENT == new->kind);
 
   new->data.statement.count++;
@@ -146,7 +146,7 @@ struct Node *genWhile(struct Node *cond, struct Node *stmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating while node at %p", new);
+  debug("create", "while node at %p", new);
 
   new->kind = nt_WHILE;
   new->data.whilee.cond = cond;
@@ -160,7 +160,7 @@ struct Node *genIf(struct Node *cond, struct Node *stmt, struct Node *elsestmt)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating if node at %p", new);
+  debug("create", "if node at %p", new);
 
   new->kind = nt_IF;
   new->data.iff.cond = cond;
@@ -175,7 +175,7 @@ struct Node *genFor(struct Node *init, struct Node *cond, struct Node *action, s
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating for node at %p", new);
+  debug("create", "for node at %p", new);
 
   new->kind = nt_FOR;
   new->data.forr.init = init;
@@ -191,7 +191,7 @@ struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int a
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating function definiton <name: %s> at %p", name, new);
+  debug("create", "function definiton <name: %s> at %p", name, new);
 
   new->kind = nt_FUNCDEF;
   new->data.funcdef.returntype = returntype;
@@ -208,7 +208,7 @@ struct ArgList *genArgList(Type type, char *name, struct ArgList *head, int pos)
   struct ArgList *arglist = myalloc(sizeof(struct ArgList));
   struct Arg *arg = myalloc(sizeof(struct Arg));
 
-  debug("creating argument list at %p", arglist);
+  debug("create", "argument list at %p", arglist);
 
   arglist->arg = arg;
   arglist->pos = pos;
@@ -224,7 +224,7 @@ struct ParamList *genParamList(struct Node *param, struct ParamList *head, int p
 {
   struct ParamList *new = myalloc(sizeof(struct ParamList));
 
-  debug("creating parameter list at %p", new);
+  debug("create", "parameter list at %p", new);
 
   new->param = param;
   new->pos = pos;
@@ -238,7 +238,7 @@ struct Node *genCall(char *name, struct ParamList *params, int paramcount)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating call node <name: %s> at %p", name, new);
+  debug("create", "call node <name: %s> at %p", name, new);
 
   new->kind = nt_CALL;
   new->data.call.name = name;
@@ -253,7 +253,7 @@ struct Node *genReturn(struct Node *expr)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating return node at %p", new);
+  debug("create", "return node at %p", new);
 
   new->kind = nt_RETURN;
   new->data.returnn.expr = expr;
@@ -266,7 +266,7 @@ struct Node *genIter(char *type, struct Node *count, struct Node *stmt, struct N
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("creating iter node <type: '%s'> at %p", type, new);
+  debug("create", "iter node <type: '%s'> at %p", type, new);
 
   new->kind = nt_ITER;
   new->data.iter.count = count;

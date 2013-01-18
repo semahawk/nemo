@@ -11,7 +11,7 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof *(x))
 
-void debug(char *, ...);
+void debug(const char *, char *, ...);
 void error(char *, ...);
 void cerror(char *, ...);
 

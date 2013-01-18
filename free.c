@@ -52,7 +52,7 @@ void freeTermExpression(struct Node *n)
 {
   assert(n);
 
-  debug("freeing id/constant node at %p", n);
+  debug("free", "id/constant node at %p", n);
 
   free(n);
 }
@@ -62,7 +62,7 @@ void freeBinExpression(struct Node *n)
   assert(n);
   assert(nt_BINARYOP == n->kind);
 
-  debug("freeing binary operation node at %p", n);
+  debug("free", "binary operation node at %p", n);
 
   freeNode(n->data.binaryop.left);
   freeNode(n->data.binaryop.right);
@@ -75,7 +75,7 @@ void freeUnExpression(struct Node *n)
   assert(n);
   assert(nt_UNARYOP == n->kind);
 
-  debug("freeing unary operation node at %p", n);
+  debug("free", "unary operation node at %p", n);
 
   freeNode(n->data.unaryop.expression);
 
@@ -87,7 +87,7 @@ void freeAssignment(struct Node *n)
   assert(n);
   assert(nt_ASSIGNMENT == n->kind);
 
-  debug("freeing assignment node at %p", n);
+  debug("free", "assignment node at %p", n);
 
   freeNode(n->data.assignment.right);
 
@@ -99,7 +99,7 @@ void freeCall(struct Node *n)
   assert(n);
   assert(nt_CALL == n->kind);
 
-  debug("freeing call node at %p", n);
+  debug("free", "call node at %p", n);
 
   if (n->data.call.params)
     for (struct ParamList *p = n->data.call.params; p != NULL; p = p->next)
@@ -113,7 +113,7 @@ void freeReturn(struct Node *n)
   assert(n);
   assert(nt_RETURN == n->kind);
 
-  debug("freeing return node at %p", n);
+  debug("free", "return node at %p", n);
 
   if (n->data.returnn.expr)
     freeNode(n->data.returnn.expr);
@@ -126,7 +126,7 @@ void freeWhile(struct Node *n)
   assert(n);
   assert(nt_WHILE == n->kind);
 
-  debug("freeing while node at %p", n);
+  debug("free", "while node at %p", n);
 
   freeNode(n->data.whilee.cond);
   freeNode(n->data.whilee.statements);
@@ -139,7 +139,7 @@ void freeIf(struct Node *n)
   assert(n);
   assert(nt_IF == n->kind);
 
-  debug("freeing if node at %p", n);
+  debug("free", "if node at %p", n);
 
   freeNode(n->data.iff.cond);
   freeNode(n->data.iff.stmt);
@@ -155,7 +155,7 @@ void freeFor(struct Node *n)
   assert(n);
   assert(nt_FOR == n->kind);
 
-  debug("freeing for node at %p", n);
+  debug("free", "for node at %p", n);
 
   if (n->data.forr.init)
     freeNode(n->data.forr.init);
@@ -177,7 +177,7 @@ void freeBlock(struct Node *n)
   assert(n);
   assert(nt_BLOCK == n->kind);
 
-  debug("freeing block node at %p", n);
+  debug("free", "block node at %p", n);
 
   for (int i = 0; i < n->data.block.count; i++){
     freeNode(n->data.block.statements[i]);
@@ -191,7 +191,7 @@ void freeStatement(struct Node *n)
   assert(n);
   assert(nt_STATEMENT == n->kind);
 
-  debug("freeing statement node at %p", n);
+  debug("free", "statement node at %p", n);
 
   for (int i = 0; i < n->data.statement.count; i++){
     freeNode(n->data.statement.nodes[i]);
@@ -205,7 +205,7 @@ void freeFuncDef(struct Node *n)
   assert(n);
   assert(nt_FUNCDEF == n->kind);
 
-  debug("freeing funcion declaration node at %p", n);
+  debug("free", "funcion declaration node at %p", n);
 
   if (n->data.funcdef.args)
     for (struct ArgList *a = n->data.funcdef.args; a != NULL; a = a->next)
@@ -221,7 +221,7 @@ void freeIter(struct Node *n)
   assert(n);
   assert(nt_ITER == n->kind);
 
-  debug("freeing iteration node at %p", n);
+  debug("free", "iteration node at %p", n);
 
   freeNode(n->data.iter.count);
   freeNode(n->data.iter.stmt);
