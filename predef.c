@@ -18,12 +18,12 @@
 
 struct PredefFunction predefs[] =
 {
-  { "out", predef_out }
+  { "print", predef_print }
 };
 
 unsigned int predefs_size = 1;
 
-Value predef_out(struct ParamList *params, int paramcount)
+Value predef_print(struct ParamList *params, int paramcount)
 {
   Value ret;
 

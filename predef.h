@@ -18,7 +18,7 @@ struct PredefFunction {
   Value (*fn)(struct ParamList *, int);
 };
 
-Value predef_out(struct ParamList *, int);
+Value predef_print(struct ParamList *, int);
 
 extern struct PredefFunction predefs[];
 extern unsigned int predefs_size;
