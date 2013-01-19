@@ -55,7 +55,7 @@
 %token GE LE EQ NE
 %token PLUSPLUS MINUSMINUS
 
-%right '='
+%right '=' EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD
 %left  EQ NE
 %left  GT LT GE LE
 %left  '+' '-'
@@ -158,17 +158,22 @@ select_stmt
     ;
 
 binary_expr
-    : expr '+' expr    { $$ = genBinaryop($1, $3, BINARY_ADD); }
-    | expr '-' expr    { $$ = genBinaryop($1, $3, BINARY_SUB); }
-    | expr '*' expr    { $$ = genBinaryop($1, $3, BINARY_MUL); }
-    | expr '/' expr    { $$ = genBinaryop($1, $3, BINARY_DIV); }
-    | expr '%' expr    { $$ = genBinaryop($1, $3, BINARY_MOD); }
-    | expr GT expr     { $$ = genBinaryop($1, $3, BINARY_GT); }
-    | expr LT expr     { $$ = genBinaryop($1, $3, BINARY_LT); }
-    | expr GE expr     { $$ = genBinaryop($1, $3, BINARY_GE); }
-    | expr LE expr     { $$ = genBinaryop($1, $3, BINARY_LE); }
-    | expr NE expr     { $$ = genBinaryop($1, $3, BINARY_NE); }
-    | expr EQ expr     { $$ = genBinaryop($1, $3, BINARY_EQ); }
+    : expr '+' expr    { $$ = genBinaryop($1, $3, BINARY_ADD, currentblock); }
+    | expr '-' expr    { $$ = genBinaryop($1, $3, BINARY_SUB, currentblock); }
+    | expr '*' expr    { $$ = genBinaryop($1, $3, BINARY_MUL, currentblock); }
+    | expr '/' expr    { $$ = genBinaryop($1, $3, BINARY_DIV, currentblock); }
+    | expr '%' expr    { $$ = genBinaryop($1, $3, BINARY_MOD, currentblock); }
+    | expr GT expr     { $$ = genBinaryop($1, $3, BINARY_GT, currentblock); }
+    | expr LT expr     { $$ = genBinaryop($1, $3, BINARY_LT, currentblock); }
+    | expr GE expr     { $$ = genBinaryop($1, $3, BINARY_GE, currentblock); }
+    | expr LE expr     { $$ = genBinaryop($1, $3, BINARY_LE, currentblock); }
+    | expr NE expr     { $$ = genBinaryop($1, $3, BINARY_NE, currentblock); }
+    | expr EQ expr     { $$ = genBinaryop($1, $3, BINARY_EQ, currentblock); }
+    | expr EQ_ADD expr { $$ = genBinaryop($1, $3, BINARY_EQ_ADD, currentblock); }
+    | expr EQ_SUB expr { $$ = genBinaryop($1, $3, BINARY_EQ_SUB, currentblock); }
+    | expr EQ_MUL expr { $$ = genBinaryop($1, $3, BINARY_EQ_MUL, currentblock); }
+    | expr EQ_DIV expr { $$ = genBinaryop($1, $3, BINARY_EQ_DIV, currentblock); }
+    | expr EQ_MOD expr { $$ = genBinaryop($1, $3, BINARY_EQ_MOD, currentblock); }
     ;
 
 unary_expr

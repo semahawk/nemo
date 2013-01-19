@@ -28,6 +28,11 @@ typedef enum {
   BINARY_LE,
   BINARY_NE,
   BINARY_EQ,
+  BINARY_EQ_ADD,
+  BINARY_EQ_SUB,
+  BINARY_EQ_MUL,
+  BINARY_EQ_DIV,
+  BINARY_EQ_MOD,
 } Binary;
 
 typedef enum {
@@ -86,7 +91,7 @@ struct Node {
 
     struct {
       struct Node *left, *right;
-      char op;
+      Binary op;
     } binaryop;
 
     struct {

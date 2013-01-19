@@ -92,6 +92,7 @@ Value execBinExpression(struct Node *n)
   const Value left = dispatchNode(n->data.binaryop.left);
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
+  Value new_value;
 
   debug("exec", "binary operation node <op: '%s'> at %p", binarytos(n->data.binaryop.op), n);
 
@@ -206,15 +207,15 @@ Value execBinExpression(struct Node *n)
             cerror("zero divison!");
             exit(1);
           }
-          ret.v.f = left.v.i / right.v.i;
+          ret.v.f = vtof(left) / vtof(right);
           ret.type = TYPE_FLOATING;
         // int / float
         } else if (right.type == TYPE_FLOATING){
-          if (right.v.f == 0){
+          if (right.v.f == 0.0f){
             cerror("zero divison!");
             exit(1);
           }
-          ret.v.f = left.v.i / right.v.f;
+          ret.v.f = vtof(left) / right.v.f;
           ret.type = TYPE_FLOATING;
         } else {
           cerror("right operand in binary is of unknown type");
@@ -227,11 +228,11 @@ Value execBinExpression(struct Node *n)
             cerror("zero divison!");
             exit(1);
           }
-          ret.v.f = left.v.f / right.v.i;
+          ret.v.f = left.v.f / vtof(right);
           ret.type = TYPE_FLOATING;
         // float / float
         } else if (right.type == TYPE_FLOATING){
-          if (right.v.f == 0){
+          if (right.v.f == 0.0f){
             cerror("zero divison!");
             exit(1);
           }
@@ -447,6 +448,197 @@ Value execBinExpression(struct Node *n)
         } else if (right.type == TYPE_FLOATING){
           ret.v.i = (left.v.f == right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
+        }
+      }
+      break;
+
+    //
+    // XXX EQ_ADD
+    //
+    case BINARY_EQ_ADD:
+      if (left.type == TYPE_INTEGER){
+        // int += int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.i = left.v.i + right.v.i;
+          new_value.type = TYPE_INTEGER;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // int += float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.i + right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float += int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.f = left.v.f + right.v.i;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // float += float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.f + right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      }
+      break;
+
+    //
+    // XXX EQ_SUB
+    //
+    case BINARY_EQ_SUB:
+      if (left.type == TYPE_INTEGER){
+        // int -= int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.i = left.v.i - right.v.i;
+          new_value.type = TYPE_INTEGER;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // int -= float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.i - right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float -= int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.f = left.v.f - right.v.i;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // float -= float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.f - right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      }
+      break;
+
+    //
+    // XXX EQ_MUL
+    //
+    case BINARY_EQ_MUL:
+      if (left.type == TYPE_INTEGER){
+        // int *= int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.i = left.v.i * right.v.i;
+          new_value.type = TYPE_INTEGER;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // int *= float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.i * right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float *= int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.f = left.v.f * right.v.i;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // float *= float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.f * right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      }
+      break;
+
+    //
+    // XXX EQ_DIV
+    //
+    case BINARY_EQ_DIV:
+      if (left.type == TYPE_INTEGER){
+        // int /= int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.f = vtof(left) / vtof(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // int /= float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = vtof(left) / right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float /= int
+        if (right.type == TYPE_INTEGER){
+          new_value.v.f = left.v.f / vtof(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // float /= float
+        } else if (right.type == TYPE_FLOATING){
+          new_value.v.f = left.v.f / right.v.f;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      }
+      break;
+
+    //
+    // XXX EQ_MOD
+    //
+    case BINARY_EQ_MOD:
+      if (left.type == TYPE_INTEGER){
+        // int %= int
+        if (right.type == TYPE_INTEGER){
+          if (right.v.i == 0){
+            cerror("zero division!");
+            exit(1);
+          }
+          new_value.v.i = left.v.i % vtoi(right);
+          new_value.type = TYPE_INTEGER;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // int %= float
+        } else if (right.type == TYPE_FLOATING){
+          if (vtoi(right) == 0){
+            cerror("zero division!");
+            exit(1);
+          }
+          new_value.v.i = left.v.i % vtoi(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float %= int
+        if (right.type == TYPE_INTEGER){
+          if (right.v.i == 0){
+            cerror("zero division!");
+            exit(1);
+          }
+          new_value.v.i = vtoi(left) % right.v.i;
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // float %= float
+        } else if (right.type == TYPE_FLOATING){
+          if (vtoi(right) == 0){
+            cerror("zero division!");
+            exit(1);
+          }
+          new_value.v.i = vtoi(left) % vtoi(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
         }
       }
       break;

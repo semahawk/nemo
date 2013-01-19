@@ -18,6 +18,7 @@ assert 3 % 2, 1;
 assert 8 / 4, 2;
 assert 2 / 2, 1;
 assert 10 / 1, 10;
+assert 5 / 2, 2.5;
 
 // Boolean operators
 assert 2 > 1, 1;
@@ -40,6 +41,20 @@ assert 6 ge 5, 1;
 assert 6 ge 8, 0;
 assert 3 le 3, 1;
 assert 3 le 4, 1;
+
+// Operator assignment
+$a = 10;
+assert $a, 10;
+$a += 2;
+assert $a, 12;
+$a -= 4;
+assert $a, 8;
+$a *= 2;
+assert $a, 16;
+$a /= 4;
+assert $a, 4;
+$a %= 2;
+assert $a, 0;
 
 // Correct precedence
 assert 2 + 2 * 2, 6;

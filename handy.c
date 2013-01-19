@@ -124,6 +124,16 @@ const char *binarytos(Binary type)
       return "!=";
     case BINARY_EQ:
       return "==";
+    case BINARY_EQ_ADD:
+      return "+=";
+    case BINARY_EQ_SUB:
+      return "-=";
+    case BINARY_EQ_MUL:
+      return "*=";
+    case BINARY_EQ_DIV:
+      return "/=";
+    case BINARY_EQ_MOD:
+      return "%=";
   }
 
   return "#UNKBT#";
