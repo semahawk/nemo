@@ -1,7 +1,7 @@
 CC      =  gcc
 CFLAGS += -g -W -Wall -std=c99 -O2 -D_POSIX_SOURCE
 YACC    =  bison
-YFLAGS += -d
+YFLAGS += -d -v
 LEX     =  flex
 SHELL   =  zsh
 

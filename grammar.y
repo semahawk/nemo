@@ -109,8 +109,7 @@ constant
     ;
 
 comp_stmt
-    : '{' '}'         { $$ = 0; }
-    | '{' { $<node>$ = currentblock; currentblock = genEmptyBlock(currentblock); } stmts '}'
+    : '{' { $<node>$ = currentblock; currentblock = genEmptyBlock(currentblock); } stmts '}'
           { $<node>$ = currentblock; currentblock = $<node>2; }
     ;
 
