@@ -20,5 +20,6 @@ void *myalloc(size_t);
 char *strdup(const char *);
 
 const char *unarytos(Unary);
+const char *binarytos(Binary);
 
 #endif // HANDY_H

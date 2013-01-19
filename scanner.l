@@ -52,13 +52,23 @@ D [0-9]
 
 "++"                     { count(); return PLUSPLUS; }
 "--"                     { count(); return MINUSMINUS; }
+">="                     { count(); return GE; }
+"<="                     { count(); return LE; }
+"!="                     { count(); return NE; }
+"=="                     { count(); return EQ; }
+"<"                      { count(); return LT; }
+">"                      { count(); return GT; }
+"ge"                     { count(); return GE; }
+"le"                     { count(); return LE; }
+"ne"                     { count(); return NE; }
+"eq"                     { count(); return EQ; }
+"lt"                     { count(); return LT; }
+"gt"                     { count(); return GT; }
 "+"                      { count(); return '+'; }
 "-"                      { count(); return '-'; }
 "*"                      { count(); return '*'; }
 "/"                      { count(); return '/'; }
 "%"                      { count(); return '%'; }
-"<"                      { count(); return '<'; }
-">"                      { count(); return '>'; }
 
 "("                      { count(); return '('; }
 ")"                      { count(); return ')'; }

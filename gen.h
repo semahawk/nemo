@@ -13,7 +13,7 @@ struct Node *genDeclaration(Type, char *, struct Node *, struct Node *);
 struct Node *genAssignment(char *, struct Node *, struct Node *);
 struct Node *genEmptyBlock(struct Node *);
        void  blockappend(struct Node *, struct Node *);
-struct Node *genBinaryop(struct Node *, struct Node *, char);
+struct Node *genBinaryop(struct Node *, struct Node *, Binary);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
 struct Node *genCall(char *, struct ParamList *, int);
 struct Node *genReturn(struct Node *);

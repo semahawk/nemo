@@ -52,10 +52,12 @@
 
 %token WHILE IF ELSE FOR NONE RETURN
 %token FUN TIMES
+%token GE LE EQ NE
 %token PLUSPLUS MINUSMINUS
 
 %right '='
-%left  '<' '>'
+%left  EQ NE
+%left  GT LT GE LE
 %left  '+' '-'
 %left  '*' '/' '%'
 %nonassoc PLUSPLUS MINUSMINUS
@@ -156,13 +158,17 @@ select_stmt
     ;
 
 binary_expr
-    : expr '+' expr    { $$ = genBinaryop($1, $3, '+'); }
-    | expr '-' expr    { $$ = genBinaryop($1, $3, '-'); }
-    | expr '*' expr    { $$ = genBinaryop($1, $3, '*'); }
-    | expr '/' expr    { $$ = genBinaryop($1, $3, '/'); }
-    | expr '%' expr    { $$ = genBinaryop($1, $3, '%'); }
-    | expr '>' expr    { $$ = genBinaryop($1, $3, '>'); }
-    | expr '<' expr    { $$ = genBinaryop($1, $3, '<'); }
+    : expr '+' expr    { $$ = genBinaryop($1, $3, BINARY_ADD); }
+    | expr '-' expr    { $$ = genBinaryop($1, $3, BINARY_SUB); }
+    | expr '*' expr    { $$ = genBinaryop($1, $3, BINARY_MUL); }
+    | expr '/' expr    { $$ = genBinaryop($1, $3, BINARY_DIV); }
+    | expr '%' expr    { $$ = genBinaryop($1, $3, BINARY_MOD); }
+    | expr GT expr     { $$ = genBinaryop($1, $3, BINARY_GT); }
+    | expr LT expr     { $$ = genBinaryop($1, $3, BINARY_LT); }
+    | expr GE expr     { $$ = genBinaryop($1, $3, BINARY_GE); }
+    | expr LE expr     { $$ = genBinaryop($1, $3, BINARY_LE); }
+    | expr NE expr     { $$ = genBinaryop($1, $3, BINARY_NE); }
+    | expr EQ expr     { $$ = genBinaryop($1, $3, BINARY_EQ); }
     ;
 
 unary_expr

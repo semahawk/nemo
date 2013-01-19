@@ -63,7 +63,7 @@ struct Node *genExpByName(char *name, struct Node *block)
   return new;
 }
 
-struct Node *genBinaryop(struct Node *left, struct Node *right, char op)
+struct Node *genBinaryop(struct Node *left, struct Node *right, Binary op)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 

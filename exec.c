@@ -93,236 +93,365 @@ Value execBinExpression(struct Node *n)
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
 
-  debug("exec", "binary operation node <op: '%c'> at %p", n->data.binaryop.op, n);
+  debug("exec", "binary operation node <op: '%s'> at %p", binarytos(n->data.binaryop.op), n);
 
   switch (n->data.binaryop.op){
-    // binary PLUS
-    case '+': if (left.type == TYPE_INTEGER){
-                // int + int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = left.v.i + right.v.i;
-                  ret.type = TYPE_INTEGER;
-                // int + float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.f = left.v.i + right.v.f;
-                  ret.type = TYPE_FLOATING;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float + int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.f = left.v.f + right.v.i;
-                  ret.type = TYPE_FLOATING;
-                // float + float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.f = left.v.f + right.v.f;
-                  ret.type = TYPE_FLOATING;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX PLUS
+    //
+    case BINARY_ADD:
+      if (left.type == TYPE_INTEGER){
+        // int + int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = left.v.i + right.v.i;
+          ret.type = TYPE_INTEGER;
+        // int + float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = left.v.i + right.v.f;
+          ret.type = TYPE_FLOATING;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float + int
+        if (right.type == TYPE_INTEGER){
+          ret.v.f = left.v.f + right.v.i;
+          ret.type = TYPE_FLOATING;
+        // float + float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = left.v.f + right.v.f;
+          ret.type = TYPE_FLOATING;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    // binary MINUS
-    case '-': if (left.type == TYPE_INTEGER){
-                // int - int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = left.v.i - right.v.i;
-                  ret.type = TYPE_INTEGER;
-                // int - float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.f = left.v.i - right.v.f;
-                  ret.type = TYPE_FLOATING;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float - int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.f = left.v.f - right.v.i;
-                  ret.type = TYPE_FLOATING;
-                // float - float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.f = left.v.f - right.v.f;
-                  ret.type = TYPE_FLOATING;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX MINUS
+    //
+    case BINARY_SUB:
+      if (left.type == TYPE_INTEGER){
+        // int - int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = left.v.i - right.v.i;
+          ret.type = TYPE_INTEGER;
+        // int - float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = left.v.i - right.v.f;
+          ret.type = TYPE_FLOATING;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float - int
+        if (right.type == TYPE_INTEGER){
+          ret.v.f = left.v.f - right.v.i;
+          ret.type = TYPE_FLOATING;
+        // float - float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = left.v.f - right.v.f;
+          ret.type = TYPE_FLOATING;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    // binary MULTIPLE
-    case '*': if (left.type == TYPE_INTEGER){
-                // int * int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = left.v.i * right.v.i;
-                  ret.type = TYPE_INTEGER;
-                // int * float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.f = left.v.i * right.v.f;
-                  ret.type = TYPE_FLOATING;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float * int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.f = left.v.f * right.v.i;
-                  ret.type = TYPE_FLOATING;
-                // float * float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.f = left.v.f * right.v.f;
-                  ret.type = TYPE_FLOATING;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX MULTIPLE
+    //
+    case BINARY_MUL:
+      if (left.type == TYPE_INTEGER){
+        // int * int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = left.v.i * right.v.i;
+          ret.type = TYPE_INTEGER;
+        // int * float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = left.v.i * right.v.f;
+          ret.type = TYPE_FLOATING;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float * int
+        if (right.type == TYPE_INTEGER){
+          ret.v.f = left.v.f * right.v.i;
+          ret.type = TYPE_FLOATING;
+        // float * float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = left.v.f * right.v.f;
+          ret.type = TYPE_FLOATING;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    // binary DIVIDE
-    case '/': if (left.type == TYPE_INTEGER){
-                // int / int
-                if (right.type == TYPE_INTEGER){
-                  if (right.v.i == 0){
-                    cerror("zero divison!");
-                    exit(1);
-                  }
-                  ret.v.f = left.v.i / right.v.i;
-                  ret.type = TYPE_FLOATING;
-                // int / float
-                } else if (right.type == TYPE_FLOATING){
-                  if (right.v.f == 0){
-                    cerror("zero divison!");
-                    exit(1);
-                  }
-                  ret.v.f = left.v.i / right.v.f;
-                  ret.type = TYPE_FLOATING;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float / int
-                if (right.type == TYPE_INTEGER){
-                  if (right.v.i == 0){
-                    cerror("zero divison!");
-                    exit(1);
-                  }
-                  ret.v.f = left.v.f / right.v.i;
-                  ret.type = TYPE_FLOATING;
-                // float / float
-                } else if (right.type == TYPE_FLOATING){
-                  if (right.v.f == 0){
-                    cerror("zero divison!");
-                    exit(1);
-                  }
-                  ret.v.f = left.v.f / right.v.f;
-                  ret.type = TYPE_FLOATING;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX DIVIDE
+    //
+    case BINARY_DIV:
+      if (left.type == TYPE_INTEGER){
+        // int / int
+        if (right.type == TYPE_INTEGER){
+          if (right.v.i == 0){
+            cerror("zero divison!");
+            exit(1);
+          }
+          ret.v.f = left.v.i / right.v.i;
+          ret.type = TYPE_FLOATING;
+        // int / float
+        } else if (right.type == TYPE_FLOATING){
+          if (right.v.f == 0){
+            cerror("zero divison!");
+            exit(1);
+          }
+          ret.v.f = left.v.i / right.v.f;
+          ret.type = TYPE_FLOATING;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float / int
+        if (right.type == TYPE_INTEGER){
+          if (right.v.i == 0){
+            cerror("zero divison!");
+            exit(1);
+          }
+          ret.v.f = left.v.f / right.v.i;
+          ret.type = TYPE_FLOATING;
+        // float / float
+        } else if (right.type == TYPE_FLOATING){
+          if (right.v.f == 0){
+            cerror("zero divison!");
+            exit(1);
+          }
+          ret.v.f = left.v.f / right.v.f;
+          ret.type = TYPE_FLOATING;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    // binary MODULO
-    case '%': if (left.type == TYPE_INTEGER){
-                // int % int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = (int)(left.v.i % right.v.i);
-                  ret.type = TYPE_INTEGER;
-                // int % float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.i = (int)(left.v.i % (int)right.v.f);
-                  ret.type = TYPE_INTEGER;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float % int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = (int)((int)left.v.f % right.v.i);
-                  ret.type = TYPE_INTEGER;
-                // float % float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.i = (int)((int)left.v.f % (int)right.v.f);
-                  ret.type = TYPE_INTEGER;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX MODULO
+    //
+    case BINARY_MOD:
+      if (left.type == TYPE_INTEGER){
+        // int % int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (int)(left.v.i % right.v.i);
+          ret.type = TYPE_INTEGER;
+        // int % float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (int)(left.v.i % (int)right.v.f);
+          ret.type = TYPE_INTEGER;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float % int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (int)((int)left.v.f % right.v.i);
+          ret.type = TYPE_INTEGER;
+        // float % float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (int)((int)left.v.f % (int)right.v.f);
+          ret.type = TYPE_INTEGER;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    // binary GT
-    case '>': if (left.type == TYPE_INTEGER){
-                // int > int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = (left.v.i > right.v.i) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                // int > float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.i = (left.v.i > right.v.f) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float > int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = (left.v.f > right.v.i) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                // float > float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.i = (left.v.f > right.v.f) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX GT
+    //
+    case BINARY_GT:
+      if (left.type == TYPE_INTEGER){
+        // int > int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.i > right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // int > float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.i > right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float > int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.f > right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // float > float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.f > right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    // binary GT
-    case '<': if (left.type == TYPE_INTEGER){
-                // int < int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = (left.v.i < right.v.i) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                // int < float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.i = (left.v.i < right.v.f) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                } else {
-                  cerror("right operand in binary is of unknown type");
-                  exit(1);
-                }
-              } else if (left.type == TYPE_FLOATING){
-                // float < int
-                if (right.type == TYPE_INTEGER){
-                  ret.v.i = (left.v.f < right.v.i) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                // float < float
-                } else if (right.type == TYPE_FLOATING){
-                  ret.v.i = (left.v.f < right.v.f) ? 1 : 0;
-                  ret.type = TYPE_INTEGER;
-                }
-              } else {
-                cerror("right operand in binary is of unknown type");
-                exit(1);
-              }
-              break;
+    //
+    // XXX LT
+    //
+    case BINARY_LT:
+      if (left.type == TYPE_INTEGER){
+        // int < int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.i < right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // int < float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.i < right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        } else {
+          cerror("right operand in binary is of unknown type");
+          exit(1);
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float < int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.f < right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // float < float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.f < right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      } else {
+        cerror("right operand in binary is of unknown type");
+        exit(1);
+      }
+      break;
 
-    default: cerror("unknown operator '%c'", n->data.binaryop.op);
+    //
+    // XXX GE
+    //
+    case BINARY_GE:
+      if (left.type == TYPE_INTEGER){
+        // int >= int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.i >= right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // int >= float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.i >= right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float >= int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.f >= right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // float >= float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.f >= right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      }
+      break;
+
+    //
+    // XXX LE
+    //
+    case BINARY_LE:
+      if (left.type == TYPE_INTEGER){
+        // int <= int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.i <= right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // int <= float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.i <= right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float <= int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.f <= right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // float <= float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.f <= right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      }
+      break;
+
+    //
+    // XXX NE
+    //
+    case BINARY_NE:
+      if (left.type == TYPE_INTEGER){
+        // int != int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.i != right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // int != float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.i != right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float != int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.f != right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // float != float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.f != right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      }
+      break;
+
+    //
+    // XXX EQ
+    //
+    case BINARY_EQ:
+      if (left.type == TYPE_INTEGER){
+        // int == int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.i == right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // int == float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.i == right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      } else if (left.type == TYPE_FLOATING){
+        // float == int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = (left.v.f == right.v.i) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        // float == float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.i = (left.v.f == right.v.f) ? 1 : 0;
+          ret.type = TYPE_INTEGER;
+        }
+      }
+      break;
+
+    default: cerror("unknown operator '%s'", binarytos(n->data.binaryop.op));
              exit(1);
   }
 

@@ -99,3 +99,33 @@ const char *unarytos(Unary type)
   return "#UNKUT#";
 }
 
+const char *binarytos(Binary type)
+{
+  switch (type){
+    case BINARY_ADD:
+      return "+";
+    case BINARY_SUB:
+      return "-";
+    case BINARY_MUL:
+      return "*";
+    case BINARY_DIV:
+      return "/";
+    case BINARY_MOD:
+      return "%";
+    case BINARY_GT:
+      return ">";
+    case BINARY_LT:
+      return "<";
+    case BINARY_GE:
+      return ">=";
+    case BINARY_LE:
+      return "<=";
+    case BINARY_NE:
+      return "!=";
+    case BINARY_EQ:
+      return "==";
+  }
+
+  return "#UNKBT#";
+}
+

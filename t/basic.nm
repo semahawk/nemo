@@ -16,6 +16,28 @@ assert 10 * 2, 20;
 assert 12 % 5, 2;
 assert 3 % 2, 1;
 
+// Boolean operators
+assert 2 > 1, 1;
+assert 1 < 2, 1;
+assert 2 != 1, 1;
+assert 2 != 2, 0;
+assert 2 == 2, 1;
+assert 5 >= 5, 1;
+assert 6 >= 5, 1;
+assert 6 >= 8, 0;
+assert 3 <= 3, 1;
+assert 3 <= 4, 1;
+assert 2 gt 1, 1;
+assert 1 lt 2, 1;
+assert 2 ne 1, 1;
+assert 2 ne 2, 0;
+assert 2 eq 2, 1;
+assert 5 ge 5, 1;
+assert 6 ge 5, 1;
+assert 6 ge 8, 0;
+assert 3 le 3, 1;
+assert 3 le 4, 1;
+
 // Correct precedence
 assert 2 + 2 * 2, 6;
 assert 2 * 2 + 2, 6;

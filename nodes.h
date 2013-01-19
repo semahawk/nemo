@@ -17,6 +17,20 @@ typedef enum {
 } Unary;
 
 typedef enum {
+  BINARY_ADD,
+  BINARY_SUB,
+  BINARY_MUL,
+  BINARY_DIV,
+  BINARY_MOD,
+  BINARY_GT,
+  BINARY_LT,
+  BINARY_GE,
+  BINARY_LE,
+  BINARY_NE,
+  BINARY_EQ,
+} Binary;
+
+typedef enum {
   TYPE_INTEGER,
   TYPE_FLOATING
 } Type;
