@@ -7,12 +7,17 @@
 #include "nemo.h"
 #include "handy.h"
 #include "gen.h"
+#include "vars.h"
 
 struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
   debug("create", "assignment node <name: %s> at %p", name, new);
+
+  if (!variableAlreadySet(name, block)){
+    addVariableToBlock(name, block);
+  }
 
   new->kind = nt_ASSIGNMENT;
   new->data.assignment.name = name;
@@ -55,6 +60,11 @@ struct Node *genExpByName(char *name, struct Node *block)
   struct Node *new = myalloc(sizeof(struct Node));
 
   debug("create", "identifier node <name: %s> at %p", name, new);
+
+  if (!variableAlreadySet(name, block)){
+    cerror("variable '%s' was not found", name);
+    exit(1);
+  }
 
   new->kind = nt_ID;
   new->data.s = name;

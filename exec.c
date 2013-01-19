@@ -730,10 +730,6 @@ Value execAssignment(struct Node *n)
   struct Node *r = n->data.assignment.right;
   Value r_val = dispatchNode(r);
 
-  if (!variableAlreadySet(n->data.s, n->block)){
-    addVariableToBlock(n->data.assignment.name, n->block);
-  }
-
   setVariableValue(n->data.s, r_val, n->block);
 
   ret = vtov(r_val, r_val.type);
@@ -982,9 +978,7 @@ Value execFuncDef(struct Node *n)
 
   Value ret;
 
-  struct FunctionTable *t;
-
-  for (t = funchead; t != NULL; t = t->next){
+  for (struct FunctionTable *t = funchead; t != NULL; t = t->next){
     if (!strcmp(t->function->data.funcdef.name, n->data.funcdef.name)){
       cerror("function '%s' already defined", n->data.funcdef.name);
       exit(1);
