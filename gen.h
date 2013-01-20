@@ -11,7 +11,7 @@
 
 struct Node *genDeclaration(Type, char *, struct Node *, struct Node *);
 struct Node *genAssignment(char *, struct Node *, struct Node *);
-struct Node *genEmptyBlock(struct Node *);
+struct Node *genEmptyBlock(struct Node *, struct Node *);
        void  blockappend(struct Node *, struct Node *);
 struct Node *genBinaryop(struct Node *, struct Node *, Binary, struct Node *);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
@@ -20,7 +20,7 @@ struct Node *genReturn(struct Node *);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *, struct Node *);
 struct Node *genFor(struct Node *, struct Node *, struct Node *, struct Node *, struct Node *);
-struct Node *genFuncDef(Type, char *, struct ArgList *, int, struct Node *);
+struct Node *genFuncDef(Type, char *, struct ArgList *, int);
 struct Node *genExpByInt(int);
 struct Node *genExpByFloat(float);
 struct Node *genExpByName(char *, struct Node *);

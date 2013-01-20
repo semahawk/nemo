@@ -58,12 +58,26 @@ struct Node *genExpByFloat(float val)
 struct Node *genExpByName(char *name, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
+  bool found = false;
 
   debug("create", "identifier node <name: %s> at %p", name, new);
 
   if (!variableAlreadySet(name, block)){
-    cerror("variable '%s' was not found", name);
-    exit(1);
+    // that variable is in a function, so let's check if one of arguments match
+    // it
+    if (block->data.block.funcdef){
+      for (struct ArgList *a = block->data.block.funcdef->data.funcdef.args; a != NULL; a = a->next){
+        // FOUND
+        if (!strcmp(name, a->arg->name)){
+          found = true;
+        }
+      }
+    }
+
+    if (!found){
+      cerror("variable '%s' was not found", name);
+      exit(1);
+    }
   }
 
   new->kind = nt_ID;
@@ -107,7 +121,7 @@ struct Node *genUnaryop(struct Node *left, Unary op, struct Node *currentblock)
   return new;
 }
 
-struct Node *genEmptyBlock(struct Node *parent)
+struct Node *genEmptyBlock(struct Node *parent, struct Node *funcdef)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -116,6 +130,7 @@ struct Node *genEmptyBlock(struct Node *parent)
   new->data.block.statements = 0;
   new->data.block.vars = NULL;
   new->data.block.parent = parent;
+  new->data.block.funcdef = funcdef;
   new->block = NULL;
 
   debug("create", "empty block node at %p with parent at %p", new, parent);
@@ -197,7 +212,7 @@ struct Node *genFor(struct Node *init, struct Node *cond, struct Node *action, s
   return new;
 }
 
-struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int argcount, struct Node *body)
+struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int argcount)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
@@ -206,7 +221,7 @@ struct Node *genFuncDef(Type returntype, char *name, struct ArgList *args, int a
   new->kind = nt_FUNCDEF;
   new->data.funcdef.returntype = returntype;
   new->data.funcdef.name = name;
-  new->data.funcdef.body = body;
+  new->data.funcdef.body = NULL;
   new->data.funcdef.args = args;
   new->data.funcdef.argcount = argcount;
 

@@ -110,6 +110,9 @@ struct Node {
       struct Node *parent;
       struct VariableList *vars;
       struct Node **statements;
+      // pointer to function definition in which that block
+      // is a body of (yup, gonna be NULL sometimes)
+      struct Node *funcdef;
     } block;
 
     struct {

@@ -26,6 +26,7 @@
 
   extern struct Node *nodest;
   struct Node *currentblock;
+  struct Node *funcdef = NULL;
   int argcount = 0, paramcount = 0;
 
 %}
@@ -71,7 +72,7 @@
 %%
 
 source
-    : { currentblock = nodest = genEmptyBlock(NULL); } stmts
+    : { currentblock = nodest = genEmptyBlock(NULL, NULL); } stmts
     ;
 
 stmts
@@ -109,12 +110,15 @@ constant
     ;
 
 comp_stmt
-    : '{' { $<node>$ = currentblock; currentblock = genEmptyBlock(currentblock); } stmts '}'
+    : '{' { $<node>$ = currentblock; currentblock = genEmptyBlock(currentblock, funcdef); } stmts '}'
           { $<node>$ = currentblock; currentblock = $<node>2; }
     ;
 
 funcdef_stmt
-    : FUN IDENT ';' arg_list comp_stmt   { $$ = genFuncDef(TYPE_INTEGER, $2, $4, argcount, $5); argcount = 0; }
+    : FUN IDENT ';' arg_list
+      { $<node>$ = funcdef; funcdef = genFuncDef(TYPE_INTEGER, $2, $4, argcount); argcount = 0; }
+      comp_stmt
+      { $<node>$ = funcdef; funcdef->data.funcdef.body = $<node>6; funcdef = NULL; }
     ;
 
 arg_list
