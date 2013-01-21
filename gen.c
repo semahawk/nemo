@@ -141,19 +141,11 @@ struct Node *genEmptyBlock(struct Node *parent, struct Node *funcdef)
 
 void blockappend(struct Node *currentblock, struct Node *toappend)
 {
-  // FIXME: when `return` was an expression, everything worked just cool
-  //        but when I changed it to a statement, a NULL statements sometimes
-  //        get appended. This little hack seems to do the job.
-  //
-  //        But I'm still not sure if that's OK
-  //
-  if (toappend){
-    currentblock->data.block.count++;
-    currentblock->data.block.statements = realloc(currentblock->data.block.statements, currentblock->data.block.count * sizeof(*currentblock->data.block.statements));
-    currentblock->data.block.statements[currentblock->data.block.count - 1] = toappend;
+  currentblock->data.block.count++;
+  currentblock->data.block.statements = realloc(currentblock->data.block.statements, currentblock->data.block.count * sizeof(*currentblock->data.block.statements));
+  currentblock->data.block.statements[currentblock->data.block.count - 1] = toappend;
 
-    debug("append", "statement (%p) to block node (%p)", toappend, currentblock);
-  }
+  debug("append", "statement (%p) to block node (%p)", toappend, currentblock);
 }
 
 struct Node *genStatement(struct Node *new, struct Node *toappend)

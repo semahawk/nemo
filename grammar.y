@@ -113,6 +113,11 @@ select_stmt
     | IF expr stmt ELSE stmt            { $$ = genIf($2, $3, $5); }
     ;
 
+return_stmt
+    : RETURN expr ';'                { $$ = genReturn($2); }
+    | RETURN ';'                     { $$ = genReturn(NULL); }
+    ;
+
 expr_stmt
     : ';'      { $$ = 0;  }
     | expr ';' { $$ = $1; }
@@ -141,11 +146,6 @@ assign_expr
 call_expr
     : IDENT '(' param_list ')'       { $$ = genCall($1, $3, paramcount); paramcount = 0; }
     | IDENT     param_list           { $$ = genCall($1, $2, paramcount); paramcount = 0; }
-    ;
-
-return_stmt
-    : RETURN expr                    { $$ = genReturn($2); }
-    | RETURN                         { $$ = genReturn(NULL); }
     ;
 
 binary_expr
