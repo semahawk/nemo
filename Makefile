@@ -5,7 +5,7 @@ YFLAGS += -d -v
 LEX     =  flex
 SHELL   =  zsh
 
-OBJECTS = nemo.o gen.o exec.o free.o vars.o cast.o handy.o predef.o y.tab.o lex.yy.o
+OBJECTS = nemo.o gen.o exec.o free.o vars.o cast.o handy.o predef.o userdef.o y.tab.o lex.yy.o
 
 all: nemo
 
@@ -35,6 +35,9 @@ handy.o: handy.c handy.h
 
 predef.o: predef.c predef.h nodes.h
 	$(CC) $(CFLAGS) -c predef.c
+
+userdef.o: userdef.c userdef.h nodes.h
+	$(CC) $(CFLAGS) -c userdef.c
 
 y.tab.o: grammar.y nodes.h
 	$(YACC) $(YFLAGS) grammar.y

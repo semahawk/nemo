@@ -8,6 +8,7 @@
 #include "handy.h"
 #include "gen.h"
 #include "vars.h"
+#include "userdef.h"
 
 struct Node *genAssignment(char *name, struct Node *val, struct Node *block)
 {

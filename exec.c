@@ -12,13 +12,7 @@
 #include "vars.h"
 #include "cast.h"
 #include "predef.h"
-
-struct FunctionTable {
-  struct Node *function;
-  struct FunctionTable *next;
-};
-// pointer to first element in FunctionTable
-struct FunctionTable *funchead = NULL;
+#include "userdef.h"
 
 Value(*nodeExecs[])(struct Node *) =
 {
@@ -811,7 +805,7 @@ Value execCall(struct Node *n)
 
   // if it's not a predefined function, we search for it
   // and exec
-  for (struct FunctionTable *t = funchead; t != NULL; t = t->next){
+  for (struct UserdefFunction *t = userdefs; t != NULL; t = t->next){
     if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
       // checking for argument/param lenghts
       if (n->data.call.paramcount > t->function->data.funcdef.argcount){
@@ -978,18 +972,7 @@ Value execFuncDef(struct Node *n)
 
   Value ret;
 
-  for (struct FunctionTable *t = funchead; t != NULL; t = t->next){
-    if (!strcmp(t->function->data.funcdef.name, n->data.funcdef.name)){
-      cerror("function '%s' already defined", n->data.funcdef.name);
-      exit(1);
-    }
-  }
-
-  struct FunctionTable *functable = myalloc(sizeof(struct FunctionTable));
-
-  functable->function = n;
-  functable->next = funchead;
-  funchead = functable;
+  addFunction(n);
 
   ret.v.i = 1;
   ret.type = TYPE_INTEGER;
