@@ -46,8 +46,8 @@
 %token <f> FLOAT
 %token <s> VAR_IDENT IDENT
 %type <node> stmts stmt
-%type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt
-%type <node> expr assign_expr call_expr binary_expr unary_expr return_expr constant
+%type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt return_stmt
+%type <node> expr assign_expr call_expr binary_expr unary_expr constant
 %type <arglist> arg_list
 %type <paramlist> param_list
 
@@ -86,27 +86,7 @@ stmt
     | select_stmt          { $$ = $1; }
     | comp_stmt            { $$ = $1; }
     | funcdef_stmt         { $$ = $1; }
-    ;
-
-expr_stmt
-    : ';'      { $$ = 0;  }
-    | expr ';' { $$ = $1; }
-    ;
-
-expr
-    : binary_expr     { $$ = $1; }
-    | unary_expr      { $$ = $1; }
-    | assign_expr     { $$ = $1; }
-    | call_expr       { $$ = $1; }
-    | return_expr     { $$ = $1; }
-    | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
-    | constant        { $$ = $1; }
-    | '(' expr ')'    { $$ = $2; }
-    ;
-
-constant
-    : INTEGER         { $$ = genExpByInt($1); }
-    | FLOAT           { $$ = genExpByFloat($1); }
+    | return_stmt          { $$ = $1; }
     ;
 
 comp_stmt
@@ -121,16 +101,36 @@ funcdef_stmt
       { $<node>$ = funcdef; funcdef->data.funcdef.body = $<node>6; funcdef = NULL; }
     ;
 
-arg_list
-    : NONE                         { $$ = NULL; argcount = 0; }
-    | VAR_IDENT                    { $$ = genArgList(TYPE_INTEGER, $1, NULL, argcount); argcount = 1; }
-    | arg_list ',' VAR_IDENT       { $$ = genArgList(TYPE_INTEGER, $3, $1, argcount); argcount++;   }
+iter_stmt
+    : WHILE expr stmt                     { $$ = genWhile($2, $3); }
+    | FOR expr_stmt expr_stmt expr stmt   { $$ = genFor($2, $3, $4, $5, currentblock); }
+    | FOR expr_stmt expr_stmt stmt        { $$ = genFor($2, $3, NULL, $4, currentblock); }
+    | expr TIMES  stmt                    { $$ = genIter("times", $1, $3, currentblock); }
     ;
 
-param_list
-    : /* empty */                  { $$ = NULL; paramcount = 0; }
-    | expr                         { $$ = genParamList($1, NULL, paramcount); paramcount = 1; }
-    | param_list ',' expr          { $$ = genParamList($3, $1, paramcount); paramcount++; }
+select_stmt
+    : IF expr stmt %prec LOWERTHANELSE  { $$ = genIf($2, $3, NULL); }
+    | IF expr stmt ELSE stmt            { $$ = genIf($2, $3, $5); }
+    ;
+
+expr_stmt
+    : ';'      { $$ = 0;  }
+    | expr ';' { $$ = $1; }
+    ;
+
+expr
+    : binary_expr     { $$ = $1; }
+    | unary_expr      { $$ = $1; }
+    | assign_expr     { $$ = $1; }
+    | call_expr       { $$ = $1; }
+    | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
+    | constant        { $$ = $1; }
+    | '(' expr ')'    { $$ = $2; }
+    ;
+
+constant
+    : INTEGER         { $$ = genExpByInt($1); }
+    | FLOAT           { $$ = genExpByFloat($1); }
     ;
 
 assign_expr
@@ -143,21 +143,9 @@ call_expr
     | IDENT     param_list           { $$ = genCall($1, $2, paramcount); paramcount = 0; }
     ;
 
-return_expr
+return_stmt
     : RETURN expr                    { $$ = genReturn($2); }
     | RETURN                         { $$ = genReturn(NULL); }
-    ;
-
-iter_stmt
-    : WHILE expr stmt                     { $$ = genWhile($2, $3); }
-    | FOR expr_stmt expr_stmt expr stmt   { $$ = genFor($2, $3, $4, $5, currentblock); }
-    | FOR expr_stmt expr_stmt stmt        { $$ = genFor($2, $3, NULL, $4, currentblock); }
-    | expr TIMES  stmt                    { $$ = genIter("times", $1, $3, currentblock); }
-    ;
-
-select_stmt
-    : IF expr stmt %prec LOWERTHANELSE  { $$ = genIf($2, $3, NULL); }
-    | IF expr stmt ELSE stmt            { $$ = genIf($2, $3, $5); }
     ;
 
 binary_expr
@@ -184,6 +172,18 @@ unary_expr
     | expr MINUSMINUS  { $$ = genUnaryop($1, UNARY_POSTDEC, currentblock); }
     | PLUSPLUS expr    { $$ = genUnaryop($2, UNARY_PREINC, currentblock); }
     | MINUSMINUS expr  { $$ = genUnaryop($2, UNARY_PREDEC, currentblock); }
+    ;
+
+arg_list
+    : NONE                         { $$ = NULL; argcount = 0; }
+    | VAR_IDENT                    { $$ = genArgList(TYPE_INTEGER, $1, NULL, argcount); argcount = 1; }
+    | arg_list ',' VAR_IDENT       { $$ = genArgList(TYPE_INTEGER, $3, $1, argcount); argcount++;   }
+    ;
+
+param_list
+    : /* empty */                  { $$ = NULL; paramcount = 0; }
+    | expr                         { $$ = genParamList($1, NULL, paramcount); paramcount = 1; }
+    | param_list ',' expr          { $$ = genParamList($3, $1, paramcount); paramcount++; }
     ;
 
 %%

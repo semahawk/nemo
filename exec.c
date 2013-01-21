@@ -846,6 +846,8 @@ Value execReturn(struct Node *n)
   assert(n);
   assert(nt_RETURN == n->kind);
 
+  debug("exec", "return node at %p", n);
+
   Value ret;
 
   ret.v.i = 0;
