@@ -94,6 +94,10 @@ const char *unarytos(Unary type)
       return "++$v";
     case UNARY_PREDEC:
       return "--$v";
+    case UNARY_PLUS:
+      return "unary +";
+    case UNARY_MINUS:
+      return "unary -";
   }
 
   return "#UNKUT#";

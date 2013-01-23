@@ -14,6 +14,8 @@ typedef enum {
   UNARY_POSTDEC,
   UNARY_PREINC,
   UNARY_PREDEC,
+  UNARY_PLUS,
+  UNARY_MINUS,
 } Unary;
 
 typedef enum {

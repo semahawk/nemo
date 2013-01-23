@@ -109,11 +109,6 @@ struct Node *genUnaryop(struct Node *left, Unary op, struct Node *currentblock)
 
   debug("create", "unary operation node <op: '%s'> at %p", unarytos(op), new);
 
-  if (left->kind != nt_ID){
-    cerror("trying to change value of a constant object");
-    exit(1);
-  }
-
   new->kind = nt_UNARYOP;
   new->data.unaryop.expression = left;
   new->data.unaryop.op = op;

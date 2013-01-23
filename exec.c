@@ -651,8 +651,15 @@ Value execUnExpression(struct Node *n)
 
   debug("exec", "unary operation node <op: '%s'> at %p", unarytos(n->data.unaryop.op), n);
 
-  const Value currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
+  Value currval;
   Value ret;
+
+  // if that's a variable, get it's value
+  if (n->data.unaryop.expression->kind == nt_ID)
+    currval = getVariableValue(n->data.unaryop.expression->data.s, n->block);
+  // otherwise it's just a constant (or any other expression)
+  else
+    currval = dispatchNode(n->data.unaryop.expression);
 
   switch (n->data.unaryop.op){
     case UNARY_POSTINC:
@@ -705,6 +712,28 @@ Value execUnExpression(struct Node *n)
           ret.v.f = currval.v.f - 1.0f;
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
+          return ret;
+      }
+    case UNARY_PLUS:
+      switch (currval.type){
+        case TYPE_INTEGER:
+          ret.v.i = +currval.v.i;
+          ret.type = currval.type;
+          return ret;
+        case TYPE_FLOATING:
+          ret.v.f = +currval.v.f;
+          ret.type = currval.type;
+          return ret;
+      }
+    case UNARY_MINUS:
+      switch (currval.type){
+        case TYPE_INTEGER:
+          ret.v.i = -currval.v.i;
+          ret.type = currval.type;
+          return ret;
+        case TYPE_FLOATING:
+          ret.v.f = -currval.v.f;
+          ret.type = currval.type;
           return ret;
       }
     default: cerror("unknown unary expression");

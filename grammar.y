@@ -49,7 +49,7 @@
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt return_stmt
 %type <node> expr assign_expr equ_expr cond_expr add_expr mult_expr prefix_expr postfix_expr primary_expr
-%type <binary> assign_op add_op mult_op cond_op equ_op
+%type <binary> assign_op add_op mult_op cond_op equ_op unary_op
 %type <arglist> arg_list
 %type <paramlist> param_list
 
@@ -64,6 +64,7 @@
 %left  '+' '-'
 %left  '*' '/' '%'
 %nonassoc PLUSPLUS MINUSMINUS
+%left  UPLUS UMINUS
 %left  '('
 
 %nonassoc LOWERTHANELSE
@@ -186,10 +187,16 @@ mult_expr
     | mult_expr mult_op prefix_expr { $$ = genBinaryop($1, $3, $2, currentblock); }
     ;
 
+unary_op
+    : '+'     { $$ = UNARY_PLUS; }
+    | '-'     { $$ = UNARY_MINUS; }
+    ;
+
 prefix_expr
     : postfix_expr
     | PLUSPLUS prefix_expr { $$ = genUnaryop($2, UNARY_PREINC, currentblock); }
     | MINUSMINUS prefix_expr { $$ = genUnaryop($2, UNARY_PREDEC, currentblock); }
+    | unary_op prefix_expr { $$ = genUnaryop($2, $1, currentblock); }
     ;
 
 postfix_expr
