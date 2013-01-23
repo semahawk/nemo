@@ -1,73 +1,73 @@
 // Don't fall on easy things
-assert 1, 1;
-assert 1.0, 1.0;
+assert(1, 1);
+assert(1.0, 1.0);
 
 // Basic boolean
-assert 1;
+assert(1);
 
 // Basic arithmetic
-assert 2, 1 + 1;
-assert 1 + 1, 2;
-assert 5 - 1, 4;
-assert 1, 4 - 3;
-assert 2 * 2, 4;
-assert 2.5 * 2, 5;
-assert 10 * 2, 20;
-assert 12 % 5, 2;
-assert 3 % 2, 1;
-assert 8 / 4, 2;
-assert 2 / 2, 1;
-assert 10 / 1, 10;
-assert 5 / 2, 2.5;
+assert(2, 1 + 1);
+assert(1 + 1, 2);
+assert(5 - 1, 4);
+assert(1, 4 - 3);
+assert(2 * 2, 4);
+assert(2.5 * 2, 5);
+assert(10 * 2, 20);
+assert(12 % 5, 2);
+assert(3 % 2, 1);
+assert(8 / 4, 2);
+assert(2 / 2, 1);
+assert(10 / 1, 10);
+assert(5 / 2, 2.5);
 
 // Boolean operators
-assert 2 > 1, 1;
-assert 1 < 2, 1;
-assert 2 != 1, 1;
-assert 2 != 2, 0;
-assert 2 == 2, 1;
-assert 5 >= 5, 1;
-assert 6 >= 5, 1;
-assert 6 >= 8, 0;
-assert 3 <= 3, 1;
-assert 3 <= 4, 1;
-assert 2 gt 1, 1;
-assert 1 lt 2, 1;
-assert 2 ne 1, 1;
-assert 2 ne 2, 0;
-assert 2 eq 2, 1;
-assert 5 ge 5, 1;
-assert 6 ge 5, 1;
-assert 6 ge 8, 0;
-assert 3 le 3, 1;
-assert 3 le 4, 1;
+assert(2 > 1, 1);
+assert(1 < 2, 1);
+assert(2 != 1, 1);
+assert(2 != 2, 0);
+assert(2 == 2, 1);
+assert(5 >= 5, 1);
+assert(6 >= 5, 1);
+assert(6 >= 8, 0);
+assert(3 <= 3, 1);
+assert(3 <= 4, 1);
+assert(2 gt 1, 1);
+assert(1 lt 2, 1);
+assert(2 ne 1, 1);
+assert(2 ne 2, 0);
+assert(2 eq 2, 1);
+assert(5 ge 5, 1);
+assert(6 ge 5, 1);
+assert(6 ge 8, 0);
+assert(3 le 3, 1);
+assert(3 le 4, 1);
 
 // Operator assignment
 $a = 10;
-assert $a, 10;
+assert($a, 10);
 $a += 2;
-assert $a, 12;
+assert($a, 12);
 $a -= 4;
-assert $a, 8;
+assert($a, 8);
 $a *= 2;
-assert $a, 16;
+assert($a, 16);
 $a /= 4;
-assert $a, 4;
+assert($a, 4);
 $a %= 2;
-assert $a, 0;
+assert($a, 0);
 
 // Correct precedence
-assert 2 + 2 * 2, 6;
-assert 2 * 2 + 2, 6;
-assert (2 + 2) * 2, 8;
-assert 2 * (2 + 2), 8;
+assert(2 + 2 * 2, 6);
+assert(2 * 2 + 2, 6);
+assert((2 + 2) * 2, 8);
+assert(2 * (2 + 2), 8);
 
 // Assignment
 $a = 10;
-assert $a, 10;
-assert $a;
+assert($a, 10);
+assert($a);
 
 $a = $b = 20;
-assert $a, 20;
-assert $b, 20;
-assert $a, $b;
+assert($a, 20);
+assert($b, 20);
+assert($a, $b);

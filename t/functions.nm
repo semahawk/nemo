@@ -14,8 +14,8 @@ fun function_three; $a, $b {
 
 assert(function_one(), 20);
 
-$return = function_two 5;
-assert $return, 5;
+$return = function_two(5);
+assert($return, 5);
 
-$return = function_three 3.5, 5;
-assert $return, 8.5;
+$return = function_three(3.5, 5);
+assert($return, 8.5);

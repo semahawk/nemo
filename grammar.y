@@ -40,6 +40,7 @@
   struct Node *node;
   struct ArgList *arglist;
   struct ParamList *paramlist;
+  Binary binary;
 }
 
 %token <i> INTEGER
@@ -47,16 +48,17 @@
 %token <s> VAR_IDENT IDENT
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt return_stmt
-%type <node> expr assign_expr call_expr binary_expr unary_expr constant
+%type <node> expr assign_expr equ_expr cond_expr add_expr mult_expr prefix_expr postfix_expr primary_expr
+%type <binary> assign_op add_op mult_op cond_op equ_op
 %type <arglist> arg_list
 %type <paramlist> param_list
 
 %token WHILE IF ELSE FOR NONE RETURN
-%token FUN TIMES
+%token ASSIGN FUN TIMES
 %token GE LE EQ NE
 %token PLUSPLUS MINUSMINUS
 
-%right '=' EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD
+%right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD
 %left  EQ NE
 %left  GT LT GE LE
 %left  '+' '-'
@@ -124,54 +126,84 @@ expr_stmt
     ;
 
 expr
-    : binary_expr     { $$ = $1; }
-    | unary_expr      { $$ = $1; }
-    | assign_expr     { $$ = $1; }
-    | call_expr       { $$ = $1; }
-    | VAR_IDENT       { $$ = genExpByName($1, currentblock); }
-    | constant        { $$ = $1; }
-    | '(' expr ')'    { $$ = $2; }
+    : assign_expr
+    | VAR_IDENT ASSIGN expr { $$ = genAssignment($1, $3, currentblock); }
     ;
 
-constant
-    : INTEGER         { $$ = genExpByInt($1); }
-    | FLOAT           { $$ = genExpByFloat($1); }
+assign_op
+    : EQ_ADD  { $$ = BINARY_EQ_ADD; }
+    | EQ_SUB  { $$ = BINARY_EQ_SUB; }
+    | EQ_MUL  { $$ = BINARY_EQ_MUL; }
+    | EQ_DIV  { $$ = BINARY_EQ_DIV; }
+    | EQ_MOD  { $$ = BINARY_EQ_MOD; }
     ;
 
 assign_expr
-    : VAR_IDENT '=' expr             { $$ = genAssignment($1, $3, currentblock); }
-    | constant  '=' expr             { cerror("cannot change value of a constant"); exit(1); }
+    : equ_expr
+    | expr assign_op equ_expr { $$ = genBinaryop($1, $3, $2, currentblock); }
     ;
 
-call_expr
-    : IDENT '(' param_list ')'       { $$ = genCall($1, $3, paramcount); paramcount = 0; }
-    | IDENT     param_list           { $$ = genCall($1, $2, paramcount); paramcount = 0; }
+equ_op
+    : NE      { $$ = BINARY_NE; }
+    | EQ      { $$ = BINARY_EQ; }
     ;
 
-binary_expr
-    : expr '+' expr    { $$ = genBinaryop($1, $3, BINARY_ADD, currentblock); }
-    | expr '-' expr    { $$ = genBinaryop($1, $3, BINARY_SUB, currentblock); }
-    | expr '*' expr    { $$ = genBinaryop($1, $3, BINARY_MUL, currentblock); }
-    | expr '/' expr    { $$ = genBinaryop($1, $3, BINARY_DIV, currentblock); }
-    | expr '%' expr    { $$ = genBinaryop($1, $3, BINARY_MOD, currentblock); }
-    | expr GT expr     { $$ = genBinaryop($1, $3, BINARY_GT, currentblock); }
-    | expr LT expr     { $$ = genBinaryop($1, $3, BINARY_LT, currentblock); }
-    | expr GE expr     { $$ = genBinaryop($1, $3, BINARY_GE, currentblock); }
-    | expr LE expr     { $$ = genBinaryop($1, $3, BINARY_LE, currentblock); }
-    | expr NE expr     { $$ = genBinaryop($1, $3, BINARY_NE, currentblock); }
-    | expr EQ expr     { $$ = genBinaryop($1, $3, BINARY_EQ, currentblock); }
-    | expr EQ_ADD expr { $$ = genBinaryop($1, $3, BINARY_EQ_ADD, currentblock); }
-    | expr EQ_SUB expr { $$ = genBinaryop($1, $3, BINARY_EQ_SUB, currentblock); }
-    | expr EQ_MUL expr { $$ = genBinaryop($1, $3, BINARY_EQ_MUL, currentblock); }
-    | expr EQ_DIV expr { $$ = genBinaryop($1, $3, BINARY_EQ_DIV, currentblock); }
-    | expr EQ_MOD expr { $$ = genBinaryop($1, $3, BINARY_EQ_MOD, currentblock); }
+equ_expr
+    : cond_expr
+    | equ_expr equ_op cond_expr { $$ = genBinaryop($1, $3, $2, currentblock); }
     ;
 
-unary_expr
-    : expr PLUSPLUS    { $$ = genUnaryop($1, UNARY_POSTINC, currentblock); }
-    | expr MINUSMINUS  { $$ = genUnaryop($1, UNARY_POSTDEC, currentblock); }
-    | PLUSPLUS expr    { $$ = genUnaryop($2, UNARY_PREINC, currentblock); }
-    | MINUSMINUS expr  { $$ = genUnaryop($2, UNARY_PREDEC, currentblock); }
+cond_op
+    : GT      { $$ = BINARY_GT; }
+    | LT      { $$ = BINARY_LT; }
+    | GE      { $$ = BINARY_GE; }
+    | LE      { $$ = BINARY_LE; }
+    ;
+
+cond_expr
+    : add_expr
+    | cond_expr cond_op add_expr { $$ = genBinaryop($1, $3, $2, currentblock); }
+    ;
+
+add_op
+    : '+'     { $$ = BINARY_ADD; }
+    | '-'     { $$ = BINARY_SUB; }
+    ;
+
+add_expr
+    : mult_expr
+    | add_expr add_op mult_expr { $$ = genBinaryop($1, $3, $2, currentblock); }
+    ;
+
+mult_op
+    : '*'     { $$ = BINARY_MUL; }
+    | '/'     { $$ = BINARY_DIV; }
+    | '%'     { $$ = BINARY_MOD; }
+    ;
+
+mult_expr
+    : prefix_expr
+    | mult_expr mult_op prefix_expr { $$ = genBinaryop($1, $3, $2, currentblock); }
+    ;
+
+prefix_expr
+    : postfix_expr
+    | PLUSPLUS prefix_expr { $$ = genUnaryop($2, UNARY_PREINC, currentblock); }
+    | MINUSMINUS prefix_expr { $$ = genUnaryop($2, UNARY_PREDEC, currentblock); }
+    ;
+
+postfix_expr
+    : primary_expr
+    | IDENT '(' param_list ')' { $$ = genCall($1, $3, paramcount); paramcount = 0; }
+    | postfix_expr PLUSPLUS    { $$ = genUnaryop($1, UNARY_POSTINC, currentblock); }
+    | postfix_expr MINUSMINUS  { $$ = genUnaryop($1, UNARY_POSTDEC, currentblock); }
+    ;
+
+primary_expr
+    : VAR_IDENT        { $$ = genExpByName($1, currentblock); }
+    | INTEGER          { $$ = genExpByInt($1); }
+    | FLOAT            { $$ = genExpByFloat($1); }
+    | '(' expr ')'     { $$ = $2; }
     ;
 
 arg_list

@@ -61,6 +61,7 @@ D [0-9]
 "*="                     { count(); return EQ_MUL; }
 "/="                     { count(); return EQ_DIV; }
 "%="                     { count(); return EQ_MOD; }
+"="                      { count(); return ASSIGN; }
 "<"                      { count(); return LT; }
 ">"                      { count(); return GT; }
 "ge"                     { count(); return GE; }
@@ -79,7 +80,6 @@ D [0-9]
 ")"                      { count(); return ')'; }
 "{"                      { count(); return '{'; }
 "}"                      { count(); return '}'; }
-"="                      { count(); return '='; }
 ";"                      { count(); return ';'; }
 ","                      { count(); return ','; }
 
