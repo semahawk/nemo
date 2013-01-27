@@ -30,7 +30,8 @@ Value(*nodeExecs[])(struct Node *) =
   execIf,
   execFor,
   execFuncDef,
-  execIter
+  execIter,
+  execNoop
 };
 
 Value dispatchNode(struct Node *n)
@@ -1047,6 +1048,15 @@ Value execIter(struct Node *n)
 
   ret.v.i = 1;
   ret.type = TYPE_INTEGER;
+
+  return ret;
+}
+
+Value execNoop(struct Node *n)
+{
+  Value ret;
+
+  debug("exec", "but not really, a noop node at %p", n);
 
   return ret;
 }

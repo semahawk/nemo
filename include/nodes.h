@@ -84,7 +84,7 @@ struct Node {
     nt_FOR,
     nt_FUNCDEF,
     nt_ITER,
-    nt_LASTELEMENT
+    nt_NOOP
   } kind;
 
   union {

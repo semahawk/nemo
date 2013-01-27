@@ -308,3 +308,15 @@ struct Node *genIter(char *type, struct Node *count, struct Node *stmt, struct N
 
   return new;
 }
+
+struct Node *genNoop(void)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("create", "noop node at %p", new);
+
+  new->kind = nt_NOOP;
+
+  return new;
+}
+

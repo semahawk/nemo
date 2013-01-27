@@ -25,5 +25,6 @@ void freeFuncDef(struct Node *);
 void freeBlock(struct Node *);
 void freeStatement(struct Node *);
 void freeIter(struct Node *);
+void freeNoop(struct Node *);
 
 #endif // FREE_H

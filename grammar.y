@@ -122,7 +122,7 @@ return_stmt
     ;
 
 expr_stmt
-    : ';'      { $$ = 0;  }
+    : ';'      { $$ = genNoop();  }
     | expr ';' { $$ = $1; }
     ;
 
