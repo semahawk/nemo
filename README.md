@@ -14,11 +14,11 @@ You could also run tests, by typing `make test`, just to make sure it works.
 
 Nemo supports same set of comments as C.
 
-Multiline `/* ... */` and oneline `//`.
+Multiline `/* ... */` and oneline `// ...`.
 
 ## Types
 
-So far Nemo supports integers and floats. Hey, it still in development!
+So far Nemo supports integers, floats and strings.
 
 ## Variables
 
@@ -32,9 +32,22 @@ Those plain-old variables start with a dollar sign, eg. `$very_meaningful_variab
 
 If a variable starts with a `!` sign, it means it's read-only. You can set it only once, and can't change it's value later on.
 
+## Strings
+
+So far, strings get casted to integers only. The rule of casting is pretty
+simple. Every number found in the string, gets to be in the integer. Everything
+else is discarded.
+
+Examples:
+
+`"99 bottles of beer"` will get casted to `99`    
+`"99 bottles of beer on the wall, take 1 down and pass it around"` will get
+casted to `991`    
+`"no more bottles of beer on the wall"` will get casted to `0`
+
 ## Booleanism
 
-In Nemo, there is no `bool` type. Like in C/Perl, `0` or `0.0` is false, the rest is true.
+In Nemo, there is no `bool` type. Like in C/Perl, `0`, `0.0` and an empty string `""` is false, the rest is true.
 
 ## Operators
 

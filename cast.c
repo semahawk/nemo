@@ -12,7 +12,6 @@
 inline int vtoi(Value value)
 {
   char str[50];
-  int res;
   int j = 0;
 
   if (value.type == TYPE_INTEGER){
@@ -25,9 +24,9 @@ inline int vtoi(Value value)
         str[j] = value.v.s[i];
         j++;
       }
+      str[j] = '\0';
     }
-    res = atoi(str);
-    return res;
+    return atoi(str);
   } else {
     return 0;
   }
@@ -72,6 +71,12 @@ inline bool vtob(Value value)
       return true;
     } else {
       return false;
+    }
+  } else if (value.type == TYPE_STRING){
+    if (strlen(value.v.s) == 0){
+      return false;
+    } else {
+      return true;
     }
   } else {
     return false;
