@@ -57,7 +57,7 @@ Nemo supports few operators. Here is a list of them:
 
 `+`, `-`, `*`, `/` and `%`
 
-Note: division operator always returns a float, and modulo operator always returns an integer.
+__Note:__ division operator always returns a float, and modulo operator always returns an integer.
 
 ### Assignment
 
@@ -71,7 +71,7 @@ Each mathematical operator has its assignment operation, like in C/Perl.
 
 `lt`, `gt`, `ge`, `le`, `eq` and `ne`
 
-Note: in both cases (like with `>` and `gt`) they are exactly the same.
+__Note:__ in both cases (like with `>` and `gt`) they are exactly the same.
 
 ### Unary
 
@@ -122,7 +122,7 @@ Examples:
       return $a + $b;
     }
 
-Note: if an argument is an exclamation variable (like `!blerh`) you won't be able
+__Note:__ if an argument is an exclamation variable (like `!blerh`) you won't be able
 to change it's value inside of the function.
 
 ## Control structures
@@ -151,6 +151,20 @@ Examples:
       $d++;
       $e += $d;
     }
+
+### For
+
+Basic syntax: `FOR expr; expr; expr stmt`
+
+Examples:
+
+    $a = 0;
+
+    for $a = 0; $a < 10; $a++
+      print($a);
+
+__Note:__ so far, the variable used in the `expr`s, must be 'declared' earlier,
+otherwise it would say it couldn't find it.
 
 ## Iters
 
@@ -190,5 +204,5 @@ It will print:
 
 If it was `$-` instead of `$+`, the output would be from `9` to `0`.
 
-Note: `expr` is being casted to int, so if `expr` is, say, `2.5`, it's gonna be casted to 2.
+__Note:__ `expr` is being casted to int, so if `expr` is, say, `2.5`, it's gonna be casted to 2.
 
