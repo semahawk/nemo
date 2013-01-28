@@ -122,7 +122,7 @@ Examples:
       return $a + $b;
     }
 
-Note: if an argument is a exclamation variable (like `!blerh`) you won't be able
+Note: if an argument is an exclamation variable (like `!blerh`) you won't be able
 to change it's value inside of the function.
 
 ## Control structures
