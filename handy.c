@@ -68,8 +68,21 @@ void cerror(char *string, ...)
 void *myalloc(size_t size)
 {
   void *p = malloc(size);
+
   if (p == NULL){
     error("malloc: failed to allocate %d bytes in file %s at line %d", size, __FILE__, __LINE__);
+    exit(1);
+  }
+
+  return p;
+}
+
+void *myrealloc(void *ptr, size_t size)
+{
+  void *p = realloc(ptr, size);
+
+  if (p == NULL){
+    error("realloc: failed to allocate %d bytes in file %s at line %d", size, __FILE__, __LINE__);
     exit(1);
   }
 
@@ -138,6 +151,8 @@ const char *binarytos(Binary type)
       return "/=";
     case BINARY_EQ_MOD:
       return "%=";
+    case BINARY_CON:
+      return ".";
   }
 
   return "#UNKBT#";

@@ -16,6 +16,7 @@ void error(char *, ...);
 void cerror(char *, ...);
 
 void *myalloc(size_t);
+void *myrealloc(void *, size_t);
 
 char *strdup(const char *);
 

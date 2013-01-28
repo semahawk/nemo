@@ -44,7 +44,8 @@ inline float vtof(Value value)
 
 inline char *vtos(Value value)
 {
-  static char str[30];
+  // TODO: freeit
+  char *str = myalloc(30);
 
   if (value.type == TYPE_INTEGER)
     snprintf(str, 30, "%d", value.v.i);

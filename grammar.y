@@ -61,7 +61,7 @@
 %right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD
 %left  EQ NE
 %left  GT LT GE LE
-%left  '+' '-'
+%left  '+' '-' '.'
 %left  '*' '/' '%'
 %nonassoc PLUSPLUS MINUSMINUS
 %left  UPLUS UMINUS
@@ -169,6 +169,7 @@ cond_expr
 add_op
     : '+'     { $$ = BINARY_ADD; }
     | '-'     { $$ = BINARY_SUB; }
+    | '.'     { $$ = BINARY_CON; }
     ;
 
 add_expr

@@ -73,6 +73,10 @@ Each mathematical operator has its assignment operation, like in C/Perl.
 
 __Note:__ in both cases (like with `>` and `gt`) they are exactly the same.
 
+### String specific
+
+`.` - concatention, pretty straight-forward
+
 ### Unary
 
 `+`, `-`, `++` and `--`

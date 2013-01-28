@@ -76,7 +76,7 @@ Value execConstant(struct Node *n)
          nt_FLOATING == n->kind ||
          nt_STRING   == n->kind);
 
-  debug("exec", "constant node <val: %s> at %p", vtos(n->data.value), n);
+  debug("exec", "constant node <val: %d> at %p", vtoi(n->data.value), n);
 
   return n->data.value;
 }
@@ -89,7 +89,9 @@ Value execBinExpression(struct Node *n)
   const Value left = dispatchNode(n->data.binaryop.left);
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
-  /*Value new_value;*/
+  // we're reallocing it later
+  char  *new_str = myalloc(1);
+  size_t new_size;
 
   debug("exec", "binary operation node <op: '%s'> at %p", binarytos(n->data.binaryop.op), n);
 
@@ -194,6 +196,14 @@ Value execBinExpression(struct Node *n)
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
+            // XXX int . int
+            case BINARY_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%d%d", left.v.i, right.v.i);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -292,6 +302,14 @@ Value execBinExpression(struct Node *n)
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
+            // XXX int . float
+            case BINARY_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%d%.2f", left.v.i, right.v.f);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              break;
           }
           break;
         case TYPE_STRING:
@@ -389,6 +407,14 @@ Value execBinExpression(struct Node *n)
               ret.v.i = left.v.i % vtoi(right);
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int . string
+            case BINARY_CON:
+              new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%d%s", left.v.i, right.v.s);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
               break;
           }
           break;
@@ -493,6 +519,14 @@ Value execBinExpression(struct Node *n)
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
+            // XXX float . int
+            case BINARY_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%.2f%d", left.v.f, right.v.i);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -591,6 +625,14 @@ Value execBinExpression(struct Node *n)
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
+            // XXX float . float
+            case BINARY_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%.2f%.2f", left.v.f, right.v.f);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              break;
           }
           break;
         case TYPE_STRING:
@@ -688,6 +730,14 @@ Value execBinExpression(struct Node *n)
               ret.v.i = vtoi(left) % vtoi(right);
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float . string
+            case BINARY_CON:
+              new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%.2f%s", left.v.f, right.v.s);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
               break;
           }
           break;
@@ -792,6 +842,14 @@ Value execBinExpression(struct Node *n)
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
+            // XXX string . int
+            case BINARY_CON:
+              new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%d", left.v.s, right.v.i);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -890,6 +948,14 @@ Value execBinExpression(struct Node *n)
               ret.type = TYPE_INTEGER;
               setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
+            // XXX string . float
+            case BINARY_CON:
+              new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%.2f", left.v.s, right.v.f);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              break;
           }
           break;
         case TYPE_STRING:
@@ -982,6 +1048,14 @@ Value execBinExpression(struct Node *n)
             case BINARY_EQ_MOD:
               ret.v.i = vtoi(left) % vtoi(right);
               ret.type = TYPE_INTEGER;
+              break;
+            // XXX string . string
+            case BINARY_CON:
+              new_size = strlen(left.v.s) + strlen(right.v.s) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", left.v.s, right.v.s);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
               break;
           }
           break;
@@ -1329,7 +1403,6 @@ Value execFor(struct Node *n)
   if (i){
     if (i->kind == nt_ASSIGNMENT){
       setVariableValue(i->data.assignment.name, dispatchNode(i->data.assignment.right), n->block);
-      // TODO: make it could be a declaration
     } else {
       cerror("wrong expression kind at first fortion");
       exit(1);

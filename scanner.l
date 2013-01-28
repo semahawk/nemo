@@ -81,6 +81,7 @@ D [0-9]
 "{"                      { count(); return '{'; }
 "}"                      { count(); return '}'; }
 ";"                      { count(); return ';'; }
+"."                      { count(); return '.'; }
 ","                      { count(); return ','; }
 
 \$[a-zA-Z_][a-zA-Z0-9_]* { count(); yylval.s = strdup(yytext); return VAR_IDENT; }

@@ -35,6 +35,7 @@ typedef enum {
   BINARY_EQ_MUL,
   BINARY_EQ_DIV,
   BINARY_EQ_MOD,
+  BINARY_CON
 } Binary;
 
 typedef enum {
