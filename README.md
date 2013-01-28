@@ -84,6 +84,9 @@ In Nemo statements end with a semicolon. Like in C.
 ## Functions
 
 In Nemo function calls must alway include parenthesis.
+Also, if function takes 2 arguments, you must pass 2 of them, otherwise an error
+would be shown. One exception is the `print` function. You can specify as many
+as you want.
 
 ### Predefined
 
@@ -100,9 +103,27 @@ If you pass 2 parameters, it will check if they are equal. If they are not, it w
 
 ### Userdefined
 
-Basic syntax: `FUN name; ARGS block`
+Basic syntax: `FUN name ARGS block`
 
-`ARGS` could one of following: `none` keyword (function doesn't take params [well, now I think about it, I will probably change it somehow]) or one or more (separated by commas) variables.
+If `ARGS` is empty, it means function doesn't take any parameters. If it takes,
+specify them, and separate with commas, if there's more than one.
+
+Examples:
+
+    fun hello {
+      print("hello, world");
+    }
+
+    fun print_one $a {
+      print($a);
+    }
+
+    fun add $a, $b {
+      return $a + $b;
+    }
+
+Note: if an argument is a exclamation variable (like `!blerh`) you won't be able
+to change it's value inside of the function.
 
 ## Control structures
 

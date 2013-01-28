@@ -98,10 +98,10 @@ comp_stmt
     ;
 
 funcdef_stmt
-    : FUN IDENT ';' arg_list
-      { $<node>$ = funcdef; funcdef = genFuncDef(TYPE_INTEGER, $2, $4, argcount); argcount = 0; }
+    : FUN IDENT arg_list
+      { $<node>$ = funcdef; funcdef = genFuncDef(TYPE_INTEGER, $2, $3, argcount); argcount = 0; }
       comp_stmt
-      { $<node>$ = funcdef; funcdef->data.funcdef.body = $<node>6; funcdef = NULL; }
+      { $<node>$ = funcdef; funcdef->data.funcdef.body = $<node>5; funcdef = NULL; }
     ;
 
 iter_stmt
@@ -215,7 +215,7 @@ primary_expr
     ;
 
 arg_list
-    : NONE                         { $$ = NULL; argcount = 0; }
+    : /* empty */                  { $$ = NULL; argcount = 0; }
     | VAR_IDENT                    { $$ = genArgList(TYPE_INTEGER, $1, NULL, argcount); argcount = 1; }
     | arg_list ',' VAR_IDENT       { $$ = genArgList(TYPE_INTEGER, $3, $1, argcount); argcount++;   }
     ;
