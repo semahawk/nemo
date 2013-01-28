@@ -56,6 +56,30 @@ struct Node *genExpByFloat(float val)
   return new;
 }
 
+struct Node *genExpByString(char *val)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("create", "string node <val: %s> at %p", val, new);
+
+  char str[strlen(val) - 2];
+  int j = 0;
+
+  // we have to get rid of these "s in val
+  for (unsigned int i = 1; i < strlen(val) - 1; i++, j++){
+    str[j] = val[i];
+  }
+  str[j] = '\0';
+
+  new->kind = nt_STRING;
+  new->data.value.type = TYPE_STRING;
+  new->data.value.v.s = strdup(str);
+  // TODO: we would need to actually set block when we have string interpolation
+  new->block = NULL;
+
+  return new;
+}
+
 struct Node *genExpByName(char *name, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));

@@ -15,6 +15,7 @@ void(*nodeFrees[])(struct Node *) =
   freeTermExpression,
   freeTermExpression,
   freeTermExpression,
+  freeTermExpression,
   freeBinExpression,
   freeUnExpression,
   freeAssignment,

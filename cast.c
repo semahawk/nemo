@@ -11,12 +11,26 @@
 
 inline int vtoi(Value value)
 {
-  if (value.type == TYPE_INTEGER)
+  char str[50];
+  int res;
+  int j = 0;
+
+  if (value.type == TYPE_INTEGER){
     return value.v.i;
-  else if (value.type == TYPE_FLOATING)
+  } else if (value.type == TYPE_FLOATING){
     return (int)value.v.f;
-  else
+  } else if (value.type == TYPE_STRING){
+    for (unsigned int i = 0; i < strlen(value.v.s); i++){
+      if (isdigit(value.v.s[i])){
+        str[j] = value.v.s[i];
+        j++;
+      }
+    }
+    res = atoi(str);
+    return res;
+  } else {
     return 0;
+  }
 }
 
 inline float vtof(Value value)
@@ -31,12 +45,14 @@ inline float vtof(Value value)
 
 inline char *vtos(Value value)
 {
-  char *str = myalloc(31);
+  static char str[30];
 
   if (value.type == TYPE_INTEGER)
     snprintf(str, 30, "%d", value.v.i);
   else if (value.type == TYPE_FLOATING)
     snprintf(str, 30, "%.2f", value.v.f);
+  else if (value.type == TYPE_STRING)
+    return value.v.s;
   else
     snprintf(str, 30, "#unknowntype#vtos#");
 
@@ -74,6 +90,10 @@ inline Value vtov(Value value, Type type)
     case TYPE_FLOATING:
       ret.v.f = vtof(value);
       ret.type = TYPE_FLOATING;
+      break;
+    case TYPE_STRING:
+      ret.v.s = vtos(value);
+      ret.type = TYPE_STRING;
       break;
   }
 

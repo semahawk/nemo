@@ -87,9 +87,10 @@ D [0-9]
 \$[+-]                   { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
 ![a-zA-Z_][a-zA-Z0-9_]*  { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
 ![+-]                    { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
-[a-zA-Z_][a-zA-Z0-9_]*   { count(); yylval.s = strdup(yytext); return IDENT; }
-{D}{D}*                  { count(); yylval.i = atoi(yytext); return INTEGER; }
-{D}*\.{D}+               { count(); yylval.f = atof(yytext); return FLOAT; }
+[a-zA-Z_][a-zA-Z0-9_]*   { count(); yylval.s = strdup(yytext); return IDENT;     }
+{D}{D}*                  { count(); yylval.i = atoi(yytext);   return INTEGER;   }
+{D}*\.{D}+               { count(); yylval.f = atof(yytext);   return FLOAT;     }
+\"(\\.|[^\\"])*\"        { count(); yylval.s = strdup(yytext); return STRING;    }
 
 [ \t]                    { count(); }
 .                        { /* ignooar */ }

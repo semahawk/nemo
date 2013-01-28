@@ -78,7 +78,7 @@ void *myalloc(size_t size)
 
 char *strdup(const char *p)
 {
-  char *np = malloc(strlen(p) + 1);
+  char *np = myalloc(strlen(p) + 1);
 
   return np ? strcpy(np, p) : np;
 }

@@ -39,7 +39,8 @@ typedef enum {
 
 typedef enum {
   TYPE_INTEGER,
-  TYPE_FLOATING
+  TYPE_FLOATING,
+  TYPE_STRING
 } Type;
 
 typedef struct {
@@ -47,6 +48,7 @@ typedef struct {
   union {
     int i;
     float f;
+    char *s;
   } v;
 } Value;
 
@@ -72,6 +74,7 @@ struct Node {
     nt_ID,
     nt_INTEGER,
     nt_FLOATING,
+    nt_STRING,
     nt_BINARYOP,
     nt_UNARYOP,
     nt_ASSIGNMENT,

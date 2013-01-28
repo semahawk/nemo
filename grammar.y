@@ -45,7 +45,7 @@
 
 %token <i> INTEGER
 %token <f> FLOAT
-%token <s> VAR_IDENT IDENT
+%token <s> STRING VAR_IDENT IDENT
 %type <node> stmts stmt
 %type <node> expr_stmt iter_stmt select_stmt comp_stmt funcdef_stmt return_stmt
 %type <node> expr assign_expr equ_expr cond_expr add_expr mult_expr prefix_expr postfix_expr primary_expr
@@ -210,6 +210,7 @@ primary_expr
     : VAR_IDENT        { $$ = genExpByName($1, currentblock); }
     | INTEGER          { $$ = genExpByInt($1); }
     | FLOAT            { $$ = genExpByFloat($1); }
+    | STRING           { $$ = genExpByString($1); }
     | '(' expr ')'     { $$ = $2; }
     ;
 

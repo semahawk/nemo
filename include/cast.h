@@ -8,6 +8,8 @@
 #ifndef CAST_H
 #define CAST_H
 
+#include <ctype.h>
+
 #include "nodes.h"
 
 int   vtoi(Value);

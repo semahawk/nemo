@@ -19,6 +19,7 @@ Value(*nodeExecs[])(struct Node *) =
   execID,
   execConstant,
   execConstant,
+  execConstant,
   execBinExpression,
   execUnExpression,
   execAssignment,
@@ -72,7 +73,8 @@ Value execConstant(struct Node *n)
 {
   assert(n);
   assert(nt_INTEGER  == n->kind ||
-         nt_FLOATING == n->kind);
+         nt_FLOATING == n->kind ||
+         nt_STRING   == n->kind);
 
   debug("exec", "constant node <val: %s> at %p", vtos(n->data.value), n);
 
@@ -87,10 +89,907 @@ Value execBinExpression(struct Node *n)
   const Value left = dispatchNode(n->data.binaryop.left);
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
-  Value new_value;
+  /*Value new_value;*/
 
   debug("exec", "binary operation node <op: '%s'> at %p", binarytos(n->data.binaryop.op), n);
 
+  switch (left.type)
+  {
+    case TYPE_INTEGER:
+      switch (right.type)
+      {
+        case TYPE_INTEGER:
+          switch (n->data.binaryop.op)
+          {
+            // XXX int + int
+            case BINARY_ADD:
+              ret.v.i = left.v.i + right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int - int
+            case BINARY_SUB:
+              ret.v.i = left.v.i - right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int * int
+            case BINARY_MUL:
+              ret.v.i = left.v.i * right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int / int
+            case BINARY_DIV:
+              if (right.v.i == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtof(left) / vtof(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int % int
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int > int
+            case BINARY_GT:
+              ret.v.i = left.v.i > right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int < int
+            case BINARY_LT:
+              ret.v.i = left.v.i < right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int >= int
+            case BINARY_GE:
+              ret.v.i = left.v.i >= right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int <= int
+            case BINARY_LE:
+              ret.v.i = left.v.i <= right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int != int
+            case BINARY_NE:
+              ret.v.i = left.v.i != right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int == int
+            case BINARY_EQ:
+              ret.v.i = left.v.i == right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int += int
+            case BINARY_EQ_ADD:
+              ret.v.i = left.v.i + right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int -= int
+            case BINARY_EQ_SUB:
+              ret.v.i = left.v.i - right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int *= int
+            case BINARY_EQ_MUL:
+              ret.v.i = left.v.i * right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int /= int
+            case BINARY_EQ_DIV:
+              if (right.v.i == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtof(left) / vtof(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int %= int
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+        case TYPE_FLOATING:
+          switch (n->data.binaryop.op)
+          {
+            // XXX int + float
+            case BINARY_ADD:
+              ret.v.f = left.v.i + right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int - float
+            case BINARY_SUB:
+              ret.v.f = left.v.i - right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int * float
+            case BINARY_MUL:
+              ret.v.f = left.v.i * right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int / float
+            case BINARY_DIV:
+              if (right.v.f == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtof(left) / right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int % float
+            case BINARY_MOD:
+              ret.v.i = left.v.i % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int > float
+            case BINARY_GT:
+              ret.v.f = left.v.i > right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int < float
+            case BINARY_LT:
+              ret.v.f = left.v.i < right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int >= float
+            case BINARY_GE:
+              ret.v.f = left.v.i >= right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int <= float
+            case BINARY_LE:
+              ret.v.f = left.v.i <= right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int != float
+            case BINARY_NE:
+              ret.v.f = left.v.i != right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int == float
+            case BINARY_EQ:
+              ret.v.f = left.v.i == right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int += float
+            case BINARY_EQ_ADD:
+              ret.v.f = left.v.i + right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int -= float
+            case BINARY_EQ_SUB:
+              ret.v.f = left.v.i - right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int *= float
+            case BINARY_EQ_MUL:
+              ret.v.f = left.v.i * right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int /= float
+            case BINARY_EQ_DIV:
+              if (right.v.f == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtof(left) / right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int %= float
+            case BINARY_EQ_MOD:
+              ret.v.i = left.v.i % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+        case TYPE_STRING:
+          switch (n->data.binaryop.op)
+          {
+            // XXX int + string
+            case BINARY_ADD:
+              ret.v.i = left.v.i + vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int - string
+            case BINARY_SUB:
+              ret.v.i = left.v.i - vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int * string
+            case BINARY_MUL:
+              ret.v.i = left.v.i * vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int / string
+            case BINARY_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtof(left) / vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX int % string
+            case BINARY_MOD:
+              ret.v.i = left.v.i % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int > string
+            case BINARY_GT:
+              ret.v.i = left.v.i > vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int < string
+            case BINARY_LT:
+              ret.v.i = left.v.i < vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int >= string
+            case BINARY_GE:
+              ret.v.i = left.v.i >= vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int <= string
+            case BINARY_LE:
+              ret.v.i = left.v.i <= vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int != string
+            case BINARY_NE:
+              ret.v.i = left.v.i != vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int == string
+            case BINARY_EQ:
+              ret.v.i = left.v.i == vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int += string
+            case BINARY_EQ_ADD:
+              ret.v.i = left.v.i + vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int -= string
+            case BINARY_EQ_SUB:
+              ret.v.i = left.v.i - vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int *= string
+            case BINARY_EQ_MUL:
+              ret.v.i = left.v.i * vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int /= string
+            case BINARY_EQ_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtof(left) / vtoi(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX int %= string
+            case BINARY_EQ_MOD:
+              ret.v.i = left.v.i % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+      }
+      break;
+    case TYPE_FLOATING:
+      switch (right.type)
+      {
+        case TYPE_INTEGER:
+          switch (n->data.binaryop.op)
+          {
+            // XXX float + int
+            case BINARY_ADD:
+              ret.v.f = left.v.f + right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float - int
+            case BINARY_SUB:
+              ret.v.f = left.v.f - right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float * int
+            case BINARY_MUL:
+              ret.v.f = left.v.f * right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float / int
+            case BINARY_DIV:
+              if (right.v.i == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = left.v.f / vtof(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float % int
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float > int
+            case BINARY_GT:
+              ret.v.f = left.v.f > right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float < int
+            case BINARY_LT:
+              ret.v.f = left.v.f < right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float >= int
+            case BINARY_GE:
+              ret.v.f = left.v.f >= right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float <= int
+            case BINARY_LE:
+              ret.v.f = left.v.f <= right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float != int
+            case BINARY_NE:
+              ret.v.f = left.v.f != right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float == int
+            case BINARY_EQ:
+              ret.v.f = left.v.f == right.v.i;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float += int
+            case BINARY_EQ_ADD:
+              ret.v.f = left.v.f + right.v.i;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float -= int
+            case BINARY_EQ_SUB:
+              ret.v.f = left.v.f - right.v.i;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float *= int
+            case BINARY_EQ_MUL:
+              ret.v.f = left.v.f * right.v.i;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float /= int
+            case BINARY_EQ_DIV:
+              if (right.v.i == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = left.v.f / vtof(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float %= int
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+        case TYPE_FLOATING:
+          switch (n->data.binaryop.op)
+          {
+            // XXX float + float
+            case BINARY_ADD:
+              ret.v.f = left.v.f + right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float - float
+            case BINARY_SUB:
+              ret.v.f = left.v.f - right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float * float
+            case BINARY_MUL:
+              ret.v.f = left.v.f * right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float / float
+            case BINARY_DIV:
+              if (right.v.f == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = left.v.f / right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float % float
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float > float
+            case BINARY_GT:
+              ret.v.f = left.v.f > right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float < float
+            case BINARY_LT:
+              ret.v.f = left.v.f < right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float >= float
+            case BINARY_GE:
+              ret.v.f = left.v.f >= right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float <= float
+            case BINARY_LE:
+              ret.v.f = left.v.f <= right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float != float
+            case BINARY_NE:
+              ret.v.f = left.v.f != right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float == float
+            case BINARY_EQ:
+              ret.v.f = left.v.f == right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float += float
+            case BINARY_EQ_ADD:
+              ret.v.f = left.v.f + right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float -= float
+            case BINARY_EQ_SUB:
+              ret.v.f = left.v.f - right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float *= float
+            case BINARY_EQ_MUL:
+              ret.v.f = left.v.f * right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float /= float
+            case BINARY_EQ_DIV:
+              if (right.v.f == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = left.v.f / right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float %= float
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+        case TYPE_STRING:
+          switch (n->data.binaryop.op)
+          {
+            // XXX float + string
+            case BINARY_ADD:
+              ret.v.f = left.v.f + vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float - string
+            case BINARY_SUB:
+              ret.v.f = left.v.f - vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float * string
+            case BINARY_MUL:
+              ret.v.f = left.v.f * vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float / string
+            case BINARY_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = left.v.f / vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float % string
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float > string
+            case BINARY_GT:
+              ret.v.f = left.v.f > vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float < string
+            case BINARY_LT:
+              ret.v.f = left.v.f < vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float >= string
+            case BINARY_GE:
+              ret.v.f = left.v.f >= vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float <= string
+            case BINARY_LE:
+              ret.v.f = left.v.f <= vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float != string
+            case BINARY_NE:
+              ret.v.f = left.v.f != vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float == string
+            case BINARY_EQ:
+              ret.v.f = left.v.f == vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX float += string
+            case BINARY_EQ_ADD:
+              ret.v.f = left.v.f + vtoi(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float -= string
+            case BINARY_EQ_SUB:
+              ret.v.f = left.v.f - vtoi(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float *= string
+            case BINARY_EQ_MUL:
+              ret.v.f = left.v.f * vtoi(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float /= string
+            case BINARY_EQ_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = left.v.f / vtoi(right);
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX float %= string
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+      }
+      break;
+    case TYPE_STRING:
+      switch (right.type)
+      {
+        case TYPE_INTEGER:
+          switch (n->data.binaryop.op)
+          {
+            // XXX string + int
+            case BINARY_ADD:
+              ret.v.i = vtoi(left) + right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string - int
+            case BINARY_SUB:
+              ret.v.i = vtoi(left) - right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string * int
+            case BINARY_MUL:
+              ret.v.i = vtoi(left) * right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string / int
+            case BINARY_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtoi(left) / vtof(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string % int
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string > int
+            case BINARY_GT:
+              ret.v.i = vtoi(left) > right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string < int
+            case BINARY_LT:
+              ret.v.i = vtoi(left) < right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string >= int
+            case BINARY_GE:
+              ret.v.i = vtoi(left) >= right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string <= int
+            case BINARY_LE:
+              ret.v.i = vtoi(left) <= right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string != int
+            case BINARY_NE:
+              ret.v.i = vtoi(left) != right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string == int
+            case BINARY_EQ:
+              ret.v.i = vtoi(left) == right.v.i;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string += int
+            case BINARY_EQ_ADD:
+              ret.v.i = vtoi(left) + right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string -= int
+            case BINARY_EQ_SUB:
+              ret.v.i = vtoi(left) - right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string *= int
+            case BINARY_EQ_MUL:
+              ret.v.i = vtoi(left) * right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string /= int
+            case BINARY_EQ_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.i = vtoi(left) / vtof(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string %= int
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % right.v.i;
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+        case TYPE_FLOATING:
+          switch (n->data.binaryop.op)
+          {
+            // XXX string + float
+            case BINARY_ADD:
+              ret.v.f = vtoi(left) + right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string - float
+            case BINARY_SUB:
+              ret.v.f = vtoi(left) - right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string * float
+            case BINARY_MUL:
+              ret.v.f = vtoi(left) * right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string / float
+            case BINARY_DIV:
+              if (right.v.f == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtoi(left) / right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string % float
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string > float
+            case BINARY_GT:
+              ret.v.f = vtoi(left) > right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string < float
+            case BINARY_LT:
+              ret.v.f = vtoi(left) < right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string >= float
+            case BINARY_GE:
+              ret.v.f = vtoi(left) >= right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string <= float
+            case BINARY_LE:
+              ret.v.f = vtoi(left) <= right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string != float
+            case BINARY_NE:
+              ret.v.f = vtoi(left) != right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string == float
+            case BINARY_EQ:
+              ret.v.f = vtoi(left) == right.v.f;
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string += float
+            case BINARY_EQ_ADD:
+              ret.v.f = vtoi(left) + right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string -= float
+            case BINARY_EQ_SUB:
+              ret.v.f = vtoi(left) - right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string *= float
+            case BINARY_EQ_MUL:
+              ret.v.f = vtoi(left) * right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string /= float
+            case BINARY_EQ_DIV:
+              if (right.v.f == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtoi(left) / right.v.f;
+              ret.type = TYPE_FLOATING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+            // XXX string %= float
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
+          }
+          break;
+        case TYPE_STRING:
+          switch (n->data.binaryop.op)
+          {
+            // XXX string + string
+            case BINARY_ADD:
+              ret.v.i = vtoi(left) + vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string - string
+            case BINARY_SUB:
+              ret.v.i = vtoi(left) - vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string * string
+            case BINARY_MUL:
+              ret.v.i = vtoi(left) * vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string / string
+            case BINARY_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtoi(left) / vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string % string
+            case BINARY_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string > string
+            case BINARY_GT:
+              ret.v.i = vtoi(left) > vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string < string
+            case BINARY_LT:
+              ret.v.i = vtoi(left) < vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string >= string
+            case BINARY_GE:
+              ret.v.i = vtoi(left) >= vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string <= string
+            case BINARY_LE:
+              ret.v.i = vtoi(left) <= vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string != string
+            case BINARY_NE:
+              ret.v.i = vtoi(left) != vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string == string
+            case BINARY_EQ:
+              ret.v.i = vtoi(left) == vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string += string
+            case BINARY_EQ_ADD:
+              ret.v.i = vtoi(left) + vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string -= string
+            case BINARY_EQ_SUB:
+              ret.v.i = vtoi(left) - vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string *= string
+            case BINARY_EQ_MUL:
+              ret.v.i = vtoi(left) * vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string /= string
+            case BINARY_EQ_DIV:
+              if (vtoi(right) == 0){
+                cerror("zero division!");
+                exit(1);
+              }
+              ret.v.f = vtoi(left) / vtoi(right);
+              ret.type = TYPE_FLOATING;
+              break;
+            // XXX string %= string
+            case BINARY_EQ_MOD:
+              ret.v.i = vtoi(left) % vtoi(right);
+              ret.type = TYPE_INTEGER;
+              break;
+          }
+          break;
+      }
+      break;
+  }
+
+#if 0
   switch (n->data.binaryop.op){
     //
     // XXX PLUS
@@ -105,6 +1004,10 @@ Value execBinExpression(struct Node *n)
         } else if (right.type == TYPE_FLOATING){
           ret.v.f = left.v.i + right.v.f;
           ret.type = TYPE_FLOATING;
+        // int + string
+        } else if (right.type == TYPE_STRING){
+          ret.v.i = left.v.i + vtoi(right);
+          ret.type = TYPE_INTEGER;
         } else {
           cerror("right operand in binary is of unknown type");
           exit(1);
@@ -118,6 +1021,24 @@ Value execBinExpression(struct Node *n)
         } else if (right.type == TYPE_FLOATING){
           ret.v.f = left.v.f + right.v.f;
           ret.type = TYPE_FLOATING;
+        // float + string
+        } else if (right.type == TYPE_STRING){
+          ret.v.i = left.v.i + vtoi(right);
+          ret.type = TYPE_INTEGER;
+        }
+      } else if (left.type == TYPE_STRING){
+        // string + int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = vtoi(left) + right.v.i;
+          ret.type = TYPE_INTEGER;
+        // string + float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = vtoi(left) + right.v.f;
+          ret.type = TYPE_FLOATING;
+        // string + string
+        } else if (right.type == TYPE_STRING){
+          ret.v.i = vtoi(left) + vtoi(right);
+          ret.type = TYPE_INTEGER;
         }
       } else {
         cerror("right operand in binary is of unknown type");
@@ -152,6 +1073,20 @@ Value execBinExpression(struct Node *n)
           ret.v.f = left.v.f - right.v.f;
           ret.type = TYPE_FLOATING;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       } else {
         cerror("right operand in binary is of unknown type");
         exit(1);
@@ -185,6 +1120,20 @@ Value execBinExpression(struct Node *n)
           ret.v.f = left.v.f * right.v.f;
           ret.type = TYPE_FLOATING;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       } else {
         cerror("right operand in binary is of unknown type");
         exit(1);
@@ -234,6 +1183,20 @@ Value execBinExpression(struct Node *n)
           ret.v.f = left.v.f / right.v.f;
           ret.type = TYPE_FLOATING;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       } else {
         cerror("right operand in binary is of unknown type");
         exit(1);
@@ -267,6 +1230,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (int)((int)left.v.f % (int)right.v.f);
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       } else {
         cerror("right operand in binary is of unknown type");
         exit(1);
@@ -300,6 +1277,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (left.v.f > right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       } else {
         cerror("right operand in binary is of unknown type");
         exit(1);
@@ -333,6 +1324,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (left.v.f < right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       } else {
         cerror("right operand in binary is of unknown type");
         exit(1);
@@ -363,6 +1368,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (left.v.f >= right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -390,6 +1409,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (left.v.f <= right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -417,6 +1450,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (left.v.f != right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -444,6 +1491,20 @@ Value execBinExpression(struct Node *n)
           ret.v.i = (left.v.f == right.v.f) ? 1 : 0;
           ret.type = TYPE_INTEGER;
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -479,6 +1540,20 @@ Value execBinExpression(struct Node *n)
           ret = new_value;
           setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -514,6 +1589,20 @@ Value execBinExpression(struct Node *n)
           ret = new_value;
           setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -549,6 +1638,20 @@ Value execBinExpression(struct Node *n)
           ret = new_value;
           setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
         }
+        } else if (left.type == TYPE_STRING){
+          // string + int
+          if (right.type == TYPE_INTEGER){
+            ret.v.i = vtoi(left) + right.v.i;
+            ret.type = TYPE_INTEGER;
+          // string + float
+          } else if (right.type == TYPE_FLOATING){
+            ret.v.f = vtoi(left) + right.v.f;
+            ret.type = TYPE_FLOATING;
+          // string + string
+          } else if (right.type == TYPE_STRING){
+            ret.v.i = vtoi(left) + vtoi(right);
+            ret.type = TYPE_INTEGER;
+          }
       }
       break;
 
@@ -583,6 +1686,20 @@ Value execBinExpression(struct Node *n)
           new_value.type = TYPE_FLOATING;
           ret = new_value;
           setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        }
+      } else if (left.type == TYPE_STRING){
+        // string /= int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = vtoi(left) / right.v.i;
+          ret.type = TYPE_INTEGER;
+        // string /= float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = vtoi(left) / right.v.f;
+          ret.type = TYPE_FLOATING;
+        // string /= string
+        } else if (right.type == TYPE_STRING){
+          ret.v.i = vtoi(left) / vtoi(right);
+          ret.type = TYPE_INTEGER;
         }
       }
       break;
@@ -634,6 +1751,33 @@ Value execBinExpression(struct Node *n)
           new_value.type = TYPE_FLOATING;
           ret = new_value;
           setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        } else if (right.type == )
+      // XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX
+      } else if (left.type == TYPE_STRING){
+        // string %= int
+        if (right.type == TYPE_INTEGER){
+          ret.v.i = vtoi(left) % vtoi(right);
+          ret.type = TYPE_INTEGER;
+          new_value.v.i = vtoi(left) % vtoi(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // string %= float
+        } else if (right.type == TYPE_FLOATING){
+          ret.v.f = vtoi(left) % vtoi(right);
+          ret.type = TYPE_FLOATING;
+          new_value.v.i = vtoi(left) % vtoi(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
+        // string %= string
+        } else if (right.type == TYPE_STRING){
+          ret.v.i = vtoi(left) % vtoi(right);
+          ret.type = TYPE_INTEGER;
+          new_value.v.i = vtoi(left) % vtoi(right);
+          new_value.type = TYPE_FLOATING;
+          ret = new_value;
+          setVariableValue(n->data.binaryop.left->data.s, new_value, n->block);
         }
       }
       break;
@@ -641,6 +1785,7 @@ Value execBinExpression(struct Node *n)
     default: cerror("unknown operator '%s'", binarytos(n->data.binaryop.op));
              exit(1);
   }
+#endif
 
   return ret;
 }
@@ -675,6 +1820,9 @@ Value execUnExpression(struct Node *n)
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
           return currval;
+        case TYPE_STRING:
+          cerror("cannot change value of a string");
+          exit(1);
       }
     case UNARY_POSTDEC:
       switch (currval.type){
@@ -688,6 +1836,9 @@ Value execUnExpression(struct Node *n)
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
           return currval;
+        case TYPE_STRING:
+          cerror("cannot change value of a string");
+          exit(1);
       }
     case UNARY_PREINC:
       switch (currval.type){
@@ -701,6 +1852,9 @@ Value execUnExpression(struct Node *n)
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
           return ret;
+        case TYPE_STRING:
+          cerror("cannot change value of a string");
+          exit(1);
       }
     case UNARY_PREDEC:
       switch (currval.type){
@@ -714,6 +1868,9 @@ Value execUnExpression(struct Node *n)
           ret.type = currval.type;
           setVariableValue(n->data.unaryop.expression->data.s, ret, n->block);
           return ret;
+        case TYPE_STRING:
+          cerror("cannot change value of a string");
+          exit(1);
       }
     case UNARY_PLUS:
       switch (currval.type){
@@ -725,6 +1882,9 @@ Value execUnExpression(struct Node *n)
           ret.v.f = +currval.v.f;
           ret.type = currval.type;
           return ret;
+        case TYPE_STRING:
+          cerror("cannot change value of a string");
+          exit(1);
       }
     case UNARY_MINUS:
       switch (currval.type){
@@ -736,6 +1896,9 @@ Value execUnExpression(struct Node *n)
           ret.v.f = -currval.v.f;
           ret.type = currval.type;
           return ret;
+        case TYPE_STRING:
+          cerror("cannot change value of a string");
+          exit(1);
       }
     default: cerror("unknown unary expression");
              exit(1);
