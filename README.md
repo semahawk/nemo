@@ -163,9 +163,6 @@ Examples:
     for $a = 0; $a < 10; $a++
       print($a);
 
-__Note:__ so far, the variable used in the `expr`s, must be 'declared' earlier,
-otherwise it would say it couldn't find it.
-
 ## Iters
 
 ### Times
