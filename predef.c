@@ -75,6 +75,17 @@ Value predef_assert(struct ParamList *params, int paramcount)
       } else if (second.type == TYPE_FLOATING){
         res = first.v.f == second.v.f;
       }
+    } else if (first.type == TYPE_STRING){
+      res = true;
+      char *str_left = first.v.s;
+      char *str_right = vtos(second);
+      size_t longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+      for (size_t i = 0; i < longer; i++){
+        if (str_left[i] != str_right[i]){
+          res = false;
+          break;
+        }
+      }
     }
   // 1 argument
   //
