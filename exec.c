@@ -330,6 +330,15 @@ Value execBinExpression(struct Node *n)
 
               ret.type = TYPE_INTEGER;
               break;
+            // XXX int .= int
+            case BINARY_EQ_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
           }
           break;
         // }}}
@@ -554,6 +563,15 @@ Value execBinExpression(struct Node *n)
 
               ret.type = TYPE_INTEGER;
               break;
+            // XXX int .= float
+            case BINARY_EQ_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
           }
           break;
         // }}}
@@ -777,6 +795,15 @@ Value execBinExpression(struct Node *n)
                 ret.v.i = 0;
 
               ret.type = TYPE_INTEGER;
+              break;
+            // XXX int .= string
+            case BINARY_EQ_CON:
+              new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", vtos(left), right.v.s);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
           }
           break;
@@ -1009,6 +1036,15 @@ Value execBinExpression(struct Node *n)
 
               ret.type = TYPE_INTEGER;
               break;
+            // XXX float .= int
+            case BINARY_EQ_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
           }
           break;
         // }}}
@@ -1233,6 +1269,15 @@ Value execBinExpression(struct Node *n)
 
               ret.type = TYPE_INTEGER;
               break;
+            // XXX float .= float
+            case BINARY_EQ_CON:
+              new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
           }
           break;
         // }}}
@@ -1456,6 +1501,15 @@ Value execBinExpression(struct Node *n)
                 ret.v.i = 0;
 
               ret.type = TYPE_INTEGER;
+              break;
+            // XXX float .= string
+            case BINARY_EQ_CON:
+              new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", vtos(left), right.v.s);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
           }
           break;
@@ -1688,6 +1742,15 @@ Value execBinExpression(struct Node *n)
 
               ret.type = TYPE_INTEGER;
               break;
+            // XXX string .= int
+            case BINARY_EQ_CON:
+              new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", left.v.s, vtos(right));
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
           }
           break;
         // }}}
@@ -1912,6 +1975,15 @@ Value execBinExpression(struct Node *n)
 
               ret.type = TYPE_INTEGER;
               break;
+            // XXX string .= float
+            case BINARY_EQ_CON:
+              new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", left.v.s, vtos(right));
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
+              break;
           }
           break;
         // }}}
@@ -2130,6 +2202,15 @@ Value execBinExpression(struct Node *n)
                 ret.v.i = 0;
 
               ret.type = TYPE_INTEGER;
+              break;
+            // XXX string .= string
+            case BINARY_EQ_CON:
+              new_size = strlen(left.v.s) + strlen(right.v.s) + 1;
+              myrealloc(new_str, new_size);
+              snprintf(new_str, new_size, "%s%s", left.v.s, right.v.s);
+              ret.v.s = new_str;
+              ret.type = TYPE_STRING;
+              setVariableValue(n->data.binaryop.left->data.s, ret, n->block);
               break;
           }
           break;

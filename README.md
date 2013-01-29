@@ -71,11 +71,13 @@ Each mathematical operator has its assignment operation, like in C/Perl.
 
 ### String specific
 
-`.` - concatention, pretty straight-forward
+`.` - concatention, casts everything to a string
 
 `ne` and `eq` - check for (non-)equality of strings
 
 `gt` and `lt` - check if a string is 'bigger' (or 'smaller') than the other one
+
+`.=` - concatention assignment
 
 (`ge` and `le` are not yet implemented)
 

@@ -58,7 +58,7 @@
 %token GE LE EQ NE
 %token PLUSPLUS MINUSMINUS
 
-%right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD
+%right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD EQ_CON
 %left  EQ NE STR_EQ STR_NE
 %left  GT LT GE LE STR_GT STR_LT STR_GE STR_LE
 %left  '+' '-' '.'
@@ -137,6 +137,7 @@ assign_op
     | EQ_MUL  { $$ = BINARY_EQ_MUL; }
     | EQ_DIV  { $$ = BINARY_EQ_DIV; }
     | EQ_MOD  { $$ = BINARY_EQ_MOD; }
+    | EQ_CON  { $$ = BINARY_EQ_CON; }
     ;
 
 assign_expr

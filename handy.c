@@ -151,6 +151,8 @@ const char *binarytos(Binary type)
       return "/=";
     case BINARY_EQ_MOD:
       return "%=";
+    case BINARY_EQ_CON:
+      return ".=";
     case BINARY_CON:
       return ".";
     case BINARY_STR_GT:
