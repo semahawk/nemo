@@ -239,6 +239,36 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX int gt int
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int lt int
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -351,7 +381,7 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -366,8 +396,38 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int gt float
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int lt float
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -487,7 +547,7 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = right.v.s;
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -502,8 +562,38 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = right.v.s;
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int gt string
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int lt string
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -628,7 +718,7 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -643,8 +733,38 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float gt int
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float lt int
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -764,7 +884,7 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -779,8 +899,38 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float gt float
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float lt float
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -900,7 +1050,7 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = right.v.s;
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -915,8 +1065,38 @@ Value execBinExpression(struct Node *n)
               str_left = vtos(left);
               str_right = right.v.s;
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float gt string
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float lt string
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -1041,7 +1221,7 @@ Value execBinExpression(struct Node *n)
               str_left = left.v.s;
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -1056,8 +1236,38 @@ Value execBinExpression(struct Node *n)
               str_left = left.v.s;
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string gt int
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string lt int
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -1177,7 +1387,7 @@ Value execBinExpression(struct Node *n)
               str_left = left.v.s;
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -1192,8 +1402,38 @@ Value execBinExpression(struct Node *n)
               str_left = left.v.s;
               str_right = vtos(right);
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string gt float
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string lt float
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }
@@ -1308,7 +1548,7 @@ Value execBinExpression(struct Node *n)
               str_left = left.v.s;
               str_right = right.v.s;
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
                   str_flag = 0;
                   break;
@@ -1323,8 +1563,38 @@ Value execBinExpression(struct Node *n)
               str_left = left.v.s;
               str_right = right.v.s;
               longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
-              for (unsigned int i = 0; i < longer; i++){
+              for (size_t i = 0; i < longer; i++){
                 if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string gt string
+            case BINARY_STR_GT:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string lt string
+            case BINARY_STR_LT:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
                   str_flag = 1;
                   break;
                 }

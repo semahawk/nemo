@@ -20,7 +20,16 @@ assert("hello" eq 5.71, 0);
 assert("hello" ne 5.71, 1);
 assert("hello" eq "hello", 1);
 assert("hello" ne "hello", 0);
+assert("a" gt "b", 0);
+assert("a" lt "b", 1);
+assert("abc" gt "abb", 1);
+assert("abc" lt "abd");
+assert("b" gt "B", 1);
+assert("B" lt "b", 1);
+assert("AB" lt "ab", 1);
+assert("7" lt "a", 1);
 
+// Casting
 assert("99 bottles of beer" + 1, 100);
 assert("9 bottles of 9 beer" + 1, 100);
 assert("101" - 2, 99);
