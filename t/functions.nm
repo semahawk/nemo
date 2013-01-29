@@ -1,14 +1,14 @@
 $return = 0;
 
-fun function_one; none {
+fun function_one {
   return 20;
 }
 
-fun function_two; $a {
+fun function_two $a {
   return $a;
 }
 
-fun function_three; $a, $b {
+fun function_three $a, $b {
   return $b + $a;
 }
 

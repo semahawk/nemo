@@ -59,8 +59,8 @@
 %token PLUSPLUS MINUSMINUS
 
 %right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD
-%left  EQ NE
-%left  GT LT GE LE
+%left  EQ NE STR_EQ STR_NE
+%left  GT LT GE LE STR_GT STR_LT STR_GE STR_LE
 %left  '+' '-' '.'
 %left  '*' '/' '%'
 %nonassoc PLUSPLUS MINUSMINUS
@@ -145,8 +145,10 @@ assign_expr
     ;
 
 equ_op
-    : NE      { $$ = BINARY_NE; }
-    | EQ      { $$ = BINARY_EQ; }
+    : NE      { $$ = BINARY_NE;     }
+    | EQ      { $$ = BINARY_EQ;     }
+    | STR_NE  { $$ = BINARY_STR_NE; }
+    | STR_EQ  { $$ = BINARY_STR_EQ; }
     ;
 
 equ_expr
@@ -155,10 +157,14 @@ equ_expr
     ;
 
 cond_op
-    : GT      { $$ = BINARY_GT; }
-    | LT      { $$ = BINARY_LT; }
-    | GE      { $$ = BINARY_GE; }
-    | LE      { $$ = BINARY_LE; }
+    : GT      { $$ = BINARY_GT;     }
+    | LT      { $$ = BINARY_LT;     }
+    | GE      { $$ = BINARY_GE;     }
+    | LE      { $$ = BINARY_LE;     }
+    | STR_GT  { $$ = BINARY_STR_GT; }
+    | STR_LT  { $$ = BINARY_STR_LT; }
+    | STR_GE  { $$ = BINARY_STR_GE; }
+    | STR_LE  { $$ = BINARY_STR_LE; }
     ;
 
 cond_expr

@@ -92,6 +92,11 @@ Value execBinExpression(struct Node *n)
   // we're reallocing it later
   char  *new_str = myalloc(1);
   size_t new_size;
+  // used with BINARY_STR_* operators
+  int str_flag;
+  char *str_left;
+  char *str_right;
+  size_t longer;
 
   debug("exec", "binary operation node <op: '%s'> at %p", binarytos(n->data.binaryop.op), n);
 
@@ -204,6 +209,36 @@ Value execBinExpression(struct Node *n)
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
               break;
+            // XXX int eq int
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int ne int
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -310,6 +345,36 @@ Value execBinExpression(struct Node *n)
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
               break;
+            // XXX int eq float
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int ne float
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_STRING:
@@ -415,6 +480,36 @@ Value execBinExpression(struct Node *n)
               snprintf(new_str, new_size, "%d%s", left.v.i, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
+              break;
+            // XXX int eq string
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int ne string
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
               break;
           }
           break;
@@ -527,6 +622,36 @@ Value execBinExpression(struct Node *n)
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
               break;
+            // XXX float eq int
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float ne int
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -633,6 +758,36 @@ Value execBinExpression(struct Node *n)
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
               break;
+            // XXX float eq float
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float ne float
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_STRING:
@@ -738,6 +893,36 @@ Value execBinExpression(struct Node *n)
               snprintf(new_str, new_size, "%.2f%s", left.v.f, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
+              break;
+            // XXX float eq string
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float ne string
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
               break;
           }
           break;
@@ -850,6 +1035,36 @@ Value execBinExpression(struct Node *n)
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
               break;
+            // XXX string eq int
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string ne int
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_FLOATING:
@@ -956,6 +1171,36 @@ Value execBinExpression(struct Node *n)
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
               break;
+            // XXX string eq float
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string ne float
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
         case TYPE_STRING:
@@ -1056,6 +1301,36 @@ Value execBinExpression(struct Node *n)
               snprintf(new_str, new_size, "%s%s", left.v.s, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
+              break;
+            // XXX string eq string
+            case BINARY_STR_EQ:
+              str_flag = 1;
+              str_left = left.v.s;
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 0;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string ne string
+            case BINARY_STR_NE:
+              str_flag = 0;
+              str_left = left.v.s;
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (unsigned int i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+              ret.v.i = str_flag;
+              ret.type = TYPE_INTEGER;
               break;
           }
           break;

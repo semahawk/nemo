@@ -1,3 +1,26 @@
+// String operators
+assert(4 eq 4, 1);
+assert(4 ne 4, 0);
+assert(4 eq "4", 1);
+assert(4 ne "5", 1);
+assert(5 ne "5", 0);
+assert(4 eq 5.71, 0);
+assert(4 ne 5.71, 1);
+assert(4 eq "hello", 0);
+assert(4 ne "hello", 1);
+assert(5.71 eq 4, 0);
+assert(5.71 ne 4, 1);
+assert(5.71 eq 5.71, 1);
+assert(5.71 ne 5.71, 0);
+assert(5.71 eq "hello", 0);
+assert(5.71 ne "hello", 1);
+assert("hello" eq 4, 0);
+assert("hello" ne 4, 1);
+assert("hello" eq 5.71, 0);
+assert("hello" ne 5.71, 1);
+assert("hello" eq "hello", 1);
+assert("hello" ne "hello", 0);
+
 assert("99 bottles of beer" + 1, 100);
 assert("9 bottles of 9 beer" + 1, 100);
 assert("101" - 2, 99);

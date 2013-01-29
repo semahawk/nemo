@@ -69,13 +69,13 @@ Each mathematical operator has its assignment operation, like in C/Perl.
 
 `<`, `>`, `>=`, `<=`, `==` and `!=`
 
-`lt`, `gt`, `ge`, `le`, `eq` and `ne`
-
-__Note:__ in both cases (like with `>` and `gt`) they are exactly the same.
-
 ### String specific
 
 `.` - concatention, pretty straight-forward
+
+`ne` and `eq` - check for (non-)equality of strings
+
+(`lt`, `gt`, `ge`, `le` are not yet implemented)
 
 ### Unary
 

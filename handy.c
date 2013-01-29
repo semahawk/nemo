@@ -153,6 +153,18 @@ const char *binarytos(Binary type)
       return "%=";
     case BINARY_CON:
       return ".";
+    case BINARY_STR_GT:
+      return "gt";
+    case BINARY_STR_LT:
+      return "lt";
+    case BINARY_STR_GE:
+      return "ge";
+    case BINARY_STR_LE:
+      return "le";
+    case BINARY_STR_NE:
+      return "ne";
+    case BINARY_STR_EQ:
+      return "eq";
   }
 
   return "#UNKBT#";
