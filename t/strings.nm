@@ -1,3 +1,17 @@
+// Basics
+assert("hello", "hello");
+
+// Concatention
+assert("hello, world", "hello, " . "world");
+
+$a  = "hello, world";
+$a .= "!";
+assert($a, "hello, world!");
+
+$a  = 99;
+$a .= " bottles";
+assert($a, "99 bottles");
+
 // String operators
 assert(4 eq 4, 1);
 assert(4 ne 4, 0);
