@@ -75,7 +75,9 @@ Each mathematical operator has its assignment operation, like in C/Perl.
 
 `ne` and `eq` - check for (non-)equality of strings
 
-(`lt`, `gt`, `ge`, `le` are not yet implemented)
+`gt` and `lt` - check if a string is 'bigger' (or 'smaller') than the other one
+
+(`ge` and `le` are not yet implemented)
 
 ### Unary
 
