@@ -10,6 +10,11 @@
 #include "nodes.h"
 #include "free.h"
 
+// stack of things to be freed at the end of executing
+// things basically like strings and stuff
+static void *stack[128];
+static unsigned int stack_size = 0;
+
 void(*nodeFrees[])(struct Node *) =
 {
   freeTermExpression,
@@ -239,5 +244,20 @@ void freeNoop(struct Node *n)
   debug("free", "noop node at %p", n);
 
   free(n);
+}
+
+void addToStack(void *ptr)
+{
+  stack[stack_size] = ptr;
+  stack_size += 1;
+}
+
+void freeStack(void)
+{
+  for (unsigned int i = 0; i < stack_size; i++){
+    debug("free", "freeing a value at %p", stack[i]);
+    free(stack[i]);
+    stack[i] = NULL;
+  }
 }
 

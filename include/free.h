@@ -27,4 +27,7 @@ void freeStatement(struct Node *);
 void freeIter(struct Node *);
 void freeNoop(struct Node *);
 
+void addToStack(void *);
+void freeStack(void);
+
 #endif // FREE_H

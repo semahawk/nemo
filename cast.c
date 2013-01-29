@@ -8,6 +8,7 @@
 #include "cast.h"
 #include "nodes.h"
 #include "handy.h"
+#include "free.h"
 
 inline int vtoi(Value value)
 {

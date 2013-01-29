@@ -7,6 +7,7 @@
 #include "nemo.h"
 #include "handy.h"
 #include "nodes.h"
+#include "free.h"
 
 extern bool debugflag;
 
@@ -92,6 +93,7 @@ void *myrealloc(void *ptr, size_t size)
 char *strdup(const char *p)
 {
   char *np = myalloc(strlen(p) + 1);
+  addToStack(np);
 
   return np ? strcpy(np, p) : np;
 }

@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
     }
     ret = execNodes(nodest).v.i;
     freeNodes(nodest);
+    freeStack();
   } while (!feof(yyin));
 
   return ret;
@@ -102,8 +103,11 @@ void version(void)
 }
 
 /*
- * Megadeth, Running Wild, Gamma Ray
+ * Megadeth, Running Wild, Gamma Ray, Iron Savior
+ * Helloween
  * Within Temptation, Nightwish
+ *
+ * Family Guy, The Office
  *
  */
 
