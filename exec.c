@@ -89,11 +89,14 @@ Value execBinExpression(struct Node *n)
   const Value left = dispatchNode(n->data.binaryop.left);
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
+
   // we're reallocing it later
   char  *new_str = myalloc(1);
   size_t new_size;
+
   // used with BINARY_STR_* operators
   int str_flag;
+  int str_flag2;
   char *str_left;
   char *str_right;
   size_t longer;
@@ -102,9 +105,11 @@ Value execBinExpression(struct Node *n)
 
   switch (left.type)
   {
+    // INTEGER {{{
     case TYPE_INTEGER:
       switch (right.type)
       {
+        // INTEGER and INTEGER {{{
         case TYPE_INTEGER:
           switch (n->data.binaryop.op)
           {
@@ -269,8 +274,66 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX int ge int
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int le int
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+        // }}}
+        // INTEGER and FLOATING {{{
         case TYPE_FLOATING:
           switch (n->data.binaryop.op)
           {
@@ -435,8 +498,66 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX int ge float
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int le float
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+        // }}}
+        // INTEGER and STRING {{{
         case TYPE_STRING:
           switch (n->data.binaryop.op)
           {
@@ -601,13 +722,73 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX int ge string
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX int le string
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
       }
       break;
+      // }}}
+    // }}}
+    // FLOATING {{{
     case TYPE_FLOATING:
       switch (right.type)
       {
+        // FLOATING and INTEGER {{{
         case TYPE_INTEGER:
           switch (n->data.binaryop.op)
           {
@@ -772,8 +953,66 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX float ge int
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float le int
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+        // }}}
+        // FLOATING and FLOATING {{{
         case TYPE_FLOATING:
           switch (n->data.binaryop.op)
           {
@@ -938,8 +1177,66 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX float ge float
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float le float
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+        // }}}
+        // FLOATING and STRING {{{
         case TYPE_STRING:
           switch (n->data.binaryop.op)
           {
@@ -1104,13 +1401,73 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX float ge string
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = vtos(left);
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX float le string
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+          // }}}
       }
       break;
+    // }}}
+    // STRING {{{
     case TYPE_STRING:
       switch (right.type)
       {
+        // STRING and INTEGER {{{
         case TYPE_INTEGER:
           switch (n->data.binaryop.op)
           {
@@ -1275,8 +1632,66 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX string ge int
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string le int
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+        // }}}
+        // STRING and FLOATING {{{
         case TYPE_FLOATING:
           switch (n->data.binaryop.op)
           {
@@ -1441,8 +1856,66 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX string ge float
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string le float
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = vtos(right);
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+        // }}}
+        // STRING and STRING {{{
         case TYPE_STRING:
           switch (n->data.binaryop.op)
           {
@@ -1602,10 +2075,68 @@ Value execBinExpression(struct Node *n)
               ret.v.i = str_flag;
               ret.type = TYPE_INTEGER;
               break;
+            // XXX string ge string
+            case BINARY_STR_GE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] > str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
+            // XXX string le string
+            case BINARY_STR_LE:
+              str_flag = 0;
+              str_flag2 = 1;
+              str_left = left.v.s;
+              str_right = right.v.s;
+              longer = (strlen(str_left) > strlen(str_right)) ? strlen(str_left) : strlen(str_right);
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] < str_right[i]){
+                  str_flag = 1;
+                  break;
+                }
+              }
+
+              for (size_t i = 0; i < longer; i++){
+                if (str_left[i] != str_right[i]){
+                  str_flag2 = 0;
+                  break;
+                }
+              }
+
+              if (str_flag || str_flag2)
+                ret.v.i = 1;
+              else
+                ret.v.i = 0;
+
+              ret.type = TYPE_INTEGER;
+              break;
           }
           break;
+          // }}}
       }
       break;
+      // }}}
   }
 
   return ret;

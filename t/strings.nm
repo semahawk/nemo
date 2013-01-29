@@ -28,6 +28,17 @@ assert("b" gt "B", 1);
 assert("B" lt "b", 1);
 assert("AB" lt "ab", 1);
 assert("7" lt "a", 1);
+assert("abd" ge "abc", 1);
+assert("abc" ge "abd", 0);
+assert("abc" ge "abc", 1);
+assert("abd" le "abc", 0);
+assert("abc" le "abc", 1);
+assert("abc" le "abd", 1);
+assert("7" ge "7", 1);
+assert("7" ge "3", 1);
+assert("3" le "7", 1);
+assert("7" le "7", 1);
+assert("a" ge "A");
 
 // Casting
 assert("99 bottles of beer" + 1, 100);
