@@ -93,7 +93,7 @@ void *myrealloc(void *ptr, size_t size)
 char *strdup(const char *p)
 {
   char *np = myalloc(strlen(p) + 1);
-  addToStack(np);
+  //addToStack(np);
 
   return np ? strcpy(np, p) : np;
 }

@@ -9,8 +9,8 @@ $a .= "!";
 assert($a, "hello, world!");
 
 $a  = 99;
-$a .= " bottles";
-assert($a, "99 bottles");
+$a .= " bottles of beer on the wall";
+assert($a, "99 bottles of beer on the wall");
 
 // String operators
 assert(4 eq 4, 1);

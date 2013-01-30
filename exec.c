@@ -90,8 +90,7 @@ Value execBinExpression(struct Node *n)
   const Value right = dispatchNode(n->data.binaryop.right);
   Value ret;
 
-  // we're reallocing it later
-  char  *new_str = myalloc(1);
+  char  *new_str;
   size_t new_size;
 
   // used with BINARY_STR_* operators
@@ -209,7 +208,7 @@ Value execBinExpression(struct Node *n)
             // XXX int . int
             case BINARY_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%d%d", left.v.i, right.v.i);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -333,7 +332,7 @@ Value execBinExpression(struct Node *n)
             // XXX int .= int
             case BINARY_EQ_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -442,7 +441,7 @@ Value execBinExpression(struct Node *n)
             // XXX int . float
             case BINARY_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%d%.2f", left.v.i, right.v.f);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -566,7 +565,7 @@ Value execBinExpression(struct Node *n)
             // XXX int .= float
             case BINARY_EQ_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -675,7 +674,7 @@ Value execBinExpression(struct Node *n)
             // XXX int . string
             case BINARY_CON:
               new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%d%s", left.v.i, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -799,7 +798,7 @@ Value execBinExpression(struct Node *n)
             // XXX int .= string
             case BINARY_EQ_CON:
               new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", vtos(left), right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -915,7 +914,7 @@ Value execBinExpression(struct Node *n)
             // XXX float . int
             case BINARY_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%.2f%d", left.v.f, right.v.i);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1039,7 +1038,7 @@ Value execBinExpression(struct Node *n)
             // XXX float .= int
             case BINARY_EQ_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1148,7 +1147,7 @@ Value execBinExpression(struct Node *n)
             // XXX float . float
             case BINARY_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%.2f%.2f", left.v.f, right.v.f);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1272,7 +1271,7 @@ Value execBinExpression(struct Node *n)
             // XXX float .= float
             case BINARY_EQ_CON:
               new_size = strlen(vtos(left)) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", vtos(left), vtos(right));
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1381,7 +1380,7 @@ Value execBinExpression(struct Node *n)
             // XXX float . string
             case BINARY_CON:
               new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%.2f%s", left.v.f, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1505,7 +1504,7 @@ Value execBinExpression(struct Node *n)
             // XXX float .= string
             case BINARY_EQ_CON:
               new_size = strlen(vtos(left)) + strlen(right.v.s) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", vtos(left), right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1621,7 +1620,7 @@ Value execBinExpression(struct Node *n)
             // XXX string . int
             case BINARY_CON:
               new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%d", left.v.s, right.v.i);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1745,7 +1744,7 @@ Value execBinExpression(struct Node *n)
             // XXX string .= int
             case BINARY_EQ_CON:
               new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", left.v.s, vtos(right));
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1854,7 +1853,7 @@ Value execBinExpression(struct Node *n)
             // XXX string . float
             case BINARY_CON:
               new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%.2f", left.v.s, right.v.f);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -1978,7 +1977,7 @@ Value execBinExpression(struct Node *n)
             // XXX string .= float
             case BINARY_EQ_CON:
               new_size = strlen(left.v.s) + strlen(vtos(right)) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", left.v.s, vtos(right));
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -2082,7 +2081,7 @@ Value execBinExpression(struct Node *n)
             // XXX string . string
             case BINARY_CON:
               new_size = strlen(left.v.s) + strlen(right.v.s) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", left.v.s, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
@@ -2206,7 +2205,7 @@ Value execBinExpression(struct Node *n)
             // XXX string .= string
             case BINARY_EQ_CON:
               new_size = strlen(left.v.s) + strlen(right.v.s) + 1;
-              myrealloc(new_str, new_size);
+              new_str = myalloc(new_size);
               snprintf(new_str, new_size, "%s%s", left.v.s, right.v.s);
               ret.v.s = new_str;
               ret.type = TYPE_STRING;
