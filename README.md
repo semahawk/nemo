@@ -77,9 +77,9 @@ Each mathematical operator has its assignment operation, like in C/Perl.
 
 `gt` and `lt` - check if a string is 'bigger' (or 'smaller') than the other one
 
-`.=` - concatention assignment
+`ge` and `le` - check if a string is 'bigger' (or 'smaller') or equall than the other one
 
-(`ge` and `le` are not yet implemented)
+`.=` - concatention assignment
 
 ### Unary
 
