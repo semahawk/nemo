@@ -114,10 +114,6 @@ iter_stmt
       { $<node>$ = iterblock; iterblock = genIter("times", $1, currentblock); }
       stmt
       { $<node>$ = iterblock; iterblock->data.iter.stmt = $<node>4;
-        /*if (iterblock->data.iter.stmt->kind == nt_BLOCK){*/
-          /*addVariableToBlock("$+", iterblock->data.iter.stmt);*/
-          /*addVariableToBlock("$-", iterblock->data.iter.stmt);*/
-        /*}*/
         iterblock = NULL; }
     ;
 
