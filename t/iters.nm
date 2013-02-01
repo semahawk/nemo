@@ -1,0 +1,19 @@
+$a = 0;
+
+10 times $a++;
+
+assert($a, 10);
+
+
+$a = 0;
+
+10 times $a += $+;
+
+assert($a, 45);
+
+
+$a = 0;
+
+10 times $a += $-;
+
+assert($a, 45);

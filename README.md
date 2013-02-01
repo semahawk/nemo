@@ -187,12 +187,16 @@ Examples:
 
 Basically, 'times' iter is gonna execute `stmt` `expr` times. Pretty simple.
 
-One thing, that's worth mentioning: if `stmt` is a block, not a single statement, there will be created two special variables inside of it:
-`$+` and `$-`. As the loops go, `$+` will start from `0` and will get bigger, till `expr - 1`, and `$-` the other way round. So, given:
+One thing, that's worth mentioning: there will be created two special variables inside of `stmt`:
+`$+` and `$-`. As the loops go, `$+` will start from `0` and will get bigger, till `expr - 1`, and `$-` the other way round. So, given both:
 
     10 times {
       print($+);
     }
+
+or
+
+    10 times print($+);
 
 It will print:
 

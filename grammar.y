@@ -13,6 +13,7 @@
   #include "nodes.h"
   #include "gen.h"
   #include "handy.h"
+  #include "vars.h"
 
   #define YYERROR_VERBOSE
 
@@ -27,6 +28,7 @@
   extern struct Node *nodest;
   struct Node *currentblock;
   struct Node *funcdef = NULL;
+  struct Node *iterblock = NULL;
   int argcount = 0, paramcount = 0;
 
 %}
@@ -108,7 +110,15 @@ iter_stmt
     : WHILE expr stmt                     { $$ = genWhile($2, $3); }
     | FOR expr_stmt expr_stmt expr stmt   { $$ = genFor($2, $3, $4, $5, currentblock); }
     | FOR expr_stmt expr_stmt stmt        { $$ = genFor($2, $3, NULL, $4, currentblock); }
-    | expr TIMES  stmt                    { $$ = genIter("times", $1, $3, currentblock); }
+    | expr TIMES
+      { $<node>$ = iterblock; iterblock = genIter("times", $1, currentblock); }
+      stmt
+      { $<node>$ = iterblock; iterblock->data.iter.stmt = $<node>4;
+        /*if (iterblock->data.iter.stmt->kind == nt_BLOCK){*/
+          /*addVariableToBlock("$+", iterblock->data.iter.stmt);*/
+          /*addVariableToBlock("$-", iterblock->data.iter.stmt);*/
+        /*}*/
+        iterblock = NULL; }
     ;
 
 select_stmt

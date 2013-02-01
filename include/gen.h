@@ -25,7 +25,7 @@ struct Node *genExpByInt(int);
 struct Node *genExpByFloat(float);
 struct Node *genExpByString(char *, struct Node *);
 struct Node *genExpByName(char *, struct Node *);
-struct Node *genIter(char *, struct Node *, struct Node *, struct Node *);
+struct Node *genIter(char *, struct Node *, struct Node *);
 struct Node *genNoop(void);
 
 struct ArgList *genArgList(Type, char *, struct ArgList *, int);

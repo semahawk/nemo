@@ -79,23 +79,23 @@ struct ParamList {
 
 struct Node {
   enum {
-    nt_ID,
-    nt_INTEGER,
-    nt_FLOATING,
-    nt_STRING,
-    nt_BINARYOP,
-    nt_UNARYOP,
-    nt_ASSIGNMENT,
-    nt_BLOCK,
-    nt_STATEMENT,
-    nt_CALL,
-    nt_RETURN,
-    nt_WHILE,
-    nt_IF,
-    nt_FOR,
-    nt_FUNCDEF,
-    nt_ITER,
-    nt_NOOP
+    nt_ID,         // 0
+    nt_INTEGER,    // 1
+    nt_FLOATING,   // 2
+    nt_STRING,     // 3
+    nt_BINARYOP,   // 4
+    nt_UNARYOP,    // 5
+    nt_ASSIGNMENT, // 6
+    nt_BLOCK,      // 7
+    nt_STATEMENT,  // 8
+    nt_CALL,       // 9
+    nt_RETURN,     // 10
+    nt_WHILE,      // 11
+    nt_IF,         // 12
+    nt_FOR,        // 13
+    nt_FUNCDEF,    // 14
+    nt_ITER,       // 15
+    nt_NOOP        // 16
   } kind;
 
   union {

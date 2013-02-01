@@ -85,3 +85,32 @@ void addVariableToBlock(char *name, struct Node *block)
   block->data.block.vars = varlist;
 }
 
+void removeVariable(char *name, struct Node *block)
+{
+  struct VariableList *curr, *prev;
+
+  for (curr  = block->data.block.vars, prev = NULL;
+       curr != NULL && strcmp(curr->var->name, name);
+       prev  = curr, curr = curr->next)
+    ;
+
+  // variable not found
+  if (curr == NULL){
+    ;
+  }
+
+  // variable in the first 'node' of the list
+  if (prev == NULL){
+    block->data.block.vars = block->data.block.vars->next;
+
+    free(curr->var);
+    curr->var = NULL;
+  // variable in some next 'node'
+  } else {
+    prev->next = curr->next;
+
+    free(curr->var);
+    curr->var = NULL;
+  }
+}
+
