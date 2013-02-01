@@ -21,9 +21,10 @@ struct PredefFunction predefs[] =
 {
   { "print",  predef_print  },
   { "assert", predef_assert },
+  { "strlen", predef_strlen },
 };
 
-unsigned int predefs_size = 2;
+unsigned int predefs_size = 3;
 
 Value predef_print(struct ParamList *params, int paramcount)
 {
@@ -101,6 +102,21 @@ Value predef_assert(struct ParamList *params, int paramcount)
   }
 
   ret.v.i = 1;
+  ret.type = TYPE_INTEGER;
+
+  return ret;
+}
+
+Value predef_strlen(struct ParamList *params, int param_count)
+{
+  Value ret;
+
+  if (param_count != 1){
+    cerror("strlen: wrong number of arguments (%d when 1 expected)", param_count);
+    exit(1);
+  }
+
+  ret.v.i = strlen(vtos(dispatchNode(params->param)));
   ret.type = TYPE_INTEGER;
 
   return ret;

@@ -66,3 +66,7 @@ assert("a" ge "A");
 assert("99 bottles of beer" + 1, 100);
 assert("9 bottles of 9 beer" + 1, 100);
 assert("101" - 2, 99);
+
+// Strlen
+assert(strlen("hello"), 5);
+assert(strlen("hello" . "world"), 10);
