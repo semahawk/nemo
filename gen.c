@@ -4,6 +4,8 @@
 // Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
 //
 
+#include <ctype.h>
+
 #include "nemo.h"
 #include "handy.h"
 #include "gen.h"
@@ -56,26 +58,79 @@ struct Node *genExpByFloat(float val)
   return new;
 }
 
-struct Node *genExpByString(char *val)
+struct Node *genExpByString(char *val, struct Node *block)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
   debug("create", "string node <val: %s> at %p", val, new);
 
+  // val w/o "s
   char str[strlen(val) - 2];
-  int j = 0;
+
+  // array of variables that are in that string
+  char **vars = myalloc(0);
+  unsigned int vars_count = 0;
+
+  // these arrays hold values of where a variable start
+  // (position in the string, so replacing would be easier)
+  unsigned int *vars_start = myalloc(0);
+
+  // length of the variables
+  unsigned int vars_size = 0;
+
+  // some useful stuff
+  int j = 0, k;
+  char *p, *q;
 
   // we have to get rid of these "s in val
   for (unsigned int i = 1; i < strlen(val) - 1; i++, j++){
     str[j] = val[i];
+
+    // searching for any variables to interpolate
+    if (val[i] == '$' || val[i] == '!'){
+      if (val[i + 1] == '+' || val[i + 1] == '-'){
+        vars_count++;
+        p = strdup(&val[i]);
+        *(p + 2) = '\0';
+        // resizing arrays
+        vars = myrealloc(vars, vars_count * sizeof(*vars));
+        vars_start = myrealloc(vars_start, vars_count * sizeof(int));
+        // adding to arrays
+        vars[vars_count - 1] = p;
+        vars_size += 2;
+        vars_start[vars_count - 1] = i - 1;
+      } else if (isalpha(val[i+1]) || val[i+1] == '_'){
+        vars_count++;
+        k = 0;
+        p = strdup(&val[i]);
+        q = p + 1;
+        while (isalpha(*q) || *q == '_'){
+          q++; k++;
+        }
+        q--;
+        *(p + (k + 1)) = '\0';
+
+        // adding the var to the array
+        //   but first, resizing
+        vars = myrealloc(vars, vars_count * sizeof(*vars));
+        vars_start = myrealloc(vars_start, vars_count * sizeof(int));
+        //   and adding
+        vars[vars_count - 1] = p;
+        vars_size += strlen(p);
+        vars_start[vars_count - 1] = i - 1;
+      }
+    }
   }
   str[j] = '\0';
 
   new->kind = nt_STRING;
-  new->data.value.type = TYPE_STRING;
-  new->data.value.v.s = strdup(str);
-  // TODO: we would need to actually set block when we have string interpolation
-  new->block = NULL;
+  new->data.string.value.type = TYPE_STRING;
+  new->data.string.value.v.s = strdup(str);
+  new->data.string.vars = vars;
+  new->data.string.vars_count = vars_count;
+  new->data.string.vars_start = vars_start;
+  new->data.string.vars_size = vars_size;
+  new->block = block;
 
   return new;
 }
@@ -153,7 +208,10 @@ struct Node *genEmptyBlock(struct Node *parent, struct Node *funcdef)
   new->data.block.funcdef = funcdef;
   new->block = NULL;
 
-  debug("create", "empty block node at %p with parent at %p", new, parent);
+  if (parent)
+    debug("create", "empty block node at %p with parent at %p", new, parent);
+  else
+    debug("create", "main block node at %p", new);
 
   return new;
 }

@@ -218,7 +218,7 @@ primary_expr
     : VAR_IDENT        { $$ = genExpByName($1, currentblock); }
     | INTEGER          { $$ = genExpByInt($1); }
     | FLOAT            { $$ = genExpByFloat($1); }
-    | STRING           { $$ = genExpByString($1); }
+    | STRING           { $$ = genExpByString($1, currentblock); }
     | '(' expr ')'     { $$ = $2; }
     ;
 

@@ -103,6 +103,18 @@ struct Node {
     char *s;
 
     struct {
+      Value value;
+      char **vars;
+      // total number of variables
+      unsigned int vars_count;
+      // actually, it's an array (of where does a variable of a
+      // given index start in the string)
+      unsigned int *vars_start;
+      // total length of variables
+      unsigned int vars_size;
+    } string;
+
+    struct {
       struct Node *left, *right;
       Binary op;
     } binaryop;

@@ -76,7 +76,64 @@ Value execConstant(struct Node *n)
          nt_FLOATING == n->kind ||
          nt_STRING   == n->kind);
 
-  debug("exec", "constant node <val: %d> at %p", vtoi(n->data.value), n);
+  if (nt_STRING == n->kind){
+    // do that stuff only if it has any vars in it
+    if (n->data.string.vars_count > 0){
+      // new size for the new string
+      size_t new_size = 1;
+      // old size of the old string
+      size_t old_size = strlen(n->data.string.value.v.s);
+      // new string
+      char *new_str;
+
+      for (unsigned int i = 0; i < n->data.string.vars_count; i++){
+        new_size += strlen(vtos(getVariableValue(n->data.string.vars[i], n->block)));
+      }
+
+      // establish the new size of the new string
+      new_size += old_size - n->data.string.vars_size;
+      // let the string be!
+      new_str = myalloc(new_size);
+
+      // darn, I'm so proud of myself
+      // it was not that hard, as I now think about it
+      unsigned int char_pos = 0, var = 0, var_len;
+      char *tmp_var;
+      unsigned int i = 0;
+      // iterate through the old string
+      for (char *ch = n->data.string.value.v.s; *ch != '\0'; ch++, char_pos++){
+        // the actuall position in string is a beginning of some variable
+        if (n->data.string.vars_start[var] == char_pos){
+          // get it's value
+          tmp_var = vtos(getVariableValue(n->data.string.vars[var], n->block));
+          var_len = strlen(n->data.string.vars[var]);
+          for (unsigned int j = 0; j < strlen(tmp_var); j++){
+            // copy the variables value to the new string
+            new_str[i] = tmp_var[j];
+            i++;
+          }
+          // skip over the variable names
+          char_pos += var_len;
+          ch += var_len;
+          // get to the next var (if any left)
+          var++;
+        }
+        // assign any non-variable characters to the new string
+        new_str[i] = *ch;
+        i++;
+      }
+      // close the deal
+      new_str[i] = '\0';
+
+      n->data.string.value.v.s = new_str;
+    }
+
+    debug("exec", "constant node <val: \"%s\"> at %p", vtos(n->data.string.value), n);
+
+    return n->data.string.value;
+  }
+
+  debug("exec", "constant node <val: %s> at %p", vtos(n->data.value), n);
 
   return n->data.value;
 }

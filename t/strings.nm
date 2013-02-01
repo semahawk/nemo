@@ -12,6 +12,14 @@ $a  = 99;
 $a .= " bottles of beer on the wall";
 assert($a, "99 bottles of beer on the wall");
 
+// String interpolation
+$a = "world";
+assert("hello, $a!", "hello, world!");
+$a = 4;
+assert("i have $a apples!", "i have 4 apples!");
+$a = 2.71;
+assert("euler number is $a", "euler number is 2.71");
+
 // String operators
 assert(4 eq 4, 1);
 assert(4 ne 4, 0);

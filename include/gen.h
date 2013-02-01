@@ -23,7 +23,7 @@ struct Node *genFor(struct Node *, struct Node *, struct Node *, struct Node *, 
 struct Node *genFuncDef(Type, char *, struct ArgList *, int);
 struct Node *genExpByInt(int);
 struct Node *genExpByFloat(float);
-struct Node *genExpByString(char *);
+struct Node *genExpByString(char *, struct Node *);
 struct Node *genExpByName(char *, struct Node *);
 struct Node *genIter(char *, struct Node *, struct Node *, struct Node *);
 struct Node *genNoop(void);
