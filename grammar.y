@@ -6,6 +6,7 @@
  */
 
 %output "y.tab.c"
+%parse-param { struct Node **nodest }
 
 %{
 
@@ -17,7 +18,7 @@
 
   #define YYERROR_VERBOSE
 
-  void yyerror(const char *);
+  void yyerror(struct Node **, const char *);
   int yylex();
 
   extern int linenum;
@@ -25,7 +26,6 @@
 
   extern char source[255];
 
-  extern struct Node *nodest;
   struct Node *currentblock;
   struct Node *funcdef = NULL;
   struct Node *iterblock = NULL;
@@ -77,7 +77,7 @@
 %%
 
 source
-    : { currentblock = nodest = genEmptyBlock(NULL, NULL); } stmts
+    : { *nodest = currentblock = genEmptyBlock(NULL, NULL); } stmts
     ;
 
 stmts
@@ -242,9 +242,10 @@ param_list
 
 %%
 
-void yyerror(const char *s)
+void yyerror(struct Node **nodest, const char *s)
 {
   fflush(stdout);
   printf("%s:%d:%d: %s", source, linenum, column, s);
+  nodest = NULL;
 }
 

@@ -11,7 +11,7 @@
 // Date: Sat Sep 15, 16:05:12
 //
 
-#include <unistd.h>
+#include <stdio.h>
 
 #include "nemo.h"
 #include "handy.h"
@@ -20,12 +20,10 @@
 #include "free.h"
 
 extern void yy_scan_string(const char *str);
-extern int yyparse(void);
+extern int yyparse(struct Node **);
 extern FILE *yyin;
 extern FILE *yyout;
 
-// struct pointer to our nodes
-struct Node *nodest = NULL;
 // name of the source file to be interpreted
 char source[255];
 // keep track of what line is it in the source
@@ -44,12 +42,14 @@ char *eval_strings[MAX_EVAL_FLAGS];
 
 int main(int argc, char *argv[])
 {
-  FILE *fp;
   // temporary file
   FILE *tmp_fp = NULL;
   char *tmp_fn = NULL;
   // value to be returned (from executing the main block)
   int ret = 0;
+
+  // struct pointer to our nodes
+  struct Node *nodest = NULL;
 
   int c;
 
@@ -102,9 +102,7 @@ int main(int argc, char *argv[])
     }
     fclose(tmp_fp);
 
-    tmp_fp = fopen(tmp_fn, "r");
-
-    yyin = tmp_fp;
+    strcpy(source, tmp_fn);
   // no --eval flags passed
   } else {
     if (optind < argc){
@@ -115,21 +113,9 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-    if ((fp = fopen(source, "r")) != NULL){
-      yyin = fp;
-    } else if (!strcmp(source, "-")){
-      yyin = stdin;
-    } else {
-      perror(source);
-      return 1;
-    }
   }
 
-  yyparse();
-  if (!nodest){
-    error("execution failed due to some errors");
-    exit(1);
-  }
+  nodest = parseFile(source);
 
   ret = execNodes(nodest).v.i;
   freeNodes(nodest);
@@ -139,6 +125,30 @@ int main(int argc, char *argv[])
     fclose(tmp_fp);
 
   return ret;
+}
+
+struct Node *parseFile(char *fname)
+{
+  struct Node *nodest = NULL;
+  FILE *fp;
+
+  if ((fp = fopen(fname, "r")) != NULL){
+    yyin = fp;
+  } else if (!strcmp(fname, "-")){
+    yyin = stdin;
+  } else {
+    perror(fname);
+    return 1;
+  }
+
+  yyparse(&nodest);
+
+  if (!nodest){
+    error("execution failed due to some errors");
+    exit(1);
+  }
+
+  return nodest;
 }
 
 void version(void)

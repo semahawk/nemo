@@ -20,9 +20,12 @@
 // it's actually 10, as we start from 0
 //
 // booyah!
-#define MAX_EVAL_FLAGS 2
+#define MAX_EVAL_FLAGS 9
 
 #define VERSION "0.11.2"
+
+struct Node *parseFile(char *);
+// TODO: struct Node *parseString(char *);
 
 void version(void);
 
