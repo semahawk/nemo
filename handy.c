@@ -9,11 +9,11 @@
 #include "nodes.h"
 #include "free.h"
 
-extern bool debugflag;
+extern bool debug_flag;
 
 void debug(const char *type, char *string, ...)
 {
-  if (debugflag){
+  if (debug_flag){
     va_list ap;
 
     fprintf(stderr, " * ");
@@ -43,7 +43,7 @@ void error(char *string, ...)
   static int error_num = 1;
 
   fprintf(stderr, "nemo: error");
-  if (debugflag)
+  if (debug_flag)
     fprintf(stderr, " #%d", error_num);
   fprintf(stderr, ": ");
   va_start(ap, string);
