@@ -40,7 +40,7 @@ So far, strings get casted to integers only. The rule of casting is pretty
 simple. Every number found in the string, gets to be in the integer. Everything
 else is discarded.
 
-Examples:
+__Examples:__
 
 `"99 bottles of beer"` will get casted to `99`    
 `"99 bottles of beer on the wall, take 1 down and pass it around"` will get
@@ -106,10 +106,34 @@ Nemo, so far, has two predefined functions.
 
 Will print any given parameter.
 
+__Examples:__
+
+    print(2);                       // will print: 2
+    print(2.71);                    // will print: 2.71
+    print("ahoy, sea!");            // will print: "ahoy, sea!"
+    print(99 . " bottles of beer"); // will print: "99 bottles of beer"
+
 #### `assert`
 
 If you pass 1 parameter, it will check if it's true. If it's false, it will exit the whole script.
 If you pass 2 parameters, it will check if they are equal. If they are not, it will exit.
+
+__Examples:__
+
+    assert(1);    // will succeed
+    assert(1, 1); // will succeed
+    assert(0);    // will fail
+    assert(0, 0); // will succeed
+
+#### `eval`
+
+Takes 1 parameter, and evaluates it. Since our strings have (more or less
+working) string interpolation you can't create variables there or do any stuff
+like that, as it will obviously be replaced by the variables value.
+
+__Examples:__
+
+    eval("print(2 + 2);"); // will: print 4
 
 ### Userdefined
 
@@ -118,7 +142,7 @@ Basic syntax: `FUN name ARGS block`
 If `ARGS` is empty, it means function doesn't take any parameters. If it takes,
 specify them, and separate with commas, if there's more than one.
 
-Examples:
+__Examples:__
 
     fun hello {
       print("hello, world");
@@ -141,7 +165,7 @@ to change it's value inside of the function.
 
 Basic syntax: `IF expr stmt`
 
-Examples:
+__Examples:__
 
     if $a < 10
       $a++;
@@ -155,7 +179,7 @@ Examples:
 
 Basic syntax: `WHILE expr stmt`
 
-Examples:
+__Examples:__
 
     while $d < 10 {
       $d++;
@@ -166,7 +190,7 @@ Examples:
 
 Basic syntax: `FOR expr; expr; expr stmt`
 
-Examples:
+__Examples:__
 
     $a = 0;
 
@@ -181,7 +205,7 @@ Nemo supports so-called iters. Well, it's only one of it, but still. The one tha
 
 Basic syntax: `expr TIMES stmt`
 
-Examples:
+__Examples:__
 
     2 times {
       $a += 10;
