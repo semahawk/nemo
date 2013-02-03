@@ -26,7 +26,7 @@
 
   extern char source[255];
 
-  struct Node *currentblock;
+  struct Node *currentblock = NULL;
   struct Node *funcdef = NULL;
   struct Node *iterblock = NULL;
   int argcount = 0, paramcount = 0;
@@ -77,7 +77,7 @@
 %%
 
 source
-    : { *nodest = currentblock = genEmptyBlock(NULL, NULL); } stmts
+    : { *nodest = currentblock = genEmptyBlock(NULL, currentblock); } stmts
     ;
 
 stmts

@@ -16,15 +16,17 @@
 #include "nodes.h"
 #include "cast.h"
 #include "handy.h"
+#include "free.h"
 
 struct PredefFunction predefs[] =
 {
   { "print",  predef_print  },
   { "assert", predef_assert },
   { "strlen", predef_strlen },
+  { "eval",   predef_eval   },
 };
 
-unsigned int predefs_size = 3;
+unsigned int predefs_size = 4;
 
 Value predef_print(struct ParamList *params, int paramcount)
 {
@@ -118,6 +120,27 @@ Value predef_strlen(struct ParamList *params, int param_count)
 
   ret.v.i = strlen(vtos(dispatchNode(params->param)));
   ret.type = TYPE_INTEGER;
+
+  return ret;
+}
+
+Value predef_eval(struct ParamList *params, int param_count)
+{
+  Value ret;
+  struct Node *nodest;
+
+  if (param_count != 1){
+    cerror("eval: wrong number of arguments (%d when 1 expected)", param_count);
+    exit(1);
+  }
+
+  nodest = parseString(vtos(dispatchNode(params->param)));
+
+  ret.v.i = execNodes(nodest).v.i;
+  ret.type = TYPE_INTEGER;
+
+  freeNodes(nodest);
+  freeStack();
 
   return ret;
 }
