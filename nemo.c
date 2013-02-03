@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
 void version(void)
 {
-  printf("Nemo v%s\n", VERSION);
+  printf("Nemo v%s, %s\n", VERSION, __DATE__);
 }
 
 /*
@@ -151,7 +151,7 @@ void version(void)
  * Helloween
  * Within Temptation, Nightwish
  *
- * Family Guy, The Office
+ * Family Guy, The Office, Monty Python
  *
  */
 
