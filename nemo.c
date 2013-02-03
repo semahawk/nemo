@@ -138,9 +138,26 @@ struct Node *parseFile(char *fname)
     yyin = stdin;
   } else {
     perror(fname);
-    return 1;
+    return NULL;
   }
 
+  yyparse(&nodest);
+
+  if (!nodest){
+    error("execution failed due to some errors");
+    exit(1);
+  }
+
+  fclose(fp);
+
+  return nodest;
+}
+
+struct Node *parseString(char *string)
+{
+  struct Node *nodest;
+
+  yy_scan_string(string);
   yyparse(&nodest);
 
   if (!nodest){

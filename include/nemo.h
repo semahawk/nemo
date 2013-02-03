@@ -25,7 +25,7 @@
 #define VERSION "0.11.2"
 
 struct Node *parseFile(char *);
-// TODO: struct Node *parseString(char *);
+struct Node *parseString(char *);
 
 void version(void);
 
