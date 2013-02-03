@@ -32,6 +32,8 @@ Those plain-old variables start with a dollar sign, eg. `$very_meaningful_variab
 
 If a variable starts with a `!` sign, it means it's read-only. You can set it only once, and can't change it's value later on.
 
+__Note,__ that `$variable` is *different* from `!variable`, they are two, separate variables.
+
 ## Strings
 
 So far, strings get casted to integers only. The rule of casting is pretty
