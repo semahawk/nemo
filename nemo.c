@@ -130,8 +130,9 @@ struct Node *parseFile(char *fname)
   struct yyguts_t *yyg;
 
   if ((fp = fopen(fname, "r")) == NULL){
+    fprintf(stderr, "nemo: error: ");
     perror(fname);
-    return NULL;
+    exit(1);
   }
 
   yylex_init(&scanner);

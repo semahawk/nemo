@@ -86,7 +86,14 @@ stmt(A) ::= return_stmt(B) .  { A = B; }
 stmt(A) ::= use_stmt(B) .     { A = B; }
 
 
-use_stmt(A) ::= USE STRING SEMICOLON . { A = NULL; printf("nemo: warning: 'use' not yet implemented.\n"); }
+use_stmt(A) ::= USE STRING(fname) SEMICOLON .
+{
+  // TODO: prevent from 'use'-ing the same file, or any other kind of infinitness
+  void *tmp = block;
+  block = A;
+  A = parseFile(fname.s);
+  block = tmp;
+}
 
 
 change_comp_stmt_block(A) ::= .
