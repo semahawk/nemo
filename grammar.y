@@ -32,6 +32,7 @@
 %type select_stmt { struct Node * }
 %type return_stmt { struct Node * }
 %type funcdef_stmt { struct Node * }
+%type gen_empty_funcdef { struct Node * }
 %type use_stmt { struct Node * }
 %type expr_stmt { struct Node * }
 %type expr { struct Node * }
@@ -65,7 +66,6 @@
 
 %syntax_error {
   fprintf(stderr, "syntax error!\n");
-  exit(1);
 }
 
 source ::= gen_main_block(A) stmts . { context->nodest = A; }
@@ -113,10 +113,10 @@ select_stmt(A) ::= IF expr(expr) stmt(stmt) ELSE stmt(else_stmt) .
                    { A = genIf(expr, stmt, else_stmt); }
 
 
-/*funcdef_stmt(A) ::= FUN IDENT arg_list(args) comp_stmt(body) .*/
-                    /*{ genFuncDef(); }*/
-funcdef_stmt(A) ::= FUN IDENT arg_list comp_stmt .
-                    { A = NULL; printf("nemo: warning: defining functions not yet implemented.\n"); }
+gen_empty_funcdef(B) ::= IDENT(name) arg_list(args) .
+                         { B = funcdef; funcdef = genFuncDef(TYPE_INTEGER, name.s, args, argcount); argcount = 0; }
+funcdef_stmt(A) ::= FUN gen_empty_funcdef(B) comp_stmt(C) .
+                    { A = funcdef; funcdef->data.funcdef.body = C; funcdef = NULL; }
 
 
 return_stmt(A) ::= RETURN SEMICOLON .
