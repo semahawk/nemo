@@ -17,7 +17,7 @@
 #include "yystype.h"
 
 void *ParseAlloc(void * (*)(size_t));
-void *Parse(void *, int, YYSTYPE, struct Node **);
+void *Parse(void *, int, YYSTYPE, struct Context *);
 void *ParseFree(void *, void(*)(void *));
 
 #endif // LEMON_H

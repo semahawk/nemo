@@ -55,11 +55,10 @@ void error(char *string, ...)
 void cerror(char *string, ...)
 {
   va_list ap;
-  extern char source[];
-  extern int linenum;
-  extern int column;
+  extern int line;
+  extern int col;
 
-  fprintf(stderr, "%s:%d:%d: error: ", source, linenum, column);
+  fprintf(stderr, "%d:%d: error: ", line, col);
   va_start(ap, string);
   vfprintf(stderr, string, ap);
   fprintf(stderr, "\n");

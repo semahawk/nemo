@@ -21,8 +21,10 @@
 
   extern char *stdup(const char *);
 
-  extern int linenum;
-  extern int column;
+  // keep track of what line is it in the source
+  int line = 0;
+  // keep track of what column is it in the source
+  int col = 0;
 
 %}
 
@@ -32,7 +34,7 @@ D [0-9]
 
 %%
 
-"/"{2,}.*                { /* one line comments */ ++linenum; }
+"/"{2,}.*                { /* one line comments */ ++line; }
 
 "use"                    { return USE; }
 "fun"                    { return FUN; }
@@ -44,7 +46,7 @@ D [0-9]
 "while"                  { return WHILE; }
 "return"                 { return RETURN; }
 
-"\n"                     { ++linenum; }
+"\n"                     { ++line; }
 
 "++"                     { return PLUSPLUS; }
 "--"                     { return MINUSMINUS; }
@@ -100,7 +102,7 @@ D [0-9]
   "*/"                   BEGIN(INITIAL);
   [^*\n]+                // eat comment in chunks
   "*"                    // eat the lone star
-  \n                     ++linenum;
+  \n                     ++line;
 }
 
 %%

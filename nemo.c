@@ -23,13 +23,6 @@
 #include "scanner.h"
 #include "yystype.h"
 
-// name of the source file to be interpreted
-char source[255];
-// keep track of what line is it in the source
-int linenum = 0;
-// keep track of what column is it in the source
-int column = 0;
-
 // --debug, -d
 bool debug_flag = false;
 // --eval, -e
@@ -46,6 +39,8 @@ int main(int argc, char *argv[])
   char *tmp_fn = NULL;
   // value to be returned (from executing the main block)
   int ret = 0;
+  // name of the source file to be interpreted
+  char source[255];
 
   // struct pointer to our nodes
   struct Node *nodest = NULL;
@@ -115,6 +110,7 @@ int main(int argc, char *argv[])
   }
 
   nodest = parseFile(source);
+  printf("main: nodest: %p\n", nodest);
 
   /*ret = execNodes(nodest).v.i;*/
   /*freeNodes(nodest);*/
@@ -128,7 +124,7 @@ int main(int argc, char *argv[])
 
 struct Node *parseFile(char *fname)
 {
-  struct Node *nodest = NULL;
+  struct Context context;
   void *parser;
   FILE *fp;
   yyscan_t scanner;
@@ -142,6 +138,7 @@ struct Node *parseFile(char *fname)
   yylex_init(&scanner);
   parser = ParseAlloc(myalloc);
   yyg = (struct yyguts *)scanner;
+  context.filename = fname;
   yyset_in(fp, scanner);
 
   YYSTYPE token;
@@ -150,25 +147,25 @@ struct Node *parseFile(char *fname)
   do {
     lex_code = yylex(scanner);
     token = yylval;
-    Parse(parser, lex_code, token, &nodest);
+    Parse(parser, lex_code, token, &context);
   } while (lex_code > 0);
 
   yylex_destroy(scanner);
   ParseFree(parser, free);
 
-  if (!nodest){
+  if (!context.nodest){
     error("execution failed due to some errors");
     exit(1);
   }
 
   fclose(fp);
 
-  return nodest;
+  return context.nodest;
 }
 
 struct Node *parseString(char *string)
 {
-  struct Node *nodest = NULL;
+  struct Context context;
   void *parser;
   yyscan_t scanner;
   YY_BUFFER_STATE buffer;
@@ -176,6 +173,7 @@ struct Node *parseString(char *string)
   yylex_init(&scanner);
   buffer = yy_scan_string(string, scanner);
   parser = ParseAlloc(malloc);
+  context.filename = string;
 
   YYSTYPE token;
 
@@ -183,19 +181,19 @@ struct Node *parseString(char *string)
   do {
     lex_code = yylex(scanner);
     token = yylval;
-    Parse(parser, lex_code, token, &nodest);
+    Parse(parser, lex_code, token, &context);
   } while (lex_code > 0);
 
   yy_delete_buffer(buffer, scanner);
   yylex_destroy(scanner);
   ParseFree(parser, free);
 
-  if (!nodest){
+  if (!context.nodest){
     error("execution failed due to some errors");
     exit(1);
   }
 
-  return nodest;
+  return context.nodest;
 }
 
 void version(void)

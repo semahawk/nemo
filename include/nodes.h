@@ -9,6 +9,11 @@
 
 #include "nemo.h"
 
+struct Context {
+  struct Node **nodest;
+  const char *filename;
+};
+
 typedef enum {
   UNARY_POSTINC,
   UNARY_POSTDEC,

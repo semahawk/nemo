@@ -7,7 +7,7 @@
 
 %token_type { YYSTYPE }
 
-%extra_argument { struct Node **nodest }
+%extra_argument { struct Context *context }
 
 %right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD EQ_DOT.
 %left EQ NE STR_EQ STR_NE.
@@ -32,8 +32,6 @@
   #include "grammar.h"
   #include "yystype.h"
 
-  extern char source[255];
-
   struct Node *currentblock = NULL;
   struct Node *funcdef = NULL;
   struct Node *iterblock = NULL;
@@ -42,7 +40,7 @@
 }
 
 %parse_accept {
-  printf("parsing completed!\n");
+  debug("", "parsing completed successfuly!");
 }
 
 %syntax_error {
@@ -50,7 +48,7 @@
   exit(1);
 }
 
-source ::= stmts .      { *nodest = (char *)(0xdeadbeef); }
+source ::= stmts .      { context->nodest = (char *)(0xdeadbeef); }
 
 stmts ::= stmt .        {  }
 stmts ::= stmts stmt .  {  }
@@ -130,5 +128,5 @@ param_list ::= expr .                  { }
 param_list ::= param_list COMMA expr . { }
 param_list ::= .                       { }
 
-lvalue ::= VAR_IDENT . { printf("found a variable! %s\n", yylval.s); }
+lvalue ::= VAR_IDENT . {  }
 
