@@ -171,7 +171,7 @@ struct Node *genBinaryop(struct Node *left, struct Node *right, Binary op, struc
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("create", "binary operation node <op: '%c'> at %p", op, new);
+  debug("create", "binary operation node <op: '%s'> at %p", binarytos(op), new);
 
   new->kind = nt_BINARYOP;
   new->data.binaryop.left = left;
