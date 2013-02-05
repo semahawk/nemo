@@ -16,18 +16,18 @@ void debug(const char *type, char *string, ...)
   if (debug_flag){
     va_list ap;
 
-    fprintf(stderr, " * ");
+    /*fprintf(stderr, " * ");*/
 
     if (!strcmp(type, "free")){
-      fprintf(stderr, "\e[1;34mFREE:\e[0;0m ");
-    } else if (!strcmp(type, "create")){
-      fprintf(stderr, "\e[1;32mCREATE:\e[0;0m ");
+      fprintf(stderr, "\e[1;34m *   FREE:\e[0;0m ");
+    } else if (!strcmp(type, "gen")){
+      fprintf(stderr, "\e[1;32m *    GEN:\e[0;0m ");
     } else if (!strcmp(type, "exec")){
-      fprintf(stderr, "\e[1;33mEXEC:\e[0;0m ");
+      fprintf(stderr, "\e[1;33m *   EXEC:\e[0;0m ");
     } else if (!strcmp(type, "append")){
-      fprintf(stderr, "\e[1;32mAPPEND:\e[0;0m ");
+      fprintf(stderr, "\e[1;32m * APPEND:\e[0;0m ");
     } else {
-      fprintf(stderr, "\e[1;35mDEBUG:\e[0;0m ");
+      fprintf(stderr, "\e[1;35m *  DEBUG:\e[0;0m ");
     }
 
     va_start(ap, string);
