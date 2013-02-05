@@ -23,7 +23,7 @@
 // booyah!
 #define MAX_EVAL_FLAGS 9
 // version of Nemo, obviously
-#define VERSION "0.12.0"
+#define VERSION "0.13.0"
 
 struct Node *parseFile(char *);
 struct Node *parseString(char *);
