@@ -5,7 +5,7 @@
  *
  */
 
-%token_type { int }
+%token_type { YYSTYPE }
 
 %right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD EQ_DOT.
 %left EQ NE STR_EQ STR_NE.
@@ -28,6 +28,7 @@
   #include "handy.h"
   #include "vars.h"
   #include "grammar.h"
+  #include "yystype.h"
 
   extern char source[255];
 
@@ -127,5 +128,5 @@ param_list ::= expr .                  { }
 param_list ::= param_list COMMA expr . { }
 param_list ::= .                       { }
 
-lvalue ::= VAR_IDENT . {  }
+lvalue ::= VAR_IDENT . { printf("found a variable! %s\n", yylval.s); }
 

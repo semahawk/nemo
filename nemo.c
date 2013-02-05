@@ -21,6 +21,7 @@
 #include "lemon.h"
 #include "grammar.h"
 #include "scanner.h"
+#include "yystype.h"
 
 // name of the source file to be interpreted
 char source[255];
@@ -127,8 +128,8 @@ int main(int argc, char *argv[])
 
 struct Node *parseFile(char *fname)
 {
-  struct Node *nodest = (char*)(0xffff);
-  void *parser = NULL;
+  struct Node *nodest = (char *)(0xffff);
+  void *parser;
   FILE *fp;
   yyscan_t scanner;
   struct yyguts_t *yyg;
@@ -143,10 +144,13 @@ struct Node *parseFile(char *fname)
   yyg = (struct yyguts *)scanner;
   yyset_in(fp, scanner);
 
+  YYSTYPE token;
+
   int lex_code;
   do {
     lex_code = yylex(scanner);
-    Parse(parser, lex_code, 0);
+    token = yylval;
+    Parse(parser, lex_code, token);
   } while (lex_code > 0);
 
   yylex_destroy(scanner);
@@ -164,17 +168,26 @@ struct Node *parseFile(char *fname)
 
 struct Node *parseString(char *string)
 {
-  struct Node *nodest;
+  struct Node *nodest = (char *)(0xffff);
+  void *parser;
+  yyscan_t scanner;
+  YY_BUFFER_STATE buffer;
 
-  void *parser = ParseAlloc(malloc);
+  yylex_init(&scanner);
+  buffer = yy_scan_string(string, scanner);
+  parser = ParseAlloc(malloc);
 
-  // input: 6 + 9 - 6
-  Parse(parser, INTEGER, 6);
-  Parse(parser, ADD, 0);
-  Parse(parser, INTEGER, 9);
-  Parse(parser, SUB, 0);
-  Parse(parser, INTEGER, 6);
+  YYSTYPE token;
 
+  int lex_code;
+  do {
+    lex_code = yylex(scanner);
+    token = yylval;
+    Parse(parser, lex_code, token);
+  } while (lex_code > 0);
+
+  yy_delete_buffer(buffer, scanner);
+  yylex_destroy(scanner);
   ParseFree(parser, free);
 
   if (!nodest){

@@ -1,6 +1,6 @@
 /*
  *
- * scanner.h
+ * yystype.h
  *
  * Created at:  02/04/2013 06:57:08 PM
  *
@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef SCANNER_H
-#define SCANNER_H
+#ifndef YYSTYPE_H
+#define YYSTYPE_H
 
 #ifndef YYSTYPE
   typedef union {
@@ -25,5 +25,5 @@
 
 YYSTYPE yylval;
 
-#endif // SCANNER_H
+#endif // YYSTYPE_H
 

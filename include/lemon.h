@@ -13,8 +13,10 @@
 #ifndef LEMON_H
 #define LEMON_H
 
+#include "yystype.h"
+
 void *ParseAlloc(void * (*)(size_t));
-void *Parse(void *, int, int);
+void *Parse(void *, int, YYSTYPE);
 void *ParseFree(void *, void(*)(void *));
 
 #endif // LEMON_H
