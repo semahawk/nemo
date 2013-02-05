@@ -4,3 +4,4 @@ testing.nm
 grammar.c
 grammar.h
 grammar.out
+scanner.h
