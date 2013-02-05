@@ -13,10 +13,11 @@
 #ifndef LEMON_H
 #define LEMON_H
 
+#include "nodes.h"
 #include "yystype.h"
 
 void *ParseAlloc(void * (*)(size_t));
-void *Parse(void *, int, YYSTYPE);
+void *Parse(void *, int, YYSTYPE, struct Node **);
 void *ParseFree(void *, void(*)(void *));
 
 #endif // LEMON_H

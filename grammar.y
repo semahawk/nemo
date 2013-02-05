@@ -7,6 +7,8 @@
 
 %token_type { YYSTYPE }
 
+%extra_argument { struct Node **nodest }
+
 %right ASSIGN EQ_ADD EQ_SUB EQ_MUL EQ_DIV EQ_MOD EQ_DOT.
 %left EQ NE STR_EQ STR_NE.
 %left GT LT GE LE STR_GT STR_GE STR_LT STR_LE.
@@ -48,7 +50,7 @@
   exit(1);
 }
 
-source ::= stmts .      {  }
+source ::= stmts .      { *nodest = (char *)(0xdeadbeef); }
 
 stmts ::= stmt .        {  }
 stmts ::= stmts stmt .  {  }

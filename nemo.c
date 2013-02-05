@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
 struct Node *parseFile(char *fname)
 {
-  struct Node *nodest = (char *)(0xffff);
+  struct Node *nodest = NULL;
   void *parser;
   FILE *fp;
   yyscan_t scanner;
@@ -150,7 +150,7 @@ struct Node *parseFile(char *fname)
   do {
     lex_code = yylex(scanner);
     token = yylval;
-    Parse(parser, lex_code, token);
+    Parse(parser, lex_code, token, &nodest);
   } while (lex_code > 0);
 
   yylex_destroy(scanner);
@@ -168,7 +168,7 @@ struct Node *parseFile(char *fname)
 
 struct Node *parseString(char *string)
 {
-  struct Node *nodest = (char *)(0xffff);
+  struct Node *nodest = NULL;
   void *parser;
   yyscan_t scanner;
   YY_BUFFER_STATE buffer;
@@ -183,7 +183,7 @@ struct Node *parseString(char *string)
   do {
     lex_code = yylex(scanner);
     token = yylval;
-    Parse(parser, lex_code, token);
+    Parse(parser, lex_code, token, &nodest);
   } while (lex_code > 0);
 
   yy_delete_buffer(buffer, scanner);
