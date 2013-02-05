@@ -8,7 +8,10 @@
 //
 // Copyright: (c) 2012 by Szymon Urbaś <szymon.urbas@aol.com>
 //
-// Date: Sat Sep 15, 16:05:12
+// Started at: Sat Sep 15, 16:05:12
+//
+//
+// Mon Feb 18, 22:18:24 - 200 commits!
 //
 
 #include <stdio.h>
