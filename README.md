@@ -1,37 +1,8 @@
 # Nemo
 
-+ [About](#about)
-+ [Installing](#installing)
-+ [Dependencies](#dependencies)
-+ [Language](#language)
-  + [Comments](#comments)
-  + [Types](#types)
-  + [Variables](#variables)
-    + [Dollar](#dollar)
-    + [Bang](#bang)
-  + [Strings](#strigns)
-  + [Booleanism](#booleanism)
-  + [Operators](#operators)
-    + [Mathematical](#mathematical)
-    + [Assignment](#assignment)
-    + [Logical](#logical)
-    + [String specific](#string-specific)
-    + [Unary](#unary)
-  + [Statements](#statements)
-  + [Functions](#functions)
-    + [Predefined](#predefined)
-    + [Userdefined](#userdefined)
-  + [Control structures](#control-structures)
-    + [If](#if)
-    + [While](#while)
-    + [For](#for)
-  + [Iterators](#iterators)
-    + [Times](#times)
-+ [License](#license)
-
 # About
 
-Nemo is a programming language written entirely in C. It uses Flex and Bison as its lexer and parser.
+Nemo is a programming language written entirely in C. It uses Flex and Lemon as its lexer and parser.
 Nemo is a interpreted, scripting language, dynamically and weakly typed.
 
 # Installing
@@ -45,7 +16,7 @@ You could also run tests, by typing `make test`, just to make sure it works.
 + make (`3.82`)
 + flex (`2.5.35`)
 
-Most distributions should have those, but still.
+Most distributions should have those out of the box, but still.
 
 Nemo has been tested, and ran multiple number of times, using these versions,
 and it is confirmed that they work. Older versions may be working, but on my
