@@ -5,21 +5,20 @@
  *
  */
 
-%option outfile="lex.yy.c"
+%option outfile="scanner.c"
+%option reentrant
+%option noyywrap
 %option noinput
 %option nounput
 
 %{
 
   #include <stdio.h>
+
   #include "handy.h"
-  #include "y.tab.h"
+  #include "grammar.h"
+  #include "yystype.h"
 
-  #define MAX_INCLUDE_DEPTH 10
-  YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
-  int include_stack_ptr = 0;
-
-  void count();
   extern char *stdup(const char *);
 
   extern int linenum;
@@ -29,72 +28,69 @@
 
 D [0-9]
 
-%x USE
 %x IN_COMMENT
 
 %%
 
 "/"{2,}.*                { /* one line comments */ ++linenum; }
 
-"use"                    { BEGIN(USE); }
-"fun"                    { count(); return FUN; }
-"times"                  { count(); return TIMES; }
+"use"                    { return USE; }
+"fun"                    { return FUN; }
+"times"                  { return TIMES; }
 
-"none"                   { count(); return NONE; }
+"if"                     { return IF; }
+"else"                   { return ELSE; }
+"for"                    { return FOR; }
+"while"                  { return WHILE; }
+"return"                 { return RETURN; }
 
-"if"                     { count(); return IF; }
-"else"                   { count(); return ELSE; }
-"for"                    { count(); return FOR; }
-"while"                  { count(); return WHILE; }
-"return"                 { count(); return RETURN; }
+"\n"                     { ++linenum; }
 
-"\n"                     { count(); ++linenum; }
+"++"                     { return PLUSPLUS; }
+"--"                     { return MINUSMINUS; }
+">="                     { return GE; }
+"<="                     { return LE; }
+"!="                     { return NE; }
+"=="                     { return EQ; }
+"+="                     { return EQ_ADD; }
+"-="                     { return EQ_SUB; }
+"*="                     { return EQ_MUL; }
+"/="                     { return EQ_DIV; }
+"%="                     { return EQ_MOD; }
+".="                     { return EQ_DOT; }
+"="                      { return ASSIGN; }
+"<"                      { return LT; }
+">"                      { return GT; }
+"ge"                     { return STR_GE; }
+"le"                     { return STR_LE; }
+"ne"                     { return STR_NE; }
+"eq"                     { return STR_EQ; }
+"lt"                     { return STR_LT; }
+"gt"                     { return STR_GT; }
+"+"                      { return ADD; }
+"-"                      { return SUB; }
+"*"                      { return MUL; }
+"/"                      { return DIV; }
+"%"                      { return MOD; }
 
-"++"                     { count(); return PLUSPLUS; }
-"--"                     { count(); return MINUSMINUS; }
-">="                     { count(); return GE; }
-"<="                     { count(); return LE; }
-"!="                     { count(); return NE; }
-"=="                     { count(); return EQ; }
-"+="                     { count(); return EQ_ADD; }
-"-="                     { count(); return EQ_SUB; }
-"*="                     { count(); return EQ_MUL; }
-"/="                     { count(); return EQ_DIV; }
-"%="                     { count(); return EQ_MOD; }
-".="                     { count(); return EQ_CON; }
-"="                      { count(); return ASSIGN; }
-"<"                      { count(); return LT; }
-">"                      { count(); return GT; }
-"ge"                     { count(); return STR_GE; }
-"le"                     { count(); return STR_LE; }
-"ne"                     { count(); return STR_NE; }
-"eq"                     { count(); return STR_EQ; }
-"lt"                     { count(); return STR_LT; }
-"gt"                     { count(); return STR_GT; }
-"+"                      { count(); return '+'; }
-"-"                      { count(); return '-'; }
-"*"                      { count(); return '*'; }
-"/"                      { count(); return '/'; }
-"%"                      { count(); return '%'; }
+"("                      { return LPAREN; }
+")"                      { return RPAREN; }
+"{"                      { return LMUSTASHE; }
+"}"                      { return RMUSTASHE; }
+";"                      { return SEMICOLON; }
+"."                      { return DOT; }
+","                      { return COMMA; }
 
-"("                      { count(); return '('; }
-")"                      { count(); return ')'; }
-"{"                      { count(); return '{'; }
-"}"                      { count(); return '}'; }
-";"                      { count(); return ';'; }
-"."                      { count(); return '.'; }
-","                      { count(); return ','; }
+\$[a-zA-Z_][a-zA-Z0-9_]* { yylval.s = strdup(yytext); return VAR_IDENT; }
+\$[+-]                   { yylval.s = strdup(yytext); return VAR_IDENT; }
+![a-zA-Z_][a-zA-Z0-9_]*  { yylval.s = strdup(yytext); return VAR_IDENT; }
+![+-]                    { yylval.s = strdup(yytext); return VAR_IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]*   { yylval.s = strdup(yytext); return IDENT;     }
+{D}{D}*                  { yylval.i = atoi(yytext);   return INTEGER;   }
+{D}*\.{D}+               { yylval.f = atof(yytext);   return FLOATING;  }
+\"(\\.|[^\\"])*\"        { yylval.s = strdup(yytext); return STRING;    }
 
-\$[a-zA-Z_][a-zA-Z0-9_]* { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
-\$[+-]                   { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
-![a-zA-Z_][a-zA-Z0-9_]*  { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
-![+-]                    { count(); yylval.s = strdup(yytext); return VAR_IDENT; }
-[a-zA-Z_][a-zA-Z0-9_]*   { count(); yylval.s = strdup(yytext); return IDENT;     }
-{D}{D}*                  { count(); yylval.i = atoi(yytext);   return INTEGER;   }
-{D}*\.{D}+               { count(); yylval.f = atof(yytext);   return FLOAT;     }
-\"(\\.|[^\\"])*\"        { count(); yylval.s = strdup(yytext); return STRING;    }
-
-[ \t]                    { count(); }
+[ \t]                    { }
 .                        { /* ignooar */ }
 
 <INITIAL>{
@@ -107,56 +103,5 @@ D [0-9]
   \n                     ++linenum;
 }
 
-<USE>{
-  [ \t]*                 { /* eat the whitespace */ }
-  [^ \t\n\;]+ {
-    if (include_stack_ptr >= MAX_INCLUDE_DEPTH){
-      error("includes nested too deeply");
-      exit(1);
-    }
-
-    include_stack[include_stack_ptr++] = YY_CURRENT_BUFFER;
-    yyin = fopen(yytext, "r");
-
-    if (!yyin){
-      fprintf(stderr, "nemo: error in 'use': ");
-      perror(yytext);
-      exit(1);
-    }
-
-    yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
-
-    BEGIN(INITIAL);
-  }
-}
-
-<<EOF>> {
-  if (--include_stack_ptr < 0){
-    yyterminate();
-  } else {
-    yy_switch_to_buffer(include_stack[include_stack_ptr]);
-  }
-}
-
 %%
-
-int yywrap()
-{
-  return 1;
-}
-
-void count()
-{
-  int i;
-
-  for (i = 0; yytext[i] != '\0'; i++){
-    if (yytext[i] == '\n'){
-      column = 0;
-    } else if (yytext[i] == '\t'){
-      column += 8 - (column % 8);
-    } else {
-      column++;
-    }
-  }
-}
 

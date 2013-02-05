@@ -18,11 +18,9 @@
 #include "exec.h"
 #include "nodes.h"
 #include "free.h"
-
-extern void yy_scan_string(const char *str);
-extern int yyparse(struct Node **);
-extern FILE *yyin;
-extern FILE *yyout;
+#include "lemon.h"
+#include "grammar.h"
+#include "scanner.h"
 
 // name of the source file to be interpreted
 char source[255];
@@ -117,9 +115,9 @@ int main(int argc, char *argv[])
 
   nodest = parseFile(source);
 
-  ret = execNodes(nodest).v.i;
-  freeNodes(nodest);
-  freeStack();
+  /*ret = execNodes(nodest).v.i;*/
+  /*freeNodes(nodest);*/
+  /*freeStack();*/
 
   if (eval_flag)
     fclose(tmp_fp);
@@ -129,19 +127,30 @@ int main(int argc, char *argv[])
 
 struct Node *parseFile(char *fname)
 {
-  struct Node *nodest = NULL;
+  struct Node *nodest = (char*)(0xffff);
+  void *parser = NULL;
   FILE *fp;
+  yyscan_t scanner;
+  struct yyguts_t *yyg;
 
-  if ((fp = fopen(fname, "r")) != NULL){
-    yyin = fp;
-  } else if (!strcmp(fname, "-")){
-    yyin = stdin;
-  } else {
+  if ((fp = fopen(fname, "r")) == NULL){
     perror(fname);
     return NULL;
   }
 
-  yyparse(&nodest);
+  yylex_init(&scanner);
+  parser = ParseAlloc(myalloc);
+  yyg = (struct yyguts *)scanner;
+  yyset_in(fp, scanner);
+
+  int lex_code;
+  do {
+    lex_code = yylex(scanner);
+    Parse(parser, lex_code, 0);
+  } while (lex_code > 0);
+
+  yylex_destroy(scanner);
+  ParseFree(parser, free);
 
   if (!nodest){
     error("execution failed due to some errors");
@@ -157,8 +166,16 @@ struct Node *parseString(char *string)
 {
   struct Node *nodest;
 
-  yy_scan_string(string);
-  yyparse(&nodest);
+  void *parser = ParseAlloc(malloc);
+
+  // input: 6 + 9 - 6
+  Parse(parser, INTEGER, 6);
+  Parse(parser, ADD, 0);
+  Parse(parser, INTEGER, 9);
+  Parse(parser, SUB, 0);
+  Parse(parser, INTEGER, 6);
+
+  ParseFree(parser, free);
 
   if (!nodest){
     error("execution failed due to some errors");
@@ -175,7 +192,7 @@ void version(void)
 
 /*
  * Megadeth, Running Wild, Gamma Ray, Iron Savior
- * Helloween
+ * Helloween, Testament
  * Within Temptation, Nightwish
  *
  * Family Guy, The Office, Monty Python

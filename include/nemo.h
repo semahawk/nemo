@@ -16,6 +16,7 @@
 #include <getopt.h>
 #include <assert.h>
 #include <time.h>
+#include <sys/stat.h>
 
 // it's actually 10, as we start from 0
 //

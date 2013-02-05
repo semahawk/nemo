@@ -98,6 +98,18 @@ char *strdup(const char *p)
   return np ? strcpy(np, p) : np;
 }
 
+int fsize(const char *name)
+{
+  struct stat st;
+
+  if (stat(name, &st) != 0){
+    perror("could not stat");
+    return -1;
+  }
+
+  return st.st_size;
+}
+
 const char *unarytos(Unary type)
 {
   switch (type){

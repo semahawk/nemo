@@ -19,6 +19,7 @@ void *myalloc(size_t);
 void *myrealloc(void *, size_t);
 
 char *strdup(const char *);
+int fsize(const char *);
 
 const char *unarytos(Unary);
 const char *binarytos(Binary);
