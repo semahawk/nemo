@@ -28,6 +28,7 @@
 %type stmt { struct Node * }
 %type comp_stmt { struct Node * }
 %type change_comp_stmt_block { struct Node * }
+%type gen_empty_iter { struct Node * }
 %type iter_stmt { struct Node * }
 %type select_stmt { struct Node * }
 %type return_stmt { struct Node * }
@@ -100,11 +101,10 @@ iter_stmt(A) ::= FOR expr_stmt(init) expr_stmt(guard) stmt(stmt) .
                  { A = genFor(init, guard, NULL, stmt, block); }
 iter_stmt(A) ::= WHILE expr(expr) stmt(stmt) .
                  { A = genWhile(expr, stmt); }
-/*iter_stmt(A) ::= expr(expr) TIMES change_times_iter_block(B) stmt(stmt) .*/
-                 /*{ A = iter; iter->data.iter.stmt = stmt; iter = NULL; }*/
-/*change_times_iter_block(A) ::= . { A = iter; iter = genIter("times", ) }*/
-iter_stmt(A) ::= expr TIMES stmt .
-                 { A = NULL; printf("nemo: warning: 'times' iter not yet implemented.\n"); }
+gen_empty_iter(B) ::= expr(expr) TIMES .
+                      { B = iter; iter = genIter("times", expr, block); }
+iter_stmt(A) ::= gen_empty_iter(B) stmt(C) .
+                 { A = iter; iter->data.iter.stmt = C; iter = NULL; }
 
 
 select_stmt(A) ::= IF expr(expr) stmt(stmt) .
