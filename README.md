@@ -1,14 +1,57 @@
 # Nemo
 
-## About
++ [About](#about)
++ [Installing](#installing)
++ [Dependencies](#dependencies)
++ [Language](#language)
+  + [Comments](#comments)
+  + [Types](#types)
+  + [Variables](#variables)
+    + [Dollar](#dollar)
+    + [Bang](#bang)
+  + [Strings](#strigns)
+  + [Booleanism](#booleanism)
+  + [Operators](#operators)
+    + [Mathematical](#mathematical)
+    + [Assignment](#assignment)
+    + [Logical](#logical)
+    + [String specific](#string-specific)
+    + [Unary](#unary)
+  + [Statements](#statements)
+  + [Functions](#functions)
+    + [Predefined](#predefined)
+    + [Userdefined](#userdefined)
+  + [Control structures](#control-structures)
+    + [If](#if)
+    + [While](#while)
+    + [For](#for)
+  + [Iterators](#iterators)
+    + [Times](#times)
++ [License](#license)
+
+# About
 
 Nemo is a programming language written entirely in C. It uses Flex and Bison as its lexer and parser.
 Nemo is a interpreted, scripting language, dynamically and weakly typed.
 
-## Installing
+# Installing
 
 To install Nemo, just obtain the sources and run old good `make`. So far, it's not to be "installed", it just compiles and just is.
 You could also run tests, by typing `make test`, just to make sure it works.
+
+# Dependencies
+
++ gcc (`4.5.4`)
++ make (`3.82`)
++ flex (`2.5.35`)
+
+Most distributions should have those, but still.
+
+Nemo has been tested, and ran multiple number of times, using these versions,
+and it is confirmed that they work. Older versions may be working, but on my
+computer I havy only those.
+
+# Language
 
 ## Comments
 
@@ -28,7 +71,7 @@ Note: in Nemo there's no declaring.
 
 Those plain-old variables start with a dollar sign, eg. `$very_meaningful_variable_name`.
 
-### Exclamation
+### Bang
 
 If a variable starts with a `!` sign, it means it's read-only. You can set it only once, and can't change it's value later on.
 
@@ -125,6 +168,10 @@ __Examples:__
     assert(0);    // will fail
     assert(0, 0); // will succeed
 
+#### `strlen`
+
+Name says it all. Takes one parameter.
+
 #### `eval`
 
 Takes 1 parameter, and evaluates it. Since our strings have (more or less
@@ -197,11 +244,11 @@ __Examples:__
     for $a = 0; $a < 10; $a++
       print($a);
 
-## Iters
+## Iterators
+
+Nemo supports so-called 'iters'. Well, it's only one of it, but still. The one that we've got is a 'times' iter.
 
 ### Times
-
-Nemo supports so-called iters. Well, it's only one of it, but still. The one that we've got is a 'times' iter.
 
 Basic syntax: `expr TIMES stmt`
 
@@ -240,4 +287,54 @@ It will print:
 If it was `$-` instead of `$+`, the output would be from `9` to `0`.
 
 __Note:__ `expr` is being casted to int, so if `expr` is, say, `2.5`, it's gonna be casted to 2.
+
+## Including other files
+
+In Nemo, we have here a `use` statement, which parses given file, and appends
+that block (parsing returns a main block node) to the current AST.
+
+Basic syntax: `USE "filename";`
+
+__Example:__
+
+Given files
+
+    // first.nm
+
+    print("first.nm included");
+
+and
+
+    // second.nm
+
+    use "first.nm"
+
+    print("second.nm executed");
+
+and executed file `second.nm` will yield the following output:
+
+    first.nm included
+    second.nm executed
+
+# License
+
+Copyright (c) 2012-2013 Szymon Urbaś <szymon.urbas@aol.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
