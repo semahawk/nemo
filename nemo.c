@@ -110,10 +110,9 @@ int main(int argc, char *argv[])
   }
 
   nodest = parseFile(source);
-  printf("main: nodest: %p\n", nodest);
 
-  /*ret = execNodes(nodest).v.i;*/
-  /*freeNodes(nodest);*/
+  ret = execNodes(nodest).v.i;
+  freeNodes(nodest);
   /*freeStack();*/
 
   if (eval_flag)

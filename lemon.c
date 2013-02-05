@@ -1515,7 +1515,7 @@ int main(int argc, char **argv)
   }
 
   /* return 0 on success, 1 on failure. */
-  exitcode = ((lem.errorcnt > 0) || (lem.nconflict > 0)) ? 1 : 0;
+  exitcode = ((lem.errorcnt > 0) || (lem.nconflict > 0)) ? /*1*/0 : 0;
   exit(exitcode);
   return (exitcode);
 }

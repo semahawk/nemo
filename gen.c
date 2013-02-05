@@ -216,7 +216,7 @@ struct Node *genEmptyBlock(struct Node *parent, struct Node *funcdef)
   return new;
 }
 
-void blockappend(struct Node *currentblock, struct Node *toappend)
+void appendToBlock(struct Node *currentblock, struct Node *toappend)
 {
   currentblock->data.block.count++;
   currentblock->data.block.statements = realloc(currentblock->data.block.statements, currentblock->data.block.count * sizeof(*currentblock->data.block.statements));
