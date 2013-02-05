@@ -80,7 +80,7 @@ struct Node *genExpByString(char *val, struct Node *block)
   char *p, *q;
 
   // we have to get rid of these "s in val
-  for (unsigned int i = 1; i < strlen(val) - 1; i++){
+  for (unsigned int i = 0; i < strlen(val); i++){
     // searching for any variables to interpolate
     if (val[i] == '$' || val[i] == '!'){
       if (val[i + 1] == '+' || val[i + 1] == '-'){

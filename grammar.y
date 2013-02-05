@@ -49,6 +49,8 @@
   #include "nemo.h"
   #include "nodes.h"
   #include "gen.h"
+  #include "exec.h"
+  #include "cast.h"
   #include "handy.h"
   #include "vars.h"
   #include "grammar.h"
@@ -92,7 +94,7 @@ use_stmt(A) ::= USE STRING(fname) SEMICOLON .
   // TODO: prevent from 'use'-ing the same file, or any other kind of infinitness
   void *tmp = block;
   block = A;
-  A = parseFile(fname.s);
+  A = parseFile(vtos(dispatchNode(genExpByString(fname.s, block))));
   block = tmp;
 }
 
