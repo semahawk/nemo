@@ -1,1 +1,1 @@
-print("stdio included correctly.");
+print('stdio included correctly.');

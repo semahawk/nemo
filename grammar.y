@@ -89,12 +89,20 @@ stmt(A) ::= return_stmt(B) .  { A = B; }
 stmt(A) ::= use_stmt(B) .     { A = B; }
 
 
-use_stmt(A) ::= USE STRING(fname) SEMICOLON .
+use_stmt(A) ::= USE DQ_STRING(fname) SEMICOLON .
 {
   // TODO: prevent from 'use'-ing the same file, or any other kind of infinitness
   void *tmp = block;
   block = A;
-  A = parseFile(vtos(dispatchNode(genExpByString(fname.s, block))));
+  A = parseFile(vtos(dispatchNode(genExpByDoubleString(fname.s, block))));
+  block = tmp;
+}
+use_stmt(A) ::= USE SQ_STRING(fname) SEMICOLON .
+{
+  void *tmp = block;
+  block = A;
+  // we don't exec it and anything, because that is a best as it could get
+  A = parseFile(fname.s);
   block = tmp;
 }
 
@@ -149,8 +157,10 @@ expr(A) ::= INTEGER(val) .
             { A = genExpByInt(val.i); }
 expr(A) ::= FLOATING(val) .
             { A = genExpByFloat(val.f); }
-expr(A) ::= STRING(val) .
-            { A = genExpByString(val.s, block); }
+expr(A) ::= DQ_STRING(val) .
+            { A = genExpByDoubleString(val.s, block); }
+expr(A) ::= SQ_STRING(val) .
+            { A = genExpBySingleString(val.s); }
 expr(A) ::= VAR_IDENT(val) .
             { A = genExpByName(val.s, block); }
 

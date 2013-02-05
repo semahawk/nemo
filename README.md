@@ -79,6 +79,10 @@ __Note,__ that `$variable` is *different* from `!variable`, they are two, separa
 
 ## Strings
 
+Strings are enquoted by `"` or by `'`. If double quotes were used, interpolation
+is possible, and will be made. If single quotes were used, that string will be
+you will get. WYSIWYG.
+
 So far, strings get casted to integers only. The rule of casting is pretty
 simple. Every number found in the string, gets to be in the integer. Everything
 else is discarded.

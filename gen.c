@@ -58,11 +58,26 @@ struct Node *genExpByFloat(float val)
   return new;
 }
 
-struct Node *genExpByString(char *val, struct Node *block)
+struct Node *genExpBySingleString(char *val)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("create", "string node <val: %s> at %p", val, new);
+  debug("create", "string node <val: '%s'> at %p", val, new);
+
+  new->kind = nt_STRING;
+  new->data.string.value.type = TYPE_STRING;
+  new->data.string.value.v.s = val;
+  new->data.string.vars_count = 0;
+  new->block = NULL;
+
+  return new;
+}
+
+struct Node *genExpByDoubleString(char *val, struct Node *block)
+{
+  struct Node *new = myalloc(sizeof(struct Node));
+
+  debug("create", "string node <val: \"%s\"> at %p", val, new);
 
   // array of variables that are in that string
   char **vars = myalloc(0);
