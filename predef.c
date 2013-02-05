@@ -127,14 +127,21 @@ Value predef_strlen(struct ParamList *params, int param_count)
 Value predef_eval(struct ParamList *params, int param_count)
 {
   Value ret;
-  struct Node *nodest;
+  struct Node *nodest = NULL;
 
   if (param_count != 1){
     cerror("eval: wrong number of arguments (%d when 1 expected)", param_count);
     exit(1);
   }
 
+  // TODO: make it appendToBlock(), from which it was ran
+
   nodest = parseString(vtos(dispatchNode(params->param)));
+
+  if (!nodest){
+    cerror("eval: execution falied.");
+    exit(1);
+  }
 
   ret.v.i = execNodes(nodest).v.i;
   ret.type = TYPE_INTEGER;

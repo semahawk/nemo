@@ -1,6 +1,10 @@
 bin/
+
 testing.nm
+stdio.nm
+
 *.o
+
 grammar.c
 grammar.h
 grammar.out

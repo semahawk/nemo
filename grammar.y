@@ -67,6 +67,7 @@
 
 %syntax_error {
   fprintf(stderr, "syntax error!\n");
+  context->nodest = NULL;
 }
 
 source ::= gen_main_block(A) stmts . { context->nodest = A; }
@@ -110,8 +111,8 @@ iter_stmt(A) ::= WHILE expr(expr) stmt(stmt) .
                  { A = genWhile(expr, stmt); }
 gen_empty_iter(B) ::= expr(expr) TIMES .
                       { B = iter; iter = genIter("times", expr, block); }
-iter_stmt(A) ::= gen_empty_iter(B) stmt(C) .
-                 { A = iter; iter->data.iter.stmt = C; iter = NULL; }
+iter_stmt(A) ::= gen_empty_iter stmt(B) .
+                 { A = iter; iter->data.iter.stmt = B; iter = NULL; }
 
 
 select_stmt(A) ::= IF expr(expr) stmt(stmt) .
@@ -122,8 +123,8 @@ select_stmt(A) ::= IF expr(expr) stmt(stmt) ELSE stmt(else_stmt) .
 
 gen_empty_funcdef(B) ::= IDENT(name) arg_list(args) .
                          { B = funcdef; funcdef = genFuncDef(TYPE_INTEGER, name.s, args, argcount); argcount = 0; }
-funcdef_stmt(A) ::= FUN gen_empty_funcdef(B) comp_stmt(C) .
-                    { A = funcdef; funcdef->data.funcdef.body = C; funcdef = NULL; }
+funcdef_stmt(A) ::= FUN gen_empty_funcdef comp_stmt(B) .
+                    { A = funcdef; funcdef->data.funcdef.body = B; funcdef = NULL; }
 
 
 return_stmt(A) ::= RETURN SEMICOLON .
