@@ -97,6 +97,17 @@ char *strdup(const char *p)
   return np ? strcpy(np, p) : np;
 }
 
+char *strip_quotes(char *p)
+{
+  for (char *q = p; *(q + 2) != '\0'; q++){
+    *q = *(q + 1);
+  }
+
+  *(p + strlen(p) - 2) = '\0';
+
+  return p;
+}
+
 int fsize(const char *name)
 {
   struct stat st;

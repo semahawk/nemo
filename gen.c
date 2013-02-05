@@ -64,9 +64,6 @@ struct Node *genExpByString(char *val, struct Node *block)
 
   debug("create", "string node <val: %s> at %p", val, new);
 
-  // val w/o "s
-  char str[strlen(val) - 2];
-
   // array of variables that are in that string
   char **vars = myalloc(0);
   unsigned int vars_count = 0;
@@ -79,13 +76,11 @@ struct Node *genExpByString(char *val, struct Node *block)
   unsigned int vars_size = 0;
 
   // some useful stuff
-  int j = 0, k;
+  int k;
   char *p, *q;
 
   // we have to get rid of these "s in val
-  for (unsigned int i = 1; i < strlen(val) - 1; i++, j++){
-    str[j] = val[i];
-
+  for (unsigned int i = 1; i < strlen(val) - 1; i++){
     // searching for any variables to interpolate
     if (val[i] == '$' || val[i] == '!'){
       if (val[i + 1] == '+' || val[i + 1] == '-'){
@@ -121,11 +116,10 @@ struct Node *genExpByString(char *val, struct Node *block)
       }
     }
   }
-  str[j] = '\0';
 
   new->kind = nt_STRING;
   new->data.string.value.type = TYPE_STRING;
-  new->data.string.value.v.s = strdup(str);
+  new->data.string.value.v.s = val;
   new->data.string.vars = vars;
   new->data.string.vars_count = vars_count;
   new->data.string.vars_start = vars_start;

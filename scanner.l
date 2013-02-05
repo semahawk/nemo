@@ -90,7 +90,7 @@ D [0-9]
 [a-zA-Z_][a-zA-Z0-9_]*   { yylval.s = strdup(yytext); return IDENT;     }
 {D}{D}*                  { yylval.i = atoi(yytext);   return INTEGER;   }
 {D}*\.{D}+               { yylval.f = atof(yytext);   return FLOATING;  }
-\"(\\.|[^\\"])*\"        { yylval.s = strdup(yytext); return STRING;    }
+\"(\\.|[^\\"])*\"        { yylval.s = strip_quotes(strdup(yytext)); return STRING; }
 
 [ \t]                    { }
 .                        { /* ignooar */ }
