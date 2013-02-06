@@ -229,14 +229,10 @@ expr(A) ::= expr(left) PLUSPLUS .
             { A = genUnaryop(left, UNARY_POSTINC, block); }
 expr(A) ::= expr(left) MINUSMINUS .
             { A = genUnaryop(left, UNARY_POSTDEC, block); }
-
-// If I turn these two on, there will be 2 conflicts, that prevent from
-// compiling. It would work if I commented those post- guys.
-//
-//expr(A) ::= PLUSPLUS VAR_IDENT(right) .
-//            { A = genUnaryop(right, UNARY_PREDEC, block); }
-//expr(A) ::= MINUSMINUS VAR_IDENT(right) .
-//            { A = genUnaryop(right, UNARY_PREDEC, block); }
+expr(A) ::= PLUSPLUS expr(right) .
+            { A = genUnaryop(right, UNARY_PREDEC, block); }
+expr(A) ::= MINUSMINUS expr(right) .
+            { A = genUnaryop(right, UNARY_PREDEC, block); }
 
 
 arg_list(A) ::= VAR_IDENT(val) .
