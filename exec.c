@@ -79,6 +79,9 @@ Value execConstant(struct Node *n)
   if (nt_STRING == n->kind){
     // do that stuff only if it has any vars in it
     if (n->data.string.vars_count > 0){
+      // value to be returned, not the actuall string
+      // the modified one
+      Value ret;
       // new size for the new string
       size_t new_size = 1;
       // old size of the old string
@@ -95,8 +98,6 @@ Value execConstant(struct Node *n)
       // let the string be!
       new_str = myalloc(new_size);
 
-      // darn, I'm so proud of myself
-      // it was not that hard, as I now think about it
       unsigned int char_pos = 0, var = 0, var_len;
       char *tmp_var;
       unsigned int i = 0;
@@ -106,6 +107,7 @@ Value execConstant(struct Node *n)
         if (n->data.string.vars_start[var] == char_pos){
           // get it's value
           tmp_var = vtos(getVariableValue(n->data.string.vars[var], n->block));
+          // and lenght
           var_len = strlen(n->data.string.vars[var]);
           for (unsigned int j = 0; j < strlen(tmp_var); j++){
             // copy the variables value to the new string
@@ -125,7 +127,10 @@ Value execConstant(struct Node *n)
       // close the deal
       new_str[i] = '\0';
 
-      n->data.string.value.v.s = new_str;
+      ret.v.s = new_str;
+      ret.type = TYPE_STRING;
+
+      return ret;
     }
 
     debug("exec", "constant node <val: \"%s\"> at %p", vtos(n->data.string.value), n);
