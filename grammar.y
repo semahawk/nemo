@@ -230,7 +230,7 @@ expr(A) ::= expr(left) PLUSPLUS .
 expr(A) ::= expr(left) MINUSMINUS .
             { A = genUnaryop(left, UNARY_POSTDEC, block); }
 expr(A) ::= PLUSPLUS expr(right) .
-            { A = genUnaryop(right, UNARY_PREDEC, block); }
+            { A = genUnaryop(right, UNARY_PREINC, block); }
 expr(A) ::= MINUSMINUS expr(right) .
             { A = genUnaryop(right, UNARY_PREDEC, block); }
 
