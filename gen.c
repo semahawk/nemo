@@ -107,7 +107,7 @@ struct Node *genExpByDoubleString(char *val, struct Node *block)
         // adding to arrays
         vars[vars_count - 1] = p;
         vars_size += 2;
-        vars_start[vars_count - 1] = i - 1;
+        vars_start[vars_count - 1] = i;
       } else if (isalpha(val[i+1]) || val[i+1] == '_'){
         vars_count++;
         k = 0;
@@ -126,7 +126,7 @@ struct Node *genExpByDoubleString(char *val, struct Node *block)
         //   and adding
         vars[vars_count - 1] = p;
         vars_size += strlen(p);
-        vars_start[vars_count - 1] = i - 1;
+        vars_start[vars_count - 1] = i;
       }
     }
   }
