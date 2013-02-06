@@ -156,7 +156,7 @@ struct Node {
     } whilee;
 
     struct {
-      char *name;
+      struct Node *name;
       struct ParamList *params;
       int paramcount;
     } call;

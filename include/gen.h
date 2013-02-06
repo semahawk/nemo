@@ -15,7 +15,7 @@ struct Node *genEmptyBlock(struct Node *, struct Node *);
        void  appendToBlock(struct Node *, struct Node *);
 struct Node *genBinaryop(struct Node *, struct Node *, Binary, struct Node *);
 struct Node *genUnaryop(struct Node *, Unary, struct Node *);
-struct Node *genCall(char *, struct ParamList *, int);
+struct Node *genCall(struct Node *, struct ParamList *, int);
 struct Node *genReturn(struct Node *);
 struct Node *genWhile(struct Node *, struct Node *);
 struct Node *genIf(struct Node *, struct Node *, struct Node *);

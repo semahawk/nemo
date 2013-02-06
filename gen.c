@@ -94,7 +94,6 @@ struct Node *genExpByDoubleString(char *val, struct Node *block)
   int k;
   char *p, *q;
 
-  // we have to get rid of these "s in val
   for (unsigned int i = 0; i < strlen(val); i++){
     // searching for any variables to interpolate
     if (val[i] == '$' || val[i] == '!'){
@@ -346,11 +345,11 @@ struct ParamList *genParamList(struct Node *param, struct ParamList *head, int p
   return new;
 }
 
-struct Node *genCall(char *name, struct ParamList *params, int paramcount)
+struct Node *genCall(struct Node *name, struct ParamList *params, int paramcount)
 {
   struct Node *new = myalloc(sizeof(struct Node));
 
-  debug("gen", "call node <name: %s> at %p", name, new);
+  debug("gen", "call node <name: '%s'> at %p", vtos(dispatchNode(name)), new);
 
   // reversing the params list
   struct ParamList *next;

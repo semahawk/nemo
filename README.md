@@ -116,9 +116,35 @@ Also, if function takes 2 arguments, you must pass 2 of them, otherwise an error
 would be shown. One exception is the `print` function. You can specify as many
 as you want.
 
+Basic syntax of calling a function:
+
+        IDENT '(' (expr [',' expr]+)* ')'
+    VAR_IDENT '(' (expr [',' expr]+)* ')'
+       STRING '(' (expr [',' expr]+)* ')'
+
+__Examples:__
+
+    print("yarhar!");
+    "print"("yarhar!");
+    'print'("yarhar!");
+
+    $function = "print";
+    $function("yarhar!");
+
+    $function  = "pr";
+    $function .= "int";
+
+    $function("yarhar!");
+
+But, this for example __won't__ work:
+
+    "pr" . "int"("yarhar!");
+
+It can't be an expression, just these three mentioned above.
+
 ### Predefined
 
-Nemo, so far, has two predefined functions.
+Nemo, so far, has these predefined functions:
 
 #### `print`
 
@@ -130,6 +156,7 @@ __Examples:__
     print(2.71);                    // will print: 2.71
     print("ahoy, sea!");            // will print: "ahoy, sea!"
     print(99 . " bottles of beer"); // will print: "99 bottles of beer"
+    print(2, 2.71, "bekon");        // will print: 2, 2.71, "bekon"
 
 #### `assert`
 
@@ -145,7 +172,8 @@ __Examples:__
 
 #### `strlen`
 
-Name says it all. Takes one parameter.
+Name says it all. Takes one parameter. Ideally a string, but, anything else
+would get casted anyway.
 
 #### `eval`
 
@@ -159,7 +187,7 @@ __Examples:__
 
 ### Userdefined
 
-Basic syntax: `FUN name ARGS block`
+Basic syntax: `FUN IDENT ARGS block`
 
 If `ARGS` is empty, it means function doesn't take any parameters. If it takes,
 specify them, and separate with commas, if there's more than one.

@@ -150,7 +150,14 @@ expr_stmt(A) ::= SEMICOLON .
 
 
 expr(A) ::= IDENT(B) LPAREN param_list(C) RPAREN .
-            { A = genCall(B.s, C, paramcount); paramcount = 0; }
+            { A = genCall(genExpBySingleString(B.s), C, paramcount); paramcount = 0; }
+expr(A) ::= VAR_IDENT(B) LPAREN param_list(C) RPAREN .
+            { A = genCall(genExpByName(B.s, block), C, paramcount); paramcount = 0; }
+expr(A) ::= DQ_STRING(B) LPAREN param_list(C) RPAREN .
+            { A = genCall(genExpByDoubleString(B.s, block), C, paramcount); paramcount = 0; }
+expr(A) ::= SQ_STRING(B) LPAREN param_list(C) RPAREN .
+            { A = genCall(genExpBySingleString(B.s), C, paramcount); paramcount = 0; }
+
 expr(A) ::= LPAREN expr(expr) RPAREN .
             { A = expr; }
 expr(A) ::= INTEGER(val) .
@@ -186,6 +193,10 @@ expr(A) ::= expr(left) EQ_DIV expr(right) .
             { A = genBinaryop(left, right, BINARY_EQ_DIV, block); }
 expr(A) ::= expr(left) EQ_MOD expr(right) .
             { A = genBinaryop(left, right, BINARY_EQ_MOD, block); }
+expr(A) ::= expr(left) EQ_DOT expr(right) .
+            { A = genBinaryop(left, right, BINARY_EQ_CON, block); }
+expr(A) ::= expr(left) DOT expr(right) .
+            { A = genBinaryop(left, right, BINARY_CON, block); }
 expr(A) ::= expr(left) NE expr(right) .
             { A = genBinaryop(left, right, BINARY_NE, block); }
 expr(A) ::= expr(left) EQ expr(right) .

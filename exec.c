@@ -2472,14 +2472,16 @@ Value execCall(struct Node *n)
   assert(n);
   assert(nt_CALL == n->kind);
 
-  debug("exec", "call node <name: %s> at %p", n->data.call.name, n);
+  char *name = vtos(dispatchNode(n->data.call.name));
+
+  debug("exec", "call node <name: %s> at %p", name, n);
 
   Value ret;
 
   // check if that function is a predefined one
   // if so, execute it, and return value of that executed function
   for (unsigned int i = 0; i < predefs_size; i++){
-    if (!strcmp(n->data.call.name, predefs[i].name)){
+    if (!strcmp(name, predefs[i].name)){
       ret = predefs[i].fn(n->data.call.params, n->data.call.paramcount);
       return ret;
     }
@@ -2488,7 +2490,7 @@ Value execCall(struct Node *n)
   // if it's not a predefined function, we search for it
   // and exec
   for (struct UserdefFunction *t = userdefs; t != NULL; t = t->next){
-    if (!strcmp(n->data.call.name, t->function->data.funcdef.name)){
+    if (!strcmp(name, t->function->data.funcdef.name)){
       // checking for argument/param lenghts
       if (n->data.call.paramcount > t->function->data.funcdef.argcount){
         cerror("too many arguments for function '%s' (%d when %d expected)", t->function->data.funcdef.name, n->data.call.paramcount, t->function->data.funcdef.argcount);
@@ -2519,7 +2521,7 @@ Value execCall(struct Node *n)
     }
   }
 
-  cerror("couldn't find a function called '%s'", n->data.call.name);
+  cerror("couldn't find a function called '%s'", name);
   exit(1);
 }
 
