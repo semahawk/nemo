@@ -72,7 +72,7 @@
   context->nodest = NULL;
 }
 
-source ::= gen_main_block(A) stmts . { context->nodest = A; }
+source ::= gen_main_block(A) stmts . { void **p = context->nodest; *p = A; }
 gen_main_block(A) ::= . { A = genEmptyBlock(NULL, block); block = A; }
 
 

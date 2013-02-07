@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS := $(CFLAGS) -g -W -Wunused-variable -std=c99 -O2 -D_POSIX_SOURCE -Iinclude
+CFLAGS := $(CFLAGS) -g -W -Wunused-variable -std=c99 -O0 -D_POSIX_SOURCE -Iinclude
 LEX     = flex
 SHELL   = zsh
 

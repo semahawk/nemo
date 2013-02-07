@@ -156,14 +156,14 @@ struct Node *parseFile(char *fname)
   yylex_destroy(scanner);
   ParseFree(parser, free);
 
-  if (!context.nodest){
+  if (!(*context.nodest)){
     error("execution failed due to some errors");
     exit(1);
   }
 
   fclose(fp);
 
-  return context.nodest;
+  return *context.nodest;
 }
 
 struct Node *parseString(char *string)
@@ -191,12 +191,12 @@ struct Node *parseString(char *string)
   yylex_destroy(scanner);
   ParseFree(parser, free);
 
-  if (!context.nodest){
+  if (!(*context.nodest)){
     error("execution failed due to some errors");
     exit(1);
   }
 
-  return context.nodest;
+  return *context.nodest;
 }
 
 void version(void)
