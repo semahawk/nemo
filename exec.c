@@ -2411,6 +2411,10 @@ Value execAssignment(struct Node *n)
   struct Node *r = n->data.assignment.right;
   Value r_val = dispatchNode(r);
 
+  if (!variableAlreadySet(n->data.s, n->block)){
+    addVariableToBlock(n->data.s, n->block);
+  }
+
   setVariableValue(n->data.s, r_val, n->block);
 
   ret = vtov(r_val, r_val.type);
