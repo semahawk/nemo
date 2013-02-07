@@ -7,8 +7,27 @@ Nemo is a interpreted, scripting language, dynamically and weakly typed.
 
 # Installing
 
-To install Nemo, just obtain the sources and run old good `make`. So far, it's not to be "installed", it just compiles and just is.
-You could also run tests, by typing `make test`, just to make sure it works.
+In order to install Nemo, you'd have to download the sources (for example by
+[clicking me](http://github.com/semahawk/nemo/tarball/master)) and then you'd
+have to run:
+
+    make
+
+to compile the sources, and then
+
+    make install
+
+to install it. Additionally you may want to run
+
+    make test
+
+just to make sure everything works as expected.
+
+__Note:__ at the moment Nemo is installed in `/usr/local`, that will be
+customizable when we have that configure scripts.
+
+__Note 2:__ as Nemo is under heavy development, `make test` may not work
+every time.
 
 # Dependencies
 
