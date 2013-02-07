@@ -1,4 +1,5 @@
-bin/
+nemo
+lemon
 
 testing.nm
 stdio.nm

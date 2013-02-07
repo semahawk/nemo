@@ -7,23 +7,23 @@ PREFIX  = /usr/local
 
 OBJECTS = nemo.o gen.o exec.o free.o vars.o cast.o handy.o predef.o userdef.o grammar.o scanner.o
 
-.PHONY: all lemon
+.PHONY: all
 all: lemon nemo
 
 lemon: lemon.o
-	$(CC) $(CFLAGS) lemon.o -o bin/lemon
+	$(CC) $(CFLAGS) lemon.o -o lemon
 
 lemon.o: lemon.c lempar.c
 	$(CC) $(CFLAGS) -c lemon.c
 
 nemo: $(OBJECTS) include/nodes.h
-	$(CC) $(OBJECTS) $(CFLAGS) -o bin/nemo
+	$(CC) $(OBJECTS) $(CFLAGS) -o nemo
 
 nemo.o: nemo.c include/nemo.h grammar.o scanner.o
 	$(CC) $(CFLAGS) -c nemo.c
 
 grammar.o: lemon grammar.y
-	bin/lemon -c -s grammar.y
+	./lemon -c -s grammar.y
 	$(CC) $(CFLAGS) -c grammar.c
 
 scanner.o: scanner.l
@@ -35,7 +35,7 @@ test: all
 	@$(SHELL) t/runner.sh
 
 install: all
-	install -D -m 755 bin/nemo $(PREFIX)/bin/nemo
+	install -D -m 755 nemo $(PREFIX)/bin/nemo
 
 uninstall:
 	rm -rf $(PREFIX)/bin/nemo
@@ -46,6 +46,6 @@ clean:
 	rm -f *.o
 
 distclean: clean
-	rm -f bin/nemo
-	rm -f bin/lemon
+	rm -f nemo
+	rm -f lemon
 
