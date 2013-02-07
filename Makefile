@@ -1,11 +1,22 @@
-CC      =  gcc
-CFLAGS += -g -W -Wunused-variable -std=c99 -O2 -D_POSIX_SOURCE -Iinclude
-LEX     =  flex
-SHELL   =  zsh
+CC      = gcc
+CFLAGS := $(CFLAGS) -g -W -Wunused-variable -std=c99 -O2 -D_POSIX_SOURCE -Iinclude
+LEX     = flex
+SHELL   = zsh
+
+PREFIX  = /usr/local
 
 OBJECTS = nemo.o gen.o exec.o free.o vars.o cast.o handy.o predef.o userdef.o grammar.o scanner.o
 
-all: $(OBJECTS) include/nodes.h
+.PHONY: all lemon
+all: lemon nemo
+
+lemon: lemon.o
+	$(CC) $(CFLAGS) lemon.o -o bin/lemon
+
+lemon.o: lemon.c lempar.c
+	$(CC) $(CFLAGS) -c lemon.c
+
+nemo: $(OBJECTS) include/nodes.h
 	$(CC) $(OBJECTS) $(CFLAGS) -o bin/nemo
 
 nemo.o: nemo.c include/nemo.h grammar.o scanner.o
@@ -15,21 +26,20 @@ grammar.o: lemon grammar.y
 	bin/lemon -c -s grammar.y
 	$(CC) $(CFLAGS) -c grammar.c
 
-scanner.o: scanner.l scanner
-
-.PHONY: lemon
-lemon: lemon.c lempar.c
-	$(CC) $(CFLAGS) -o bin/lemon lemon.c
-
-.PHONY: scanner
-scanner: scanner.l
+scanner.o: scanner.l
 	$(LEX) --header-file=scanner.h scanner.l
 	$(CC) $(CFLAGS) -c scanner.c
 
-test:
+.PHONY: test install uninstall clean distclean
+test: all
 	@$(SHELL) t/runner.sh
 
-.PHONY: clean distclean
+install: all
+	install -D -m 755 bin/nemo $(PREFIX)/bin/nemo
+
+uninstall:
+	rm -rf $(PREFIX)/bin/nemo
+
 clean:
 	rm -f grammar.c grammar.h grammar.out
 	rm -f scanner.c scanner.h
