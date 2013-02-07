@@ -1,0 +1,32 @@
+//
+// "99 bottles of beer" in Nemo
+//
+
+99 times {
+  // $- starts from 98, so we have to increment it
+  $-++;
+  $bottle = "bottle";
+
+  // make it plural
+  if ($- != 1)
+    $bottle .= "s";
+
+  print("$- $bottle of beer on the wall, $- $bottle of beer.");
+
+  // in the next line, if current number of bottles was say 99, we have one
+  // less, so decrement
+  $---;
+
+  // let's see if we havy any left
+  if ($- != 0)
+    print("Take one down and pass it around, $- $bottle of beer on the wall.");
+  else
+    print("Take one down and pass it around, no more bottles of beer on the wall.");
+
+  // new line
+  print("");
+}
+
+// Fin
+print("No more bottles of beer on the wall, no more bottles of beer.");
+print("Go to the store and buy some more, 99 bottles of beer on the wall.");
