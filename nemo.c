@@ -207,7 +207,7 @@ void version(void)
 /*
  * Megadeth, Running Wild, Gamma Ray, Iron Savior
  * Helloween, Testament
- * Within Temptation, Nightwish
+ * Within Temptation, Nightwish, Avantasia
  *
  * Family Guy, The Office, Monty Python
  *
