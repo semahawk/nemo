@@ -67,9 +67,24 @@
   debug("", "parsing completed successfuly!");
 }
 
+%parse_failure {
+  error("parser is lost :C");
+}
+
 %syntax_error {
-  fprintf(stderr, "syntax error!\n");
-  context->nodest = NULL;
+  int n = sizeof(yyTokenName) / sizeof(yyTokenName[0]);
+  fprintf(stderr, "%s: syntax error: unexpected '%s', expected", context->filename, yyTokenName[0]);
+  for (int i = 0; i < n; ++i){
+    int a = yy_find_shift_action(yypParser, (YYCODETYPE)i);
+    if (a < YYNSTATE + YYNRULE){
+      fprintf(stderr, " '%s'", yyTokenName[i]);
+    }
+  }
+  fprintf(stderr, "\n");
+
+  // null out the nodest
+  void **p = context->nodest;
+  *p = NULL;
 }
 
 source ::= gen_main_block(A) stmts . { void **p = context->nodest; *p = A; }
