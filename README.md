@@ -39,7 +39,7 @@ Most distributions should have those out of the box, but still.
 
 Nemo has been tested, and ran multiple number of times, using these versions,
 and it is confirmed that they work. Older versions may be working, but on my
-computer I havy only those.
+computer I have only those.
 
 # Language
 
@@ -86,7 +86,7 @@ casted to `991`
 
 ## Booleanism
 
-In Nemo, there is no `bool` type. Like in C/Perl, `0`, `0.0` and an empty string `""` is false, the rest is true.
+In Nemo, there is no `bool` type. Like in C/Perl, `0`, `0.0` and an empty string `""` (or `''`) are false, the rest is true.
 
 ## Operators
 
