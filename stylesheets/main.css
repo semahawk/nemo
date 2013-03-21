@@ -1,0 +1,110 @@
+html {
+  background: #49B0F5;
+  margin: 60px 0px;
+}
+
+header {
+  padding-left: 30px;
+}
+
+a {
+  text-decoration: none;
+  color: #3590CC;
+}
+
+  a:hover { color: #43AFF7; }
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: "Tangerine";
+  font-weight: normal;
+  margin: 30px 10px;
+}
+
+h1 { font-size: 60px; border-bottom: 1px dashed #ccc; }
+h2 { font-size: 60px; }
+h3 { font-size: 50px; }
+h4 { font-size: 40px; }
+h5 { font-size: 30px; }
+h6 { font-size: 20px; }
+
+p {
+  margin: 20px;
+  font-family: "Verdana";
+  font-weight: normal;
+  font-size: 14px;
+}
+
+nav {
+  padding: 10px;
+  margin: 0px;
+  border-bottom: 1px dashed #ccc;
+  font-family: "Verdana;"
+}
+
+  nav a { color: #333; }
+  nav a:hover { color: #111; }
+
+  nav ul li {
+    list-style: none;
+    display: inline;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+footer {
+  font-size: 14px;
+  color: #333;
+  border-top: 1px dashed #ccc;
+  padding: 20px 10px 0px 0px;
+  text-align: center;
+  font-family: "Aller";
+}
+
+#wrap {
+  width: 960px;
+  margin: 0 auto;
+}
+
+#content {
+  margin-top: 80px;
+  padding: 0px 20px 20px 20px;
+  background: #fff;
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 20px;
+  border-radius: 20px;
+}
+
+#logo {
+  font-family: "Eutemia";
+  font-size: 128px;
+  color: #333;
+  width: 350px;
+}
+
+#slogan {
+  font-family: "Tangerine";
+  font-size: 42px;
+  color: #333;
+  margin-left: 120px;
+  margin-top: -20px;
+}
+
+.clear {
+  clear: both;
+}
+
+@font-face {
+  font-family: "Eutemia";
+  src: url("../fonts/Eutemia.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Tangerine";
+  src: url("../fonts/Tangerine.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Aller";
+  src: url("../fonts/Aller.ttf") format("truetype");
+}
+
