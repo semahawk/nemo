@@ -1,6 +1,6 @@
 html {
-  background: #49B0F5;
   margin: 60px 0px;
+  background: #49B0F5 url("../images/gradient.png") 160px -40px no-repeat;
 }
 
 header {
