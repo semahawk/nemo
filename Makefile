@@ -5,7 +5,7 @@ SHELL   = zsh
 
 PREFIX  = /usr/local
 
-OBJECTS = nemo.o gen.o exec.o free.o vars.o cast.o handy.o predef.o userdef.o grammar.o scanner.o
+OBJECTS = nemo.o gen.o exec.o free.o vars.o cast.o handy.o predef.o userdef.o grammar.o scanner.o nvm.o
 
 .PHONY: all
 all: lemon nemo
