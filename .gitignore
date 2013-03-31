@@ -3,6 +3,7 @@ lemon
 
 testing.nm
 stdio.nm
+bytecode.nc
 
 *.o
 
