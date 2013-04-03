@@ -1,14 +1,6 @@
 nemo
-lemon
 
-testing.nm
-stdio.nm
-bytecode.nc
+foo.nm
+bar.nc
 
 *.o
-
-grammar.c
-grammar.h
-grammar.out
-scanner.c
-scanner.h
