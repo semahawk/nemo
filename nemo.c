@@ -46,63 +46,93 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <getopt.h>
+#include <errno.h>
 
 #include "nemo.h"
+#include "parser.h"
+#include "error.h"
+#include "debug.h"
 
 int main(int argc, char *argv[])
 {
   /* file input */
   char input[255];
-  /* file handle for that input */
-  FILE *input_p;
   /* used for getopt */
   int c;
+  /* creating Nemo's main object */
+  Nemo *NM = calloc(1, sizeof(Nemo));
+  if (!NM){
+    nmFatal("calloc failed to create the main object");
+    return EXIT_FAILURE;
+  }
 
   while (1){
     static struct option long_options[] = {
+      { "debug", required_argument, 0, 'd' },
       { "version", no_argument, 0, 'v' },
       { 0, 0, 0, 0 }
     };
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "v", long_options, &option_index);
+    c = getopt_long(argc, argv, "d:v", long_options, &option_index);
 
     if (c == -1)
       break;
 
     switch (c){
-      case 'v': version();
-                exit(0);
+      case 'd': {
+                  switch (*optarg){
+                    case 'h': printf("\nDebug options include:\n");
+                              printf("  m   memory allocation, freeing and so-on\n");
+                              printf("  l   lexer messages\n\n");
+                              return EXIT_SUCCESS;
+                    case 'm': NM->debug_flags.memory = TRUE;
+                              break;
+                    case 'l': NM->debug_flags.lexer = TRUE;
+                              break;
+                    default:  nmError("unknown option for debug '%c', run with -dh to see the possible options", *optarg);
+                              return EXIT_FAILURE;
+                  }
+                  break;
+                }
+      case 'v': printf("Nemo v" VERSION ", " __DATE__ " " __TIME__"\n");
+                return EXIT_SUCCESS;
       case '?': break;
       default: abort();
     }
   }
+  debugCalloc(NM, 1, sizeof(Nemo));
 
   /* an argument was passed */
   if (optind < argc){
     strcpy(input, argv[optind++]);
   /* no argument passed atall */
   } else {
-    NM_fatal("no input files");
-    return 1;
+    nmFatal("no input files");
+    return EXIT_FAILURE;
   }
 
-  if ((input_p = fopen(input, "r")) == NULL){
-    NM_fatal(strerror(errno));
-    return 1;
+  /* set the sources name */
+  NM->source = malloc(strlen(input) + 1);
+  if (!NM->source){
+    nmFatal("malloc failed to allocate %lu bytes", strlen(input) + 1);
+    return EXIT_FAILURE;
   }
+  debugMalloc(NM->source, strlen(input) + 1);
+  strcpy(NM->source, input);
 
-  /* XXX */
+  /* parse the file */
+  parseFile(NM, NM->source);
 
-  return 0;
-}
+  /* tidy up */
+  free(NM->source);
+  debugFree(NM->source);
+  free(NM);
+  debugFree(NM);
 
-void version(void)
-{
-  printf("Nemo v%s, %s\n", VERSION, __DATE__);
+  return EXIT_SUCCESS;
 }
 
 /*

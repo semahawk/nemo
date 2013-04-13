@@ -10,6 +10,25 @@
 /* version of Nemo, obviously */
 #define VERSION "0.14.0"
 
-void version(void);
+#define  BOOL short
+#ifndef  TRUE
+# define TRUE 1
+#endif
+#ifndef  FALSE
+# define FALSE 0
+#endif
+
+/*
+ * The main type for Nemo
+ */
+typedef struct {
+  char *source;
+  struct {
+    BOOL memory;
+    BOOL lexer;
+  } debug_flags;
+} Nemo;
+
+char *strdup(Nemo *, char *);
 
 #endif /* NEMO_H */
