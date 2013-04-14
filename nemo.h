@@ -24,9 +24,11 @@
 typedef struct {
   char *source;
   struct {
-    BOOL memory;
-    BOOL lexer;
-  } debug_flags;
+    struct {
+      BOOL memory;
+      BOOL lexer;
+    } debug;
+  } flags;
 } Nemo;
 
 char *strdup(Nemo *, char *);

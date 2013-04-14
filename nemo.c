@@ -53,6 +53,7 @@
 #include "parser.h"
 #include "error.h"
 #include "debug.h"
+#include "mem.h"
 
 int main(int argc, char *argv[])
 {
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
   /* used for getopt */
   int c;
   /* creating Nemo's main object */
+  /* (not using nmCalloc, because the -dm flag is not set yet) */
   Nemo *NM = calloc(1, sizeof(Nemo));
   if (!NM){
     nmFatal("calloc failed to create the main object");
@@ -88,9 +90,9 @@ int main(int argc, char *argv[])
                               printf("  m   memory allocation, freeing and so-on\n");
                               printf("  l   lexer messages\n\n");
                               return EXIT_SUCCESS;
-                    case 'm': NM->debug_flags.memory = TRUE;
+                    case 'm': NM->flags.debug.memory = TRUE;
                               break;
-                    case 'l': NM->debug_flags.lexer = TRUE;
+                    case 'l': NM->flags.debug.lexer = TRUE;
                               break;
                     default:  nmError("unknown option for debug '%c', run with -dh to see the possible options", *optarg);
                               return EXIT_FAILURE;
@@ -115,22 +117,15 @@ int main(int argc, char *argv[])
   }
 
   /* set the sources name */
-  NM->source = malloc(strlen(input) + 1);
-  if (!NM->source){
-    nmFatal("malloc failed to allocate %lu bytes", strlen(input) + 1);
-    return EXIT_FAILURE;
-  }
-  debugMalloc(NM->source, strlen(input) + 1);
+  NM->source = nmMalloc(NM, strlen(input) + 1);
   strcpy(NM->source, input);
 
   /* parse the file */
   parseFile(NM, NM->source);
 
   /* tidy up */
-  free(NM->source);
-  debugFree(NM->source);
-  free(NM);
-  debugFree(NM);
+  nmFree(NM, NM->source);
+  nmFree(NM, NM);
 
   return EXIT_SUCCESS;
 }

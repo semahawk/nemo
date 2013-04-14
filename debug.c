@@ -48,7 +48,7 @@
 
 void debugMemory(Nemo *NM, void *pointer, const char *msg, ...)
 {
-  if (NM->debug_flags.memory){
+  if (NM->flags.debug.memory){
     static unsigned count = 1;
     va_list vl;
     va_start(vl, msg);
@@ -62,28 +62,28 @@ void debugMemory(Nemo *NM, void *pointer, const char *msg, ...)
 
 void debugLexer(Nemo *NM, LexerState *lex, SymbolType type)
 {
-  if (NM->debug_flags.lexer){
+  if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s\n", lex->line, lex->column, symToS(type));
   }
 }
 
 void debugLexerInt(Nemo *NM, LexerState *lex, SymbolType type, int i)
 {
-  if (NM->debug_flags.lexer){
+  if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%i)\n", lex->line, lex->column, symToS(type), i);
   }
 }
 
 void debugLexerFloat(Nemo *NM, LexerState *lex, SymbolType type, double f)
 {
-  if (NM->debug_flags.lexer){
+  if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%f)\n", lex->line, lex->column, symToS(type), f);
   }
 }
 
 void debugLexerStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
 {
-  if (NM->debug_flags.lexer){
+  if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%s)\n", lex->line, lex->column, symToS(type), s);
   }
 }

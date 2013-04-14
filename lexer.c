@@ -47,6 +47,7 @@
 #include "error.h"
 #include "lexer.h"
 #include "debug.h"
+#include "mem.h"
 
 /* defines which characters are a valid character for eg. name */
 #define validForNameHead(c) (isalpha((c)) || (c) == '_')
@@ -67,12 +68,7 @@ typedef struct Keyword Keyword;
  */
 static void append(Nemo *NM, LexerState *lex, SymbolType type)
 {
-  SymbolsList *new = malloc(sizeof(SymbolsList));
-  if (!new){
-    nmFatal("malloc failed to allocate %lu bytes", sizeof(SymbolsList));
-    exit(EXIT_FAILURE);
-  }
-  debugMalloc(new, sizeof(SymbolsList));
+  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
   debugLexer(NM, lex, type);
   /* initialize */
   new->sym.type = type;
@@ -97,12 +93,7 @@ static void append(Nemo *NM, LexerState *lex, SymbolType type)
 
 static void appendInt(Nemo *NM, LexerState *lex, int i)
 {
-  SymbolsList *new = malloc(sizeof(SymbolsList));
-  if (!new){
-    nmFatal("malloc failed to allocate %lu bytes", sizeof(SymbolsList));
-    exit(EXIT_FAILURE);
-  }
-  debugMalloc(new, sizeof(SymbolsList));
+  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
   debugLexerInt(NM, lex, SYM_INTEGER, i);
   /* initialize */
   new->sym.type = SYM_INTEGER;
@@ -128,12 +119,7 @@ static void appendInt(Nemo *NM, LexerState *lex, int i)
 
 static void appendFloat(Nemo *NM, LexerState *lex, double f)
 {
-  SymbolsList *new = malloc(sizeof(SymbolsList));
-  if (!new){
-    nmFatal("malloc failed to allocate %lu bytes", sizeof(SymbolsList));
-    exit(EXIT_FAILURE);
-  }
-  debugMalloc(new, sizeof(SymbolsList));
+  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
   debugLexerFloat(NM, lex, SYM_FLOAT, f);
   /* initialize */
   new->sym.type = SYM_FLOAT;
@@ -159,12 +145,7 @@ static void appendFloat(Nemo *NM, LexerState *lex, double f)
 
 static void appendStr(Nemo *NM, LexerState *lex, char *s)
 {
-  SymbolsList *new = malloc(sizeof(SymbolsList));
-  if (!new){
-    nmFatal("malloc failed to allocate %lu bytes", sizeof(SymbolsList));
-    exit(EXIT_FAILURE);
-  }
-  debugMalloc(new, sizeof(SymbolsList));
+  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
   debugLexerStr(NM, lex, SYM_NAME, s);
   /* initialize */
   new->sym.type = SYM_NAME;
@@ -208,11 +189,9 @@ void lexerDestroy(Nemo *NM, LexerState *lex)
     next = p->next;
     /* TODO: debug */
     if (p->sym.type == SYM_NAME){
-      free(p->sym.value.s);
-      debugFree(p->sym.value.s);
+      nmFree(NM, p->sym.value.s);
     }
-    free(p);
-    debugFree(p);
+    nmFree(NM, p);
   }
 }
 
@@ -231,12 +210,7 @@ void lexFile(Nemo *NM, LexerState *lex, char *fname)
   flen = ftell(fp);
   fseek(fp, 0, SEEK_SET);
   /* make room for the contents */
-  fbuffer = malloc(flen);
-  if (!fbuffer){
-    nmFatal("malloc failed to allocate %lu bytes", flen);
-    exit(EXIT_FAILURE);
-  }
-  debugMalloc(fbuffer, flen);
+  fbuffer = nmMalloc(NM, flen);
   /* store the files contents in the fbuffer */
   if (fread(fbuffer, 1, flen, fp) != flen){
     nmFatal("fread failed in " __FILE__ " at line %d", __LINE__);
@@ -246,8 +220,7 @@ void lexFile(Nemo *NM, LexerState *lex, char *fname)
   /* now, treat the source as a string */
   lexString(NM, lex, fbuffer);
   /* free the buffer */
-  free(fbuffer);
-  debugFree(fbuffer);
+  nmFree(NM, fbuffer);
 
   fclose(fp);
 }
@@ -286,8 +259,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
         /* TODO: debug */
         appendStr(NM, lex, tmp);
       }
-      free(tmp);
-      debugFree(tmp);
+      nmFree(NM, tmp);
       /* i is the length of the name */
       lex->column += i;
     }
@@ -325,8 +297,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       } else {
         appendInt(NM, lex, atoi(tmp));
       }
-      free(tmp);
-      debugFree(tmp);
+      nmFree(NM, tmp);
       p--;
       lex->column += i;
     }
@@ -521,12 +492,7 @@ BOOL lexPeek(LexerState *lex, SymbolType type)
 
 char *strdup(Nemo *NM, char *p)
 {
-  char *np = malloc(strlen(p) + 1);
-  if (!np){
-    nmFatal("malloc failed to allocate %lu bytes", strlen(p) + 1);
-    exit(EXIT_FAILURE);
-  }
-  debugMalloc(np, strlen(p) + 1);
+  char *np = nmMalloc(NM, strlen(p) + 1);
   return np ? strcpy(np, p) : np;
 }
 
