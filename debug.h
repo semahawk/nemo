@@ -38,10 +38,10 @@
 #define debugCalloc(p,i,j) debugMemory(NM, p, "calloc %lu x %lu bytes", i, j)
 
 void debugMemory(Nemo *, void *, const char *, ...);
-void debugLexer(Nemo *, SymbolType);
-void debugLexerInt(Nemo *, SymbolType, int);
-void debugLexerFloat(Nemo *, SymbolType, double);
-void debugLexerStr(Nemo *, SymbolType, char *);
+void debugLexer(Nemo *, LexerState *, SymbolType);
+void debugLexerInt(Nemo *, LexerState *, SymbolType, int);
+void debugLexerFloat(Nemo *, LexerState *, SymbolType, double);
+void debugLexerStr(Nemo *, LexerState *, SymbolType, char *);
 
 #endif /* DEBUG_H */
 

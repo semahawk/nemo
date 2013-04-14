@@ -73,7 +73,7 @@ static void append(Nemo *NM, LexerState *lex, SymbolType type)
     exit(EXIT_FAILURE);
   }
   debugMalloc(new, sizeof(SymbolsList));
-  debugLexer(NM, type);
+  debugLexer(NM, lex, type);
   /* initialize */
   new->sym.type = type;
   new->sym.line = lex->line;
@@ -103,7 +103,7 @@ static void appendInt(Nemo *NM, LexerState *lex, int i)
     exit(EXIT_FAILURE);
   }
   debugMalloc(new, sizeof(SymbolsList));
-  debugLexerInt(NM, SYM_INTEGER, i);
+  debugLexerInt(NM, lex, SYM_INTEGER, i);
   /* initialize */
   new->sym.type = SYM_INTEGER;
   new->sym.line = lex->line;
@@ -134,7 +134,7 @@ static void appendFloat(Nemo *NM, LexerState *lex, double f)
     exit(EXIT_FAILURE);
   }
   debugMalloc(new, sizeof(SymbolsList));
-  debugLexerFloat(NM, SYM_FLOAT, f);
+  debugLexerFloat(NM, lex, SYM_FLOAT, f);
   /* initialize */
   new->sym.type = SYM_FLOAT;
   new->sym.line = lex->line;
@@ -165,7 +165,7 @@ static void appendStr(Nemo *NM, LexerState *lex, char *s)
     exit(EXIT_FAILURE);
   }
   debugMalloc(new, sizeof(SymbolsList));
-  debugLexerStr(NM, SYM_NAME, s);
+  debugLexerStr(NM, lex, SYM_NAME, s);
   /* initialize */
   new->sym.type = SYM_NAME;
   new->sym.line = lex->line;
@@ -324,17 +324,11 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
         }
       } else {
         appendInt(NM, lex, atoi(tmp));
-        lex->column++;
       }
       free(tmp);
       debugFree(tmp);
       p--;
       lex->column += i;
-    }
-    else if (*p == '\n'){
-      append(NM, lex, SYM_NL);
-      lex->line++;
-      lex->column = 1;
     }
     else if (*p == '='){
       append(NM, lex, SYM_EQ);
@@ -372,8 +366,23 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       lex->column++;
     }
     else if (*p == '/'){
-      append(NM, lex, SYM_SLASH);
-      lex->column++;
+      if (*(p + 1) == '*'){
+        p += 2;
+        for (;;){
+          if (*p == '\n'){
+            lex->line++;
+            lex->column = 1;
+          } else if (*p == '*' && *(p + 1) == '/'){
+            p += 2;
+            break;
+          }
+          p++;
+        }
+        p--;
+      } else {
+        append(NM, lex, SYM_SLASH);
+        lex->column++;
+      }
     }
     else if (*p == '%'){
       append(NM, lex, SYM_MODULO);
@@ -430,6 +439,18 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
     else if (*p == ':'){
       append(NM, lex, SYM_COLON);
       lex->column++;
+    }
+    else if (*p == '#'){
+      /* skip over the whole thing */
+      while (*p++ != '\n');
+      p--;
+      lex->line++;
+      lex->column = 1;
+    }
+    else if (*p == '\n'){
+      append(NM, lex, SYM_NL);
+      lex->line++;
+      lex->column = 1;
     }
     else {
       printf("unknown character %c\n", *p);
@@ -516,7 +537,7 @@ const char *symToS(SymbolType type)
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
     case SYM_STRING:     return "string";
-    case SYM_NAME:       return "variable";
+    case SYM_NAME:       return "name";
     case SYM_EQ:         return "'='";
     case SYM_SEMICOLON:  return "';'";
     case SYM_COMMA:      return "','";

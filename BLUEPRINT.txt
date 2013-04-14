@@ -7,6 +7,7 @@ On how I see Nemo would look like
 + Integers, floats and strings are scalars (Perl-like)
 + Basic functions are actually keywords (additionally, no need for parenthesises)
 + More technically, it would be stack based, Perl-like
++ Support for metaprogramming
 
 # Declaring a variable
 
@@ -46,3 +47,19 @@ On how I see Nemo would look like
 
     my var = if a == 1 { 4 } else { 8 }
 
+# Metaprogramming
+
+    define true  1
+    define false 0
+
+# Documentation in comments
+
+    #
+    # @name    greet
+    # @param   name    name of the person to be greeted
+    # @return  none
+    #
+    fn greet {
+      my name = pop
+      print "hello, " . name . "!"
+    }
