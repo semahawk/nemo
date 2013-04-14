@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 
   /* parse the file */
   parseFile(NM, NM->source);
+  parseString(NM, "my *twee = 2;");
 
   /* tidy up */
   nmFree(NM, NM->source);

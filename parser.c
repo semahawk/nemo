@@ -53,12 +53,15 @@ static void parse(LexerState *lex)
   /* TODO XXX FIXME */
   /* XXX FIXME TODO */
 
-  (void)lex;
+  lexForce(lex, SYM_MY);
+  lexForce(lex, SYM_NAME);
 }
 
 void parseFile(Nemo *NM, char *fname)
 {
   LexerState lex;
+  lex.is_file = TRUE;
+  lex.source = fname;
   lexFile(NM, &lex, fname);
   parse(&lex);
   lexerDestroy(NM, &lex);
@@ -67,6 +70,8 @@ void parseFile(Nemo *NM, char *fname)
 void parseString(Nemo *NM, char *string)
 {
   LexerState lex;
+  lex.is_file = FALSE;
+  lex.source = string;
   lexString(NM, &lex, string);
   parse(&lex);
   lexerDestroy(NM, &lex);

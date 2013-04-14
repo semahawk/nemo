@@ -443,11 +443,21 @@ void lexForce(LexerState *lex, SymbolType type)
   }
 
   if (lex->current->sym.type != type){
-    nmError("expected %s instead of %s at line %d in column %d",
-             symToS(type),
-             symToS(lex->current->sym.type),
-             lex->current->sym.line,
-             lex->current->sym.column);
+    if (lex->is_file){
+      printf("In file %s: expected %s instead of %s at line %d in column %d\n",
+               lex->source,
+               symToS(type),
+               symToS(lex->current->sym.type),
+               lex->current->sym.line,
+               lex->current->sym.column);
+    } else {
+      printf("In string \"%s\": expected %s instead of %s at line %d in column %d\n",
+               lex->source,
+               symToS(type),
+               symToS(lex->current->sym.type),
+               lex->current->sym.line,
+               lex->current->sym.column);
+    }
   } else {
     lex->current = lex->current->next;
   }

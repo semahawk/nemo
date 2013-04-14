@@ -79,6 +79,8 @@ struct SymbolsList {
 };
 
 struct LexerState {
+  BOOL is_file; /* either file or a string */
+  char *source; /* name of the files name */
   unsigned line;
   unsigned column;
   struct SymbolsList *head;
