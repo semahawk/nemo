@@ -58,7 +58,9 @@ static struct Keyword {
   SymbolType sym;
 } keywords[] =
 {
-  { "my", SYM_MY },
+  { "my",    SYM_MY    },
+  { "if",    SYM_IF    },
+  { "while", SYM_WHILE },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;
@@ -419,7 +421,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       lex->column = 1;
     }
     else if (*p == '\n'){
-      append(NM, lex, SYM_NL);
+      /*append(NM, lex, SYM_NL);*/
       lex->line++;
       lex->column = 1;
     }
@@ -438,7 +440,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
 void lexForce(LexerState *lex, SymbolType type)
 {
   if (lex->current == NULL){
-    nmError("asking for a symbol while ran out of them, this shouldn't have happend");
+    nmError("asking for a symbol (in lexForce) while ran out of them, this shouldn't have happend");
     exit(EXIT_FAILURE);
   }
 
@@ -450,6 +452,7 @@ void lexForce(LexerState *lex, SymbolType type)
                symToS(lex->current->sym.type),
                lex->current->sym.line,
                lex->current->sym.column);
+      exit(EXIT_FAILURE);
     } else {
       printf("In string \"%s\": expected %s instead of %s at line %d in column %d\n",
                lex->source,
@@ -457,9 +460,23 @@ void lexForce(LexerState *lex, SymbolType type)
                symToS(lex->current->sym.type),
                lex->current->sym.line,
                lex->current->sym.column);
+      exit(EXIT_FAILURE);
     }
   } else {
     lex->current = lex->current->next;
+  }
+}
+
+/*
+ * @name    lexLast
+ * @desc    check if the current symbol is the last one
+ */
+BOOL lexLast(LexerState *lex)
+{
+  if (lex->current == NULL){
+    return TRUE;
+  } else {
+    return FALSE;
   }
 }
 
@@ -471,7 +488,7 @@ void lexForce(LexerState *lex, SymbolType type)
 BOOL lexAccept(LexerState *lex, SymbolType type)
 {
   if (lex->current == NULL){
-    nmError("asking for a symbol while ran out of them, this shouldn't have happend");
+    nmError("asking for a symbol (in lexAccept) while ran out of them, this shouldn't have happend");
     exit(EXIT_FAILURE);
   }
 
@@ -489,15 +506,24 @@ BOOL lexAccept(LexerState *lex, SymbolType type)
  */
 BOOL lexPeek(LexerState *lex, SymbolType type)
 {
-  if (lex->current == NULL){
-    nmError("asking for a symbol while ran out of them, this shouldn't have happend");
-    exit(EXIT_FAILURE);
-  }
-
-  if (lex->current->sym.type == type)
+  if ((lex->current != NULL) && (lex->current->sym.type == type))
     return TRUE;
 
   return FALSE;
+}
+
+/*
+ * @name    lexSkip
+ * @desc    simply skip over the current symbol
+ */
+void lexSkip(LexerState *lex)
+{
+  if (lex->current == NULL){
+    nmError("asking for a symbol (in lexSkip) while ran out of them, this shouldn't have happend");
+    exit(EXIT_FAILURE);
+  }
+
+  lex->current = lex->current->next;
 }
 
 char *strdup(Nemo *NM, char *p)

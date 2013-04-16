@@ -32,33 +32,35 @@
 #define LEXER_H
 
 enum SymbolType {
-  SYM_MY,             /*  0 "my" */
-  SYM_INTEGER,        /*  1      */
-  SYM_FLOAT,          /*  2      */
-  SYM_STRING,         /*  3      */
-  SYM_NAME,           /*  4      */
-  SYM_EQ,             /*  5 "="  */
-  SYM_SEMICOLON,      /*  6 ";"  */
-  SYM_COMMA,          /*  7 ","  */
-  SYM_MINUS,          /*  8 "-"  */
-  SYM_MINUSMINUS,     /*  9 "--" */
-  SYM_PLUS,           /* 10 "+"  */
-  SYM_PLUSPLUS,       /* 11 "++" */
-  SYM_TIMES,          /* 12 "*"  */
-  SYM_MODULO,         /* 13 "%"  */
-  SYM_SLASH,          /* 14 "/"  */
-  SYM_LPAREN,         /* 15 "("  */
-  SYM_RPAREN,         /* 16 ")"  */
-  SYM_LMUSTASHE,      /* 17 "{"  */
-  SYM_RMUSTASHE,      /* 18 "}"  */
-  SYM_LBRACKET,       /* 19 "["  */
-  SYM_RBRACKET,       /* 20 "]"  */
-  SYM_LT,             /* 20 "<"  */
-  SYM_GT,             /* 20 ">"  */
-  SYM_BANG,           /* 20 "!"  */
-  SYM_QUESTION,       /* 20 "?"  */
-  SYM_COLON,          /* 20 ":"  */
-  SYM_NL              /* 21 "\n" */
+  SYM_MY,             /*  0 "my"    */
+  SYM_INTEGER,        /*  1         */
+  SYM_FLOAT,          /*  2         */
+  SYM_STRING,         /*  3         */
+  SYM_NAME,           /*  4         */
+  SYM_EQ,             /*  5 "="     */
+  SYM_SEMICOLON,      /*  6 ";"     */
+  SYM_COMMA,          /*  7 ","     */
+  SYM_MINUS,          /*  8 "-"     */
+  SYM_MINUSMINUS,     /*  9 "--"    */
+  SYM_PLUS,           /* 10 "+"     */
+  SYM_PLUSPLUS,       /* 11 "++"    */
+  SYM_TIMES,          /* 12 "*"     */
+  SYM_MODULO,         /* 13 "%"     */
+  SYM_SLASH,          /* 14 "/"     */
+  SYM_LPAREN,         /* 15 "("     */
+  SYM_RPAREN,         /* 16 ")"     */
+  SYM_LMUSTASHE,      /* 17 "{"     */
+  SYM_RMUSTASHE,      /* 18 "}"     */
+  SYM_LBRACKET,       /* 19 "["     */
+  SYM_RBRACKET,       /* 20 "]"     */
+  SYM_LT,             /* 20 "<"     */
+  SYM_GT,             /* 20 ">"     */
+  SYM_BANG,           /* 20 "!"     */
+  SYM_QUESTION,       /* 20 "?"     */
+  SYM_COLON,          /* 20 ":"     */
+  SYM_NL,             /* 21 "\n"    */
+  SYM_IF,             /* 22 "if"    */
+  SYM_WHILE           /* 23 "while" */
 };
 
 struct Symbol {
@@ -97,9 +99,11 @@ void lexFile(Nemo *, LexerState *, char *);
 void lexString(Nemo *, LexerState *, char *);
 void lexerDestroy(Nemo *, LexerState *);
 
+BOOL lexLast(LexerState *lex);
 BOOL lexPeek(LexerState *lex, SymbolType);
 BOOL lexAccept(LexerState *lex, SymbolType);
 void lexForce(LexerState *lex, SymbolType);
+void lexSkip(LexerState *lex);
 
 const char *symToS(SymbolType type);
 

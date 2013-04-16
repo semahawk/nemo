@@ -33,6 +33,35 @@
 
 #include <stdarg.h>
 
+/* not yet used, but I don't want to rewrite it later */
+#if 0
+enum ErrorType {
+  NOTE,
+  WARNING,
+  ERROR
+};
+
+struct Error {
+  enum ErrorType type;
+  char *message;
+  /* singly linked list */
+  struct Error *next;
+};
+
+struct ErrorState {
+  /* wheater one of the errors would cause the program to not be able to
+   * continue execution/compilation;
+   * yeah, errors would cause it */
+  BOOL should_exit;
+  /* pointer to the first error on the list */
+  struct Error *errors;
+};
+
+typedef enum   ErrorType  ErrorType;
+typedef struct Error      Error;
+typedef struct ErrorState ErrorState;
+#endif
+
 void nmFatal(const char *msg, ...);
 void nmError(const char *msg, ...);
 
