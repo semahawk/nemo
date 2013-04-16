@@ -2,7 +2,6 @@ On how I see Nemo would look like
 ---------------------------------
 
 + Statements end with a semicolon (unless it's last statement in the block)
-+ Everything is an expression
 + Comments start with the sign `#` or as a block, enclosed with `/*` and `*/`
 + Integers, floats and strings are scalars (Perl-like)
 + Basic functions are actually keywords (additionally, no need for parenthesises)
@@ -79,10 +78,6 @@ then, to get it inside of the function, you have to pop/shift it (Perl-like)
     while a < 10; a++;
     
     while { my a = 2; 1 } print "hello, world\n"
-
-# "Everything is an expression"
-
-    my var = if a == 1; { 4 } else { 8 };
 
 # Metaprogramming
 
