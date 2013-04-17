@@ -32,35 +32,40 @@
 #define LEXER_H
 
 enum SymbolType {
-  SYM_MY,             /*  0 "my"    */
-  SYM_INTEGER,        /*  1         */
-  SYM_FLOAT,          /*  2         */
-  SYM_STRING,         /*  3         */
-  SYM_NAME,           /*  4         */
-  SYM_EQ,             /*  5 "="     */
-  SYM_SEMICOLON,      /*  6 ";"     */
-  SYM_COMMA,          /*  7 ","     */
-  SYM_MINUS,          /*  8 "-"     */
-  SYM_MINUSMINUS,     /*  9 "--"    */
-  SYM_PLUS,           /* 10 "+"     */
-  SYM_PLUSPLUS,       /* 11 "++"    */
-  SYM_TIMES,          /* 12 "*"     */
-  SYM_MODULO,         /* 13 "%"     */
-  SYM_SLASH,          /* 14 "/"     */
-  SYM_LPAREN,         /* 15 "("     */
-  SYM_RPAREN,         /* 16 ")"     */
-  SYM_LMUSTASHE,      /* 17 "{"     */
-  SYM_RMUSTASHE,      /* 18 "}"     */
-  SYM_LBRACKET,       /* 19 "["     */
-  SYM_RBRACKET,       /* 20 "]"     */
-  SYM_LT,             /* 20 "<"     */
-  SYM_GT,             /* 20 ">"     */
-  SYM_BANG,           /* 20 "!"     */
-  SYM_QUESTION,       /* 20 "?"     */
-  SYM_COLON,          /* 20 ":"     */
-  SYM_NL,             /* 21 "\n"    */
-  SYM_IF,             /* 22 "if"    */
-  SYM_WHILE           /* 23 "while" */
+  SYM_MY,             /* "my"    */
+  SYM_INTEGER,        /*         */
+  SYM_FLOAT,          /*         */
+  SYM_STRING,         /*         */
+  SYM_NAME,           /*         */
+  SYM_EQ,             /* "="     */
+  SYM_SEMICOLON,      /* ";"     */
+  SYM_COMMA,          /* ","     */
+  SYM_MINUS,          /* "-"     */
+  SYM_MINUSMINUS,     /* "--"    */
+  SYM_PLUS,           /* "+"     */
+  SYM_PLUSPLUS,       /* "++"    */
+  SYM_TIMES,          /* "*"     */
+  SYM_MODULO,         /* "%"     */
+  SYM_SLASH,          /* "/"     */
+  SYM_LPAREN,         /* "("     */
+  SYM_RPAREN,         /* ")"     */
+  SYM_LMUSTASHE,      /* "{"     */
+  SYM_RMUSTASHE,      /* "}"     */
+  SYM_LBRACKET,       /* "["     */
+  SYM_RBRACKET,       /* "]"     */
+  SYM_LT,             /* "<"     */
+  SYM_GT,             /* ">"     */
+  SYM_BANG,           /* "!"     */
+  SYM_COLON,          /* ":"     */
+  SYM_QUESTION,       /* "?"     */
+  SYM_PLUSEQ,         /* "+="    */
+  SYM_MINUSEQ,        /* "-="    */
+  SYM_TIMESEQ,        /* "*="    */
+  SYM_SLASHEQ,        /* "/="    */
+  SYM_MODULOEQ,       /* "%="    */
+  SYM_NL,             /* "\n"    */
+  SYM_IF,             /* "if"    */
+  SYM_WHILE           /* "while" */
 };
 
 struct Symbol {

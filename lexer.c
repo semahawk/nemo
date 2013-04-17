@@ -315,30 +315,71 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       lex->column++;
     }
     else if (*p == '+'){
+      /*
+       * XXX ++
+       */
       if (*(p + 1) == '+'){
         append(NM, lex, SYM_PLUSPLUS);
         lex->column += 2;
         p++;
+      /*
+       * XXX +=
+       */
+      } else if (*(p + 1) == '='){
+        append(NM, lex, SYM_PLUSEQ);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX +
+       */
       } else {
         append(NM, lex, SYM_PLUS);
         lex->column++;
       }
     }
     else if (*p == '-'){
+      /*
+       * XXX --
+       */
       if (*(p + 1) == '-'){
         append(NM, lex, SYM_MINUSMINUS);
         lex->column += 2;
         p++;
+      /*
+       * XXX -=
+       */
+      } else if (*(p + 1) == '='){
+        append(NM, lex, SYM_MINUSEQ);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX -
+       */
       } else {
         append(NM, lex, SYM_MINUS);
         lex->column++;
       }
     }
     else if (*p == '*'){
-      append(NM, lex, SYM_TIMES);
-      lex->column++;
+      /*
+       * XXX *=
+       */
+      if (*(p + 1) == '='){
+        append(NM, lex, SYM_TIMESEQ);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX *
+       */
+      } else {
+        append(NM, lex, SYM_TIMES);
+        lex->column++;
+      }
     }
     else if (*p == '/'){
+      /*
+       * XXX /\* comment *\/
+       */
       if (*(p + 1) == '*'){
         p += 2;
         for (;;){
@@ -352,14 +393,36 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
           p++;
         }
         p--;
+      /*
+       * XXX /=
+       */
+      } else if (*(p + 1) == '='){
+        append(NM, lex, SYM_SLASHEQ);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX /
+       */
       } else {
         append(NM, lex, SYM_SLASH);
         lex->column++;
       }
     }
     else if (*p == '%'){
-      append(NM, lex, SYM_MODULO);
-      lex->column++;
+      /*
+       * XXX %=
+       */
+      if (*(p + 1) == '='){
+        append(NM, lex, SYM_MODULOEQ);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX %
+       */
+      } else {
+        append(NM, lex, SYM_MODULO);
+        lex->column++;
+      }
     }
     else if (*p == ';'){
       append(NM, lex, SYM_SEMICOLON);
@@ -561,6 +624,11 @@ const char *symToS(SymbolType type)
     case SYM_BANG:       return "'!'";
     case SYM_QUESTION:   return "'?'";
     case SYM_COLON:      return "':'";
+    case SYM_PLUSEQ:     return "'+='";
+    case SYM_MINUSEQ:    return "'-='";
+    case SYM_TIMESEQ:    return "'*='";
+    case SYM_SLASHEQ:    return "'/='";
+    case SYM_MODULOEQ:   return "'%='";
     case SYM_NL:         return "newline";
     default:             return "#unknown#symToS#";
   }

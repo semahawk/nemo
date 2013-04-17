@@ -44,22 +44,30 @@
 #include "error.h"
 #include "lexer.h"
 
+#define isLiteral(s) (s == SYM_INTEGER ||\
+                      s == SYM_FLOAT)
+
 static void expr(LexerState *lex);
 static void block(LexerState *lex);
 
-static void factor(LexerState *lex)
+static SymbolType factor(LexerState *lex)
 {
+  SymbolType ret;
+
   if (lexPeek(lex, SYM_INTEGER)){
     printf("%d ", lex->current->sym.value.i);
     lexSkip(lex);
+    ret = SYM_INTEGER;
   }
   else if (lexPeek(lex, SYM_FLOAT)){
     printf("%f ", lex->current->sym.value.f);
     lexSkip(lex);
+    ret = SYM_FLOAT;
   }
   else if (lexPeek(lex, SYM_NAME)){
     printf("%s ", lex->current->sym.value.s);
     lexSkip(lex);
+    ret = SYM_NAME;
   }
   else if (lexAccept(lex, SYM_LPAREN)){
     printf("( ");
@@ -70,35 +78,75 @@ static void factor(LexerState *lex)
     nmError("factor, we've got a problem (%s)", symToS(lex->current->sym.type));
     lexSkip(lex);
   }
+
+  return ret;
 }
 
 static void postfix(LexerState *lex)
 {
-  if (lexPeek(lex, SYM_NAME)){
-    /* just a variable name */
-    printf("%s ", lex->current->sym.value.s);
-    lexSkip(lex);
-    if (lexAccept(lex, SYM_LPAREN)){
-      /* it's actually a call */
-      printf("(");
-      expr(lex);
-      lexForce(lex, SYM_RPAREN);
-      printf(")");
+  SymbolType op = factor(lex);
+
+  /*
+   * XXX NAME "(" [expr] ")"
+   */
+  if (lexAccept(lex, SYM_LPAREN)){
+    if (op != SYM_NAME){
+      nmError("expected a name for a function call");
+      exit(EXIT_FAILURE);
     }
-  } else {
-    factor(lex);
+    printf("(");
+    if (!lexPeek(lex, SYM_RPAREN)){
+      /* FIXME: params list */
+      expr(lex);
+    }
+    lexForce(lex, SYM_RPAREN);
+    printf(")");
+  }
+  /*
+   * XXX NAME "++"
+   */
+  else if (lexAccept(lex, SYM_PLUSPLUS)){
+    if (isLiteral(op)){
+      nmError("can't do the postfix increment on a literal %s in line %u at column %u", symToS(op), lex->current->prev->sym.line, lex->current->prev->sym.column);
+      exit(EXIT_FAILURE);
+    }
+    printf(":postfix++");
+  }
+  /*
+   * XXX NAME "--"
+   */
+  else if (lexAccept(lex, SYM_MINUSMINUS)){
+    if (isLiteral(op)){
+      nmError("can't do the postfix increment on a literal %s in line %u at column %u", symToS(op), lex->current->prev->sym.line, lex->current->prev->sym.column);
+      exit(EXIT_FAILURE);
+    }
+    printf(":postfix--");
   }
 }
 
 static void prefix(LexerState *lex)
 {
-  if (lexAccept(lex, SYM_PLUS)){
+  if (lexAccept(lex, SYM_BANG)){
+    printf("unary! ");
+    prefix(lex);
+  }
+  else if (lexAccept(lex, SYM_PLUS)){
     printf("unary+ ");
     prefix(lex);
-  } else if (lexAccept(lex, SYM_MINUS)){
+  }
+  else if (lexAccept(lex, SYM_MINUS)){
     printf("unary- ");
     prefix(lex);
-  } else {
+  }
+  else if (lexAccept(lex, SYM_PLUSPLUS)){
+    printf("prefix++:");
+    prefix(lex);
+  }
+  else if (lexAccept(lex, SYM_MINUSMINUS)){
+    printf("prefix--:");
+    prefix(lex);
+  }
+  else {
     postfix(lex);
   }
 }
@@ -147,6 +195,34 @@ static void cond(LexerState *lex)
   }
 }
 
+static void assign(LexerState *lex)
+{
+  cond(lex);
+
+  while (lexPeek(lex, SYM_PLUSEQ)   ||
+         lexPeek(lex, SYM_MINUSEQ)  ||
+         lexPeek(lex, SYM_TIMESEQ)  ||
+         lexPeek(lex, SYM_SLASHEQ)  ||
+         lexPeek(lex, SYM_MODULOEQ)){
+    if (lexAccept(lex, SYM_PLUSEQ)){
+      printf("+= ");
+    }
+    else if (lexAccept(lex, SYM_MINUSEQ)){
+      printf("-= ");
+    }
+    else if (lexAccept(lex, SYM_TIMESEQ)){
+      printf("*= ");
+    }
+    else if (lexAccept(lex, SYM_SLASHEQ)){
+      printf("/= ");
+    }
+    else if (lexAccept(lex, SYM_MODULOEQ)){
+      printf("%%= ");
+    }
+    cond(lex);
+  }
+}
+
 static void expr(LexerState *lex)
 {
   if (lexAccept(lex, SYM_MY)){
@@ -155,10 +231,10 @@ static void expr(LexerState *lex)
     printf("name ");
     if (lexAccept(lex, SYM_EQ)){
       printf("= ");
-      cond(lex);
+      assign(lex);
     }
   } else {
-    cond(lex);
+    assign(lex);
   }
 }
 
