@@ -42,6 +42,7 @@ void debugLexer(Nemo *, LexerState *, SymbolType);
 void debugLexerInt(Nemo *, LexerState *, SymbolType, int);
 void debugLexerFloat(Nemo *, LexerState *, SymbolType, double);
 void debugLexerStr(Nemo *, LexerState *, SymbolType, char *);
+void debugParser(Nemo *, const char *, ...);
 
 #endif /* DEBUG_H */
 

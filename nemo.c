@@ -88,9 +88,12 @@ int main(int argc, char *argv[])
                   switch (*optarg){
                     case 'h': printf("\nDebug options include:\n");
                               printf("  m   memory allocation, freeing and so-on\n");
+                              printf("  p   parser messages\n");
                               printf("  l   lexer messages\n\n");
                               return EXIT_SUCCESS;
                     case 'm': NM->flags.debug.memory = TRUE;
+                              break;
+                    case 'p': NM->flags.debug.parser = TRUE;
                               break;
                     case 'l': NM->flags.debug.lexer = TRUE;
                               break;

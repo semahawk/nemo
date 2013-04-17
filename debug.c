@@ -88,3 +88,13 @@ void debugLexerStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
   }
 }
 
+void debugParser(Nemo *NM, char const *msg, ...)
+{
+  if (NM->flags.debug.parser){
+    va_list vl;
+    va_start(vl, msg);
+    vfprintf(stderr, msg, vl);
+    va_end(vl);
+  }
+}
+

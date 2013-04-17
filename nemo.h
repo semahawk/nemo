@@ -27,6 +27,7 @@ typedef struct {
     struct {
       BOOL memory;
       BOOL lexer;
+      BOOL parser;
     } debug;
   } flags;
 } Nemo;
