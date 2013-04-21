@@ -322,8 +322,12 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   Node *body = NULL;
 
   if (lexAccept(lex, SYM_SEMICOLON)){
-    /* that's NOP */
+    /* that's NOP
+     * we're generating it anyway, because it would come in handy when we're
+     * compiling into the bytecode as NOP opcode
+     */
     debugParser(NM, ";\n");
+    ret = genNopNode(NM);
   }
   else if (lexAccept(lex, SYM_IF)){
     debugParser(NM, "if ");
@@ -352,7 +356,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
         !lexPeek(lex, SYM_WHILE) &&
         !lexPeek(lex, SYM_LMUSTASHE) &&
         !lexPeek(lex, SYM_RMUSTASHE) &&
-        !lexLast(lex)){
+        !lexPeek(lex, SYM_EOS)){
       lexForce(lex, SYM_SEMICOLON);
     }
     debugParser(NM, ";\n");
@@ -369,7 +373,7 @@ static Node *block(Nemo *NM, LexerState *lex)
   new_block->data.block.head = NULL;
   new_block->data.block.tail = NULL;
 
-  while (!lexPeek(lex, SYM_RMUSTASHE) && !lexLast(lex)){
+  while (!lexPeek(lex, SYM_RMUSTASHE) && !lexPeek(lex, SYM_EOS)){
     Statement *new_stmt = nmMalloc(NM, sizeof(Statement));
     new_stmt->stmt = stmt(NM, lex);
     /* append that statement to the statements of the block */

@@ -492,6 +492,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       lex->column++;
     }
   }
+  append(NM, lex, SYM_EOS);
 }
 
 /*
@@ -517,19 +518,6 @@ void lexForce(LexerState *lex, SymbolType type)
     }
   } else {
     lex->current = lex->current->next;
-  }
-}
-
-/*
- * @name    lexLast
- * @desc    check if the current symbol is the last one
- */
-BOOL lexLast(LexerState *lex)
-{
-  if (lex->current == NULL){
-    return TRUE;
-  } else {
-    return FALSE;
   }
 }
 
@@ -627,6 +615,7 @@ const char *symToS(SymbolType type)
     case SYM_TIMESEQ:    return "'*='";
     case SYM_SLASHEQ:    return "'/='";
     case SYM_MODULOEQ:   return "'%='";
+    case SYM_EOS:        return "<EOS>";
     default:             return "#unknown#symToS#";
   }
 }

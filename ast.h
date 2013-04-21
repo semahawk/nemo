@@ -34,6 +34,7 @@
 #include "nemo.h"
 
 enum NodeType {
+  NT_NOP,
   NT_INTEGER,
   NT_FLOAT,
   NT_NAME,
@@ -130,6 +131,7 @@ Node *genUnopNode(Nemo *, Node *, UnaryOp);
 Node *genIfNode(Nemo *, Node *, Node *);
 Node *genWhileNode(Nemo *, Node *, Node *);
 Node *genDeclNode(Nemo *, char *, Node *);
+Node *genNopNode(Nemo *);
 
 void  freeIntNode(Nemo *, Node *);
 void  freeFloatNode(Nemo *, Node *);
@@ -140,6 +142,7 @@ void  freeIfNode(Nemo *, Node *);
 void  freeWhileNode(Nemo *, Node *);
 void  freeDeclNode(Nemo *, Node *);
 void  freeBlockNode(Nemo *, Node *);
+void  freeNopNode(Nemo *, Node *);
 void  freeDispatch(Nemo *, Node *);
 
 #endif /* AST_H */

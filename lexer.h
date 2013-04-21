@@ -66,7 +66,8 @@ enum SymbolType {
   SYM_SLASHEQ,        /* "/="    */
   SYM_MODULOEQ,       /* "%="    */
   SYM_IF,             /* "if"    */
-  SYM_WHILE           /* "while" */
+  SYM_WHILE,          /* "while" */
+  SYM_EOS             /* end of script */
 };
 
 struct Symbol {
@@ -105,7 +106,6 @@ void lexFile(Nemo *, LexerState *, char *);
 void lexString(Nemo *, LexerState *, char *);
 void lexerDestroy(Nemo *, LexerState *);
 
-BOOL lexLast(LexerState *lex);
 BOOL lexPeek(LexerState *lex, SymbolType);
 BOOL lexAccept(LexerState *lex, SymbolType);
 void lexForce(LexerState *lex, SymbolType);

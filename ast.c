@@ -51,6 +51,7 @@
 static void (*freeFuncs[])(Nemo *, Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
+  freeNopNode,
   freeIntNode,
   freeFloatNode,
   freeNameNode,
@@ -68,7 +69,9 @@ static void (*freeFuncs[])(Nemo *, Node *) =
  */
 void freeDispatch(Nemo *NM, Node *node)
 {
-  freeFuncs[node->type](NM, node);
+  /* watch out for NOPs */
+  if (node)
+    freeFuncs[node->type](NM, node);
 }
 
 /*
@@ -86,6 +89,31 @@ void freeBlockNode(Nemo *NM, Node *node)
     freeDispatch(NM, s->stmt);
     nmFree(NM, s);
   }
+
+  nmFree(NM, node);
+}
+
+/*
+ * @name - genNopNode
+ * @desc - create a node that does NOTHING
+ */
+Node *genNopNode(Nemo *NM)
+{
+  Node *new = nmMalloc(NM, sizeof(Node));
+
+  new->type = NT_NOP;
+
+  return new;
+}
+
+/*
+ * @name - freeNopNode
+ * @desc - frees the NOP node
+ */
+void freeNopNode(Nemo *NM, Node *node)
+{
+  assert(node);
+  assert(node->type == NT_NOP);
 
   nmFree(NM, node);
 }
