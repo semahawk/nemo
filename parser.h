@@ -32,9 +32,10 @@
 #define PARSER_H
 
 #include "nemo.h"
+#include "ast.h"
 
-void parseFile(Nemo *, char *);
-void parseString(Nemo *, char *);
+Node *parseFile(Nemo *, char *);
+Node *parseString(Nemo *, char *);
 
 #endif /* PARSER_H */
 

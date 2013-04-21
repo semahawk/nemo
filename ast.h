@@ -41,7 +41,8 @@ enum NodeType {
   NT_UNOP,
   NT_IF,
   NT_WHILE,
-  NT_DECL
+  NT_DECL,
+  NT_BLOCK
 };
 
 enum BinaryOp {
@@ -67,6 +68,12 @@ enum UnaryOp {
   UNARY_PREDEC,
   UNARY_POSTINC,
   UNARY_POSTDEC
+};
+
+struct Statement {
+  struct Node *stmt;
+  struct Statement *next;
+  struct Statement *prev;
 };
 
 struct Node {
@@ -101,13 +108,19 @@ struct Node {
       char *name;
       struct Node *value;
     } decl;
+
+    struct {
+      struct Statement *head;
+      struct Statement *tail;
+    } block;
   } data;
 };
 
-typedef enum   BinaryOp BinaryOp;
-typedef enum   UnaryOp  UnaryOp;
-typedef enum   NodeType NodeType;
-typedef struct Node     Node;
+typedef enum   BinaryOp  BinaryOp;
+typedef enum   UnaryOp   UnaryOp;
+typedef enum   NodeType  NodeType;
+typedef struct Node      Node;
+typedef struct Statement Statement;
 
 Node *genIntNode(Nemo *, int);
 Node *genFloatNode(Nemo *, float);
@@ -126,6 +139,7 @@ void  freeUnopNode(Nemo *, Node *);
 void  freeIfNode(Nemo *, Node *);
 void  freeWhileNode(Nemo *, Node *);
 void  freeDeclNode(Nemo *, Node *);
+void  freeBlockNode(Nemo *, Node *);
 void  freeDispatch(Nemo *, Node *);
 
 #endif /* AST_H */

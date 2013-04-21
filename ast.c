@@ -28,13 +28,26 @@
  *
  */
 
+/*
+ * "Come sing along with the pirate song
+ *  Hail to the wind, hooray to the glory
+ *  We're gonna fight 'til the battle's won
+ *  On the raging sea"
+ *
+ *  Running Wild - Pirate Song
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "nemo.h"
 #include "ast.h"
 #include "mem.h"
 
+/*
+ * Array of pointer functions responsible for freeing an adequate kind of node
+ */
 static void (*freeFuncs[])(Nemo *, Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
@@ -45,14 +58,42 @@ static void (*freeFuncs[])(Nemo *, Node *) =
   freeUnopNode,
   freeIfNode,
   freeWhileNode,
-  freeDeclNode
+  freeDeclNode,
+  freeBlockNode
 };
 
+/*
+ * @name - freeDispatch
+ * @desc - runs an appropriate function, that will free given <node>
+ */
 void freeDispatch(Nemo *NM, Node *node)
 {
   freeFuncs[node->type](NM, node);
 }
 
+/*
+ * @name - freeBlock
+ * @desc - frees given block and every statement it holds
+ */
+void freeBlockNode(Nemo *NM, Node *node)
+{
+  Statement *s;
+
+  assert(node);
+  assert(node->type == NT_BLOCK);
+
+  for (s = node->data.block.tail; s != NULL; s = s->next){
+    freeDispatch(NM, s->stmt);
+    nmFree(NM, s);
+  }
+
+  nmFree(NM, node);
+}
+
+/*
+ * @name - genIntNode
+ * @desc - create a node holding a single literal integer
+ */
 Node *genIntNode(Nemo *NM, int i)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -63,11 +104,22 @@ Node *genIntNode(Nemo *NM, int i)
   return new;
 }
 
+/*
+ * @name - freeIntNode
+ * @desc - responsible for freeing literal integer nodes
+ */
 void freeIntNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_INTEGER);
+
   nmFree(NM, node);
 }
 
+/*
+ * @name - genFloatNode
+ * @desc - create a node holding a single literal float
+ */
 Node *genFloatNode(Nemo *NM, float f)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -78,11 +130,22 @@ Node *genFloatNode(Nemo *NM, float f)
   return new;
 }
 
+/*
+ * @name - freeFloatNode
+ * @desc - responsible for freeing literal float nodes
+ */
 void freeFloatNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_FLOAT);
+
   nmFree(NM, node);
 }
 
+/*
+ * @name - genNameNode
+ * @desc - creates a (eg. variable) name node
+ */
 Node *genNameNode(Nemo *NM, char *s)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -93,12 +156,23 @@ Node *genNameNode(Nemo *NM, char *s)
   return new;
 }
 
+/*
+ * @name - freeNameNode
+ * @desc - responsible for freeing (eg. variable) name nodes
+ */
 void freeNameNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_NAME);
+
   nmFree(NM, node);
   nmFree(NM, node->data.s);
 }
 
+/*
+ * @name - genBinopNode
+ * @desc - creates a binary operation node
+ */
 Node *genBinopNode(Nemo *NM, Node *left, BinaryOp op, Node *right)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -111,14 +185,25 @@ Node *genBinopNode(Nemo *NM, Node *left, BinaryOp op, Node *right)
   return new;
 }
 
+/*
+ * @name - freeBinopNode
+ * @desc - responsible for freeing binary operation nodes
+ */
 void freeBinopNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_BINOP);
+
   freeDispatch(NM, node->data.binop.left);
   freeDispatch(NM, node->data.binop.right);
 
   nmFree(NM, node);
 }
 
+/*
+ * @name - genUnopNode
+ * @desc - creates a node for unary operation
+ */
 Node *genUnopNode(Nemo *NM, Node *expr, UnaryOp op)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -130,13 +215,25 @@ Node *genUnopNode(Nemo *NM, Node *expr, UnaryOp op)
   return new;
 }
 
+/*
+ * @name - freeUnopNode
+ * @desc - responsible for freeing unary operation nodes
+ */
 void freeUnopNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_UNOP);
+
   freeDispatch(NM, node->data.unop.expr);
 
   nmFree(NM, node);
 }
 
+/*
+ * @name - genIfNode
+ * @desc - creates a node for the if statement
+ *         <guard> and <body> can be NULL, it means a NOP then
+ */
 Node *genIfNode(Nemo *NM, Node *guard, Node *body)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -148,8 +245,16 @@ Node *genIfNode(Nemo *NM, Node *guard, Node *body)
   return new;
 }
 
+/*
+ * @name - freeIfNode
+ * @desc - responsible for freeing if nodes, and optionally, if present, it's
+ *         guarding statement and it's body
+ */
 void freeIfNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_IF);
+
   /* guard in if is optional */
   if (node->data.iff.guard)
     freeDispatch(NM, node->data.iff.guard);
@@ -160,6 +265,12 @@ void freeIfNode(Nemo *NM, Node *node)
   nmFree(NM, node);
 }
 
+/*
+ * @name - genWhileNode
+ * @desc - creates a while node
+ *         <guard> and <body> are optional, can be NULL,
+ *         it means then that they are NOPs
+ */
 Node *genWhileNode(Nemo *NM, Node *guard, Node *body)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
@@ -171,8 +282,16 @@ Node *genWhileNode(Nemo *NM, Node *guard, Node *body)
   return new;
 }
 
+/*
+ * @name - freeWhileNode
+ * @desc - responsible for freeing while node, and optionally
+ *         guarding statement and it's body, as they are optional
+ */
 void freeWhileNode(Nemo *NM, Node *node)
 {
+  assert(node);
+  assert(node->type == NT_WHILE);
+
   /* guard in while is optional */
   if (node->data.whilee.guard)
     freeDispatch(NM, node->data.whilee.guard);
@@ -183,26 +302,43 @@ void freeWhileNode(Nemo *NM, Node *node)
   nmFree(NM, node);
 }
 
+/*
+ * @name - genDeclNode
+ * @desc - creates a node for declaring a variable of given <name>
+ *         parameter <value> is optional, may be NULL, then it means
+ *         something like:
+ *
+ *           my variable;
+ */
 Node *genDeclNode(Nemo *NM, char *name, Node *value)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
 
   new->type = NT_DECL;
-  new->data.decl.name = name;
+  new->data.decl.name = strdup(NM, name);
   new->data.decl.value = value;
 
   return new;
 }
 
+/*
+ * @name - freeDeclNode
+ * @desc - responsible for freeing declaration node
+ *         and optionally a init value it was holding
+ */
 void freeDeclNode(Nemo *NM, Node *node)
 {
-  /* guard in while is optional */
-  if (node->data.whilee.guard)
-    freeDispatch(NM, node->data.whilee.guard);
-  /* so is it's body */
-  if (node->data.whilee.body)
-    freeDispatch(NM, node->data.whilee.body);
+  assert(node);
+  assert(node->type == NT_DECL);
+
+  nmFree(NM, node->data.decl.name);
+  /* initialized value is optional */
+  if (node->data.decl.value)
+    freeDispatch(NM, node->data.decl.value);
 
   nmFree(NM, node);
 }
 
+/*
+ * Steve Vai
+ */

@@ -57,6 +57,8 @@
 
 int main(int argc, char *argv[])
 {
+  /* the main node from parsing the given file */
+  Node *nodest = NULL;
   /* file input */
   char input[255];
   /* used for getopt */
@@ -124,7 +126,8 @@ int main(int argc, char *argv[])
   strcpy(NM->source, input);
 
   /* parse the file */
-  parseFile(NM, NM->source);
+  nodest = parseFile(NM, NM->source);
+  freeBlockNode(NM, nodest);
 
   /* tidy up */
   nmFree(NM, NM->source);
@@ -137,7 +140,7 @@ int main(int argc, char *argv[])
  * Megadeth, Running Wild, Gamma Ray, Iron Savior
  * Helloween, Testament
  * Within Temptation, Nightwish, Avantasia
- * Stratovarius
+ * Stratovarius, Steve Vai
  *
  * Family Guy, The Office, Monty Python
  *

@@ -45,6 +45,7 @@
 #include "debug.h"
 #include "lexer.h"
 #include "ast.h"
+#include "mem.h"
 
 #define isLiteral(n) (n->type == NT_INTEGER ||\
                       n->type == NT_FLOAT)
@@ -339,12 +340,12 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   else if (lexAccept(lex, SYM_LMUSTASHE)){
     debugParser(NM, "{\n");
     debugParserIndent();
-    block(NM, lex);
+    ret = block(NM, lex);
     lexForce(lex, SYM_RMUSTASHE);
     debugParserDedent();
     debugParser(NM, "}\n");
   } else {
-    expr(NM, lex);
+    ret = expr(NM, lex);
     /* if the next symbol is "if", "while", '{', '}' or end-of-script, it
      * doesn't need the semicolon then, otherwise it is required */
     if (!lexPeek(lex, SYM_IF) &&
@@ -362,16 +363,35 @@ static Node *stmt(Nemo *NM, LexerState *lex)
 
 static Node *block(Nemo *NM, LexerState *lex)
 {
-  Node *ret = NULL;
+  Node *new_block = nmMalloc(NM, sizeof(Node));
+
+  new_block->type = NT_BLOCK;
+  new_block->data.block.head = NULL;
+  new_block->data.block.tail = NULL;
 
   while (!lexPeek(lex, SYM_RMUSTASHE) && !lexLast(lex)){
-    stmt(NM, lex);
+    Statement *new_stmt = nmMalloc(NM, sizeof(Statement));
+    new_stmt->stmt = stmt(NM, lex);
+    /* append that statement to the statements of the block */
+    /*   the list is empty */
+    if (!new_block->data.block.head && !new_block->data.block.tail){
+      new_stmt->next = new_block->data.block.head;
+      new_stmt->prev = new_block->data.block.tail;
+      new_block->data.block.head = new_stmt;
+      new_block->data.block.tail = new_stmt;
+    /*   the list is NOT empty */
+    } else {
+      new_stmt->next = new_block->data.block.head->next;
+      new_block->data.block.head->next = new_stmt;
+      new_stmt->prev = new_block->data.block.head;
+      new_block->data.block.head = new_stmt;
+    }
   }
 
-  return ret;
+  return new_block;
 }
 
-void parseFile(Nemo *NM, char *fname)
+Node *parseFile(Nemo *NM, char *fname)
 {
   Node *nodest = NULL;
   LexerState lex;
@@ -380,9 +400,11 @@ void parseFile(Nemo *NM, char *fname)
   lexFile(NM, &lex, fname);
   nodest = block(NM, &lex);
   lexerDestroy(NM, &lex);
+
+  return nodest;
 }
 
-void parseString(Nemo *NM, char *string)
+Node *parseString(Nemo *NM, char *string)
 {
   Node *nodest = NULL;
   LexerState lex;
@@ -391,5 +413,7 @@ void parseString(Nemo *NM, char *string)
   lexString(NM, &lex, string);
   nodest = block(NM, &lex);
   lexerDestroy(NM, &lex);
+
+  return nodest;
 }
 
