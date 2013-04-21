@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "lexer.h"
+
 /*
  * TODO: append the errors into some kind of a list, then print them out at
  *       once, if one of them was fatal, or error, exit before
@@ -45,6 +47,25 @@ void nmError(const char *msg, ...){
   va_start(vl, msg);
   fprintf(stderr, "nemo: error: ");
   vfprintf(stderr, msg, vl);
+  fprintf(stderr, "\n");
+  va_end(vl);
+}
+
+void lexError(LexerState *lex, const char *msg, ...)
+{
+  va_list vl;
+  va_start(vl, msg);
+
+  if (lex->is_file){
+    fprintf(stderr, "In file %s: ", lex->source);
+  } else {
+    fprintf(stderr, "In string \"%s\": ", lex->source);
+  }
+
+  vfprintf(stderr, msg, vl);
+  if (lex->current){
+    fprintf(stderr, " at line %u in column %u", lex->current->sym.line, lex->current->sym.column);
+  }
   fprintf(stderr, "\n");
   va_end(vl);
 }

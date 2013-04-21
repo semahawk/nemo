@@ -31,6 +31,8 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include "nemo.h"
+
 enum SymbolType {
   SYM_MY,             /* "my"    */
   SYM_INTEGER,        /*         */
@@ -63,7 +65,6 @@ enum SymbolType {
   SYM_TIMESEQ,        /* "*="    */
   SYM_SLASHEQ,        /* "/="    */
   SYM_MODULOEQ,       /* "%="    */
-  SYM_NL,             /* "\n"    */
   SYM_IF,             /* "if"    */
   SYM_WHILE           /* "while" */
 };

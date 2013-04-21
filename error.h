@@ -33,6 +33,8 @@
 
 #include <stdarg.h>
 
+#include "lexer.h"
+
 /* not yet used, but I don't want to rewrite it later */
 #if 0
 enum ErrorType {
@@ -64,6 +66,7 @@ typedef struct ErrorState ErrorState;
 
 void nmFatal(const char *msg, ...);
 void nmError(const char *msg, ...);
+void lexError(LexerState *, const char *msg, ...);
 
 #endif /* ERROR_H */
 

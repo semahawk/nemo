@@ -57,31 +57,115 @@ static Node *factor(Nemo *NM, LexerState *lex)
   Node *new = NULL;
 
   if (lexPeek(lex, SYM_INTEGER)){
-    debugParser(NM, "%d ", lex->current->sym.value.i);
     new = genIntNode(NM, lex->current->sym.value.i);
+    debugParser(NM, "%d ", new->data.i);
     lexSkip(lex);
   }
   else if (lexPeek(lex, SYM_FLOAT)){
-    debugParser(NM, "%f ", lex->current->sym.value.f);
     new = genFloatNode(NM, lex->current->sym.value.f);
+    debugParser(NM, "%f ", new->data.f);
     lexSkip(lex);
   }
   else if (lexPeek(lex, SYM_NAME)){
-    debugParser(NM, "%s ", lex->current->sym.value.s);
     new = genNameNode(NM, lex->current->sym.value.s);
+    debugParser(NM, "%s ", new->data.s);
     lexSkip(lex);
   }
   else if (lexAccept(lex, SYM_LPAREN)){
-    debugParser(NM, "( ");
+    debugParser(NM, "(");
     new = expr(NM, lex);
     lexForce(lex, SYM_RPAREN);
-    debugParser(NM, ") ");
+    debugParser(NM, ")");
   } else {
-    nmError("factor, we've got a problem (%s)", symToS(lex->current->sym.type));
+    nmError("factor, we've got a problem with \"%s\" at line %u in column %u", symToS(lex->current->sym.type), lex->line, lex->column);
     lexSkip(lex);
   }
 
   return new;
+}
+
+static Node *postfix(Nemo *NM, LexerState *lex)
+{
+  Node *target = NULL;
+  Node *ret = target = factor(NM, lex);
+
+  /*
+   * XXX NAME "(" [expr] ")"
+   */
+  if (lexAccept(lex, SYM_LPAREN)){
+    if (target->type != NT_NAME){
+      lexError(lex, "expected a name for a function call");
+      exit(EXIT_FAILURE);
+    }
+    debugParser(NM, "(");
+    if (!lexPeek(lex, SYM_RPAREN)){
+      /* FIXME: params list */
+      expr(NM, lex);
+    }
+    lexForce(lex, SYM_RPAREN);
+    debugParser(NM, ")");
+  }
+  /*
+   * XXX NAME "++"
+   */
+  else if (lexAccept(lex, SYM_PLUSPLUS)){
+    if (isLiteral(target)){
+      nmError("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.line, lex->current->prev->sym.column);
+      exit(EXIT_FAILURE);
+    }
+    debugParser(NM, ":postfix++");
+    ret = genUnopNode(NM, target, UNARY_POSTINC);
+  }
+  /*
+   * XXX NAME "--"
+   */
+  else if (lexAccept(lex, SYM_MINUSMINUS)){
+    if (isLiteral(target)){
+      nmError("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.line, lex->current->prev->sym.column);
+      exit(EXIT_FAILURE);
+    }
+    debugParser(NM, ":postfix--");
+    ret = genUnopNode(NM, target, UNARY_POSTDEC);
+  }
+
+  return ret;
+}
+
+static Node *prefix(Nemo *NM, LexerState *lex)
+{
+  Node *ret = NULL;
+  Node *target = NULL;
+
+  if (lexAccept(lex, SYM_BANG)){
+    debugParser(NM, "unary! ");
+    target = prefix(NM, lex);
+    ret = genUnopNode(NM, target, UNARY_NEGATE);
+  }
+  else if (lexAccept(lex, SYM_PLUS)){
+    debugParser(NM, "unary+ ");
+    target = prefix(NM, lex);
+    ret = genUnopNode(NM, target, UNARY_PLUS);
+  }
+  else if (lexAccept(lex, SYM_MINUS)){
+    debugParser(NM, "unary- ");
+    target = prefix(NM, lex);
+    ret = genUnopNode(NM, target, UNARY_MINUS);
+  }
+  else if (lexAccept(lex, SYM_PLUSPLUS)){
+    debugParser(NM, "prefix++:");
+    target = prefix(NM, lex);
+    ret = genUnopNode(NM, target, UNARY_PREINC);
+  }
+  else if (lexAccept(lex, SYM_MINUSMINUS)){
+    debugParser(NM, "prefix--:");
+    target = prefix(NM, lex);
+    ret = genUnopNode(NM, target, UNARY_PREDEC);
+  }
+  else {
+    ret = postfix(NM, lex);
+  }
+
+  return ret;
 }
 
 static Node *mult(Nemo *NM, LexerState *lex)
@@ -91,15 +175,17 @@ static Node *mult(Nemo *NM, LexerState *lex)
   Node *right;
   BinaryOp op = 0;
 
-  ret = left = factor(NM, lex);
+  ret = left = prefix(NM, lex);
 
   while (lexPeek(lex, SYM_TIMES) || lexPeek(lex, SYM_SLASH)){
     if (lexAccept(lex, SYM_TIMES)){
       op = BINARY_MUL;
+      debugParser(NM, "* ");
     } else if (lexAccept(lex, SYM_SLASH)){
       op = BINARY_DIV;
+      debugParser(NM, "/ ");
     }
-    right = factor(NM, lex);
+    right = prefix(NM, lex);
     ret = genBinopNode(NM, left, BINARY_MUL, right);
     left = ret;
   }
@@ -119,10 +205,84 @@ static Node *add(Nemo *NM, LexerState *lex)
   while (lexPeek(lex, SYM_PLUS) || lexPeek(lex, SYM_MINUS)){
     if (lexAccept(lex, SYM_PLUS)){
       op = BINARY_ADD;
+      debugParser(NM, "+ ");
     } else if (lexAccept(lex, SYM_MINUS)){
       op = BINARY_SUB;
+      debugParser(NM, "- ");
     }
     right = mult(NM, lex);
+    ret = genBinopNode(NM, left, op, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+static Node *cond(Nemo *NM, LexerState *lex)
+{
+  Node *ret;
+  Node *left;
+  Node *right;
+  BinaryOp op = 0;
+
+  ret = left = add(NM, lex);
+
+  while (lexPeek(lex, SYM_GT) || lexPeek(lex, SYM_LT)){
+    if (lexAccept(lex, SYM_GT)){
+      op = BINARY_GT;
+      debugParser(NM, "> ");
+    } else if (lexAccept(lex, SYM_LT)){
+      op = BINARY_LT;
+      debugParser(NM, "< ");
+    }
+    right = add(NM, lex);
+    ret = genBinopNode(NM, left, op, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+static Node *assign(Nemo *NM, LexerState *lex)
+{
+  Node *ret;
+  Node *left;
+  Node *right;
+  BinaryOp op = 0;
+
+  ret = left = cond(NM, lex);
+
+  while (lexPeek(lex, SYM_EQ)      ||
+         lexPeek(lex, SYM_PLUSEQ)  ||
+         lexPeek(lex, SYM_MINUSEQ) ||
+         lexPeek(lex, SYM_TIMESEQ) ||
+         lexPeek(lex, SYM_SLASHEQ) ||
+         lexPeek(lex, SYM_MODULOEQ)){
+    if (lexAccept(lex, SYM_EQ)){
+      op = BINARY_ADD;
+      debugParser(NM, "= ");
+    }
+    else if (lexAccept(lex, SYM_PLUSEQ)){
+      op = BINARY_ASSIGN_ADD;
+      debugParser(NM, "+= ");
+    }
+    else if (lexAccept(lex, SYM_MINUSEQ)){
+      op = BINARY_ASSIGN_SUB;
+      debugParser(NM, "-= ");
+    }
+    else if (lexAccept(lex, SYM_TIMESEQ)){
+      op = BINARY_ASSIGN_MUL;
+      debugParser(NM, "*= ");
+    }
+    else if (lexAccept(lex, SYM_SLASHEQ)){
+      op = BINARY_ASSIGN_DIV;
+      debugParser(NM, "/= ");
+    }
+    else if (lexAccept(lex, SYM_MODULOEQ)){
+      op = BINARY_ASSIGN_MOD;
+      debugParser(NM, "%= ");
+    }
+    right = assign(NM, lex);
     ret = genBinopNode(NM, left, op, right);
     left = ret;
   }
@@ -134,22 +294,21 @@ static Node *expr(Nemo *NM, LexerState *lex)
 {
   Node *ret = NULL;
   Node *value = NULL;
+  char *name = NULL;
 
   if (lexAccept(lex, SYM_MY)){
     debugParser(NM, "my ");
     lexForce(lex, SYM_NAME);
     /* lexForce skips the symbol so we have to get to the previous one */
-    /*name = lex->current->prev->sym.value.s;*/
-    debugParser(NM, "%s ", lex->current->prev->sym.value.s);
+    name = lex->current->prev->sym.value.s;
+    debugParser(NM, "%s", name);
     if (lexAccept(lex, SYM_EQ)){
-      debugParser(NM, "= ");
-      value = add(NM, lex);
-      /*printf("add: %d\n", add(NM, lex));*/
+      debugParser(NM, " = ");
+      value = assign(NM, lex);
     }
-    /*ret = genDeclNode(NM, name, value);*/
+    ret = genDeclNode(NM, name, value);
   } else {
-    ret = add(NM, lex);
-    /*printf("add: %d\n", add(NM, lex));*/
+    ret = assign(NM, lex);
   }
 
   return ret;
@@ -161,28 +320,31 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   Node *guard = NULL;
   Node *body = NULL;
 
-  if (lexAccept(lex, SYM_IF)){
+  if (lexAccept(lex, SYM_SEMICOLON)){
+    /* that's NOP */
+    debugParser(NM, ";\n");
+  }
+  else if (lexAccept(lex, SYM_IF)){
     debugParser(NM, "if ");
     guard = stmt(NM, lex);
     body = stmt(NM, lex);
-    debugParser(NM, "\n");
     ret = genIfNode(NM, guard, body);
   }
   else if (lexAccept(lex, SYM_WHILE)){
     debugParser(NM, "while ");
     guard = stmt(NM, lex);
     body = stmt(NM, lex);
-    debugParser(NM, "\n");
     ret = genWhileNode(NM, guard, body);
   }
   else if (lexAccept(lex, SYM_LMUSTASHE)){
     debugParser(NM, "{\n");
+    debugParserIndent();
     block(NM, lex);
     lexForce(lex, SYM_RMUSTASHE);
+    debugParserDedent();
     debugParser(NM, "}\n");
   } else {
-    /*ret = */expr(NM, lex);
-    ret = NULL;
+    expr(NM, lex);
     /* if the next symbol is "if", "while", '{', '}' or end-of-script, it
      * doesn't need the semicolon then, otherwise it is required */
     if (!lexPeek(lex, SYM_IF) &&

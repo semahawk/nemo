@@ -46,6 +46,9 @@
 #include "nemo.h"
 #include "lexer.h"
 
+#define PARSER_INDENT_STEP 2
+static unsigned parser_debug_level = 0;
+
 void debugMemory(Nemo *NM, void *pointer, const char *msg, ...)
 {
   if (NM->flags.debug.memory){
@@ -92,9 +95,23 @@ void debugParser(Nemo *NM, char const *msg, ...)
 {
   if (NM->flags.debug.parser){
     va_list vl;
+    /*unsigned i;*/
     va_start(vl, msg);
+    /*for (i = 0; i < parser_debug_level; i++){*/
+      /*fprintf(stderr, " ");*/
+    /*}*/
     vfprintf(stderr, msg, vl);
     va_end(vl);
   }
+}
+
+void debugParserIndent(void)
+{
+  parser_debug_level += PARSER_INDENT_STEP;
+}
+
+void debugParserDedent(void)
+{
+  parser_debug_level -= PARSER_INDENT_STEP;
 }
 
