@@ -260,15 +260,16 @@ void freeUnopNode(Nemo *NM, Node *node)
 /*
  * @name - genIfNode
  * @desc - creates a node for the if statement
- *         <guard> and <body> can be NULL, it means a NOP then
+ *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *genIfNode(Nemo *NM, Node *guard, Node *body)
+Node *genIfNode(Nemo *NM, Node *guard, Node *body, Node *elsee)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
 
   new->type = NT_IF;
   new->data.iff.guard = guard;
   new->data.iff.body = body;
+  new->data.iff.elsee = elsee;
 
   return new;
 }
@@ -276,7 +277,8 @@ Node *genIfNode(Nemo *NM, Node *guard, Node *body)
 /*
  * @name - freeIfNode
  * @desc - responsible for freeing if nodes, and optionally, if present, it's
- *         guarding statement and it's body
+ *         guarding statement and it's body, and the else statement connected
+ *         with it
  */
 void freeIfNode(Nemo *NM, Node *node)
 {
@@ -289,6 +291,9 @@ void freeIfNode(Nemo *NM, Node *node)
   /* so is it's body */
   if (node->data.iff.body)
     freeDispatch(NM, node->data.iff.body);
+  /* aaaaaand the else */
+  if (node->data.iff.elsee)
+    freeDispatch(NM, node->data.iff.elsee);
 
   nmFree(NM, node);
 }
@@ -296,16 +301,18 @@ void freeIfNode(Nemo *NM, Node *node)
 /*
  * @name - genWhileNode
  * @desc - creates a while node
- *         <guard> and <body> are optional, can be NULL,
+ *         <guard>, <body> and <elsee> are optional, can be NULL,
  *         it means then that they are NOPs
+ *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *genWhileNode(Nemo *NM, Node *guard, Node *body)
+Node *genWhileNode(Nemo *NM, Node *guard, Node *body, Node *elsee)
 {
   Node *new = nmMalloc(NM, sizeof(Node));
 
   new->type = NT_WHILE;
   new->data.whilee.guard = guard;
   new->data.whilee.body = body;
+  new->data.whilee.elsee = elsee;
 
   return new;
 }
@@ -326,6 +333,9 @@ void freeWhileNode(Nemo *NM, Node *node)
   /* so is it's body */
   if (node->data.whilee.body)
     freeDispatch(NM, node->data.whilee.body);
+  /* aaaaaand the else */
+  if (node->data.whilee.elsee)
+    freeDispatch(NM, node->data.whilee.elsee);
 
   nmFree(NM, node);
 }

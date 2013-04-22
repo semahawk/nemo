@@ -405,6 +405,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   Node *ret   = NULL;
   Node *guard = NULL;
   Node *body  = NULL;
+  Node *elsee = NULL;
 
   /*
    * XXX ;
@@ -424,7 +425,14 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParser(NM, "if ");
     guard = stmt(NM, lex);
     body = stmt(NM, lex);
-    ret = genIfNode(NM, guard, body);
+    /*
+     * XXX IF stmt stmt ELSE stmt
+     */
+    if (lexAccept(lex, SYM_ELSE)){
+      debugParser(NM, "else ");
+      elsee = stmt(NM, lex);
+    }
+    ret = genIfNode(NM, guard, body, elsee);
   }
   /*
    * XXX WHILE stmt stmt
@@ -433,7 +441,14 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParser(NM, "while ");
     guard = stmt(NM, lex);
     body = stmt(NM, lex);
-    ret = genWhileNode(NM, guard, body);
+    /*
+     * XXX WHILE stmt stmt ELSE stmt
+     */
+    if (lexAccept(lex, SYM_ELSE)){
+      debugParser(NM, "else ");
+      elsee = stmt(NM, lex);
+    }
+    ret = genWhileNode(NM, guard, body, elsee);
   }
   /*
    * XXX { block }
@@ -453,7 +468,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     if (lexAccept(lex, SYM_IF)){
       debugParser(NM, "if ");
       guard = stmt(NM, lex);
-      ret = genIfNode(NM, ret, guard);
+      ret = genIfNode(NM, ret, guard, NULL);
     }
     /*
      * XXX expr WHILE stmt
@@ -461,7 +476,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     else if (lexAccept(lex, SYM_WHILE)){
       debugParser(NM, "while ");
       guard = stmt(NM, lex);
-      ret = genWhileNode(NM, ret, guard);
+      ret = genWhileNode(NM, ret, guard, NULL);
     }
     /* if the next symbol is '{', '}' or end-of-script, it
      * doesn't need the semicolon then, otherwise it is required */

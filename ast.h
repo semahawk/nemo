@@ -98,11 +98,13 @@ struct Node {
     struct {
       struct Node *guard;
       struct Node *body;
+      struct Node *elsee;
     } iff;
 
     struct {
       struct Node *guard;
       struct Node *body;
+      struct Node *elsee;
     } whilee;
 
     struct {
@@ -128,8 +130,8 @@ Node *genFloatNode(Nemo *, float);
 Node *genNameNode(Nemo *, char *);
 Node *genBinopNode(Nemo *, Node *, BinaryOp, Node *);
 Node *genUnopNode(Nemo *, Node *, UnaryOp);
-Node *genIfNode(Nemo *, Node *, Node *);
-Node *genWhileNode(Nemo *, Node *, Node *);
+Node *genIfNode(Nemo *, Node *, Node *, Node *);
+Node *genWhileNode(Nemo *, Node *, Node *, Node *);
 Node *genDeclNode(Nemo *, char *, Node *);
 Node *genNopNode(Nemo *);
 

@@ -61,6 +61,7 @@ static struct Keyword {
   { "my",    SYM_MY    },
   { "if",    SYM_IF    },
   { "while", SYM_WHILE },
+  { "else",  SYM_ELSE  },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;
@@ -587,6 +588,7 @@ const char *symToS(SymbolType type)
     case SYM_MY:         return "\"my\"";
     case SYM_IF:         return "\"if\"";
     case SYM_WHILE:      return "\"while\"";
+    case SYM_ELSE:       return "\"else\"";
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
     case SYM_STRING:     return "string";

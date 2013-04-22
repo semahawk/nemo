@@ -35,6 +35,9 @@
 
 enum SymbolType {
   SYM_MY,             /* "my"    */
+  SYM_IF,             /* "if"    */
+  SYM_WHILE,          /* "while" */
+  SYM_ELSE,           /* "else"  */
   SYM_INTEGER,        /*         */
   SYM_FLOAT,          /*         */
   SYM_STRING,         /*         */
@@ -65,8 +68,6 @@ enum SymbolType {
   SYM_TIMESEQ,        /* "*="    */
   SYM_SLASHEQ,        /* "/="    */
   SYM_MODULOEQ,       /* "%="    */
-  SYM_IF,             /* "if"    */
-  SYM_WHILE,          /* "while" */
   SYM_EOS             /* end of script */
 };
 
