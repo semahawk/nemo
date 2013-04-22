@@ -585,6 +585,8 @@ const char *symToS(SymbolType type)
 {
   switch (type){
     case SYM_MY:         return "\"my\"";
+    case SYM_IF:         return "\"if\"";
+    case SYM_WHILE:      return "\"while\"";
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
     case SYM_STRING:     return "string";

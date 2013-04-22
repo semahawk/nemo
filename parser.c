@@ -53,7 +53,14 @@
 static Node *expr(Nemo *NM, LexerState *lex);
 static Node *block(Nemo *NM, LexerState *lex);
 
-static Node *factor(Nemo *NM, LexerState *lex)
+/*
+ * primary_expr: INTEGER
+ *             | FLOAT
+ *             | NAME
+ *             | '(' expr ')'
+ *             ;
+ */
+static Node *primary_expr(Nemo *NM, LexerState *lex)
 {
   Node *new = NULL;
 
@@ -77,21 +84,35 @@ static Node *factor(Nemo *NM, LexerState *lex)
     new = expr(NM, lex);
     lexForce(lex, SYM_RPAREN);
     debugParser(NM, ")");
-  } else {
-    nmError("factor, we've got a problem with \"%s\" at line %u in column %u", symToS(lex->current->sym.type), lex->line, lex->column);
+  }
+  else if (lexAccept(lex, SYM_EOS)){
+    lexError(lex, "unexpected end of file");
+    exit(EXIT_FAILURE);
+  }
+  else {
+    lexError(lex, "factor, we've got a problem with \"%s\"", symToS(lex->current->sym.type));
     lexSkip(lex);
   }
 
   return new;
 }
 
-static Node *postfix(Nemo *NM, LexerState *lex)
+/*
+ *   postfix_op: '++'
+ *             | '--'
+ *             ;
+ *
+ * postfix_expr: NAME '(' [expr] ')'
+ *             | primary_expr postfix_op
+ *             ;
+ */
+static Node *postfix_expr(Nemo *NM, LexerState *lex)
 {
   Node *target = NULL;
-  Node *ret = target = factor(NM, lex);
+  Node *ret = target = primary_expr(NM, lex);
 
   /*
-   * XXX NAME "(" [expr] ")"
+   * XXX NAME '(' [expr] ')'
    */
   if (lexAccept(lex, SYM_LPAREN)){
     if (target->type != NT_NAME){
@@ -107,7 +128,7 @@ static Node *postfix(Nemo *NM, LexerState *lex)
     debugParser(NM, ")");
   }
   /*
-   * XXX NAME "++"
+   * XXX NAME '++'
    */
   else if (lexAccept(lex, SYM_PLUSPLUS)){
     if (isLiteral(target)){
@@ -118,7 +139,7 @@ static Node *postfix(Nemo *NM, LexerState *lex)
     ret = genUnopNode(NM, target, UNARY_POSTINC);
   }
   /*
-   * XXX NAME "--"
+   * XXX NAME '--'
    */
   else if (lexAccept(lex, SYM_MINUSMINUS)){
     if (isLiteral(target)){
@@ -132,51 +153,72 @@ static Node *postfix(Nemo *NM, LexerState *lex)
   return ret;
 }
 
-static Node *prefix(Nemo *NM, LexerState *lex)
+/*
+ *   prefix_op: '+'
+ *            | '-'
+ *            | '!'
+ *            | '++'
+ *            | '--'
+ *            ;
+ *
+ * prefix_expr: postfix_expr
+ *            | prefix_op prefix_expr
+ *            ;
+ */
+static Node *prefix_expr(Nemo *NM, LexerState *lex)
 {
   Node *ret = NULL;
   Node *target = NULL;
 
   if (lexAccept(lex, SYM_BANG)){
     debugParser(NM, "unary! ");
-    target = prefix(NM, lex);
+    target = prefix_expr(NM, lex);
     ret = genUnopNode(NM, target, UNARY_NEGATE);
   }
   else if (lexAccept(lex, SYM_PLUS)){
     debugParser(NM, "unary+ ");
-    target = prefix(NM, lex);
+    target = prefix_expr(NM, lex);
     ret = genUnopNode(NM, target, UNARY_PLUS);
   }
   else if (lexAccept(lex, SYM_MINUS)){
     debugParser(NM, "unary- ");
-    target = prefix(NM, lex);
+    target = prefix_expr(NM, lex);
     ret = genUnopNode(NM, target, UNARY_MINUS);
   }
   else if (lexAccept(lex, SYM_PLUSPLUS)){
     debugParser(NM, "prefix++:");
-    target = prefix(NM, lex);
+    target = prefix_expr(NM, lex);
     ret = genUnopNode(NM, target, UNARY_PREINC);
   }
   else if (lexAccept(lex, SYM_MINUSMINUS)){
     debugParser(NM, "prefix--:");
-    target = prefix(NM, lex);
+    target = prefix_expr(NM, lex);
     ret = genUnopNode(NM, target, UNARY_PREDEC);
   }
   else {
-    ret = postfix(NM, lex);
+    ret = postfix_expr(NM, lex);
   }
 
   return ret;
 }
 
-static Node *mult(Nemo *NM, LexerState *lex)
+/*
+ *   mult_op: '*'
+ *          | '/'
+ *          | '%'
+ *          ;
+ *
+ * mult_expr: prefix_expr [mult_op prefix_expr]*
+ *          ;
+ */
+static Node *mult_expr(Nemo *NM, LexerState *lex)
 {
   Node *ret;
   Node *left;
   Node *right;
   BinaryOp op = 0;
 
-  ret = left = prefix(NM, lex);
+  ret = left = prefix_expr(NM, lex);
 
   while (lexPeek(lex, SYM_TIMES) || lexPeek(lex, SYM_SLASH)){
     if (lexAccept(lex, SYM_TIMES)){
@@ -186,7 +228,7 @@ static Node *mult(Nemo *NM, LexerState *lex)
       op = BINARY_DIV;
       debugParser(NM, "/ ");
     }
-    right = prefix(NM, lex);
+    right = prefix_expr(NM, lex);
     ret = genBinopNode(NM, left, BINARY_MUL, right);
     left = ret;
   }
@@ -194,14 +236,22 @@ static Node *mult(Nemo *NM, LexerState *lex)
   return ret;
 }
 
-static Node *add(Nemo *NM, LexerState *lex)
+/*
+ *   add_op: '+'
+ *         | '-'
+ *         ;
+ *
+ * add_expr: mult_expr [add_op mult_expr]*
+ *         ;
+ */
+static Node *add_expr(Nemo *NM, LexerState *lex)
 {
   Node *ret;
   Node *left;
   Node *right;
   BinaryOp op = 0;
 
-  ret = left = mult(NM, lex);
+  ret = left = mult_expr(NM, lex);
 
   while (lexPeek(lex, SYM_PLUS) || lexPeek(lex, SYM_MINUS)){
     if (lexAccept(lex, SYM_PLUS)){
@@ -211,7 +261,7 @@ static Node *add(Nemo *NM, LexerState *lex)
       op = BINARY_SUB;
       debugParser(NM, "- ");
     }
-    right = mult(NM, lex);
+    right = mult_expr(NM, lex);
     ret = genBinopNode(NM, left, op, right);
     left = ret;
   }
@@ -219,14 +269,22 @@ static Node *add(Nemo *NM, LexerState *lex)
   return ret;
 }
 
-static Node *cond(Nemo *NM, LexerState *lex)
+/*
+ *   cond_op: '>'
+ *          | '<'
+ *          ;
+ *
+ * cond_expr: add_expr [cond_op add_expr]*
+ *          ;
+ */
+static Node *cond_expr(Nemo *NM, LexerState *lex)
 {
   Node *ret;
   Node *left;
   Node *right;
   BinaryOp op = 0;
 
-  ret = left = add(NM, lex);
+  ret = left = add_expr(NM, lex);
 
   while (lexPeek(lex, SYM_GT) || lexPeek(lex, SYM_LT)){
     if (lexAccept(lex, SYM_GT)){
@@ -236,7 +294,7 @@ static Node *cond(Nemo *NM, LexerState *lex)
       op = BINARY_LT;
       debugParser(NM, "< ");
     }
-    right = add(NM, lex);
+    right = add_expr(NM, lex);
     ret = genBinopNode(NM, left, op, right);
     left = ret;
   }
@@ -244,14 +302,26 @@ static Node *cond(Nemo *NM, LexerState *lex)
   return ret;
 }
 
-static Node *assign(Nemo *NM, LexerState *lex)
+/*
+ *   assign_op:  '='
+ *            | '+='
+ *            | '-='
+ *            | '*='
+ *            | '/='
+ *            | '%='
+ *            ;
+ *
+ * assign_expr: cond_expr [assign_op assign_expr]*
+ *            ;
+ */
+static Node *assign_expr(Nemo *NM, LexerState *lex)
 {
   Node *ret;
   Node *left;
   Node *right;
   BinaryOp op = 0;
 
-  ret = left = cond(NM, lex);
+  ret = left = cond_expr(NM, lex);
 
   while (lexPeek(lex, SYM_EQ)      ||
          lexPeek(lex, SYM_PLUSEQ)  ||
@@ -283,7 +353,7 @@ static Node *assign(Nemo *NM, LexerState *lex)
       op = BINARY_ASSIGN_MOD;
       debugParser(NM, "%= ");
     }
-    right = assign(NM, lex);
+    right = assign_expr(NM, lex);
     ret = genBinopNode(NM, left, op, right);
     left = ret;
   }
@@ -291,6 +361,11 @@ static Node *assign(Nemo *NM, LexerState *lex)
   return ret;
 }
 
+/*
+ * expr: MY NAME [= assign_expr]
+ *     | assign_expr
+ *     ;
+ */
 static Node *expr(Nemo *NM, LexerState *lex)
 {
   Node *ret = NULL;
@@ -305,22 +380,35 @@ static Node *expr(Nemo *NM, LexerState *lex)
     debugParser(NM, "%s", name);
     if (lexAccept(lex, SYM_EQ)){
       debugParser(NM, " = ");
-      value = assign(NM, lex);
+      value = assign_expr(NM, lex);
     }
     ret = genDeclNode(NM, name, value);
   } else {
-    ret = assign(NM, lex);
+    ret = assign_expr(NM, lex);
   }
 
   return ret;
 }
 
+/*
+ * stmt: ';'
+ *     | block
+ *     | IF stmt stmt
+ *     | WHILE stmt stmt
+ *     | expr IF stmt
+ *     | expr WHILE stmt
+ *     | expr ';'
+ *     ;
+ */
 static Node *stmt(Nemo *NM, LexerState *lex)
 {
-  Node *ret = NULL;
+  Node *ret   = NULL;
   Node *guard = NULL;
-  Node *body = NULL;
+  Node *body  = NULL;
 
+  /*
+   * XXX ;
+   */
   if (lexAccept(lex, SYM_SEMICOLON)){
     /* that's NOP
      * we're generating it anyway, because it would come in handy when we're
@@ -329,18 +417,27 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParser(NM, ";\n");
     ret = genNopNode(NM);
   }
+  /*
+   * XXX IF stmt stmt
+   */
   else if (lexAccept(lex, SYM_IF)){
     debugParser(NM, "if ");
     guard = stmt(NM, lex);
     body = stmt(NM, lex);
     ret = genIfNode(NM, guard, body);
   }
+  /*
+   * XXX WHILE stmt stmt
+   */
   else if (lexAccept(lex, SYM_WHILE)){
     debugParser(NM, "while ");
     guard = stmt(NM, lex);
     body = stmt(NM, lex);
     ret = genWhileNode(NM, guard, body);
   }
+  /*
+   * XXX { block }
+   */
   else if (lexAccept(lex, SYM_LMUSTASHE)){
     debugParser(NM, "{\n");
     debugParserIndent();
@@ -349,12 +446,26 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParserDedent();
     debugParser(NM, "}\n");
   } else {
-    ret = expr(NM, lex);
-    /* if the next symbol is "if", "while", '{', '}' or end-of-script, it
+    body = ret = expr(NM, lex);
+    /*
+     * XXX expr IF stmt
+     */
+    if (lexAccept(lex, SYM_IF)){
+      debugParser(NM, "if ");
+      guard = stmt(NM, lex);
+      ret = genIfNode(NM, ret, guard);
+    }
+    /*
+     * XXX expr WHILE stmt
+     */
+    else if (lexAccept(lex, SYM_WHILE)){
+      debugParser(NM, "while ");
+      guard = stmt(NM, lex);
+      ret = genWhileNode(NM, ret, guard);
+    }
+    /* if the next symbol is '{', '}' or end-of-script, it
      * doesn't need the semicolon then, otherwise it is required */
-    if (!lexPeek(lex, SYM_IF) &&
-        !lexPeek(lex, SYM_WHILE) &&
-        !lexPeek(lex, SYM_LMUSTASHE) &&
+    else if (!lexPeek(lex, SYM_LMUSTASHE) &&
         !lexPeek(lex, SYM_RMUSTASHE) &&
         !lexPeek(lex, SYM_EOS)){
       lexForce(lex, SYM_SEMICOLON);
@@ -365,6 +476,10 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   return ret;
 }
 
+/*
+ * block: '{' [stmt]* '}'
+ *      ;
+ */
 static Node *block(Nemo *NM, LexerState *lex)
 {
   Node *new_block = nmMalloc(NM, sizeof(Node));
@@ -395,6 +510,12 @@ static Node *block(Nemo *NM, LexerState *lex)
   return new_block;
 }
 
+/*
+ * @name - parseFile
+ * @desc - parse file of a given <fname> and return a pointer to the node of a
+ *         block that was parsed, the main block of the whole script
+ * @return - {Node *} of .type = NT_BLOCK
+ */
 Node *parseFile(Nemo *NM, char *fname)
 {
   Node *nodest = NULL;
@@ -408,6 +529,13 @@ Node *parseFile(Nemo *NM, char *fname)
   return nodest;
 }
 
+/*
+ * @name - parseString
+ * @desc - parse the given <string> and return a pointer to the node of a
+ *         block that was parsed, the main block of the script
+ *         (it probably should return something else)
+ * @return - {Node *} of .type = NT_BLOCK
+ */
 Node *parseString(Nemo *NM, char *string)
 {
   Node *nodest = NULL;
