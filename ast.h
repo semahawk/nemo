@@ -44,7 +44,8 @@ enum NodeType {
   NT_WHILE,
   NT_DECL,
   NT_BLOCK,
-  NT_CALL
+  NT_CALL,
+  NT_FUNCDEF
 };
 
 enum BinaryOp {
@@ -125,6 +126,11 @@ struct Node {
       char *name;
       struct Node **params;
     } call;
+
+    struct {
+      char *name;
+      struct Node *body;
+    } funcdef;
   } data;
 };
 
@@ -144,6 +150,7 @@ Node *genIfNode(Nemo *, Node *, Node *, Node *);
 Node *genWhileNode(Nemo *, Node *, Node *, Node *);
 Node *genDeclNode(Nemo *, char *, Node *);
 Node *genCallNode(Nemo *, char *, Node **);
+Node *genFuncDefNode(Nemo *, char *, Node *);
 Node *genNopNode(Nemo *);
 
 void  freeIntNode(Nemo *, Node *);
@@ -157,6 +164,7 @@ void  freeDeclNode(Nemo *, Node *);
 void  freeCallNode(Nemo *, Node *);
 void  freeBlockNode(Nemo *, Node *);
 void  freeNopNode(Nemo *, Node *);
+void  freeFuncDefNode(Nemo *, Node *);
 void  freeDispatch(Nemo *, Node *);
 
 #endif /* AST_H */

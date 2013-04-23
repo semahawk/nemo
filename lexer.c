@@ -63,6 +63,7 @@ static struct Keyword {
   { "while", SYM_WHILE },
   { "else",  SYM_ELSE  },
   { "print", SYM_PRINT },
+  { "fn",    SYM_FN    },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;
@@ -591,6 +592,7 @@ const char *symToS(SymbolType type)
     case SYM_WHILE:      return "\"while\"";
     case SYM_ELSE:       return "\"else\"";
     case SYM_PRINT:      return "\"print\"";
+    case SYM_FN:         return "\"fn\"";
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
     case SYM_STRING:     return "string";

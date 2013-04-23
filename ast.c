@@ -65,7 +65,8 @@ static void (*freeFuncs[])(Nemo *, Node *) =
   freeWhileNode,
   freeDeclNode,
   freeBlockNode,
-  freeCallNode
+  freeCallNode,
+  freeFuncDefNode
 };
 
 /*
@@ -460,6 +461,38 @@ void freeCallNode(Nemo *NM, Node *n)
   nmFree(NM, n);
 }
 
+/*
+ * @name - genFuncDefNode
+ * @desc - creates a node for defining a function of a given <name>
+ */
+Node *genFuncDefNode(Nemo *NM, char *name, Node *body)
+{
+  Node *n = nmMalloc(NM, sizeof(Node));
+
+  n->type = NT_FUNCDEF;
+  n->data.funcdef.name = strdup(NM, name);
+  n->data.funcdef.body = body;
+
+  debugAST(NM, n, "create function definition node (name: %s, body: %p)", name, (void*)body);
+
+  return n;
+}
+
+/*
+ * @name - freeFuncDefNode
+ * @desc - responsible for freeing call n and optionally any params it had
+ */
+void freeFuncDefNode(Nemo *NM, Node *n)
+{
+  assert(n);
+  assert(n->type == NT_FUNCDEF);
+
+  nmFree(NM, n->data.funcdef.name);
+  freeDispatch(NM, n->data.funcdef.body);
+  debugAST(NM, n, "free function definition node");
+  nmFree(NM, n);
+}
+
 static const char *binopToS(BinaryOp op)
 {
   switch (op){
@@ -497,4 +530,6 @@ static const char *unopToS(UnaryOp op)
 
 /*
  * Steve Vai
+ *
+ * The IT Crowd
  */

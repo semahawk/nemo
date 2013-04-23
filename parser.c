@@ -474,6 +474,7 @@ static Node *expr(Nemo *NM, LexerState *lex)
 /*
  * stmt: ';'
  *     | block
+ *     | FN NAME stmt
  *     | IF stmt stmt
  *     | WHILE stmt stmt
  *     | expr IF stmt
@@ -487,6 +488,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   Node *guard = NULL;
   Node *body  = NULL;
   Node *elsee = NULL;
+  char *name  = NULL;
 
   /*
    * XXX ;
@@ -498,6 +500,17 @@ static Node *stmt(Nemo *NM, LexerState *lex)
      */
     debugParser(NM, ";\n");
     ret = genNopNode(NM);
+  }
+  /*
+   * XXX FN NAME stmt
+   */
+  else if (lexAccept(lex, SYM_FN)){
+    debugParser(NM, "fn ");
+    lexForce(lex, SYM_NAME);
+    name = lex->current->prev->sym.value.s;
+    debugParser(NM, "%s ", name);
+    body = stmt(NM, lex);
+    ret = genFuncDefNode(NM, name, body);
   }
   /*
    * XXX IF stmt stmt
@@ -569,6 +582,8 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParser(NM, ";\n");
   }
 
+  debugAST(NM, ret, "create statement");
+
   return ret;
 }
 
@@ -602,6 +617,8 @@ static Node *block(Nemo *NM, LexerState *lex)
       new_block->data.block.head = new_stmt;
     }
   }
+
+  debugAST(NM, new_block, "create block node");
 
   return new_block;
 }
