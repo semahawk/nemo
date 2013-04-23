@@ -43,7 +43,8 @@ enum NodeType {
   NT_IF,
   NT_WHILE,
   NT_DECL,
-  NT_BLOCK
+  NT_BLOCK,
+  NT_CALL
 };
 
 enum BinaryOp {
@@ -71,6 +72,9 @@ enum UnaryOp {
   UNARY_POSTDEC
 };
 
+/*
+ * handled as a doubly linked list so it's easy to manipulate them
+ */
 struct Statement {
   struct Node *stmt;
   struct Statement *next;
@@ -116,6 +120,11 @@ struct Node {
       struct Statement *head;
       struct Statement *tail;
     } block;
+
+    struct {
+      char *name;
+      struct Node **params;
+    } call;
   } data;
 };
 
@@ -123,6 +132,7 @@ typedef enum   BinaryOp  BinaryOp;
 typedef enum   UnaryOp   UnaryOp;
 typedef enum   NodeType  NodeType;
 typedef struct Node      Node;
+typedef struct Params    Params;
 typedef struct Statement Statement;
 
 Node *genIntNode(Nemo *, int);
@@ -133,6 +143,7 @@ Node *genUnopNode(Nemo *, Node *, UnaryOp);
 Node *genIfNode(Nemo *, Node *, Node *, Node *);
 Node *genWhileNode(Nemo *, Node *, Node *, Node *);
 Node *genDeclNode(Nemo *, char *, Node *);
+Node *genCallNode(Nemo *, char *, Node **);
 Node *genNopNode(Nemo *);
 
 void  freeIntNode(Nemo *, Node *);
@@ -143,6 +154,7 @@ void  freeUnopNode(Nemo *, Node *);
 void  freeIfNode(Nemo *, Node *);
 void  freeWhileNode(Nemo *, Node *);
 void  freeDeclNode(Nemo *, Node *);
+void  freeCallNode(Nemo *, Node *);
 void  freeBlockNode(Nemo *, Node *);
 void  freeNopNode(Nemo *, Node *);
 void  freeDispatch(Nemo *, Node *);

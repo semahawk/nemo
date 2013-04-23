@@ -64,37 +64,84 @@ static Node *primary_expr(Nemo *NM, LexerState *lex)
 {
   Node *new = NULL;
 
+  /*
+   * XXX INTEGER
+   */
   if (lexPeek(lex, SYM_INTEGER)){
     new = genIntNode(NM, lex->current->sym.value.i);
     debugParser(NM, "%d ", new->data.i);
     lexSkip(lex);
   }
+  /*
+   * XXX FLOAT
+   */
   else if (lexPeek(lex, SYM_FLOAT)){
     new = genFloatNode(NM, lex->current->sym.value.f);
     debugParser(NM, "%f ", new->data.f);
     lexSkip(lex);
   }
+  /*
+   * XXX NAME
+   */
   else if (lexPeek(lex, SYM_NAME)){
     new = genNameNode(NM, lex->current->sym.value.s);
     debugParser(NM, "%s ", new->data.s);
     lexSkip(lex);
   }
+  /*
+   * XXX '(' expr ')'
+   */
   else if (lexAccept(lex, SYM_LPAREN)){
     debugParser(NM, "(");
     new = expr(NM, lex);
     lexForce(lex, SYM_RPAREN);
     debugParser(NM, ")");
   }
+  /*
+   * XXX EOS
+   */
   else if (lexAccept(lex, SYM_EOS)){
-    lexError(lex, "unexpected end of file");
-    exit(EXIT_FAILURE);
+    /*lexError(lex, "unexpected end of file");*/
+    /*exit(EXIT_FAILURE);*/
   }
+  /*
+   * XXX nothing described above, returning NULL
+   */
   else {
-    lexError(lex, "factor, we've got a problem with \"%s\"", symToS(lex->current->sym.type));
-    lexSkip(lex);
+    return NULL;
   }
 
   return new;
+}
+
+/*
+ * params_list: # empty
+ *            | expr [',' expr]*
+ *            ;
+ */
+static Node **params_list(Nemo *NM, LexerState *lex)
+{
+  unsigned nmemb = 5;
+  unsigned counter = 0;
+  Node **params = nmCalloc(NM, nmemb, sizeof(Node));
+  Node *first_expr = expr(NM, lex);
+
+  if (!first_expr){
+    nmFree(NM, params);
+    return NULL;
+  }
+
+  params[counter++] = first_expr;
+  while (lexAccept(lex, SYM_COMMA)){
+    Node *next_expr = expr(NM, lex);
+    if (counter + 1 > nmemb){
+      nmemb++;
+      params = nmRealloc(NM, params, nmemb * sizeof(Node));
+    }
+    params[counter++] = next_expr;
+  }
+
+  return params;
 }
 
 /*
@@ -110,22 +157,26 @@ static Node *postfix_expr(Nemo *NM, LexerState *lex)
 {
   Node *target = NULL;
   Node *ret = target = primary_expr(NM, lex);
+  Node ** params;
+  char *name = NULL;
 
   /*
-   * XXX NAME '(' [expr] ')'
+   * XXX NAME '(' [params_list] ')'
    */
   if (lexAccept(lex, SYM_LPAREN)){
     if (target->type != NT_NAME){
-      lexError(lex, "expected a name for a function call");
+      lexError(lex, "expected a name for a function call, not a %s", symToS(lex->current->sym.type));
       exit(EXIT_FAILURE);
     }
+    name = lex->current->prev->sym.value.s;
+    debugParser(NM, "%s ", name);
     debugParser(NM, "(");
-    if (!lexPeek(lex, SYM_RPAREN)){
-      /* FIXME: params list */
-      expr(NM, lex);
-    }
+    /*if (!lexPeek(lex, SYM_RPAREN)){*/
+      params = params_list(NM, lex);
+    /*}*/
     lexForce(lex, SYM_RPAREN);
     debugParser(NM, ")");
+    ret = genCallNode(NM, name, params);
   }
   /*
    * XXX NAME '++'
@@ -363,6 +414,7 @@ static Node *assign_expr(Nemo *NM, LexerState *lex)
 
 /*
  * expr: MY NAME [= assign_expr]
+ *     | PRINT params_list
  *     | assign_expr
  *     ;
  */
@@ -370,20 +422,47 @@ static Node *expr(Nemo *NM, LexerState *lex)
 {
   Node *ret = NULL;
   Node *value = NULL;
+  Node **params;
   char *name = NULL;
 
+  /*
+   * XXX MY
+   */
   if (lexAccept(lex, SYM_MY)){
     debugParser(NM, "my ");
     lexForce(lex, SYM_NAME);
     /* lexForce skips the symbol so we have to get to the previous one */
     name = lex->current->prev->sym.value.s;
     debugParser(NM, "%s", name);
+    /*
+     * XXX MY NAME = assign_expr
+     */
     if (lexAccept(lex, SYM_EQ)){
       debugParser(NM, " = ");
       value = assign_expr(NM, lex);
     }
     ret = genDeclNode(NM, name, value);
-  } else {
+  }
+  /*
+   * XXX PRINT
+   */
+  else if (lexAccept(lex, SYM_PRINT)){
+    debugParser(NM, "print ");
+    /*
+     * XXX PRINT '(' params_list ')'
+     */
+    if (lexAccept(lex, SYM_LPAREN)){
+      params = params_list(NM, lex);
+      lexForce(lex, SYM_RPAREN);
+    /*
+     * XXX PRINT params_list
+     */
+    } else {
+      params = params_list(NM, lex);
+    }
+    ret = genCallNode(NM, "print", params);
+  }
+  else {
     ret = assign_expr(NM, lex);
   }
 

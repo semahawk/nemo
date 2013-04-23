@@ -38,6 +38,7 @@ enum SymbolType {
   SYM_IF,             /* "if"    */
   SYM_WHILE,          /* "while" */
   SYM_ELSE,           /* "else"  */
+  SYM_PRINT,          /* "print" */
   SYM_INTEGER,        /*         */
   SYM_FLOAT,          /*         */
   SYM_STRING,         /*         */

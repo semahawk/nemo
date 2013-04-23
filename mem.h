@@ -33,6 +33,7 @@
 
 void *nmMalloc(Nemo *, size_t);
 void *nmCalloc(Nemo *, size_t, size_t);
+void *nmRealloc(Nemo *, void *, size_t);
 void  nmFree(Nemo *, void *);
 
 #endif /* MEM_H */

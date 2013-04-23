@@ -36,6 +36,7 @@
 #define debugFree(p)       debugMemory(NM, p, "free")
 #define debugMalloc(p,i)   debugMemory(NM, p, "malloc %lu bytes", i)
 #define debugCalloc(p,i,j) debugMemory(NM, p, "calloc %lu x %lu bytes", i, j)
+#define debugRealloc(p,i)  debugMemory(NM, p, "realloc %lu bytes", i)
 
 void debugMemory(Nemo *, void *, const char *, ...);
 

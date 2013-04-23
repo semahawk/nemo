@@ -73,6 +73,20 @@ void *nmCalloc(Nemo *NM, size_t nmemb, size_t size)
   return p;
 }
 
+void *nmRealloc(Nemo *NM, void *ptr, size_t nmemb)
+{
+  void *p = realloc(ptr, nmemb);
+
+  if (!p){
+    nmFatal("realloc failed to reallocate %lu bytes", nmemb);
+    exit(EXIT_FAILURE);
+  }
+
+  debugRealloc(p, nmemb);
+
+  return p;
+}
+
 void nmFree(Nemo *NM, void *p)
 {
   free(p);

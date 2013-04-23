@@ -60,7 +60,8 @@ static void (*freeFuncs[])(Nemo *, Node *) =
   freeIfNode,
   freeWhileNode,
   freeDeclNode,
-  freeBlockNode
+  freeBlockNode,
+  freeCallNode
 };
 
 /*
@@ -69,6 +70,8 @@ static void (*freeFuncs[])(Nemo *, Node *) =
  */
 void freeDispatch(Nemo *NM, Node *node)
 {
+  assert(node);
+
   /* watch out for NOPs */
   if (node)
     freeFuncs[node->type](NM, node);
@@ -374,6 +377,46 @@ void freeDeclNode(Nemo *NM, Node *node)
   if (node->data.decl.value)
     freeDispatch(NM, node->data.decl.value);
 
+  nmFree(NM, node);
+}
+
+/*
+ * @name - genCallNode
+ * @desc - creates a node for calling a function of a given <name>
+ *         parameter <params> is optional, may be NULL, then it means
+ *         that no parameters have been passed
+ */
+Node *genCallNode(Nemo *NM, char *name, Node **params)
+{
+  Node *new = nmMalloc(NM, sizeof(Node));
+
+  new->type = NT_CALL;
+  new->data.call.name = strdup(NM, name);
+  new->data.call.params = params;
+
+  return new;
+}
+
+/*
+ * @name - freeCallNode
+ * @desc - responsible for freeing call node and optionally any params it had
+ */
+void freeCallNode(Nemo *NM, Node *node)
+{
+  unsigned i;
+
+  assert(node);
+  assert(node->type == NT_CALL);
+
+  nmFree(NM, node->data.call.name);
+  /* parameters are optional */
+  if (node->data.call.params){
+    for (i = 0; node->data.call.params[i] != NULL; i++){
+      freeDispatch(NM, node->data.call.params[i]);
+    }
+  }
+
+  nmFree(NM, node->data.call.params);
   nmFree(NM, node);
 }
 
