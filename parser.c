@@ -141,6 +141,8 @@ static Node **params_list(Nemo *NM, LexerState *lex)
     params[counter++] = next_expr;
   }
 
+  debugAST(NM, params, "create params list");
+
   return params;
 }
 

@@ -44,6 +44,7 @@
 #include "nemo.h"
 #include "ast.h"
 #include "mem.h"
+#include "debug.h"
 
 /*
  * Array of pointer functions responsible for freeing an adequate kind of node
@@ -66,286 +67,315 @@ static void (*freeFuncs[])(Nemo *, Node *) =
 
 /*
  * @name - freeDispatch
- * @desc - runs an appropriate function, that will free given <node>
+ * @desc - runs an appropriate function, that will free given <n>
  */
-void freeDispatch(Nemo *NM, Node *node)
+void freeDispatch(Nemo *NM, Node *n)
 {
-  assert(node);
+  assert(n);
 
   /* watch out for NOPs */
-  if (node)
-    freeFuncs[node->type](NM, node);
+  if (n)
+    freeFuncs[n->type](NM, n);
 }
 
 /*
  * @name - freeBlock
  * @desc - frees given block and every statement it holds
  */
-void freeBlockNode(Nemo *NM, Node *node)
+void freeBlockNode(Nemo *NM, Node *n)
 {
   Statement *s;
 
-  assert(node);
-  assert(node->type == NT_BLOCK);
+  assert(n);
+  assert(n->type == NT_BLOCK);
 
-  for (s = node->data.block.tail; s != NULL; s = s->next){
+  for (s = n->data.block.tail; s != NULL; s = s->next){
     freeDispatch(NM, s->stmt);
+    debugAST(NM, n, "free statement node");
     nmFree(NM, s);
   }
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free block node");
+  nmFree(NM, n);
 }
 
 /*
  * @name - genNopNode
- * @desc - create a node that does NOTHING
+ * @desc - create a n that does NOTHING
  */
 Node *genNopNode(Nemo *NM)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_NOP;
+  n->type = NT_NOP;
 
-  return new;
+  debugAST(NM, n, "create NOP node");
+
+  return n;
 }
 
 /*
  * @name - freeNopNode
- * @desc - frees the NOP node
+ * @desc - frees the NOP n
  */
-void freeNopNode(Nemo *NM, Node *node)
+void freeNopNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_NOP);
+  assert(n);
+  assert(n->type == NT_NOP);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free NOP node");
+
+  nmFree(NM, n);
 }
 
 /*
  * @name - genIntNode
- * @desc - create a node holding a single literal integer
+ * @desc - create a n holding a single literal integer
  */
 Node *genIntNode(Nemo *NM, int i)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_INTEGER;
-  new->data.i = i;
+  n->type = NT_INTEGER;
+  n->data.i = i;
 
-  return new;
+  debugAST(NM, n, "create int node (value: %d)", i);
+
+  return n;
 }
 
 /*
  * @name - freeIntNode
- * @desc - responsible for freeing literal integer nodes
+ * @desc - responsible for freeing literal integer ns
  */
-void freeIntNode(Nemo *NM, Node *node)
+void freeIntNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_INTEGER);
+  assert(n);
+  assert(n->type == NT_INTEGER);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free int node");
+
+  nmFree(NM, n);
 }
 
 /*
  * @name - genFloatNode
- * @desc - create a node holding a single literal float
+ * @desc - create a n holding a single literal float
  */
 Node *genFloatNode(Nemo *NM, float f)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_FLOAT;
-  new->data.f = f;
+  n->type = NT_FLOAT;
+  n->data.f = f;
 
-  return new;
+  debugAST(NM, n, "create float node (value: %f)", f);
+
+  return n;
 }
 
 /*
  * @name - freeFloatNode
- * @desc - responsible for freeing literal float nodes
+ * @desc - responsible for freeing literal float ns
  */
-void freeFloatNode(Nemo *NM, Node *node)
+void freeFloatNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_FLOAT);
+  assert(n);
+  assert(n->type == NT_FLOAT);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free float node");
+
+  nmFree(NM, n);
 }
 
 /*
  * @name - genNameNode
- * @desc - creates a (eg. variable) name node
+ * @desc - creates a (eg. variable) name n
  */
 Node *genNameNode(Nemo *NM, char *s)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_NAME;
-  new->data.s = strdup(NM, s);
+  n->type = NT_NAME;
+  n->data.s = strdup(NM, s);
 
-  return new;
+  debugAST(NM, n, "create name node (name: %s)", s);
+
+  return n;
 }
 
 /*
  * @name - freeNameNode
- * @desc - responsible for freeing (eg. variable) name nodes
+ * @desc - responsible for freeing (eg. variable) name ns
  */
-void freeNameNode(Nemo *NM, Node *node)
+void freeNameNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_NAME);
+  assert(n);
+  assert(n->type == NT_NAME);
 
-  nmFree(NM, node);
-  nmFree(NM, node->data.s);
+  debugAST(NM, n, "free name node");
+  nmFree(NM, n);
+  nmFree(NM, n->data.s);
 }
 
 /*
  * @name - genBinopNode
- * @desc - creates a binary operation node
+ * @desc - creates a binary operation n
  */
 Node *genBinopNode(Nemo *NM, Node *left, BinaryOp op, Node *right)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_BINOP;
-  new->data.binop.op = op;
-  new->data.binop.left = left;
-  new->data.binop.right = right;
+  n->type = NT_BINOP;
+  n->data.binop.op = op;
+  n->data.binop.left = left;
+  n->data.binop.right = right;
 
-  return new;
+  debugAST(NM, n, "create binary operation node (op: %d, left: %p, right: %p)", op, (void*)left, (void*)right);
+
+  return n;
 }
 
 /*
  * @name - freeBinopNode
- * @desc - responsible for freeing binary operation nodes
+ * @desc - responsible for freeing binary operation ns
  */
-void freeBinopNode(Nemo *NM, Node *node)
+void freeBinopNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_BINOP);
+  assert(n);
+  assert(n->type == NT_BINOP);
 
-  freeDispatch(NM, node->data.binop.left);
-  freeDispatch(NM, node->data.binop.right);
+  freeDispatch(NM, n->data.binop.left);
+  freeDispatch(NM, n->data.binop.right);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free binary operation node");
+  nmFree(NM, n);
 }
 
 /*
  * @name - genUnopNode
- * @desc - creates a node for unary operation
+ * @desc - creates a n for unary operation
  */
 Node *genUnopNode(Nemo *NM, Node *expr, UnaryOp op)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_UNOP;
-  new->data.unop.op = op;
-  new->data.unop.expr = expr;
+  n->type = NT_UNOP;
+  n->data.unop.op = op;
+  n->data.unop.expr = expr;
 
-  return new;
+  debugAST(NM, n, "create unary operation node (op: %d, expr: %p)", op, (void*)expr);
+
+  return n;
 }
 
 /*
  * @name - freeUnopNode
- * @desc - responsible for freeing unary operation nodes
+ * @desc - responsible for freeing unary operation ns
  */
-void freeUnopNode(Nemo *NM, Node *node)
+void freeUnopNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_UNOP);
+  assert(n);
+  assert(n->type == NT_UNOP);
 
-  freeDispatch(NM, node->data.unop.expr);
+  freeDispatch(NM, n->data.unop.expr);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free unary operation node");
+  nmFree(NM, n);
 }
 
 /*
  * @name - genIfNode
- * @desc - creates a node for the if statement
+ * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
 Node *genIfNode(Nemo *NM, Node *guard, Node *body, Node *elsee)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_IF;
-  new->data.iff.guard = guard;
-  new->data.iff.body = body;
-  new->data.iff.elsee = elsee;
+  n->type = NT_IF;
+  n->data.iff.guard = guard;
+  n->data.iff.body = body;
+  n->data.iff.elsee = elsee;
 
-  return new;
+  debugAST(NM, n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+
+  return n;
 }
 
 /*
  * @name - freeIfNode
- * @desc - responsible for freeing if nodes, and optionally, if present, it's
+ * @desc - responsible for freeing if ns, and optionally, if present, it's
  *         guarding statement and it's body, and the else statement connected
  *         with it
  */
-void freeIfNode(Nemo *NM, Node *node)
+void freeIfNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_IF);
+  assert(n);
+  assert(n->type == NT_IF);
 
   /* guard in if is optional */
-  if (node->data.iff.guard)
-    freeDispatch(NM, node->data.iff.guard);
+  if (n->data.iff.guard)
+    freeDispatch(NM, n->data.iff.guard);
   /* so is it's body */
-  if (node->data.iff.body)
-    freeDispatch(NM, node->data.iff.body);
+  if (n->data.iff.body)
+    freeDispatch(NM, n->data.iff.body);
   /* aaaaaand the else */
-  if (node->data.iff.elsee)
-    freeDispatch(NM, node->data.iff.elsee);
+  if (n->data.iff.elsee)
+    freeDispatch(NM, n->data.iff.elsee);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free if node");
+  nmFree(NM, n);
 }
 
 /*
  * @name - genWhileNode
- * @desc - creates a while node
+ * @desc - creates a while n
  *         <guard>, <body> and <elsee> are optional, can be NULL,
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
 Node *genWhileNode(Nemo *NM, Node *guard, Node *body, Node *elsee)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_WHILE;
-  new->data.whilee.guard = guard;
-  new->data.whilee.body = body;
-  new->data.whilee.elsee = elsee;
+  n->type = NT_WHILE;
+  n->data.whilee.guard = guard;
+  n->data.whilee.body = body;
+  n->data.whilee.elsee = elsee;
 
-  return new;
+  debugAST(NM, n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+
+  return n;
 }
 
 /*
  * @name - freeWhileNode
- * @desc - responsible for freeing while node, and optionally
+ * @desc - responsible for freeing while n, and optionally
  *         guarding statement and it's body, as they are optional
  */
-void freeWhileNode(Nemo *NM, Node *node)
+void freeWhileNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_WHILE);
+  assert(n);
+  assert(n->type == NT_WHILE);
 
   /* guard in while is optional */
-  if (node->data.whilee.guard)
-    freeDispatch(NM, node->data.whilee.guard);
+  if (n->data.whilee.guard)
+    freeDispatch(NM, n->data.whilee.guard);
   /* so is it's body */
-  if (node->data.whilee.body)
-    freeDispatch(NM, node->data.whilee.body);
+  if (n->data.whilee.body)
+    freeDispatch(NM, n->data.whilee.body);
   /* aaaaaand the else */
-  if (node->data.whilee.elsee)
-    freeDispatch(NM, node->data.whilee.elsee);
+  if (n->data.whilee.elsee)
+    freeDispatch(NM, n->data.whilee.elsee);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free while node");
+  nmFree(NM, n);
 }
 
 /*
  * @name - genDeclNode
- * @desc - creates a node for declaring a variable of given <name>
+ * @desc - creates a n for declaring a variable of given <name>
  *         parameter <value> is optional, may be NULL, then it means
  *         something like:
  *
@@ -353,71 +383,78 @@ void freeWhileNode(Nemo *NM, Node *node)
  */
 Node *genDeclNode(Nemo *NM, char *name, Node *value)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_DECL;
-  new->data.decl.name = strdup(NM, name);
-  new->data.decl.value = value;
+  n->type = NT_DECL;
+  n->data.decl.name = strdup(NM, name);
+  n->data.decl.value = value;
 
-  return new;
+  debugAST(NM, n, "create declaration node (name: %s)", name);
+
+  return n;
 }
 
 /*
  * @name - freeDeclNode
- * @desc - responsible for freeing declaration node
+ * @desc - responsible for freeing declaration n
  *         and optionally a init value it was holding
  */
-void freeDeclNode(Nemo *NM, Node *node)
+void freeDeclNode(Nemo *NM, Node *n)
 {
-  assert(node);
-  assert(node->type == NT_DECL);
+  assert(n);
+  assert(n->type == NT_DECL);
 
-  nmFree(NM, node->data.decl.name);
+  nmFree(NM, n->data.decl.name);
   /* initialized value is optional */
-  if (node->data.decl.value)
-    freeDispatch(NM, node->data.decl.value);
+  if (n->data.decl.value)
+    freeDispatch(NM, n->data.decl.value);
 
-  nmFree(NM, node);
+  debugAST(NM, n, "free declaration node");
+  nmFree(NM, n);
 }
 
 /*
  * @name - genCallNode
- * @desc - creates a node for calling a function of a given <name>
+ * @desc - creates a n for calling a function of a given <name>
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
 Node *genCallNode(Nemo *NM, char *name, Node **params)
 {
-  Node *new = nmMalloc(NM, sizeof(Node));
+  Node *n = nmMalloc(NM, sizeof(Node));
 
-  new->type = NT_CALL;
-  new->data.call.name = strdup(NM, name);
-  new->data.call.params = params;
+  n->type = NT_CALL;
+  n->data.call.name = strdup(NM, name);
+  n->data.call.params = params;
 
-  return new;
+  debugAST(NM, n, "create call node (name: %s, params: %p)", name, params);
+
+  return n;
 }
 
 /*
  * @name - freeCallNode
- * @desc - responsible for freeing call node and optionally any params it had
+ * @desc - responsible for freeing call n and optionally any params it had
  */
-void freeCallNode(Nemo *NM, Node *node)
+void freeCallNode(Nemo *NM, Node *n)
 {
   unsigned i;
 
-  assert(node);
-  assert(node->type == NT_CALL);
+  assert(n);
+  assert(n->type == NT_CALL);
 
-  nmFree(NM, node->data.call.name);
+  nmFree(NM, n->data.call.name);
   /* parameters are optional */
-  if (node->data.call.params){
-    for (i = 0; node->data.call.params[i] != NULL; i++){
-      freeDispatch(NM, node->data.call.params[i]);
+  if (n->data.call.params){
+    for (i = 0; n->data.call.params[i] != NULL; i++){
+      freeDispatch(NM, n->data.call.params[i]);
     }
+    debugAST(NM, n->data.call.params, "free params list");
+    nmFree(NM, n->data.call.params);
   }
 
-  nmFree(NM, node->data.call.params);
-  nmFree(NM, node);
+  debugAST(NM, n, "free call node");
+  nmFree(NM, n);
 }
 
 /*

@@ -115,3 +115,15 @@ void debugParserDedent(void)
   parser_debug_level -= PARSER_INDENT_STEP;
 }
 
+void debugAST(Nemo *NM, void *ptr, const char *msg, ...)
+{
+  if (NM->flags.debug.ast){
+    va_list vl;
+    va_start(vl, msg);
+    fprintf(stderr, "%p: ", ptr);
+    vfprintf(stderr, msg, vl);
+    fprintf(stderr, "\n");
+    va_end(vl);
+  }
+}
+

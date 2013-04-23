@@ -89,17 +89,20 @@ int main(int argc, char *argv[])
       case 'd': {
                   switch (*optarg){
                     case 'h': printf("\nDebug options include:\n");
-                              printf("  m   memory allocation, freeing and so-on\n");
+                              printf("  a   abstract syntax tree nodes creation and deallocation\n");
+                              printf("  m   memory allocation, deallocation and so-on\n");
                               printf("  p   parser messages\n");
                               printf("  l   lexer messages\n\n");
                               return EXIT_SUCCESS;
+                    case 'a': NM->flags.debug.ast = TRUE;
+                              break;
                     case 'm': NM->flags.debug.memory = TRUE;
                               break;
                     case 'p': NM->flags.debug.parser = TRUE;
                               break;
                     case 'l': NM->flags.debug.lexer = TRUE;
                               break;
-                    default:  nmError("unknown option for debug '%c', run with -dh to see the possible options", *optarg);
+                    default:  nmError("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
                               return EXIT_FAILURE;
                   }
                   break;

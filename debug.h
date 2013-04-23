@@ -49,5 +49,7 @@ void debugParser(Nemo *, const char *, ...);
 void debugParserIndent(void);
 void debugParserDedent(void);
 
+void debugAST(Nemo *, void *, const char *, ...);
+
 #endif /* DEBUG_H */
 
