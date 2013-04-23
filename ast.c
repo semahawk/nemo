@@ -46,6 +46,9 @@
 #include "mem.h"
 #include "debug.h"
 
+static const char *binopToS(BinaryOp op);
+static const char *unopToS(UnaryOp op);
+
 /*
  * Array of pointer functions responsible for freeing an adequate kind of node
  */
@@ -231,7 +234,7 @@ Node *genBinopNode(Nemo *NM, Node *left, BinaryOp op, Node *right)
   n->data.binop.left = left;
   n->data.binop.right = right;
 
-  debugAST(NM, n, "create binary operation node (op: %d, left: %p, right: %p)", op, (void*)left, (void*)right);
+  debugAST(NM, n, "create binary operation node (op: %s, left: %p, right: %p)", binopToS(op), (void*)left, (void*)right);
 
   return n;
 }
@@ -264,7 +267,7 @@ Node *genUnopNode(Nemo *NM, Node *expr, UnaryOp op)
   n->data.unop.op = op;
   n->data.unop.expr = expr;
 
-  debugAST(NM, n, "create unary operation node (op: %d, expr: %p)", op, (void*)expr);
+  debugAST(NM, n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)expr);
 
   return n;
 }
@@ -455,6 +458,41 @@ void freeCallNode(Nemo *NM, Node *n)
 
   debugAST(NM, n, "free call node");
   nmFree(NM, n);
+}
+
+static const char *binopToS(BinaryOp op)
+{
+  switch (op){
+    case BINARY_GT:         return "'>'";
+    case BINARY_LT:         return "'<'";
+    case BINARY_ADD:        return "'+'";
+    case BINARY_SUB:        return "'-'";
+    case BINARY_MUL:        return "'*'";
+    case BINARY_DIV:        return "'/'";
+    case BINARY_MOD:        return "'%'";
+    case BINARY_ASSIGN_ADD: return "'+='";
+    case BINARY_ASSIGN_SUB: return "'-='";
+    case BINARY_ASSIGN_MUL: return "'*='";
+    case BINARY_ASSIGN_DIV: return "'/='";
+    case BINARY_ASSIGN_MOD: return "'%='";
+  }
+
+  return "#unknown#binopToS#";
+}
+
+static const char *unopToS(UnaryOp op)
+{
+  switch (op){
+    case UNARY_PLUS:    return "'+'";
+    case UNARY_MINUS:   return "'-'";
+    case UNARY_NEGATE:  return "'!'";
+    case UNARY_PREINC:  return "prefix '++'";
+    case UNARY_PREDEC:  return "prefix '--'";
+    case UNARY_POSTINC: return "postfix '++'";
+    case UNARY_POSTDEC: return "postfix '--'";
+  }
+
+  return "#unknown#unopToS#";
 }
 
 /*
