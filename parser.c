@@ -509,8 +509,13 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     lexForce(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
     debugParser(NM, "%s ", name);
-    body = stmt(NM, lex);
-    ret = genFuncDefNode(NM, name, body);
+    if (lexAccept(lex, SYM_SEMICOLON)){
+      ret = genFuncDefNode(NM, name, NULL);
+      debugParser(NM, ";\n");
+    } else {
+      body = stmt(NM, lex);
+      ret = genFuncDefNode(NM, name, body);
+    }
   }
   /*
    * XXX IF stmt stmt

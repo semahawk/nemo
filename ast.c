@@ -471,9 +471,14 @@ Node *genFuncDefNode(Nemo *NM, char *name, Node *body)
 
   n->type = NT_FUNCDEF;
   n->data.funcdef.name = strdup(NM, name);
-  n->data.funcdef.body = body;
 
-  debugAST(NM, n, "create function definition node (name: %s, body: %p)", name, (void*)body);
+  if (body){
+    n->data.funcdef.body = body;
+    debugAST(NM, n, "create function definition node (name: %s, body: %p)", name, (void*)body);
+  } else {
+    n->data.funcdef.body = NULL;
+    debugAST(NM, n, "create function declaration node (name: %s)", name);
+  }
 
   return n;
 }
@@ -488,8 +493,12 @@ void freeFuncDefNode(Nemo *NM, Node *n)
   assert(n->type == NT_FUNCDEF);
 
   nmFree(NM, n->data.funcdef.name);
-  freeDispatch(NM, n->data.funcdef.body);
-  debugAST(NM, n, "free function definition node");
+  if (n->data.funcdef.body){
+    freeDispatch(NM, n->data.funcdef.body);
+    debugAST(NM, n, "free function declaration node");
+  } else {
+    debugAST(NM, n, "free function definition node");
+  }
   nmFree(NM, n);
 }
 
