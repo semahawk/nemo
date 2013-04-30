@@ -58,6 +58,9 @@
 
 int main(int argc, char *argv[])
 {
+  /* used to iterate through the variables list
+   * (when tidying up after them) */
+  VariablesList *g;
   /* the main node from parsing the given file */
   Node *nodest = NULL;
   /* file input */
@@ -131,8 +134,17 @@ int main(int argc, char *argv[])
 
   /* parse the file */
   nodest = parseFile(NM, NM->source);
+  /* execute the nodes */
   execNode(NM, nodest);
+  /* tidy up after executing */
   freeBlockNode(NM, nodest);
+
+  /* iterate through the variables */
+  for (g = NM->globals; g != NULL; g = g->next){
+    nmFree(NM, g->var->name);
+    nmFree(NM, g->var);
+    nmFree(NM, g);
+  }
 
   /* tidy up */
   nmFree(NM, NM->source);

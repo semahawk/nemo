@@ -46,6 +46,7 @@
 #include "ast.h"
 #include "mem.h"
 #include "debug.h"
+#include "error.h"
 
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
@@ -261,11 +262,27 @@ Node *genNameNode(Nemo *NM, char *s)
 Value execNameNode(Nemo *NM, Node *n)
 {
   Value ret;
-
-  ret.type = VT_INTEGER;
-  ret.value.i = 1337;
+  Value vars_value;
+  VariablesList *p;
+  BOOL found = FALSE;
 
   debugAST(NM, n, "execute name node");
+
+  /* search for the variable */
+  for (p = NM->globals; p != NULL; p = p->next){
+    if (!strcmp(p->var->name, n->data.decl.name)){
+      found = TRUE;
+      vars_value = p->var->value;
+      break;
+    }
+  }
+
+  if (!found){
+    nmError("variable '%s' was not found");
+    exit(EXIT_FAILURE);
+  }
+
+  ret = vars_value;
 
   return ret;
 }
@@ -553,18 +570,35 @@ Node *genDeclNode(Nemo *NM, char *name, Node *value)
 Value execDeclNode(Nemo *NM, Node *n)
 {
   Value ret;
+  VariablesList *new_list = nmMalloc(NM, sizeof(VariablesList));
+  Variable *new_var = nmMalloc(NM, sizeof(Variable));
+  VariablesList *p;
 
-  /*char *name = n->data.decl.name;*/
+  /* before doing anything, check if that variable was already declared */
+  for (p = NM->globals; p != NULL; p = p->next){
+    if (!strcmp(p->var->name, n->data.decl.name)){
+      nmError("global variable '%s' already declared", n->data.decl.name);
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  if (n->data.decl.value){
+    Value value = execNode(NM, n->data.decl.value);
+    new_var->value = value;
+    debugAST(NM, n, "execute variable definition node");
+  } else {
+    /* zero out the variables value */
+    memset(&new_var->value, 0, sizeof(Value));
+    debugAST(NM, n, "execute variable declaration node");
+  }
+  /* append to the globals list */
+  new_var->name = strdup(NM, n->data.decl.name);
+  new_list->var = new_var;
+  new_list->next = NM->globals;
+  NM->globals = new_list;
 
   ret.type = VT_INTEGER;
   ret.value.i = 1;
-
-  if (n->data.decl.value){
-    /*Value = execNode(n->data.decl.value);*/
-    debugAST(NM, n, "execute variable definition node");
-  } else {
-    debugAST(NM, n, "execute variable declaration node");
-  }
 
   return ret;
 }
@@ -664,7 +698,7 @@ Value execCallNode(Nemo *NM, Node *n)
    * calling "print"
    */
   if (!strcmp(name, "print")){
-    for (i = 0; n->data.call.params[i] != NULL; i++){
+    for (i = 0; n->data.call.params != NULL && n->data.call.params[i] != NULL; i++){
       char *value = valueToS(execNode(NM, n->data.call.params[i]));
       /* this the last parameter */
       if (n->data.call.params[i + 1] == NULL){
