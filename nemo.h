@@ -19,8 +19,8 @@
 #endif
 
 typedef enum {
-  OT_INTEGER,
-  OT_FLOAT
+  VT_INTEGER,
+  VT_FLOAT
 } ValueType;
 
 typedef struct {

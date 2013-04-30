@@ -49,6 +49,7 @@
 
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
+static BOOL valueToB(Value);
 static char *valueToS(Value);
 
 /*
@@ -169,7 +170,7 @@ Value execIntNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = n->data.i;
 
   debugAST(NM, n, "execute integer node");
@@ -215,7 +216,7 @@ Value execFloatNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  ret.type = OT_FLOAT;
+  ret.type = VT_FLOAT;
   ret.value.f = n->data.f;
 
   debugAST(NM, n, "execute float node");
@@ -261,7 +262,7 @@ Value execNameNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = 1337;
 
   debugAST(NM, n, "execute name node");
@@ -309,7 +310,7 @@ Value execBinopNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = 0xB14;
 
   debugAST(NM, n, "execute binary operation node");
@@ -358,7 +359,7 @@ Value execUnopNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = 0x0408;
 
   debugAST(NM, n, "execute unary operation node");
@@ -408,18 +409,20 @@ Value execIfNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  /*
-   *Value guard = execNode(NM, n->data.iff.guard);
-   *Value body = execNode(NM, n->data.iff.body);
-   *Value elsee = execNode(NM, n->data.iff.elsee);
-   */
-
-  /* FIXME */
-
-  ret.type = OT_INTEGER;
-  ret.value.i = 0x1F;
+  Node *guard = n->data.iff.guard;
+  Node *body = n->data.iff.body;
+  Node *elsee = n->data.iff.elsee;
 
   debugAST(NM, n, "execute if node");
+
+  if (valueToB(execNode(NM, guard))){
+    execNode(NM, body);
+  } else {
+    execNode(NM, elsee);
+  }
+
+  ret.type = VT_INTEGER;
+  ret.value.i = 1;
 
   return ret;
 }
@@ -478,18 +481,22 @@ Value execWhileNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  /*
-   *Value guard = execNode(NM, n->data.iff.guard);
-   *Value body = execNode(NM, n->data.iff.body);
-   *Value elsee = execNode(NM, n->data.iff.elsee);
-   */
-
-  /* FIXME */
-
-  ret.type = OT_INTEGER;
-  ret.value.i = 0x173;
+  Node *guard = n->data.iff.guard;
+  Node *body = n->data.iff.body;
+  Node *elsee = n->data.iff.elsee;
 
   debugAST(NM, n, "execute while node");
+
+  if (valueToB(execNode(NM, guard))){
+    while (valueToB(execNode(NM, guard))){
+      execNode(NM, body);
+    }
+  } else {
+    execNode(NM, elsee);
+  }
+
+  ret.type = VT_INTEGER;
+  ret.value.i = 1;
 
   return ret;
 }
@@ -549,7 +556,7 @@ Value execDeclNode(Nemo *NM, Node *n)
 
   /*char *name = n->data.decl.name;*/
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = 1;
 
   if (n->data.decl.value){
@@ -669,7 +676,7 @@ Value execCallNode(Nemo *NM, Node *n)
     }
   }
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = 0xCA11;
 
   return ret;
@@ -732,7 +739,7 @@ Value execFuncDefNode(Nemo *NM, Node *n)
 
   /* FIXME */
 
-  ret.type = OT_INTEGER;
+  ret.type = VT_INTEGER;
   ret.value.i = 1;
 
   if (n->data.funcdef.body)
@@ -762,16 +769,45 @@ void freeFuncDefNode(Nemo *NM, Node *n)
   nmFree(NM, n);
 }
 
-static char *valueToS(Value o)
+/*
+ * Check if given value is a true/false boolean-wise.
+ *
+ * In Nemo there is no "bool" type as is.
+ */
+static BOOL valueToB(Value v)
+{
+  /*
+   * 0 and 0.0 are false
+   * everything else is true
+   */
+  switch (v.type){
+    case VT_INTEGER:
+      if (v.value.i == 0)
+        return FALSE;
+      else
+        return TRUE;
+      break;
+    case VT_FLOAT:
+      if (v.value.f == 0.0f)
+        return FALSE;
+      else
+        return TRUE;
+      break;
+    default:
+      return FALSE;
+  }
+}
+
+static char *valueToS(Value v)
 {
   static char s[50];
 
-  switch (o.type){
-    case OT_INTEGER:
-      sprintf(s, "%d", o.value.i);
+  switch (v.type){
+    case VT_INTEGER:
+      sprintf(s, "%d", v.value.i);
       break;
-    case OT_FLOAT:
-      sprintf(s, "%f", o.value.f);
+    case VT_FLOAT:
+      sprintf(s, "%f", v.value.f);
       break;
     default:
       sprintf(s, "#unknown#valueToS#");
