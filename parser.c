@@ -56,6 +56,7 @@ static Node *block(Nemo *NM, LexerState *lex);
 /*
  * primary_expr: INTEGER
  *             | FLOAT
+ *             | STRING
  *             | NAME
  *             | '(' expr ')'
  *             ;
@@ -78,6 +79,14 @@ static Node *primary_expr(Nemo *NM, LexerState *lex)
   else if (lexPeek(lex, SYM_FLOAT)){
     new = genFloatNode(NM, lex->current->sym.value.f);
     debugParser(NM, "%f ", new->data.f);
+    lexSkip(lex);
+  }
+  /*
+   * XXX STRING
+   */
+  else if (lexPeek(lex, SYM_STRING)){
+    new = genStringNode(NM, lex->current->sym.value.s);
+    debugParser(NM, "\"%s\" ", new->data.s);
     lexSkip(lex);
   }
   /*

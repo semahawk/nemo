@@ -23,7 +23,8 @@
  */
 enum ValueType {
   VT_INTEGER,
-  VT_FLOAT
+  VT_FLOAT,
+  VT_STRING
 };
 
 /*
@@ -35,6 +36,7 @@ struct Value {
   union {
     int i;
     float f;
+    char *s;
   } value;
 };
 

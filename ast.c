@@ -62,6 +62,7 @@ static Value (*execFuncs[])(Nemo *, Node *) =
   NULL,
   execIntNode,
   execFloatNode,
+  execStringNode,
   execNameNode,
   execBinopNode,
   execUnopNode,
@@ -82,6 +83,7 @@ static void (*freeFuncs[])(Nemo *, Node *) =
   freeNopNode,
   freeIntNode,
   freeFloatNode,
+  freeStringNode,
   freeNameNode,
   freeBinopNode,
   freeUnopNode,
@@ -236,6 +238,53 @@ void freeFloatNode(Nemo *NM, Node *n)
 
   debugAST(NM, n, "free float node");
 
+  nmFree(NM, n);
+}
+
+/*
+ * @name - genStringNode
+ * @desc - create a node holding a single literal string
+ */
+Node *genStringNode(Nemo *NM, char *s)
+{
+  Node *n = nmMalloc(NM, sizeof(Node));
+
+  n->type = NT_STRING;
+  n->data.s = strdup(NM, s);
+
+  debugAST(NM, n, "create string node (value: %s)", n->data.s);
+
+  return n;
+}
+
+/*
+ * @name - execStringNode
+ * @desc - return the value of the string
+ */
+Value execStringNode(Nemo *NM, Node *n)
+{
+  Value ret;
+
+  ret.type = VT_STRING;
+  ret.value.s = n->data.s;
+
+  debugAST(NM, n, "execute string node");
+
+  return ret;
+}
+
+/*
+ * @name - freeStringNode
+ * @desc - responsible for freeing literal string node
+ */
+void freeStringNode(Nemo *NM, Node *n)
+{
+  assert(n);
+  assert(n->type == NT_STRING);
+
+  debugAST(NM, n, "free string node");
+
+  nmFree(NM, n->data.s);
   nmFree(NM, n);
 }
 
@@ -879,7 +928,7 @@ static BOOL valueToB(Value v)
 
 static char *valueToS(Value v)
 {
-  static char s[50];
+  static char s[128];
 
   switch (v.type){
     case VT_INTEGER:
@@ -887,6 +936,9 @@ static char *valueToS(Value v)
       break;
     case VT_FLOAT:
       sprintf(s, "%f", v.value.f);
+      break;
+    case VT_STRING:
+      sprintf(s, "%s", v.value.s);
       break;
     default:
       sprintf(s, "#unknown#valueToS#");

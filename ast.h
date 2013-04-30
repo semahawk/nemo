@@ -37,6 +37,7 @@ enum NodeType {
   NT_NOP,
   NT_INTEGER,
   NT_FLOAT,
+  NT_STRING,
   NT_NAME,
   NT_BINOP,
   NT_UNOP,
@@ -144,6 +145,7 @@ typedef struct Statement Statement;
 
 Node *genIntNode(Nemo *, int);
 Node *genFloatNode(Nemo *, float);
+Node *genStringNode(Nemo *, char *);
 Node *genNameNode(Nemo *, char *);
 Node *genBinopNode(Nemo *, Node *, BinaryOp, Node *);
 Node *genUnopNode(Nemo *, Node *, UnaryOp);
@@ -156,6 +158,7 @@ Node *genNopNode(Nemo *);
 
 Value execIntNode(Nemo *, Node *);
 Value execFloatNode(Nemo *, Node *);
+Value execStringNode(Nemo *, Node *);
 Value execNameNode(Nemo *, Node *);
 Value execBinopNode(Nemo *, Node *);
 Value execUnopNode(Nemo *, Node *);
@@ -170,6 +173,7 @@ Value execNode(Nemo *, Node *);
 
 void  freeIntNode(Nemo *, Node *);
 void  freeFloatNode(Nemo *, Node *);
+void  freeStringNode(Nemo *, Node *);
 void  freeNameNode(Nemo *, Node *);
 void  freeBinopNode(Nemo *, Node *);
 void  freeUnopNode(Nemo *, Node *);

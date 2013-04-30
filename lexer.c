@@ -148,12 +148,12 @@ static void appendFloat(Nemo *NM, LexerState *lex, double f)
   }
 }
 
-static void appendStr(Nemo *NM, LexerState *lex, char *s)
+static void appendStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
 {
   SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
-  debugLexerStr(NM, lex, SYM_NAME, s);
+  debugLexerStr(NM, lex, type, s);
   /* initialize */
-  new->sym.type = SYM_NAME;
+  new->sym.type = type;
   new->sym.line = lex->line;
   new->sym.column = lex->column;
   new->sym.value.s = strdup(NM, s);
@@ -193,7 +193,8 @@ void lexerDestroy(Nemo *NM, LexerState *lex)
   for (p = lex->tail; p != NULL; p = next){
     next = p->next;
     /* TODO: debug */
-    if (p->sym.type == SYM_NAME){
+    if (p->sym.type == SYM_NAME ||
+        p->sym.type == SYM_STRING){
       nmFree(NM, p->sym.value.s);
     }
     nmFree(NM, p);
@@ -253,7 +254,6 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       found = 0;
       for (keyword = keywords; keyword->name != NULL; keyword++){
         if (!strcmp(keyword->name, tmp)){
-          /* TODO: debug */
           append(NM, lex, keyword->sym);
           found = 1;
           break;
@@ -261,8 +261,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       }
       /* it's not a keyword */
       if (!found){
-        /* TODO: debug */
-        appendStr(NM, lex, tmp);
+        appendStr(NM, lex, SYM_NAME, tmp);
       }
       nmFree(NM, tmp);
       /* i is the length of the name */
@@ -485,6 +484,28 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       p--;
       lex->line++;
       lex->column = 1;
+    }
+    /*
+     * XXX "string"
+     */
+    else if (*p == '"'){
+      p++; i++;
+      tmp = strdup(NM, p);
+      lex->column++;
+      while (*p != '"'){
+        if (*p == '\n'){
+          lex->line++;
+          lex->column = 1;
+        }
+        p++; i++;
+        lex->column++;
+      }
+      p--; i--;
+      *(tmp + i) = '\0';
+      /* skip over the '"' */
+      p++;
+      appendStr(NM, lex, SYM_STRING, tmp);
+      nmFree(NM, tmp);
     }
     else if (*p == '\n'){
       lex->line++;
