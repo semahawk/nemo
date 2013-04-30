@@ -327,10 +327,55 @@ Value execBinopNode(Nemo *NM, Node *n)
 {
   Value ret;
 
-  ret.type = VT_INTEGER;
-  ret.value.i = 0xB14;
-
   debugAST(NM, n, "execute binary operation node");
+
+  switch (n->data.binop.op){
+    case BINARY_ASSIGN:
+    {
+      Variable *var;
+      VariablesList *p;
+      char *name;
+      BOOL found = FALSE;
+      /* left-hand side of the assignment must be a name
+       * (at least for now (30 Apr 2013)) */
+      if (n->data.binop.left->type != NT_NAME){
+        nmError("expected an lvalue in assignment");
+        exit(EXIT_FAILURE);
+      }
+      name = n->data.binop.left->data.s;
+      /* iterate through the variables */
+      for (p = NM->globals; p != NULL; p = p->next){
+        if (!strcmp(p->var->name, name)){
+          found = TRUE;
+          var = p->var;
+          break;
+        }
+      }
+      /* error if the variable was not found */
+      if (!found){
+        nmError("variable '%s' was not found", name);
+        exit(EXIT_FAILURE);
+      }
+      /* actually assign the value */
+      ret = execNode(NM, n->data.binop.right);
+      var->value = ret;
+      break;
+    }
+    case BINARY_ADD:
+    case BINARY_SUB:
+    case BINARY_MUL:
+    case BINARY_DIV:
+    case BINARY_MOD:
+    case BINARY_ASSIGN_ADD:
+    case BINARY_ASSIGN_SUB:
+    case BINARY_ASSIGN_MUL:
+    case BINARY_ASSIGN_DIV:
+    case BINARY_ASSIGN_MOD:
+    case BINARY_GT:
+    case BINARY_LT:
+      /* FIXME: to be implemented */
+      break;
+  }
 
   return ret;
 }
@@ -860,6 +905,7 @@ static const char *binopToS(BinaryOp op)
     case BINARY_MUL:        return "'*'";
     case BINARY_DIV:        return "'/'";
     case BINARY_MOD:        return "'%'";
+    case BINARY_ASSIGN:     return "'='";
     case BINARY_ASSIGN_ADD: return "'+='";
     case BINARY_ASSIGN_SUB: return "'-='";
     case BINARY_ASSIGN_MUL: return "'*='";

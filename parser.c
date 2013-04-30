@@ -383,7 +383,7 @@ static Node *assign_expr(Nemo *NM, LexerState *lex)
          lexPeek(lex, SYM_SLASHEQ) ||
          lexPeek(lex, SYM_MODULOEQ)){
     if (lexAccept(lex, SYM_EQ)){
-      op = BINARY_ADD;
+      op = BINARY_ASSIGN;
       debugParser(NM, "= ");
     }
     else if (lexAccept(lex, SYM_PLUSEQ)){
