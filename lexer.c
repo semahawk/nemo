@@ -578,12 +578,6 @@ void lexSkip(LexerState *lex)
   lex->current = lex->current->next;
 }
 
-char *strdup(Nemo *NM, char *p)
-{
-  char *np = nmMalloc(NM, strlen(p) + 1);
-  return np ? strcpy(np, p) : np;
-}
-
 const char *symToS(SymbolType type)
 {
   switch (type){

@@ -94,3 +94,9 @@ void nmFree(Nemo *NM, void *p)
   debugFree(p);
 }
 
+char *strdup(Nemo *NM, char *p)
+{
+  char *np = nmMalloc(NM, strlen(p) + 1);
+  return np ? strcpy(np, p) : np;
+}
+

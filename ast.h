@@ -153,6 +153,20 @@ Node *genCallNode(Nemo *, char *, Node **);
 Node *genFuncDefNode(Nemo *, char *, Node *);
 Node *genNopNode(Nemo *);
 
+Value execIntNode(Nemo *, Node *);
+Value execFloatNode(Nemo *, Node *);
+Value execNameNode(Nemo *, Node *);
+Value execBinopNode(Nemo *, Node *);
+Value execUnopNode(Nemo *, Node *);
+Value execIfNode(Nemo *, Node *);
+Value execWhileNode(Nemo *, Node *);
+Value execDeclNode(Nemo *, Node *);
+Value execCallNode(Nemo *, Node *);
+Value execBlockNode(Nemo *, Node *);
+Value execFuncDefNode(Nemo *, Node *);
+Value execNopNode(Nemo *, Node *);
+Value execNode(Nemo *, Node *);
+
 void  freeIntNode(Nemo *, Node *);
 void  freeFloatNode(Nemo *, Node *);
 void  freeNameNode(Nemo *, Node *);
@@ -165,7 +179,7 @@ void  freeCallNode(Nemo *, Node *);
 void  freeBlockNode(Nemo *, Node *);
 void  freeNopNode(Nemo *, Node *);
 void  freeFuncDefNode(Nemo *, Node *);
-void  freeDispatch(Nemo *, Node *);
+void  freeNode(Nemo *, Node *);
 
 #endif /* AST_H */
 

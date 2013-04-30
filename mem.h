@@ -36,5 +36,7 @@ void *nmCalloc(Nemo *, size_t, size_t);
 void *nmRealloc(Nemo *, void *, size_t);
 void  nmFree(Nemo *, void *);
 
+char *strdup(Nemo *, char *);
+
 #endif /* MEM_H */
 

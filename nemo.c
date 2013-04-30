@@ -54,6 +54,7 @@
 #include "error.h"
 #include "debug.h"
 #include "mem.h"
+#include "ast.h"
 
 int main(int argc, char *argv[])
 {
@@ -130,6 +131,7 @@ int main(int argc, char *argv[])
 
   /* parse the file */
   nodest = parseFile(NM, NM->source);
+  execNode(NM, nodest);
   freeBlockNode(NM, nodest);
 
   /* tidy up */

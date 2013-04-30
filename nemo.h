@@ -18,12 +18,37 @@
 # define FALSE 0
 #endif
 
+typedef enum {
+  OT_INTEGER,
+  OT_FLOAT
+} ValueType;
+
+typedef struct {
+  ValueType type;
+  union {
+    int i;
+    float f;
+  } value;
+} Value;
+
 /*
  * The main type for Nemo
  */
 typedef struct {
+  /* name of the interpreted file */
   char *source;
+  /* The Stack */
   struct {
+    /* the stack itself */
+    Value **it;
+    /* 'pointer' to the current element */
+    size_t ptr;
+    /* size of the stack */
+    size_t nmemb;
+  } stack;
+  /* command line flags */
+  struct {
+    /* debug (-d?) flags */
     struct {
       BOOL memory;
       BOOL lexer;
@@ -33,6 +58,5 @@ typedef struct {
   } flags;
 } Nemo;
 
-char *strdup(Nemo *, char *);
-
 #endif /* NEMO_H */
+
