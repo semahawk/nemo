@@ -39,9 +39,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "nemo.h"
 #include "error.h"
+#include "parser.h"
 #include "debug.h"
 #include "lexer.h"
 #include "ast.h"
@@ -483,6 +485,7 @@ static Node *expr(Nemo *NM, LexerState *lex)
 /*
  * stmt: ';'
  *     | block
+ *     | USE NAME ';'
  *     | FN NAME stmt
  *     | IF stmt stmt
  *     | WHILE stmt stmt
@@ -509,6 +512,19 @@ static Node *stmt(Nemo *NM, LexerState *lex)
      */
     debugParser(NM, ";\n");
     ret = genNopNode(NM);
+  }
+  /*
+   * XXX USE NAME ';'
+   */
+  else if (lexAccept(lex, SYM_USE)){
+    debugParser(NM, "use ");
+    lexForce(lex, SYM_NAME);
+    debugParser(NM, "%s ", name);
+    /* return the block that was returned by parsing the file */
+    ret = parseFile(NM, "stdio.nm");
+    /*ret = genNopNode(NM);*/
+    lexForce(lex, SYM_SEMICOLON);
+    debugParser(NM, ";\n");
   }
   /*
    * XXX FN NAME stmt

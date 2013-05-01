@@ -101,10 +101,15 @@ static void (*freeFuncs[])(Nemo *, Node *) =
  */
 Value execNode(Nemo *NM, Node *n)
 {
-  assert(n);
-  assert(execFuncs[n->type]);
+  Value ret;
 
-  return execFuncs[n->type](NM, n);
+  assert(n);
+
+  /* do nothing with NOPs */
+  if (execFuncs[n->type])
+    ret = execFuncs[n->type](NM, n);
+
+  return ret;
 }
 
 /*

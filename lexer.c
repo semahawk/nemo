@@ -64,6 +64,7 @@ static struct Keyword {
   { "else",  SYM_ELSE  },
   { "print", SYM_PRINT },
   { "fn",    SYM_FN    },
+  { "use",   SYM_USE   },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;

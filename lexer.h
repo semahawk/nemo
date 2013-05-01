@@ -40,6 +40,7 @@ enum SymbolType {
   SYM_ELSE,           /* "else"  */
   SYM_PRINT,          /* "print" */
   SYM_FN,             /* "fn"    */
+  SYM_USE,            /* "use"   */
   SYM_INTEGER,        /*         */
   SYM_FLOAT,          /*         */
   SYM_STRING,         /*         */
