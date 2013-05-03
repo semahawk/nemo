@@ -58,13 +58,16 @@ static struct Keyword {
   SymbolType sym;
 } keywords[] =
 {
-  { "my",    SYM_MY    },
-  { "if",    SYM_IF    },
-  { "while", SYM_WHILE },
-  { "else",  SYM_ELSE  },
-  { "print", SYM_PRINT },
-  { "fn",    SYM_FN    },
-  { "use",   SYM_USE   },
+  { "my",    SYM_MY     },
+  { "if",    SYM_IF     },
+  { "while", SYM_WHILE  },
+  { "else",  SYM_ELSE   },
+  { "print", SYM_PRINT  },
+  { "fn",    SYM_FN     },
+  { "use",   SYM_USE    },
+  { "int",   SYM_TINT   },
+  { "float", SYM_TFLOAT },
+  { "str",   SYM_TSTR   },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;
@@ -611,6 +614,9 @@ const char *symToS(SymbolType type)
     case SYM_PRINT:      return "\"print\"";
     case SYM_USE:        return "\"use\"";
     case SYM_FN:         return "\"fn\"";
+    case SYM_TINT:       return "\"int\"";
+    case SYM_TFLOAT:     return "\"float\"";
+    case SYM_TSTR:       return "\"str\"";
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
     case SYM_STRING:     return "string";

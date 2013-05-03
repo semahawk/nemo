@@ -55,6 +55,11 @@
                       n->type == NT_STRING)
 
 /* <lex> is of type { LexerState * } */
+#define nextIsType(lex) (lexPeek(lex, SYM_TINT)   || \
+                     lexPeek(lex, SYM_TFLOAT) || \
+                     lexPeek(lex, SYM_TSTR))
+
+/* <lex> is of type { LexerState * } */
 #define endStmt(lex) do { \
   if (!lexPeek(lex, SYM_LMUSTASHE) && \
       !lexPeek(lex, SYM_RMUSTASHE) && \
@@ -190,7 +195,7 @@ static Node *postfix_expr(Nemo *NM, LexerState *lex)
    */
   if (lexAccept(lex, SYM_LPAREN)){
     if (target->type != NT_NAME){
-      lexError(lex, "expected a name for a function call, not a %s", symToS(lex->current->sym.type));
+      lexError(lex, "expected a name for a function call, not %s", symToS(lex->current->sym.type));
       exit(EXIT_FAILURE);
     }
     name = lex->current->prev->sym.value.s;
@@ -497,14 +502,20 @@ static Node *expr(Nemo *NM, LexerState *lex)
 /*
  * stmt: ';'
  *     | block
+ *     | function_definition
  *     | USE NAME ';'
- *     | FN NAME stmt
  *     | IF stmt stmt
  *     | WHILE stmt stmt
  *     | expr IF stmt
  *     | expr WHILE stmt
  *     | expr ';'
  *     ;
+ *
+ * function_definition: FN NAME block
+ *                    | FN NAME ';'
+ *                    | FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ block
+ *                    | FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
+ *                    ;
  */
 static Node *stmt(Nemo *NM, LexerState *lex)
 {
@@ -538,19 +549,72 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     endStmt(lex);
   }
   /*
-   * XXX FN NAME stmt
+   * XXX FN NAME
    */
   else if (lexAccept(lex, SYM_FN)){
     debugParser(NM, "fn ");
     lexForce(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
     debugParser(NM, "%s ", name);
+    /*
+     * XXX FN NAME ';'
+     */
     if (lexAccept(lex, SYM_SEMICOLON)){
       ret = genFuncDefNode(NM, name, NULL);
       debugParser(NM, ";\n");
-    } else {
-      body = stmt(NM, lex);
+    }
+    /*
+     * XXX FN NAME block
+     */
+    else if (lexAccept(lex, SYM_LMUSTASHE)){
+      debugParser(NM, "{\n");
+      body = block(NM, lex);
       ret = genFuncDefNode(NM, name, body);
+      lexForce(lex, SYM_RMUSTASHE);
+      debugParser(NM, "}\n");
+    }
+    /*
+     * XXX FN NAME ':'
+     */
+    else if (lexAccept(lex, SYM_COLON)){
+      debugParser(NM, ": ");
+      /*
+       * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+
+       */
+      do {
+        if (nextIsType(lex)){
+          debugParser(NM, "%s ", symToS(lex->current->sym.type));
+          lexSkip(lex);
+        } else {
+          lexError(lex, "expected a type instead of %s", symToS(lex->current->sym.type));
+          exit(EXIT_FAILURE);
+        }
+        lexForce(lex, SYM_NAME);
+        debugParser(NM, "%s ", lex->current->prev->sym.value.s);
+        /* print that comma, if preset */
+        if (lexPeek(lex, SYM_COMMA)){
+          debugParser(NM, ", ");
+        }
+      }
+      while (lexAccept(lex, SYM_COMMA));
+      /*
+       * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
+       */
+      if (lexAccept(lex, SYM_SEMICOLON)){
+        ret = genFuncDefNode(NM, name, NULL);
+        debugParser(NM, ";\n");
+      }
+      /*
+       * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ stmt
+       */
+      else {
+        lexForce(lex, SYM_LMUSTASHE);
+        debugParser(NM, "{\n");
+        body = block(NM, lex);
+        ret = genFuncDefNode(NM, name, body);
+        lexForce(lex, SYM_RMUSTASHE);
+        debugParser(NM, "}\n");
+      }
     }
   }
   /*

@@ -657,7 +657,7 @@ Node *genDeclNode(Nemo *NM, char *name, Node *value)
   n->data.decl.name = strdup(NM, name);
   n->data.decl.value = value;
 
-  debugAST(NM, n, "create declaration node (name: %s)", name);
+  debugAST(NM, n, "create variable declaration node (name: %s)", name);
 
   return n;
 }
@@ -681,14 +681,14 @@ Value execDeclNode(Nemo *NM, Node *n)
     }
   }
 
+  debugAST(NM, n, "execute variable declaration node");
+
   if (n->data.decl.value){
     Value value = execNode(NM, n->data.decl.value);
     new_var->value = value;
-    debugAST(NM, n, "execute variable definition node");
   } else {
     /* zero out the variables value */
     memset(&new_var->value, 0, sizeof(Value));
-    debugAST(NM, n, "execute variable declaration node");
   }
   /* append to the globals list */
   new_var->name = strdup(NM, n->data.decl.name);
