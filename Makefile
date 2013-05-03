@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -ansi -pedantic -O2
+CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -ansi -pedantic
 
 PREFIX  = /usr/local
 

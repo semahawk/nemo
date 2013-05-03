@@ -2,5 +2,6 @@ nemo
 
 foo.nm
 bar.nc
+stdio.nm
 
 *.o

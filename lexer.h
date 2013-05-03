@@ -108,7 +108,7 @@ typedef struct LexerState LexerState;
 
 void lexFile(Nemo *, LexerState *, char *);
 void lexString(Nemo *, LexerState *, char *);
-void lexerDestroy(Nemo *, LexerState *);
+void lexDestroy(Nemo *, LexerState *);
 
 BOOL lexPeek(LexerState *lex, SymbolType);
 BOOL lexAccept(LexerState *lex, SymbolType);

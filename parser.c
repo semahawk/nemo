@@ -49,8 +49,20 @@
 #include "ast.h"
 #include "mem.h"
 
-#define isLiteral(n) (n->type == NT_INTEGER ||\
-                      n->type == NT_FLOAT)
+/* <n> is of type { Node * } */
+#define isLiteral(n) (n->type == NT_INTEGER || \
+                      n->type == NT_FLOAT   || \
+                      n->type == NT_STRING)
+
+/* <lex> is of type { LexerState * } */
+#define endStmt(lex) do { \
+  if (!lexPeek(lex, SYM_LMUSTASHE) && \
+      !lexPeek(lex, SYM_RMUSTASHE) && \
+      !lexPeek(lex, SYM_EOS)){ \
+    lexForce(lex, SYM_SEMICOLON); \
+  } \
+  debugParser(NM, ";\n"); \
+} while (0);
 
 static Node *expr(Nemo *NM, LexerState *lex);
 static Node *block(Nemo *NM, LexerState *lex);
@@ -503,7 +515,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   char *name  = NULL;
 
   /*
-   * XXX ;
+   * XXX ';'
    */
   if (lexAccept(lex, SYM_SEMICOLON)){
     /* that's NOP
@@ -523,8 +535,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     /* return the block that was returned by parsing the file */
     ret = parseFile(NM, "stdio.nm");
     /*ret = genNopNode(NM);*/
-    lexForce(lex, SYM_SEMICOLON);
-    debugParser(NM, ";\n");
+    endStmt(lex);
   }
   /*
    * XXX FN NAME stmt
@@ -602,14 +613,10 @@ static Node *stmt(Nemo *NM, LexerState *lex)
       guard = stmt(NM, lex);
       ret = genWhileNode(NM, ret, guard, NULL);
     }
-    /* if the next symbol is '{', '}' or end-of-script, it
-     * doesn't need the semicolon then, otherwise it is required */
-    else if (!lexPeek(lex, SYM_LMUSTASHE) &&
-        !lexPeek(lex, SYM_RMUSTASHE) &&
-        !lexPeek(lex, SYM_EOS)){
-      lexForce(lex, SYM_SEMICOLON);
-    }
-    debugParser(NM, ";\n");
+    /*
+     * XXX expr ';'
+     */
+    else endStmt(lex);
   }
 
   debugAST(NM, ret, "create statement");
@@ -667,7 +674,7 @@ Node *parseFile(Nemo *NM, char *fname)
   lex.source = fname;
   lexFile(NM, &lex, fname);
   nodest = block(NM, &lex);
-  lexerDestroy(NM, &lex);
+  lexDestroy(NM, &lex);
 
   return nodest;
 }
@@ -677,7 +684,7 @@ Node *parseFile(Nemo *NM, char *fname)
  * @desc - parse the given <string> and return a pointer to the node of a
  *         block that was parsed, the main block of the script
  *         (it probably should return something else)
- * @return - {Node *} of .type = NT_BLOCK
+ * @return - { Node * } of .type = NT_BLOCK
  */
 Node *parseString(Nemo *NM, char *string)
 {
@@ -687,7 +694,7 @@ Node *parseString(Nemo *NM, char *string)
   lex.source = string;
   lexString(NM, &lex, string);
   nodest = block(NM, &lex);
-  lexerDestroy(NM, &lex);
+  lexDestroy(NM, &lex);
 
   return nodest;
 }

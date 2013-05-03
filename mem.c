@@ -89,9 +89,9 @@ void *nmRealloc(Nemo *NM, void *ptr, size_t nmemb)
 
 void nmFree(Nemo *NM, void *p)
 {
-  free(p);
-
   debugFree(p);
+
+  free(p);
 }
 
 char *strdup(Nemo *NM, char *p)

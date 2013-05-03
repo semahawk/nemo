@@ -748,11 +748,13 @@ Value execBlockNode(Nemo *NM, Node *n)
 void freeBlockNode(Nemo *NM, Node *n)
 {
   Statement *s;
+  Statement *next;
 
   assert(n);
   assert(n->type == NT_BLOCK);
 
-  for (s = n->data.block.tail; s != NULL; s = s->next){
+  for (s = n->data.block.tail; s != NULL; s = next){
+    next = s->next;
     freeNode(NM, s->stmt);
     debugAST(NM, n, "free statement node");
     nmFree(NM, s);

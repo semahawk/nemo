@@ -175,7 +175,7 @@ static void appendStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
   }
 }
 
-static void lexerInit(LexerState *lex)
+static void lexInit(LexerState *lex)
 {
   lex->line    = 1;
   lex->column  = 1;
@@ -187,10 +187,11 @@ static void lexerInit(LexerState *lex)
 /*
  * clean after the lexers work
  */
-void lexerDestroy(Nemo *NM, LexerState *lex)
+void lexDestroy(Nemo *NM, LexerState *lex)
 {
   SymbolsList *p;
   SymbolsList *next;
+
   for (p = lex->tail; p != NULL; p = next){
     next = p->next;
     /* TODO: debug */
@@ -223,7 +224,7 @@ void lexFile(Nemo *NM, LexerState *lex, char *fname)
     nmFatal("fread failed in " __FILE__ " at line %d", __LINE__);
     exit(EXIT_FAILURE);
   }
-  fbuffer[flen] = '\0';
+  fbuffer[flen - 1] = '\0';
   /* now, treat the source as a string */
   lexString(NM, lex, fbuffer);
   /* free the buffer */
@@ -237,7 +238,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
   char *p, *tmp;
   int i = 0, found = 0;
   Keyword *keyword;
-  lexerInit(lex);
+  lexInit(lex);
   /* iterate through the string, and append symbols to the symbols list */
   for (p = string; *p != '\0'; p++, i = 0){
     /*
@@ -608,6 +609,7 @@ const char *symToS(SymbolType type)
     case SYM_WHILE:      return "\"while\"";
     case SYM_ELSE:       return "\"else\"";
     case SYM_PRINT:      return "\"print\"";
+    case SYM_USE:        return "\"use\"";
     case SYM_FN:         return "\"fn\"";
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
