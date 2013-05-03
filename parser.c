@@ -500,6 +500,37 @@ static Node *expr(Nemo *NM, LexerState *lex)
 }
 
 /*
+ * Simply check if current function declaration is actually a declaration or definition.
+ *
+ * Return TRUE if declaration, FALSE if definition.
+ */
+static BOOL isItAFunctionDeclaration(LexerState *lex)
+{
+  /* save lexer's current position */
+  SymbolsList *save_current = lex->current;
+
+  /* skip over the whole definition/declaration, get right to before the
+   * semicolon or a block*/
+  while (lexAccept(lex, SYM_NAME) ||
+         lexAccept(lex, SYM_COLON) ||
+         lexAccept(lex, SYM_COMMA) ||
+         lexAccept(lex, SYM_TINT) ||
+         lexAccept(lex, SYM_TFLOAT) ||
+         lexAccept(lex, SYM_TSTR))
+    ;
+
+  if (lexPeek(lex, SYM_SEMICOLON)){
+    /* restore lexer's current position */
+    lex->current = save_current;
+    return TRUE;
+  } else {
+    /* restore lexer's current position */
+    lex->current = save_current;
+    return FALSE;
+  }
+}
+
+/*
  * stmt: ';'
  *     | block
  *     | function_definition
@@ -524,6 +555,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   Node *body  = NULL;
   Node *elsee = NULL;
   char *name  = NULL;
+  BOOL  isitafunctiondeclaration;
 
   /*
    * XXX ';'
@@ -577,6 +609,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
      * XXX FN NAME ':'
      */
     else if (lexAccept(lex, SYM_COLON)){
+      isitafunctiondeclaration = isItAFunctionDeclaration(lex);
       debugParser(NM, ": ");
       /*
        * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+
@@ -589,8 +622,16 @@ static Node *stmt(Nemo *NM, LexerState *lex)
           lexError(lex, "expected a type instead of %s", symToS(lex->current->sym.type));
           exit(EXIT_FAILURE);
         }
-        lexForce(lex, SYM_NAME);
-        debugParser(NM, "%s ", lex->current->prev->sym.value.s);
+        /* if it's a declaration, we don't need names, really */
+        if (isitafunctiondeclaration){
+          if (lexPeek(lex, SYM_NAME)){
+            debugParser(NM, "%s ", lex->current->prev->sym.value.s);
+            lexSkip(lex);
+          }
+        } else {
+          lexForce(lex, SYM_NAME);
+          debugParser(NM, "%s ", lex->current->prev->sym.value.s);
+        }
         /* print that comma, if preset */
         if (lexPeek(lex, SYM_COMMA)){
           debugParser(NM, ", ");
