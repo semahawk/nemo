@@ -351,8 +351,8 @@ void freeNameNode(Nemo *NM, Node *n)
   assert(n->type == NT_NAME);
 
   debugAST(NM, n, "free name node");
-  nmFree(NM, n);
   nmFree(NM, n->data.s);
+  nmFree(NM, n);
 }
 
 /*

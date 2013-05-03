@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
   /* used to iterate through the variables list
    * (when tidying up after them) */
   VariablesList *g;
+  VariablesList *gnext;
   /* the main node from parsing the given file */
   Node *nodest = NULL;
   /* file input */
@@ -140,7 +141,8 @@ int main(int argc, char *argv[])
   freeBlockNode(NM, nodest);
 
   /* iterate through the variables */
-  for (g = NM->globals; g != NULL; g = g->next){
+  for (g = NM->globals; g != NULL; g = gnext){
+    gnext = g->next;
     nmFree(NM, g->var->name);
     nmFree(NM, g->var);
     nmFree(NM, g);
