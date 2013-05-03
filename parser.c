@@ -533,7 +533,7 @@ static BOOL isItAFunctionDeclaration(LexerState *lex)
 /*
  * stmt: ';'
  *     | block
- *     | function_definition
+ *     | function_prototype
  *     | USE NAME ';'
  *     | IF stmt stmt
  *     | WHILE stmt stmt
@@ -542,11 +542,11 @@ static BOOL isItAFunctionDeclaration(LexerState *lex)
  *     | expr ';'
  *     ;
  *
- * function_definition: FN NAME block
- *                    | FN NAME ';'
- *                    | FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ block
- *                    | FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
- *                    ;
+ * function_prototype: TYPE NAME block
+ *                   | TYPE NAME ';'
+ *                   | TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ block
+ *                   | TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
+ *                   ;
  */
 static Node *stmt(Nemo *NM, LexerState *lex)
 {
@@ -577,26 +577,26 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParser(NM, "%s ", name);
     /* return the block that was returned by parsing the file */
     ret = parseFile(NM, "stdio.nm");
-    /*ret = genNopNode(NM);*/
     endStmt(lex);
   }
   /*
-   * XXX FN NAME
+   * XXX TYPE NAME
    */
-  else if (lexAccept(lex, SYM_FN)){
-    debugParser(NM, "fn ");
+  else if (nextIsType(lex)){
+    debugParser(NM, "%s ", symToS(lex->current->sym.type));
+    lexSkip(lex);
     lexForce(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
     debugParser(NM, "%s ", name);
     /*
-     * XXX FN NAME ';'
+     * XXX TYPE NAME ';'
      */
     if (lexAccept(lex, SYM_SEMICOLON)){
       ret = genFuncDefNode(NM, name, NULL);
       debugParser(NM, ";\n");
     }
     /*
-     * XXX FN NAME block
+     * XXX TYPE NAME block
      */
     else if (lexAccept(lex, SYM_LMUSTASHE)){
       debugParser(NM, "{\n");
@@ -606,13 +606,13 @@ static Node *stmt(Nemo *NM, LexerState *lex)
       debugParser(NM, "}\n");
     }
     /*
-     * XXX FN NAME ':'
+     * XXX TYPE NAME ':'
      */
     else if (lexAccept(lex, SYM_COLON)){
       isitafunctiondeclaration = isItAFunctionDeclaration(lex);
       debugParser(NM, ": ");
       /*
-       * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+
+       * XXX TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+
        */
       do {
         if (nextIsType(lex)){
@@ -639,14 +639,14 @@ static Node *stmt(Nemo *NM, LexerState *lex)
       }
       while (lexAccept(lex, SYM_COMMA));
       /*
-       * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
+       * XXX TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
        */
       if (lexAccept(lex, SYM_SEMICOLON)){
         ret = genFuncDefNode(NM, name, NULL);
         debugParser(NM, ";\n");
       }
       /*
-       * XXX FN NAME ':' [TYPE NAME[',' TYPE NAME]*]+ stmt
+       * XXX TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ stmt
        */
       else {
         lexForce(lex, SYM_LMUSTASHE);
