@@ -186,5 +186,7 @@ void  freeNopNode(Nemo *, Node *);
 void  freeFuncDefNode(Nemo *, Node *);
 void  freeNode(Nemo *, Node *);
 
+char *valueToS(Value);
+
 #endif /* AST_H */
 

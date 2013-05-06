@@ -5,6 +5,9 @@ PREFIX  = /usr/local
 
 OBJECTS = nemo.o lexer.o parser.o error.o debug.o mem.o ast.o
 
+LIBS = -lreadline
+CFLAGS := $(CFLAGS) $(LIBS)
+
 .PHONY: all install uninstall clean distclean
 all: nemo
 

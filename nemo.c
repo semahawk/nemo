@@ -48,6 +48,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include "nemo.h"
 #include "parser.h"
@@ -55,6 +57,8 @@
 #include "debug.h"
 #include "mem.h"
 #include "ast.h"
+
+static int nmInteractive(Nemo *);
 
 int main(int argc, char *argv[])
 {
@@ -125,8 +129,10 @@ int main(int argc, char *argv[])
     strcpy(input, argv[optind++]);
   /* no argument passed atall */
   } else {
-    nmFatal("no input files");
-    return EXIT_FAILURE;
+    /*
+     * XXX exitting code here
+     */
+    return nmInteractive(NM);
   }
 
   /* set the sources name */
@@ -153,6 +159,38 @@ int main(int argc, char *argv[])
   nmFree(NM, NM);
 
   return EXIT_SUCCESS;
+}
+
+static int nmInteractive(Nemo *NM)
+{
+  char *input, prompt[64];
+  unsigned line = 0;
+
+  printf("Welcome to the Nemo " VERSION " interactive!\n");
+  printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
+
+  for (;;){
+    /* set the prompt */
+    sprintf(prompt, "nm:%x %% ", line);
+    /* get the input */
+    input = readline(prompt);
+    /* eof */
+    if (!input) break;
+    /* add the input to the history */
+    add_history(input);
+    /* yup */
+    line++;
+    /* "quit" hit */
+    if (!strcmp(input, "quit")){
+      printf("\n  Have a good day!\n\n");
+      return 0;
+    }
+
+    printf("=> %s\n", valueToS(execNode(NM, parseString(NM, input))));
+    /* do stuff */
+  }
+
+  return 0;
 }
 
 /*

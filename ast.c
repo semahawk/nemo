@@ -51,7 +51,6 @@
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
 static BOOL valueToB(Value);
-static char *valueToS(Value);
 
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
@@ -59,7 +58,7 @@ static char *valueToS(Value);
 static Value (*execFuncs[])(Nemo *, Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
-  NULL,
+  execNopNode,
   execIntNode,
   execFloatNode,
   execStringNode,
@@ -138,6 +137,31 @@ Node *genNopNode(Nemo *NM)
   debugAST(NM, n, "create NOP node");
 
   return n;
+}
+
+/*
+ * @name - execNopNode
+ * @desc - execute a NOP, actually, it's only for the return
+ *         so for example this would work:
+ *
+ *           while ; {
+ *             # do stuff
+ *           }
+ *
+ *         which would result in a infinite loop
+ */
+Value execNopNode(Nemo *NM, Node *n)
+{
+  Value ret;
+
+  /* unused parameter */
+  (void)NM;
+  (void)n;
+
+  ret.type = VT_INTEGER;
+  ret.value.i = 1;
+
+  return ret;
 }
 
 /*
@@ -428,6 +452,8 @@ Value execBinopNode(Nemo *NM, Node *n)
     case BINARY_GT:
     case BINARY_LT:
       /* FIXME: to be implemented */
+      ret.type = VT_INTEGER;
+      ret.value.i = 0xFFF;
       break;
   }
 
@@ -811,8 +837,10 @@ Value execCallNode(Nemo *NM, Node *n)
     }
   }
 
+  /* FIXME: when running an actuall function works, it should return whatever
+   *        the function would have */
   ret.type = VT_INTEGER;
-  ret.value.i = 0xCA11;
+  ret.value.i = 1;
 
   return ret;
 }
@@ -933,7 +961,7 @@ static BOOL valueToB(Value v)
   }
 }
 
-static char *valueToS(Value v)
+char *valueToS(Value v)
 {
   static char s[128];
 
