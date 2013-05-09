@@ -529,10 +529,7 @@ static Node *stmt(Nemo *NM, LexerState *lex)
    * XXX ';'
    */
   if (lexAccept(lex, SYM_SEMICOLON)){
-    /* that's NOP
-     * we're generating it anyway, because it would come in handy when we're
-     * compiling into the bytecode as NOP opcode
-     */
+    /* that's NOP */
     debugParser(NM, ";\n");
     ret = genNopNode(NM);
   }
@@ -540,12 +537,21 @@ static Node *stmt(Nemo *NM, LexerState *lex)
    * XXX USE NAME ';'
    */
   else if (lexAccept(lex, SYM_USE)){
+    char *tmp;
     debugParser(NM, "use ");
     lexForce(lex, SYM_NAME);
-    debugParser(NM, "%s ", name);
+    tmp = lex->current->prev->sym.value.s;
+    debugParser(NM, "%s ", tmp);
+    name = nmMalloc(NM, strlen(tmp) + 4);
+    strncpy(name, tmp, strlen(tmp));
+    name[strlen(tmp)] = '.';
+    name[strlen(tmp) + 1] = 'n';
+    name[strlen(tmp) + 2] = 'm';
+    name[strlen(tmp) + 3] = '\0';
     /* return the block that was returned by parsing the file */
-    ret = parseFile(NM, "stdio.nm");
+    ret = parseFile(NM, name);
     endStmt(lex);
+    nmFree(NM, name);
   }
   /*
    * XXX FN NAME
