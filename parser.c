@@ -500,37 +500,6 @@ static Node *expr(Nemo *NM, LexerState *lex)
 }
 
 /*
- * Simply check if current function declaration is actually a declaration or definition.
- *
- * Return TRUE if declaration, FALSE if definition.
- */
-static BOOL isItAFunctionDeclaration(LexerState *lex)
-{
-  /* save lexer's current position */
-  SymbolsList *save_current = lex->current;
-
-  /* skip over the whole definition/declaration, get right to before the
-   * semicolon or a block*/
-  while (lexAccept(lex, SYM_NAME) ||
-         lexAccept(lex, SYM_COLON) ||
-         lexAccept(lex, SYM_COMMA) ||
-         lexAccept(lex, SYM_TINT) ||
-         lexAccept(lex, SYM_TFLOAT) ||
-         lexAccept(lex, SYM_TSTR))
-    ;
-
-  if (lexPeek(lex, SYM_SEMICOLON)){
-    /* restore lexer's current position */
-    lex->current = save_current;
-    return TRUE;
-  } else {
-    /* restore lexer's current position */
-    lex->current = save_current;
-    return FALSE;
-  }
-}
-
-/*
  * stmt: ';'
  *     | block
  *     | function_prototype
@@ -542,10 +511,10 @@ static BOOL isItAFunctionDeclaration(LexerState *lex)
  *     | expr ';'
  *     ;
  *
- * function_prototype: TYPE NAME block
- *                   | TYPE NAME ';'
- *                   | TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ block
- *                   | TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
+ * function_prototype: FN NAME '(' ')' block
+ *                   | FN NAME '(' ')' ';'
+ *                   | FN NAME '(' [NAME[',' NAME]*]+ ')' block
+ *                   | FN NAME '(' [NAME[',' NAME]*]+ ')' ';'
  *                   ;
  */
 static Node *stmt(Nemo *NM, LexerState *lex)
@@ -555,7 +524,6 @@ static Node *stmt(Nemo *NM, LexerState *lex)
   Node *body  = NULL;
   Node *elsee = NULL;
   char *name  = NULL;
-  BOOL  isitafunctiondeclaration;
 
   /*
    * XXX ';'
@@ -580,82 +548,55 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     endStmt(lex);
   }
   /*
-   * XXX TYPE NAME
+   * XXX FN NAME
    */
-  else if (nextIsType(lex)){
+  else if (lexAccept(lex, SYM_FN)){
+    debugParser(NM, "fn ");
     debugParser(NM, "%s ", symToS(lex->current->sym.type));
-    lexSkip(lex);
     lexForce(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
     debugParser(NM, "%s ", name);
     /*
-     * XXX TYPE NAME ';'
+     * XXX FN NAME '('
      */
-    if (lexAccept(lex, SYM_SEMICOLON)){
-      ret = genFuncDefNode(NM, name, NULL);
-      debugParser(NM, ";\n");
+    lexForce(lex, SYM_LPAREN);
+    debugParser(NM, "(");
+    /*
+     * XXX FN NAME '(' ')'
+     */
+    if (lexAccept(lex, SYM_RPAREN)){
+      debugParser(NM, ")");
+    } else {
+      /*
+       * XXX FN NAME '(' [NAME[',' NAME]*]+ ')'
+       */
+      do {
+         lexForce(lex, SYM_NAME);
+         debugParser(NM, "%s ", lex->current->prev->sym.value.s);
+         if (lexPeek(lex, SYM_COMMA)){
+           debugParser(NM, ", ");
+         }
+      } while (lexAccept(lex, SYM_COMMA));
+      lexForce(lex, SYM_RPAREN);
+      debugParser(NM, ")");
     }
     /*
-     * XXX TYPE NAME block
+     * XXX FN NAME ... ';'
      */
-    else if (lexAccept(lex, SYM_LMUSTASHE)){
+    if (lexAccept(lex, SYM_SEMICOLON)){
+      debugParser(NM, ";\n");
+      ret = genFuncDefNode(NM, name, NULL);
+    }
+    /*
+     * XXX FN NAME ... block
+     */
+    else {
+      lexForce(lex, SYM_LMUSTASHE);
       debugParser(NM, "{\n");
-      body = block(NM, lex);
+      body = stmt(NM, lex);
       ret = genFuncDefNode(NM, name, body);
       lexForce(lex, SYM_RMUSTASHE);
       debugParser(NM, "}\n");
-    }
-    /*
-     * XXX TYPE NAME ':'
-     */
-    else if (lexAccept(lex, SYM_COLON)){
-      isitafunctiondeclaration = isItAFunctionDeclaration(lex);
-      debugParser(NM, ": ");
-      /*
-       * XXX TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+
-       */
-      do {
-        if (nextIsType(lex)){
-          debugParser(NM, "%s ", symToS(lex->current->sym.type));
-          lexSkip(lex);
-        } else {
-          lexError(lex, "expected a type instead of %s", symToS(lex->current->sym.type));
-          exit(EXIT_FAILURE);
-        }
-        /* if it's a declaration, we don't need names, really */
-        if (isitafunctiondeclaration){
-          if (lexPeek(lex, SYM_NAME)){
-            debugParser(NM, "%s ", lex->current->prev->sym.value.s);
-            lexSkip(lex);
-          }
-        } else {
-          lexForce(lex, SYM_NAME);
-          debugParser(NM, "%s ", lex->current->prev->sym.value.s);
-        }
-        /* print that comma, if preset */
-        if (lexPeek(lex, SYM_COMMA)){
-          debugParser(NM, ", ");
-        }
-      }
-      while (lexAccept(lex, SYM_COMMA));
-      /*
-       * XXX TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ ';'
-       */
-      if (lexAccept(lex, SYM_SEMICOLON)){
-        ret = genFuncDefNode(NM, name, NULL);
-        debugParser(NM, ";\n");
-      }
-      /*
-       * XXX TYPE NAME ':' [TYPE NAME[',' TYPE NAME]*]+ stmt
-       */
-      else {
-        lexForce(lex, SYM_LMUSTASHE);
-        debugParser(NM, "{\n");
-        body = block(NM, lex);
-        ret = genFuncDefNode(NM, name, body);
-        lexForce(lex, SYM_RMUSTASHE);
-        debugParser(NM, "}\n");
-      }
     }
   }
   /*

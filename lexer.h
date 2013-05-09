@@ -41,9 +41,6 @@ enum SymbolType {
   SYM_PRINT,          /* "print" */
   SYM_FN,             /* "fn"    */
   SYM_USE,            /* "use"   */
-  SYM_TINT,           /* "int"   */
-  SYM_TFLOAT,         /* "float" */
-  SYM_TSTR,           /* "str"   */
   SYM_INTEGER,        /*         */
   SYM_FLOAT,          /*         */
   SYM_STRING,         /*         */
