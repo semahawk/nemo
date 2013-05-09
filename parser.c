@@ -544,12 +544,17 @@ static Node *stmt(Nemo *NM, LexerState *lex)
     debugParser(NM, "%s ", tmp);
     name = nmMalloc(NM, strlen(tmp) + 4);
     strncpy(name, tmp, strlen(tmp));
-    name[strlen(tmp)] = '.';
+    name[strlen(tmp)]     = '.';
     name[strlen(tmp) + 1] = 'n';
     name[strlen(tmp) + 2] = 'm';
     name[strlen(tmp) + 3] = '\0';
     /* return the block that was returned by parsing the file */
-    ret = parseFile(NM, name);
+    /* only when the "used" name is different than the current source's name */
+    if (!strcmp(name, lex->source)){
+      ret = genNopNode(NM);
+    } else {
+      ret = parseFile(NM, name);
+    }
     endStmt(lex);
     nmFree(NM, name);
   }
