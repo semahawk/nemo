@@ -166,6 +166,7 @@ static int nmInteractive(Nemo *NM)
 {
   char *input, prompt[64];
   unsigned line = 0;
+  NmObject *ob;
 
   printf("Welcome to the Nemo " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
@@ -187,8 +188,11 @@ static int nmInteractive(Nemo *NM)
       return 0;
     }
 
-    printf("=> %s\n", valueToS(NmAST_Exec(NM, NmParser_ParseString(NM, input))));
-    /* do stuff */
+    ob = NmAST_Exec(NM, NmParser_ParseString(NM, input));
+
+    printf("=> ");
+    ob->fn.print(NM, stdout, ob);
+    printf("\n");
   }
 
   return 0;

@@ -414,12 +414,7 @@ NmObject *NmAST_ExecBinop(Nemo *NM, Node *n)
       }
       /* actually assign the value */
       ret = NmAST_Exec(NM, n->data.binop.right);
-      /* FIXME */
-      /* FIXME */
-      /* FIXME */
-      /* FIXME */
-      /* FIXME */
-      /*var->value = ret;*/
+      var->value = ret;
       break;
     }
     case BINARY_ADD:
@@ -482,10 +477,6 @@ Node *NmAST_GenUnop(Nemo *NM, Node *expr, UnaryOp op)
 NmObject *NmAST_ExecUnop(Nemo *NM, Node *n)
 {
   /* FIXME */
-  /* FIXME */
-  /* FIXME */
-  /* FIXME */
-
   NmDebug_AST(NM, n, "execute unary operation node");
 
   return NmObject_NewFromInt(NM, 8642573);
@@ -684,8 +675,8 @@ NmObject *NmAST_ExecDecl(Nemo *NM, Node *n)
     NmObject *value = NmAST_Exec(NM, n->data.decl.value);
     new_var->value = value;
   } else {
-    /* zero out the variables value */
-    memset(&new_var->value, 0, sizeof(NmObject));
+    /* declared variables get to be a integer with the value of 0 */
+    new_var->value = NmObject_NewFromInt(NM, 0);
   }
   /* append to the globals list */
   new_var->name = NmMem_Strdup(NM, n->data.decl.name);
@@ -814,7 +805,7 @@ NmObject *NmAST_ExecCall(Nemo *NM, Node *n)
    *        the function would have */
   (void)ret;
 
-  return NmObject_NewFromInt(NM, 640420);
+  return NmObject_NewFromInt(NM, 0xCA11);
 }
 
 /*
@@ -871,7 +862,6 @@ Node *NmAST_GenFuncDef(Nemo *NM, char *name, Node *body)
 NmObject *NmAST_ExecFuncDef(Nemo *NM, Node *n)
 {
   /* FIXME */
-
   if (n->data.funcdef.body)
     NmDebug_AST(NM, n, "execute function definition node");
   else
@@ -919,26 +909,6 @@ static BOOL valueToB(NmObject *o)
       return TRUE;
     default:
       return FALSE;
-  }
-}
-
-char *valueToS(NmObject *o)
-{
-  /*
-   * FIXME
-   * FIXMEE
-   *
-   * FIXXXMEEEE
-   */
-  switch (o->type){
-    case OT_INTEGER:
-      return "INTEGER";
-    case OT_FLOAT:
-      return "FLOAT";
-    case OT_STRING:
-      return "STRING";
-    default:
-      return "#unknown#valueToS#";
   }
 }
 

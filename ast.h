@@ -187,7 +187,5 @@ void  NmAST_FreeNop(Nemo *, Node *);
 void  NmAST_FreeFuncDef(Nemo *, Node *);
 void  NmAST_Free(Nemo *, Node *);
 
-char *valueToS(NmObject *);
-
 #endif /* AST_H */
 
