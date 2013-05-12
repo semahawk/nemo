@@ -26,7 +26,7 @@ struct Variable {
   char *name;
   /* FIXME: needs to be { NmObject * } but when I include "object.h" then they
    * are circulatingly dependant on each other blerh blerh doesn't work */
-  void *value;
+  struct NmObject *value;
 };
 
 /*

@@ -320,8 +320,7 @@ Node *NmAST_GenName(Nemo *NM, char *s)
  */
 NmObject *NmAST_ExecName(Nemo *NM, Node *n)
 {
-  /*NmObject *ret;*/
-  /*NmObject *vars_value;*/
+  NmObject *ret;
   VariablesList *p;
   BOOL found = FALSE;
 
@@ -331,7 +330,7 @@ NmObject *NmAST_ExecName(Nemo *NM, Node *n)
   for (p = NM->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
       found = TRUE;
-      /*vars_value = p->var->value;*/
+      ret = p->var->value;
       break;
     }
   }
@@ -341,14 +340,7 @@ NmObject *NmAST_ExecName(Nemo *NM, Node *n)
     exit(EXIT_FAILURE);
   }
 
-  /* FIXME */
-  /* FIXME */
-  /* FIXME */
-  /* FIXME */
-  /* FIXME */
-  /*ret = vars_value;*/
-
-  return NmObject_NewFromInt(NM, 8642862);
+  return ret;
 }
 
 /*
@@ -689,12 +681,11 @@ NmObject *NmAST_ExecDecl(Nemo *NM, Node *n)
   NmDebug_AST(NM, n, "execute variable declaration node");
 
   if (n->data.decl.value){
-    /*NmObject *value = NmAST_Exec(NM, n->data.decl.value);*/
-    /* FIXME */
-    /*new_var->value = value;*/
+    NmObject *value = NmAST_Exec(NM, n->data.decl.value);
+    new_var->value = value;
   } else {
     /* zero out the variables value */
-    memset(&new_var->value, 0, sizeof(NmObject *));
+    memset(&new_var->value, 0, sizeof(NmObject));
   }
   /* append to the globals list */
   new_var->name = NmMem_Strdup(NM, n->data.decl.name);
@@ -729,10 +720,6 @@ NmObject *NmAST_ExecBlock(Nemo *NM, Node *n)
   NmObject *ret;
   Statement *s;
   Statement *next;
-
-  /*
-   * FIXME: block should return what the last statement has returned
-   */
 
   assert(n);
   assert(n->type == NT_BLOCK);
