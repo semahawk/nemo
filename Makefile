@@ -3,7 +3,7 @@ CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -ansi -pedantic
 
 PREFIX  = /usr/local
 
-OBJECTS = nemo.o lexer.o parser.o error.o debug.o mem.o ast.o
+OBJECTS = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o
 
 LIBS = -lreadline
 CFLAGS := $(CFLAGS) $(LIBS)
@@ -21,6 +21,7 @@ parser.o: parser.c parser.h nemo.h error.h lexer.h ast.h debug.h
 debug.o: debug.c debug.h nemo.h lexer.h
 mem.o: mem.c mem.h nemo.h error.h debug.h
 ast.o: ast.c ast.h nemo.h mem.h
+object.o: object.c object.h
 
 install: all
 	install -D -m 755 nemo $(PREFIX)/bin/nemo

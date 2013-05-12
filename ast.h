@@ -32,6 +32,7 @@
 #define AST_H
 
 #include "nemo.h"
+#include "object.h"
 
 enum NodeType {
   NT_NOP,
@@ -156,20 +157,20 @@ Node *genCallNode(Nemo *, char *, Node **);
 Node *genFuncDefNode(Nemo *, char *, Node *);
 Node *genNopNode(Nemo *);
 
-Value execIntNode(Nemo *, Node *);
-Value execFloatNode(Nemo *, Node *);
-Value execStringNode(Nemo *, Node *);
-Value execNameNode(Nemo *, Node *);
-Value execBinopNode(Nemo *, Node *);
-Value execUnopNode(Nemo *, Node *);
-Value execIfNode(Nemo *, Node *);
-Value execWhileNode(Nemo *, Node *);
-Value execDeclNode(Nemo *, Node *);
-Value execCallNode(Nemo *, Node *);
-Value execBlockNode(Nemo *, Node *);
-Value execFuncDefNode(Nemo *, Node *);
-Value execNopNode(Nemo *, Node *);
-Value execNode(Nemo *, Node *);
+NmObject *execIntNode(Nemo *, Node *);
+NmObject *execFloatNode(Nemo *, Node *);
+NmObject *execStringNode(Nemo *, Node *);
+NmObject *execNameNode(Nemo *, Node *);
+NmObject *execBinopNode(Nemo *, Node *);
+NmObject *execUnopNode(Nemo *, Node *);
+NmObject *execIfNode(Nemo *, Node *);
+NmObject *execWhileNode(Nemo *, Node *);
+NmObject *execDeclNode(Nemo *, Node *);
+NmObject *execCallNode(Nemo *, Node *);
+NmObject *execBlockNode(Nemo *, Node *);
+NmObject *execFuncDefNode(Nemo *, Node *);
+NmObject *execNopNode(Nemo *, Node *);
+NmObject *execNode(Nemo *, Node *);
 
 void  freeIntNode(Nemo *, Node *);
 void  freeFloatNode(Nemo *, Node *);
@@ -186,7 +187,7 @@ void  freeNopNode(Nemo *, Node *);
 void  freeFuncDefNode(Nemo *, Node *);
 void  freeNode(Nemo *, Node *);
 
-char *valueToS(Value);
+char *valueToS(NmObject *);
 
 #endif /* AST_H */
 

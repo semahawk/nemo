@@ -155,6 +155,7 @@ int main(int argc, char *argv[])
   }
 
   /* tidy up */
+  NmObject_Tidyup(NM);
   nmFree(NM, NM->source);
   nmFree(NM, NM);
 

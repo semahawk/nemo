@@ -47,15 +47,16 @@
 #include "mem.h"
 #include "debug.h"
 #include "error.h"
+#include "object.h"
 
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
-static BOOL valueToB(Value);
+static BOOL valueToB(NmObject *);
 
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
  */
-static Value (*execFuncs[])(Nemo *, Node *) =
+static NmObject *(*execFuncs[])(Nemo *, Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
   execNopNode,
@@ -96,11 +97,11 @@ static void (*freeFuncs[])(Nemo *, Node *) =
 
 /*
  * @name - execNode
- * @desc - executes given node and returns the Value it resulted in
+ * @desc - executes given node and returns the NmObject *it resulted in
  */
-Value execNode(Nemo *NM, Node *n)
+NmObject *execNode(Nemo *NM, Node *n)
 {
-  Value ret;
+  NmObject *ret;
 
   assert(n);
 
@@ -150,18 +151,13 @@ Node *genNopNode(Nemo *NM)
  *
  *         which would result in a infinite loop
  */
-Value execNopNode(Nemo *NM, Node *n)
+NmObject *execNopNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
   /* unused parameter */
   (void)NM;
   (void)n;
 
-  ret.type = VT_INTEGER;
-  ret.value.i = 1;
-
-  return ret;
+  return NmObject_NewFromInt(NM, 1);
 }
 
 /*
@@ -198,16 +194,11 @@ Node *genIntNode(Nemo *NM, int i)
  * @name - execIntNode
  * @desc - return the value of the int
  */
-Value execIntNode(Nemo *NM, Node *n)
+NmObject *execIntNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
-  ret.type = VT_INTEGER;
-  ret.value.i = n->data.i;
-
   debugAST(NM, n, "execute integer node");
 
-  return ret;
+  return NmObject_NewFromInt(NM, n->data.i);
 }
 
 /*
@@ -244,16 +235,11 @@ Node *genFloatNode(Nemo *NM, float f)
  * @name - execFloatNode
  * @desc - return the value of the float
  */
-Value execFloatNode(Nemo *NM, Node *n)
+NmObject *execFloatNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
-  ret.type = VT_FLOAT;
-  ret.value.f = n->data.f;
-
   debugAST(NM, n, "execute float node");
 
-  return ret;
+  return NmObject_NewFromFloat(NM, n->data.f);
 }
 
 /*
@@ -290,16 +276,11 @@ Node *genStringNode(Nemo *NM, char *s)
  * @name - execStringNode
  * @desc - return the value of the string
  */
-Value execStringNode(Nemo *NM, Node *n)
+NmObject *execStringNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
-  ret.type = VT_STRING;
-  ret.value.s = n->data.s;
-
   debugAST(NM, n, "execute string node");
 
-  return ret;
+  return NmObject_NewFromString(NM, n->data.s);
 }
 
 /*
@@ -337,10 +318,10 @@ Node *genNameNode(Nemo *NM, char *s)
  * @name - execNameNode
  * @desc - return the value the name is carring
  */
-Value execNameNode(Nemo *NM, Node *n)
+NmObject *execNameNode(Nemo *NM, Node *n)
 {
-  Value ret;
-  Value vars_value;
+  /*NmObject *ret;*/
+  /*NmObject *vars_value;*/
   VariablesList *p;
   BOOL found = FALSE;
 
@@ -350,7 +331,7 @@ Value execNameNode(Nemo *NM, Node *n)
   for (p = NM->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
       found = TRUE;
-      vars_value = p->var->value;
+      /*vars_value = p->var->value;*/
       break;
     }
   }
@@ -360,9 +341,14 @@ Value execNameNode(Nemo *NM, Node *n)
     exit(EXIT_FAILURE);
   }
 
-  ret = vars_value;
+  /* FIXME */
+  /* FIXME */
+  /* FIXME */
+  /* FIXME */
+  /* FIXME */
+  /*ret = vars_value;*/
 
-  return ret;
+  return NmObject_NewFromInt(NM, 8642862);
 }
 
 /*
@@ -401,9 +387,9 @@ Node *genBinopNode(Nemo *NM, Node *left, BinaryOp op, Node *right)
  * @name - execBinopNode
  * @desc - return the result of the binary operation
  */
-Value execBinopNode(Nemo *NM, Node *n)
+NmObject *execBinopNode(Nemo *NM, Node *n)
 {
-  Value ret;
+  NmObject *ret;
 
   debugAST(NM, n, "execute binary operation node");
 
@@ -436,7 +422,12 @@ Value execBinopNode(Nemo *NM, Node *n)
       }
       /* actually assign the value */
       ret = execNode(NM, n->data.binop.right);
-      var->value = ret;
+      /* FIXME */
+      /* FIXME */
+      /* FIXME */
+      /* FIXME */
+      /* FIXME */
+      /*var->value = ret;*/
       break;
     }
     case BINARY_ADD:
@@ -452,8 +443,7 @@ Value execBinopNode(Nemo *NM, Node *n)
     case BINARY_GT:
     case BINARY_LT:
       /* FIXME: to be implemented */
-      ret.type = VT_INTEGER;
-      ret.value.i = 0xFFF;
+      ret = NmObject_NewFromInt(NM, 73753753);
       break;
   }
 
@@ -497,16 +487,16 @@ Node *genUnopNode(Nemo *NM, Node *expr, UnaryOp op)
  * @name - execUnopNode
  * @desc - return the result of the unary operation
  */
-Value execUnopNode(Nemo *NM, Node *n)
+NmObject *execUnopNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
-  ret.type = VT_INTEGER;
-  ret.value.i = 0x0408;
+  /* FIXME */
+  /* FIXME */
+  /* FIXME */
+  /* FIXME */
 
   debugAST(NM, n, "execute unary operation node");
 
-  return ret;
+  return NmObject_NewFromInt(NM, 8642573);
 }
 
 /*
@@ -547,10 +537,8 @@ Node *genIfNode(Nemo *NM, Node *guard, Node *body, Node *elsee)
  * @name - execIfNode
  * @desc - do the if loop, return actually anything
  */
-Value execIfNode(Nemo *NM, Node *n)
+NmObject *execIfNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
   Node *guard = n->data.iff.guard;
   Node *body = n->data.iff.body;
   Node *elsee = n->data.iff.elsee;
@@ -563,10 +551,7 @@ Value execIfNode(Nemo *NM, Node *n)
     execNode(NM, elsee);
   }
 
-  ret.type = VT_INTEGER;
-  ret.value.i = 1;
-
-  return ret;
+  return NmObject_NewFromInt(NM, 1);
 }
 
 /*
@@ -619,10 +604,8 @@ Node *genWhileNode(Nemo *NM, Node *guard, Node *body, Node *elsee)
  * @name - execWhileNode
  * @desc - execute the loop and return, actually anything, it's a statement
  */
-Value execWhileNode(Nemo *NM, Node *n)
+NmObject *execWhileNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
   Node *guard = n->data.iff.guard;
   Node *body = n->data.iff.body;
   Node *elsee = n->data.iff.elsee;
@@ -637,10 +620,7 @@ Value execWhileNode(Nemo *NM, Node *n)
     execNode(NM, elsee);
   }
 
-  ret.type = VT_INTEGER;
-  ret.value.i = 1;
-
-  return ret;
+  return NmObject_NewFromInt(NM, 1);
 }
 
 /*
@@ -692,9 +672,8 @@ Node *genDeclNode(Nemo *NM, char *name, Node *value)
  * @name - execDeclNode
  * @desc - declare/define the variable and return 1
  */
-Value execDeclNode(Nemo *NM, Node *n)
+NmObject *execDeclNode(Nemo *NM, Node *n)
 {
-  Value ret;
   VariablesList *new_list = nmMalloc(NM, sizeof(VariablesList));
   Variable *new_var = nmMalloc(NM, sizeof(Variable));
   VariablesList *p;
@@ -710,11 +689,12 @@ Value execDeclNode(Nemo *NM, Node *n)
   debugAST(NM, n, "execute variable declaration node");
 
   if (n->data.decl.value){
-    Value value = execNode(NM, n->data.decl.value);
-    new_var->value = value;
+    /*NmObject *value = execNode(NM, n->data.decl.value);*/
+    /* FIXME */
+    /*new_var->value = value;*/
   } else {
     /* zero out the variables value */
-    memset(&new_var->value, 0, sizeof(Value));
+    memset(&new_var->value, 0, sizeof(NmObject *));
   }
   /* append to the globals list */
   new_var->name = strdup(NM, n->data.decl.name);
@@ -722,10 +702,7 @@ Value execDeclNode(Nemo *NM, Node *n)
   new_list->next = NM->globals;
   NM->globals = new_list;
 
-  ret.type = VT_INTEGER;
-  ret.value.i = 1;
-
-  return ret;
+  return NmObject_NewFromInt(NM, 1);
 }
 
 /*
@@ -747,17 +724,23 @@ void freeDeclNode(Nemo *NM, Node *n)
   nmFree(NM, n);
 }
 
-Value execBlockNode(Nemo *NM, Node *n)
+NmObject *execBlockNode(Nemo *NM, Node *n)
 {
-  Value ret;
+  NmObject *ret;
   Statement *s;
+  Statement *next;
+
+  /*
+   * FIXME: block should return what the last statement has returned
+   */
 
   assert(n);
   assert(n->type == NT_BLOCK);
 
   debugAST(NM, n, "execute block node");
 
-  for (s = n->data.block.tail; s != NULL; s = s->next){
+  for (s = n->data.block.tail; s != NULL; s = next){
+    next = s->next;
     debugAST(NM, s->stmt, "execute statement node");
     ret = execNode(NM, s->stmt);
   }
@@ -813,9 +796,9 @@ Node *genCallNode(Nemo *NM, char *name, Node **params)
  * @name - execCallNode
  * @desc - call the given function
  */
-Value execCallNode(Nemo *NM, Node *n)
+NmObject *execCallNode(Nemo *NM, Node *n)
 {
-  Value ret;
+  NmObject *ret;
   unsigned i;
   char *name = n->data.call.name;
 
@@ -839,10 +822,9 @@ Value execCallNode(Nemo *NM, Node *n)
 
   /* FIXME: when running an actuall function works, it should return whatever
    *        the function would have */
-  ret.type = VT_INTEGER;
-  ret.value.i = 1;
+  (void)ret;
 
-  return ret;
+  return NmObject_NewFromInt(NM, 640420);
 }
 
 /*
@@ -896,21 +878,16 @@ Node *genFuncDefNode(Nemo *NM, char *name, Node *body)
  * @name - execFuncDefNode
  * @desc - declare/define given function
  */
-Value execFuncDefNode(Nemo *NM, Node *n)
+NmObject *execFuncDefNode(Nemo *NM, Node *n)
 {
-  Value ret;
-
   /* FIXME */
-
-  ret.type = VT_INTEGER;
-  ret.value.i = 1;
 
   if (n->data.funcdef.body)
     debugAST(NM, n, "execute function definition node");
   else
     debugAST(NM, n, "execute function declaration node");
 
-  return ret;
+  return NmObject_NewFromInt(NM, 1);
 }
 
 /*
@@ -937,49 +914,42 @@ void freeFuncDefNode(Nemo *NM, Node *n)
  *
  * In Nemo there is no "bool" type as is.
  */
-static BOOL valueToB(Value v)
+static BOOL valueToB(NmObject *o)
 {
   /*
    * 0 and 0.0 are false
    * everything else is true
    */
-  switch (v.type){
-    case VT_INTEGER:
-      if (v.value.i == 0)
-        return FALSE;
-      else
-        return TRUE;
-      break;
-    case VT_FLOAT:
-      if (v.value.f == 0.0f)
-        return FALSE;
-      else
-        return TRUE;
-      break;
+  switch (o->type){
+    /* FIXME */
+    case OT_FLOAT:
+      return TRUE;
+    /* FIXME */
+    case OT_STRING:
+      return TRUE;
     default:
       return FALSE;
   }
 }
 
-char *valueToS(Value v)
+char *valueToS(NmObject *o)
 {
-  static char s[128];
-
-  switch (v.type){
-    case VT_INTEGER:
-      sprintf(s, "%d", v.value.i);
-      break;
-    case VT_FLOAT:
-      sprintf(s, "%f", v.value.f);
-      break;
-    case VT_STRING:
-      sprintf(s, "%s", v.value.s);
-      break;
+  /*
+   * FIXME
+   * FIXMEE
+   *
+   * FIXXXMEEEE
+   */
+  switch (o->type){
+    case OT_INTEGER:
+      return "INTEGER";
+    case OT_FLOAT:
+      return "FLOAT";
+    case OT_STRING:
+      return "STRING";
     default:
-      sprintf(s, "#unknown#valueToS#");
+      return "#unknown#valueToS#";
   }
-
-  return s;
 }
 
 static const char *binopToS(BinaryOp op)
@@ -1019,7 +989,7 @@ static const char *unopToS(UnaryOp op)
 }
 
 /*
- * Steve Vai
+ * Steve Vai, Testament
  *
  * The IT Crowd, Family Guy
  */

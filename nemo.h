@@ -19,36 +19,14 @@
 #endif
 
 /*
- * Yup, pretty self-explanatory
- */
-enum ValueType {
-  VT_INTEGER,
-  VT_FLOAT,
-  VT_STRING
-};
-
-/*
- * The very value that a node or a variable can hold
- */
-struct Value {
-  /* basically indicates which field in the union is currently in use */
-  enum ValueType type;
-  union {
-    int i;
-    float f;
-    char *s;
-  } value;
-};
-
-/*
  * Type for variables in Nemo
  */
 struct Variable {
   /* obviously */
   char *name;
-  enum ValueType type;
-  /* where in the memory the value is holded */
-  struct Value value;
+  /* FIXME: needs to be { NmObject * } but when I include "object.h" then they
+   * are circulatingly dependant on each other blerh blerh doesn't work */
+  void *value;
 };
 
 /*
@@ -88,8 +66,6 @@ struct Nemo {
   } flags;
 };
 
-typedef enum   ValueType     ValueType;
-typedef struct Value         Value;
 typedef struct Variable      Variable;
 typedef struct VariablesList VariablesList;
 typedef struct Nemo          Nemo;
