@@ -31,6 +31,8 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#include <stdio.h>
+
 #include "nemo.h"
 
 /*
@@ -49,12 +51,15 @@ typedef struct IntObject NmIntObject;
 typedef struct FloatObject NmFloatObject;
 typedef struct StringObject NmStringObject;
 
+struct Fn {
+  void (*dstr)(Nemo *, NmObject *);
+  NmObject *(*repr)(Nemo *, NmObject *);
+  void (*print)(Nemo *, FILE *, NmObject *);
+};
+
 #define NMOBJECT_HEAD                      \
   enum Type type;                          \
-  struct {                                 \
-    void (*dstr)(Nemo *, NmObject *);      \
-    NmObject *(*repr)(Nemo *, NmObject *); \
-  } fn;
+  struct Fn fn;
 
 struct Object {
   NMOBJECT_HEAD
@@ -75,17 +80,21 @@ struct StringObject {
   char *s;
 };
 
-NmObject *NmObject_New(Nemo *NM, const char *s);
-NmObject *NmObject_NewFromInt(Nemo *NM, int i);
-NmObject *NmObject_NewFromFloat(Nemo *NM, double d);
-NmObject *NmObject_NewFromString(Nemo *NM, char *s);
-
-void NmObject_Destroy(Nemo *NM, NmObject *);
-void NmObject_DestroyInt(Nemo *NM, NmObject *);
-void NmObject_DestroyFloat(Nemo *NM, NmObject *);
-void NmObject_DestroyString(Nemo *NM, NmObject *);
-
+NmObject *NmObject_New(Nemo *, const char *);
+void NmObject_Destroy(Nemo *, NmObject *);
 void NmObject_Tidyup(Nemo *);
+
+NmObject *NmObject_NewFromInt(Nemo *, int);
+void NmInt_Print(Nemo *, FILE *, NmObject *);
+void NmInt_Destroy(Nemo *, NmObject *);
+
+NmObject *NmObject_NewFromFloat(Nemo *, double);
+void NmFloat_Print(Nemo *, FILE *, NmObject *);
+void NmFloat_Destroy(Nemo *, NmObject *);
+
+NmObject *NmObject_NewFromString(Nemo *, char *);
+void NmString_Print(Nemo *, FILE *, NmObject *);
+void NmString_Destroy(Nemo *, NmObject *);
 
 #endif /* OBJECT_H */
 

@@ -66,7 +66,8 @@ NmObject *NmObject_NewFromInt(Nemo *NM, int i)
 
   ob->type = OT_INTEGER;
   ob->i = i;
-  ob->fn.dstr = NmObject_DestroyInt;
+  ob->fn.dstr = NmInt_Destroy;
+  ob->fn.print = NmInt_Print;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -76,7 +77,17 @@ NmObject *NmObject_NewFromInt(Nemo *NM, int i)
   return (NmObject *)ob;
 }
 
-void NmObject_DestroyInt(Nemo *NM, NmObject *ob)
+void NmInt_Print(Nemo *NM, FILE *fp, NmObject *ob)
+{
+  assert(ob->type == OT_INTEGER);
+
+  /* unused parameter */
+  (void)NM;
+
+  fprintf(fp, "%d", ((NmIntObject *)ob)->i);
+}
+
+void NmInt_Destroy(Nemo *NM, NmObject *ob)
 {
   assert(ob->type == OT_INTEGER);
 
@@ -90,7 +101,8 @@ NmObject *NmObject_NewFromFloat(Nemo *NM, double f)
 
   ob->type = OT_FLOAT;
   ob->f = f;
-  ob->fn.dstr = NmObject_DestroyFloat;
+  ob->fn.dstr = NmFloat_Destroy;
+  ob->fn.print = NmFloat_Print;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -100,7 +112,17 @@ NmObject *NmObject_NewFromFloat(Nemo *NM, double f)
   return (NmObject *)ob;
 }
 
-void NmObject_DestroyFloat(Nemo *NM, NmObject *ob)
+void NmFloat_Print(Nemo *NM, FILE *fp, NmObject *ob)
+{
+  assert(ob->type == OT_FLOAT);
+
+  /* unused parameter */
+  (void)NM;
+
+  fprintf(fp, "%f", ((NmFloatObject *)ob)->f);
+}
+
+void NmFloat_Destroy(Nemo *NM, NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
 
@@ -114,7 +136,8 @@ NmObject *NmObject_NewFromString(Nemo *NM, char *s)
 
   ob->type = OT_STRING;
   ob->s = NmMem_Strdup(NM, s);
-  ob->fn.dstr = NmObject_DestroyString;
+  ob->fn.dstr = NmString_Destroy;
+  ob->fn.print = NmString_Print;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -124,10 +147,21 @@ NmObject *NmObject_NewFromString(Nemo *NM, char *s)
   return (NmObject *)ob;
 }
 
-void NmObject_DestroyString(Nemo *NM, NmObject *ob)
+void NmString_Print(Nemo *NM, FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
+  /* unused parameter */
+  (void)NM;
+
+  fprintf(fp, "%s", ((NmStringObject *)ob)->s);
+}
+
+void NmString_Destroy(Nemo *NM, NmObject *ob)
+{
+  assert(ob->type == OT_STRING);
+
+  NmMem_Free(NM, ((NmStringObject *)ob)->s);
   NmMem_Free(NM, ob);
 }
 

@@ -809,13 +809,16 @@ NmObject *NmAST_ExecCall(Nemo *NM, Node *n)
    */
   if (!strcmp(name, "print")){
     for (i = 0; n->data.call.params != NULL && n->data.call.params[i] != NULL; i++){
-      char *value = valueToS(NmAST_Exec(NM, n->data.call.params[i]));
+      NmObject *value = NmAST_Exec(NM, n->data.call.params[i]);
       /* this the last parameter */
       if (n->data.call.params[i + 1] == NULL){
-        printf("%s\n", value);
+        value->fn.print(NM, stdout, value);
+        putchar('\n');
       /* this is NOT the last parameter */
       } else {
-        printf("%s, ", value);
+        value->fn.print(NM, stdout, value);
+        putchar(',');
+        putchar(' ');
       }
     }
   }
