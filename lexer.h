@@ -106,14 +106,14 @@ typedef struct Symbol Symbol;
 typedef struct SymbolsList SymbolsList;
 typedef struct LexerState LexerState;
 
-void lexFile(Nemo *, LexerState *, char *);
-void lexString(Nemo *, LexerState *, char *);
-void lexDestroy(Nemo *, LexerState *);
+void NmLexer_LexFile(Nemo *, LexerState *, char *);
+void NmLexer_LexString(Nemo *, LexerState *, char *);
+void NmLexer_Destroy(Nemo *, LexerState *);
 
-BOOL lexPeek(LexerState *lex, SymbolType);
-BOOL lexAccept(LexerState *lex, SymbolType);
-void lexForce(LexerState *lex, SymbolType);
-void lexSkip(LexerState *lex);
+BOOL NmLexer_Peek(LexerState *lex, SymbolType);
+BOOL NmLexer_Accept(LexerState *lex, SymbolType);
+void NmLexer_Force(LexerState *lex, SymbolType);
+void NmLexer_Skip(LexerState *lex);
 
 const char *symToS(SymbolType type);
 

@@ -49,7 +49,7 @@
 #define PARSER_INDENT_STEP 2
 static unsigned parser_debug_level = 0;
 
-void debugMemory(Nemo *NM, void *pointer, const char *msg, ...)
+void NmDebug_Memory(Nemo *NM, void *pointer, const char *msg, ...)
 {
   if (NM->flags.debug.memory){
     static unsigned count = 1;
@@ -63,35 +63,35 @@ void debugMemory(Nemo *NM, void *pointer, const char *msg, ...)
   }
 }
 
-void debugLexer(Nemo *NM, LexerState *lex, SymbolType type)
+void NmDebug_Lexer(Nemo *NM, LexerState *lex, SymbolType type)
 {
   if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s\n", lex->line, lex->column, symToS(type));
   }
 }
 
-void debugLexerInt(Nemo *NM, LexerState *lex, SymbolType type, int i)
+void NmDebug_LexerInt(Nemo *NM, LexerState *lex, SymbolType type, int i)
 {
   if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%i)\n", lex->line, lex->column, symToS(type), i);
   }
 }
 
-void debugLexerFloat(Nemo *NM, LexerState *lex, SymbolType type, double f)
+void NmDebug_LexerFloat(Nemo *NM, LexerState *lex, SymbolType type, double f)
 {
   if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%f)\n", lex->line, lex->column, symToS(type), f);
   }
 }
 
-void debugLexerStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
+void NmDebug_LexerStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
 {
   if (NM->flags.debug.lexer){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%s)\n", lex->line, lex->column, symToS(type), s);
   }
 }
 
-void debugParser(Nemo *NM, char const *msg, ...)
+void NmDebug_Parser(Nemo *NM, char const *msg, ...)
 {
   if (NM->flags.debug.parser){
     va_list vl;
@@ -105,17 +105,17 @@ void debugParser(Nemo *NM, char const *msg, ...)
   }
 }
 
-void debugParserIndent(void)
+void NmDebug_ParserIndent(void)
 {
   parser_debug_level += PARSER_INDENT_STEP;
 }
 
-void debugParserDedent(void)
+void NmDebug_ParserDedent(void)
 {
   parser_debug_level -= PARSER_INDENT_STEP;
 }
 
-void debugAST(Nemo *NM, void *ptr, const char *msg, ...)
+void NmDebug_AST(Nemo *NM, void *ptr, const char *msg, ...)
 {
   if (NM->flags.debug.ast){
     va_list vl;

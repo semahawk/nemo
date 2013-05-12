@@ -31,12 +31,12 @@
 #ifndef MEM_H
 #define MEM_H
 
-void *nmMalloc(Nemo *, size_t);
-void *nmCalloc(Nemo *, size_t, size_t);
-void *nmRealloc(Nemo *, void *, size_t);
-void  nmFree(Nemo *, void *);
+void *NmMem_Malloc(Nemo *, size_t);
+void *NmMem_Calloc(Nemo *, size_t, size_t);
+void *NmMem_Realloc(Nemo *, void *, size_t);
+void  NmMem_Free(Nemo *, void *);
 
-char *strdup(Nemo *, char *);
+char *NmMem_Strdup(Nemo *, char *);
 
 #endif /* MEM_H */
 

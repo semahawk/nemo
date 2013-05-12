@@ -73,10 +73,10 @@ int main(int argc, char *argv[])
   /* used for getopt */
   int c;
   /* creating Nemo's main object */
-  /* (not using nmCalloc, because the -dm flag is not set yet) */
+  /* (not using NmMem_Calloc, because the -dm flag is not set yet) */
   Nemo *NM = calloc(1, sizeof(Nemo));
   if (!NM){
-    nmFatal("calloc failed to create the main object");
+    NmError_Fatal("calloc failed to create the main object");
     return EXIT_FAILURE;
   }
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                               break;
                     case 'l': NM->flags.debug.lexer = TRUE;
                               break;
-                    default:  nmError("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
+                    default:  NmError_Error("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
                               return EXIT_FAILURE;
                   }
                   break;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
       default: abort();
     }
   }
-  debugCalloc(NM, 1, sizeof(Nemo));
+  NmDebug_CALLOC(NM, 1, sizeof(Nemo));
 
   /* an argument was passed */
   if (optind < argc){
@@ -136,28 +136,28 @@ int main(int argc, char *argv[])
   }
 
   /* set the sources name */
-  NM->source = nmMalloc(NM, strlen(input) + 1);
+  NM->source = NmMem_Malloc(NM, strlen(input) + 1);
   strcpy(NM->source, input);
 
   /* parse the file */
-  nodest = parseFile(NM, NM->source);
+  nodest = NmParser_ParseFile(NM, NM->source);
   /* execute the nodes */
-  execNode(NM, nodest);
+  NmAST_Exec(NM, nodest);
   /* tidy up after executing */
-  freeBlockNode(NM, nodest);
+  NmAST_FreeBlock(NM, nodest);
 
   /* iterate through the variables */
   for (g = NM->globals; g != NULL; g = gnext){
     gnext = g->next;
-    nmFree(NM, g->var->name);
-    nmFree(NM, g->var);
-    nmFree(NM, g);
+    NmMem_Free(NM, g->var->name);
+    NmMem_Free(NM, g->var);
+    NmMem_Free(NM, g);
   }
 
   /* tidy up */
   NmObject_Tidyup(NM);
-  nmFree(NM, NM->source);
-  nmFree(NM, NM);
+  NmMem_Free(NM, NM->source);
+  NmMem_Free(NM, NM);
 
   return EXIT_SUCCESS;
 }
@@ -187,7 +187,7 @@ static int nmInteractive(Nemo *NM)
       return 0;
     }
 
-    printf("=> %s\n", valueToS(execNode(NM, parseString(NM, input))));
+    printf("=> %s\n", valueToS(NmAST_Exec(NM, NmParser_ParseString(NM, input))));
     /* do stuff */
   }
 

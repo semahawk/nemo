@@ -61,8 +61,8 @@ static struct FreeList {
  */
 NmObject *NmObject_NewFromInt(Nemo *NM, int i)
 {
-  FreeList *list = nmMalloc(NM, sizeof(FreeList));
-  NmIntObject *ob = nmMalloc(NM, sizeof(NmIntObject));
+  FreeList *list = NmMem_Malloc(NM, sizeof(FreeList));
+  NmIntObject *ob = NmMem_Malloc(NM, sizeof(NmIntObject));
 
   ob->type = OT_INTEGER;
   ob->i = i;
@@ -80,13 +80,13 @@ void NmObject_DestroyInt(Nemo *NM, NmObject *ob)
 {
   assert(ob->type == OT_INTEGER);
 
-  nmFree(NM, ob);
+  NmMem_Free(NM, ob);
 }
 
 NmObject *NmObject_NewFromFloat(Nemo *NM, double f)
 {
-  FreeList *list = nmMalloc(NM, sizeof(FreeList));
-  NmFloatObject *ob = nmMalloc(NM, sizeof(NmFloatObject));
+  FreeList *list = NmMem_Malloc(NM, sizeof(FreeList));
+  NmFloatObject *ob = NmMem_Malloc(NM, sizeof(NmFloatObject));
 
   ob->type = OT_FLOAT;
   ob->f = f;
@@ -104,16 +104,16 @@ void NmObject_DestroyFloat(Nemo *NM, NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
 
-  nmFree(NM, ob);
+  NmMem_Free(NM, ob);
 }
 
 NmObject *NmObject_NewFromString(Nemo *NM, char *s)
 {
-  FreeList *list = nmMalloc(NM, sizeof(FreeList));
-  NmStringObject *ob = nmMalloc(NM, sizeof(NmStringObject));
+  FreeList *list = NmMem_Malloc(NM, sizeof(FreeList));
+  NmStringObject *ob = NmMem_Malloc(NM, sizeof(NmStringObject));
 
   ob->type = OT_STRING;
-  ob->s = strdup(NM, s);
+  ob->s = NmMem_Strdup(NM, s);
   ob->fn.dstr = NmObject_DestroyString;
 
   /* append to the free_list */
@@ -128,12 +128,11 @@ void NmObject_DestroyString(Nemo *NM, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  nmFree(NM, ob);
+  NmMem_Free(NM, ob);
 }
 
 void NmObject_Destroy(Nemo *NM, NmObject *ob)
 {
-  printf("destroying object at %p\n", (void*)ob);
   ob->fn.dstr(NM, ob);
 }
 
@@ -145,7 +144,7 @@ void NmObject_Tidyup(Nemo *NM)
   for (list = free_list; list != NULL; list = next){
     next = list->next;
     NmObject_Destroy(NM, (NmObject *)list->ob);
-    nmFree(NM, list);
+    NmMem_Free(NM, list);
   }
 }
 

@@ -74,8 +74,8 @@ typedef struct Keyword Keyword;
  */
 static void append(Nemo *NM, LexerState *lex, SymbolType type)
 {
-  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
-  debugLexer(NM, lex, type);
+  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  NmDebug_Lexer(NM, lex, type);
   /* initialize */
   new->sym.type = type;
   new->sym.line = lex->line;
@@ -99,8 +99,8 @@ static void append(Nemo *NM, LexerState *lex, SymbolType type)
 
 static void appendInt(Nemo *NM, LexerState *lex, int i)
 {
-  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
-  debugLexerInt(NM, lex, SYM_INTEGER, i);
+  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  NmDebug_LexerInt(NM, lex, SYM_INTEGER, i);
   /* initialize */
   new->sym.type = SYM_INTEGER;
   new->sym.line = lex->line;
@@ -125,8 +125,8 @@ static void appendInt(Nemo *NM, LexerState *lex, int i)
 
 static void appendFloat(Nemo *NM, LexerState *lex, double f)
 {
-  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
-  debugLexerFloat(NM, lex, SYM_FLOAT, f);
+  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  NmDebug_LexerFloat(NM, lex, SYM_FLOAT, f);
   /* initialize */
   new->sym.type = SYM_FLOAT;
   new->sym.line = lex->line;
@@ -151,13 +151,13 @@ static void appendFloat(Nemo *NM, LexerState *lex, double f)
 
 static void appendStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
 {
-  SymbolsList *new = nmMalloc(NM, sizeof(SymbolsList));
-  debugLexerStr(NM, lex, type, s);
+  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  NmDebug_LexerStr(NM, lex, type, s);
   /* initialize */
   new->sym.type = type;
   new->sym.line = lex->line;
   new->sym.column = lex->column;
-  new->sym.value.s = strdup(NM, s);
+  new->sym.value.s = NmMem_Strdup(NM, s);
   /* append it */
   /*   the list is empty */
   if (!lex->head && !lex->tail){
@@ -175,7 +175,7 @@ static void appendStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
   }
 }
 
-static void lexInit(LexerState *lex)
+static void NmLexer_Init(LexerState *lex)
 {
   lex->line    = 1;
   lex->column  = 1;
@@ -187,7 +187,7 @@ static void lexInit(LexerState *lex)
 /*
  * clean after the lexers work
  */
-void lexDestroy(Nemo *NM, LexerState *lex)
+void NmLexer_Destroy(Nemo *NM, LexerState *lex)
 {
   SymbolsList *p;
   SymbolsList *next;
@@ -197,20 +197,20 @@ void lexDestroy(Nemo *NM, LexerState *lex)
     /* TODO: debug */
     if (p->sym.type == SYM_NAME ||
         p->sym.type == SYM_STRING){
-      nmFree(NM, p->sym.value.s);
+      NmMem_Free(NM, p->sym.value.s);
     }
-    nmFree(NM, p);
+    NmMem_Free(NM, p);
   }
 }
 
-void lexFile(Nemo *NM, LexerState *lex, char *fname)
+void NmLexer_LexFile(Nemo *NM, LexerState *lex, char *fname)
 {
   FILE *fp;
   char *fbuffer = NULL;
   size_t flen = 0;
 
   if ((fp = fopen(fname, "r")) == NULL){
-    nmFatal("cannot open file '%s'", fname);
+    NmError_Fatal("cannot open file '%s'", fname);
     exit(EXIT_FAILURE);
   }
   /* get the files length */
@@ -218,34 +218,34 @@ void lexFile(Nemo *NM, LexerState *lex, char *fname)
   flen = ftell(fp);
   fseek(fp, 0, SEEK_SET);
   /* make room for the contents */
-  fbuffer = nmMalloc(NM, flen);
+  fbuffer = NmMem_Malloc(NM, flen);
   /* store the files contents in the fbuffer */
   if (fread(fbuffer, 1, flen, fp) != flen){
-    nmFatal("fread failed in " __FILE__ " at line %d", __LINE__);
+    NmError_Fatal("fread failed in " __FILE__ " at line %d", __LINE__);
     exit(EXIT_FAILURE);
   }
   fbuffer[flen - 1] = '\0';
   /* now, treat the source as a string */
-  lexString(NM, lex, fbuffer);
+  NmLexer_LexString(NM, lex, fbuffer);
   /* free the buffer */
-  nmFree(NM, fbuffer);
+  NmMem_Free(NM, fbuffer);
 
   fclose(fp);
 }
 
-void lexString(Nemo *NM, LexerState *lex, char *string)
+void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
 {
   char *p, *tmp;
   int i = 0, found = 0;
   Keyword *keyword;
-  lexInit(lex);
+  NmLexer_Init(lex);
   /* iterate through the string, and append symbols to the symbols list */
   for (p = string; *p != '\0'; p++, i = 0){
     /*
      * XXX name / keyword
      */
     if (validForNameHead(*p)){
-      tmp = strdup(NM, p);
+      tmp = NmMem_Strdup(NM, p);
       /* fetch the name */
       while (validForNameTail(*p)){
         p++; i++;
@@ -265,7 +265,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       if (!found){
         appendStr(NM, lex, SYM_NAME, tmp);
       }
-      nmFree(NM, tmp);
+      NmMem_Free(NM, tmp);
       /* i is the length of the name */
       lex->column += i;
     }
@@ -273,7 +273,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
      * XXX 2
      */
     else if (isdigit(*p)){
-      tmp = strdup(NM, p);
+      tmp = NmMem_Strdup(NM, p);
       p++; i++;
       /* fetch the number */
       while (isdigit(*p)){
@@ -303,7 +303,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       } else {
         appendInt(NM, lex, atoi(tmp));
       }
-      nmFree(NM, tmp);
+      NmMem_Free(NM, tmp);
       p--;
       lex->column += i;
     }
@@ -492,7 +492,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
      */
     else if (*p == '"'){
       p++; i++;
-      tmp = strdup(NM, p);
+      tmp = NmMem_Strdup(NM, p);
       lex->column++;
       while (*p != '"'){
         if (*p == '\n'){
@@ -507,7 +507,7 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
       /* skip over the '"' */
       p++;
       appendStr(NM, lex, SYM_STRING, tmp);
-      nmFree(NM, tmp);
+      NmMem_Free(NM, tmp);
     }
     else if (*p == '\n'){
       lex->line++;
@@ -522,24 +522,24 @@ void lexString(Nemo *NM, LexerState *lex, char *string)
 }
 
 /*
- * @name    lexForce
+ * @name    NmLexer_Force
  * @desc    if the next symbol is not of given <type>, throw an error
  *          grammar is baad
  */
-void lexForce(LexerState *lex, SymbolType type)
+void NmLexer_Force(LexerState *lex, SymbolType type)
 {
   if (lex->current == NULL){
     if (lex->is_file){
-      lexError(lex, "unexpected end of file");
+      NmError_Lex(lex, "unexpected end of file");
     } else {
-      lexError(lex, "unexpected end of string");
+      NmError_Lex(lex, "unexpected end of string");
     }
     exit(EXIT_FAILURE);
   }
 
   if (lex->current->sym.type != type){
     if (lex->is_file){
-      lexError(lex, "expected %s instead of %s", symToS(type), symToS(lex->current->sym.type));
+      NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(lex->current->sym.type));
       exit(EXIT_FAILURE);
     }
   } else {
@@ -548,17 +548,17 @@ void lexForce(LexerState *lex, SymbolType type)
 }
 
 /*
- * @name    lexAccept
+ * @name    NmLexer_Accept
  * @desc    if the next symbol is of given <type> return true, and skip over it
  *          else return false
  */
-BOOL lexAccept(LexerState *lex, SymbolType type)
+BOOL NmLexer_Accept(LexerState *lex, SymbolType type)
 {
   if (lex->current == NULL){
     if (lex->is_file){
-      lexError(lex, "unexpected end of file");
+      NmError_Lex(lex, "unexpected end of file");
     } else {
-      lexError(lex, "unexpected end of string");
+      NmError_Lex(lex, "unexpected end of string");
     }
     exit(EXIT_FAILURE);
   }
@@ -572,10 +572,10 @@ BOOL lexAccept(LexerState *lex, SymbolType type)
 }
 
 /*
- * @name    lexPeek
+ * @name    NmLexer_Peek
  * @desc    check if the next symbol on the list is of a given <type>
  */
-BOOL lexPeek(LexerState *lex, SymbolType type)
+BOOL NmLexer_Peek(LexerState *lex, SymbolType type)
 {
   if ((lex->current != NULL) && (lex->current->sym.type == type))
     return TRUE;
@@ -584,16 +584,16 @@ BOOL lexPeek(LexerState *lex, SymbolType type)
 }
 
 /*
- * @name    lexSkip
+ * @name    NmLexer_Skip
  * @desc    simply skip over the current symbol
  */
-void lexSkip(LexerState *lex)
+void NmLexer_Skip(LexerState *lex)
 {
   if (lex->current == NULL){
     if (lex->is_file){
-      lexError(lex, "unexpected end of file");
+      NmError_Lex(lex, "unexpected end of file");
     } else {
-      lexError(lex, "unexpected end of string");
+      NmError_Lex(lex, "unexpected end of string");
     }
     exit(EXIT_FAILURE);
   }

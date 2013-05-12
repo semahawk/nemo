@@ -45,58 +45,58 @@
 #include "error.h"
 #include "debug.h"
 
-void *nmMalloc(Nemo *NM, size_t size)
+void *NmMem_Malloc(Nemo *NM, size_t size)
 {
   void *p = malloc(size);
 
   if (!p){
-    nmFatal("malloc failed to allocate %lu bytes", size);
+    NmError_Fatal("malloc failed to allocate %lu bytes", size);
     exit(EXIT_FAILURE);
   }
 
-  debugMalloc(p, size);
+  NmDebug_MALLOC(p, size);
 
   return p;
 }
 
-void *nmCalloc(Nemo *NM, size_t nmemb, size_t size)
+void *NmMem_Calloc(Nemo *NM, size_t nmemb, size_t size)
 {
   void *p = calloc(nmemb, size);
 
   if (!p){
-    nmFatal("calloc failed to allocate %lu x %lu bytes", nmemb, size);
+    NmError_Fatal("calloc failed to allocate %lu x %lu bytes", nmemb, size);
     exit(EXIT_FAILURE);
   }
 
-  debugCalloc(p, nmemb, size);
+  NmDebug_CALLOC(p, nmemb, size);
 
   return p;
 }
 
-void *nmRealloc(Nemo *NM, void *ptr, size_t nmemb)
+void *NmMem_Realloc(Nemo *NM, void *ptr, size_t nmemb)
 {
   void *p = realloc(ptr, nmemb);
 
   if (!p){
-    nmFatal("realloc failed to reallocate %lu bytes", nmemb);
+    NmError_Fatal("realloc failed to reallocate %lu bytes", nmemb);
     exit(EXIT_FAILURE);
   }
 
-  debugRealloc(p, nmemb);
+  NmDebug_REALLOC(p, nmemb);
 
   return p;
 }
 
-void nmFree(Nemo *NM, void *p)
+void NmMem_Free(Nemo *NM, void *p)
 {
-  debugFree(p);
+  NmDebug_FREE(p);
 
   free(p);
 }
 
-char *strdup(Nemo *NM, char *p)
+char *NmMem_Strdup(Nemo *NM, char *p)
 {
-  char *np = nmMalloc(NM, strlen(p) + 1);
+  char *np = NmMem_Malloc(NM, strlen(p) + 1);
   return np ? strcpy(np, p) : np;
 }
 

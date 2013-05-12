@@ -33,23 +33,23 @@
 
 #include "lexer.h"
 
-#define debugFree(p)       debugMemory(NM, p, "free")
-#define debugMalloc(p,i)   debugMemory(NM, p, "malloc %lu bytes", i)
-#define debugCalloc(p,i,j) debugMemory(NM, p, "calloc %lu x %lu bytes", i, j)
-#define debugRealloc(p,i)  debugMemory(NM, p, "realloc %lu bytes", i)
+#define NmDebug_FREE(p)       NmDebug_Memory(NM, p, "free")
+#define NmDebug_MALLOC(p,i)   NmDebug_Memory(NM, p, "malloc %lu bytes", i)
+#define NmDebug_CALLOC(p,i,j) NmDebug_Memory(NM, p, "calloc %lu x %lu bytes", i, j)
+#define NmDebug_REALLOC(p,i)  NmDebug_Memory(NM, p, "realloc %lu bytes", i)
 
-void debugMemory(Nemo *, void *, const char *, ...);
+void NmDebug_Memory(Nemo *, void *, const char *, ...);
 
-void debugLexer(Nemo *, LexerState *, SymbolType);
-void debugLexerInt(Nemo *, LexerState *, SymbolType, int);
-void debugLexerFloat(Nemo *, LexerState *, SymbolType, double);
-void debugLexerStr(Nemo *, LexerState *, SymbolType, char *);
+void NmDebug_Lexer(Nemo *, LexerState *, SymbolType);
+void NmDebug_LexerInt(Nemo *, LexerState *, SymbolType, int);
+void NmDebug_LexerFloat(Nemo *, LexerState *, SymbolType, double);
+void NmDebug_LexerStr(Nemo *, LexerState *, SymbolType, char *);
 
-void debugParser(Nemo *, const char *, ...);
-void debugParserIndent(void);
-void debugParserDedent(void);
+void NmDebug_Parser(Nemo *, const char *, ...);
+void NmDebug_ParserIndent(void);
+void NmDebug_ParserDedent(void);
 
-void debugAST(Nemo *, void *, const char *, ...);
+void NmDebug_AST(Nemo *, void *, const char *, ...);
 
 #endif /* DEBUG_H */
 

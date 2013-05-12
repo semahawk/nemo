@@ -33,7 +33,7 @@
  *       executing/compiling
  */
 
-void nmFatal(const char *msg, ...){
+void NmError_Fatal(const char *msg, ...){
   va_list vl;
   va_start(vl, msg);
   fprintf(stderr, "nemo: fatal: ");
@@ -42,7 +42,7 @@ void nmFatal(const char *msg, ...){
   va_end(vl);
 }
 
-void nmError(const char *msg, ...){
+void NmError_Error(const char *msg, ...){
   va_list vl;
   va_start(vl, msg);
   fprintf(stderr, "nemo: error: ");
@@ -51,7 +51,7 @@ void nmError(const char *msg, ...){
   va_end(vl);
 }
 
-void lexError(LexerState *lex, const char *msg, ...)
+void NmError_Lex(LexerState *lex, const char *msg, ...)
 {
   va_list vl;
   va_start(vl, msg);
