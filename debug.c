@@ -42,16 +42,45 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #include "nemo.h"
 #include "lexer.h"
+#include "debug.h"
 
-#define PARSER_INDENT_STEP 2
-static unsigned parser_debug_level = 0;
+/*
+ * Every bit here sets on/off the debugging flags
+ * Which bit means what is described in debug.h
+ */
+static uint8_t debug_flags = 0;
 
-void NmDebug_Memory(Nemo *NM, void *pointer, const char *msg, ...)
+/*
+ * Set the given <flag> to 1
+ */
+void NmDebug_SetFlag(unsigned flag)
 {
-  if (NM->flags.debug.memory){
+  debug_flags |= 1 << flag;
+}
+
+/* Simple macro to get the given <flag> */
+/* <flag> is of type { unsigned } */
+#define NmDebug_GETFLAG(flag) (debug_flags & (1 << (flag)))
+
+void NmDebug_AST(void *ptr, const char *msg, ...)
+{
+  if (NmDebug_GETFLAG(DEBUG_FLAG_AST)){
+    va_list vl;
+    va_start(vl, msg);
+    fprintf(stderr, "%p: ", ptr);
+    vfprintf(stderr, msg, vl);
+    fprintf(stderr, "\n");
+    va_end(vl);
+  }
+}
+
+void NmDebug_Memory(void *pointer, const char *msg, ...)
+{
+  if (NmDebug_GETFLAG(DEBUG_FLAG_MEMORY)){
     static unsigned count = 1;
     va_list vl;
     va_start(vl, msg);
@@ -63,66 +92,40 @@ void NmDebug_Memory(Nemo *NM, void *pointer, const char *msg, ...)
   }
 }
 
-void NmDebug_Lexer(Nemo *NM, LexerState *lex, SymbolType type)
+void NmDebug_Lexer(LexerState *lex, SymbolType type)
 {
-  if (NM->flags.debug.lexer){
+  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s\n", lex->line, lex->column, symToS(type));
   }
 }
 
-void NmDebug_LexerInt(Nemo *NM, LexerState *lex, SymbolType type, int i)
+void NmDebug_LexerInt(LexerState *lex, SymbolType type, int i)
 {
-  if (NM->flags.debug.lexer){
+  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%i)\n", lex->line, lex->column, symToS(type), i);
   }
 }
 
-void NmDebug_LexerFloat(Nemo *NM, LexerState *lex, SymbolType type, double f)
+void NmDebug_LexerFloat(LexerState *lex, SymbolType type, double f)
 {
-  if (NM->flags.debug.lexer){
+  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%f)\n", lex->line, lex->column, symToS(type), f);
   }
 }
 
-void NmDebug_LexerStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
+void NmDebug_LexerStr(LexerState *lex, SymbolType type, char *s)
 {
-  if (NM->flags.debug.lexer){
+  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%s)\n", lex->line, lex->column, symToS(type), s);
   }
 }
 
-void NmDebug_Parser(Nemo *NM, char const *msg, ...)
+void NmDebug_Parser(char const *msg, ...)
 {
-  if (NM->flags.debug.parser){
-    va_list vl;
-    /*unsigned i;*/
-    va_start(vl, msg);
-    /*for (i = 0; i < parser_debug_level; i++){*/
-      /*fprintf(stderr, " ");*/
-    /*}*/
-    vfprintf(stderr, msg, vl);
-    va_end(vl);
-  }
-}
-
-void NmDebug_ParserIndent(void)
-{
-  parser_debug_level += PARSER_INDENT_STEP;
-}
-
-void NmDebug_ParserDedent(void)
-{
-  parser_debug_level -= PARSER_INDENT_STEP;
-}
-
-void NmDebug_AST(Nemo *NM, void *ptr, const char *msg, ...)
-{
-  if (NM->flags.debug.ast){
+  if (NmDebug_GETFLAG(DEBUG_FLAG_PARSER)){
     va_list vl;
     va_start(vl, msg);
-    fprintf(stderr, "%p: ", ptr);
     vfprintf(stderr, msg, vl);
-    fprintf(stderr, "\n");
     va_end(vl);
   }
 }

@@ -75,7 +75,7 @@ typedef struct Keyword Keyword;
 static void append(Nemo *NM, LexerState *lex, SymbolType type)
 {
   SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
-  NmDebug_Lexer(NM, lex, type);
+  NmDebug_Lexer(lex, type);
   /* initialize */
   new->sym.type = type;
   new->sym.line = lex->line;
@@ -100,7 +100,7 @@ static void append(Nemo *NM, LexerState *lex, SymbolType type)
 static void appendInt(Nemo *NM, LexerState *lex, int i)
 {
   SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
-  NmDebug_LexerInt(NM, lex, SYM_INTEGER, i);
+  NmDebug_LexerInt(lex, SYM_INTEGER, i);
   /* initialize */
   new->sym.type = SYM_INTEGER;
   new->sym.line = lex->line;
@@ -126,7 +126,7 @@ static void appendInt(Nemo *NM, LexerState *lex, int i)
 static void appendFloat(Nemo *NM, LexerState *lex, double f)
 {
   SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
-  NmDebug_LexerFloat(NM, lex, SYM_FLOAT, f);
+  NmDebug_LexerFloat(lex, SYM_FLOAT, f);
   /* initialize */
   new->sym.type = SYM_FLOAT;
   new->sym.line = lex->line;
@@ -152,7 +152,7 @@ static void appendFloat(Nemo *NM, LexerState *lex, double f)
 static void appendStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
 {
   SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
-  NmDebug_LexerStr(NM, lex, type, s);
+  NmDebug_LexerStr(lex, type, s);
   /* initialize */
   new->sym.type = type;
   new->sym.line = lex->line;

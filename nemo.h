@@ -43,27 +43,8 @@ struct VariablesList {
 struct Nemo {
   /* name of the interpreted file */
   char *source;
-  /* The Stack */
-  struct {
-    /* the stack itself */
-    struct Value **it;
-    /* 'pointer' to the current element */
-    size_t ptr;
-    /* size of the stack */
-    size_t nmemb;
-  } stack;
   /* global variables */
   struct VariablesList *globals;
-  /* command line flags */
-  struct {
-    /* debug (-d?) flags */
-    struct {
-      BOOL memory;
-      BOOL lexer;
-      BOOL parser;
-      BOOL ast;
-    } debug;
-  } flags;
 };
 
 typedef struct Variable      Variable;

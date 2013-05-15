@@ -103,13 +103,13 @@ int main(int argc, char *argv[])
                               printf("  p   parser messages\n");
                               printf("  l   lexer messages\n\n");
                               return EXIT_SUCCESS;
-                    case 'a': NM->flags.debug.ast = TRUE;
+                    case 'a': NmDebug_SetFlag(DEBUG_FLAG_AST);
                               break;
-                    case 'm': NM->flags.debug.memory = TRUE;
+                    case 'l': NmDebug_SetFlag(DEBUG_FLAG_LEXER);
                               break;
-                    case 'p': NM->flags.debug.parser = TRUE;
+                    case 'm': NmDebug_SetFlag(DEBUG_FLAG_MEMORY);
                               break;
-                    case 'l': NM->flags.debug.lexer = TRUE;
+                    case 'p': NmDebug_SetFlag(DEBUG_FLAG_PARSER);
                               break;
                     default:  NmError_Error("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
                               return EXIT_FAILURE;
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
   /* tidy up after executing */
   NmAST_FreeBlock(NM, nodest);
 
-  /* iterate through the variables */
+  /* iterate through the global variables */
   for (g = NM->globals; g != NULL; g = gnext){
     gnext = g->next;
     NmMem_Free(NM, g->var->name);
