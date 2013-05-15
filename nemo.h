@@ -19,25 +19,6 @@
 #endif
 
 /*
- * Type for variables in Nemo
- */
-struct Variable {
-  /* obviously */
-  char *name;
-  /* FIXME: needs to be { NmObject * } but when I include "object.h" then they
-   * are circulatingly dependant on each other blerh blerh doesn't work */
-  struct NmObject *value;
-};
-
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
-};
-
-/*
  * The main type for Nemo
  */
 struct Nemo {
@@ -47,9 +28,7 @@ struct Nemo {
   struct VariablesList *globals;
 };
 
-typedef struct Variable      Variable;
-typedef struct VariablesList VariablesList;
-typedef struct Nemo          Nemo;
+typedef struct Nemo Nemo;
 
 #endif /* NEMO_H */
 

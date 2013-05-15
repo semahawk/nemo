@@ -57,8 +57,9 @@
 #include "debug.h"
 #include "mem.h"
 #include "ast.h"
+#include "vars.h"
 
-static int nmInteractive(Nemo *);
+static int nmInteractive(void);
 
 int main(int argc, char *argv[])
 {
@@ -132,7 +133,7 @@ int main(int argc, char *argv[])
     /*
      * XXX exitting code here
      */
-    return nmInteractive(NM);
+    return nmInteractive();
   }
 
   /* set the sources name */
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
   return EXIT_SUCCESS;
 }
 
-static int nmInteractive(Nemo *NM)
+static int nmInteractive(void)
 {
   char *input, prompt[64];
   unsigned line = 0;

@@ -35,6 +35,8 @@
 
 #include "nemo.h"
 
+#define NmObject_PRINT(fp,ob) ob->fn.print(fp, ob)
+
 /*
  * Yup, a lot of Python inspiration; I'm too dumb to figure it nicely on my own
  */

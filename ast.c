@@ -48,6 +48,7 @@
 #include "debug.h"
 #include "error.h"
 #include "object.h"
+#include "vars.h"
 
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);

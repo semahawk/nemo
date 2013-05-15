@@ -20,7 +20,7 @@ lexer.o: lexer.c lexer.h nemo.h error.h lexer.h debug.h mem.h
 parser.o: parser.c parser.h nemo.h error.h lexer.h ast.h debug.h
 debug.o: debug.c debug.h nemo.h lexer.h
 mem.o: mem.c mem.h nemo.h error.h debug.h
-ast.o: ast.c ast.h nemo.h mem.h
+ast.o: ast.c ast.h nemo.h mem.h vars.h
 object.o: object.c object.h
 
 install: all

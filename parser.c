@@ -501,7 +501,7 @@ static Node *expr(LexerState *lex)
 
 /*
  * stmt: ';'
- *     | block
+ *     | '{' block '}'
  *     | function_prototype
  *     | USE NAME ';'
  *     | IF stmt stmt
@@ -643,7 +643,7 @@ static Node *stmt(LexerState *lex)
     ret = NmAST_GenWhile(guard, body, elsee);
   }
   /*
-   * XXX { block }
+   * XXX '{' block '}'
    */
   else if (NmLexer_Accept(lex, SYM_LMUSTASHE)){
     NmDebug_Parser("{\n");
@@ -680,7 +680,7 @@ static Node *stmt(LexerState *lex)
 }
 
 /*
- * block: '{' [stmt]* '}'
+ * block: [stmt]*
  *      ;
  */
 static Node *block(LexerState *lex)
