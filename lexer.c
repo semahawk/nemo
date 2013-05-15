@@ -72,9 +72,9 @@ typedef struct Keyword Keyword;
 /*
  * append a symbol of a given <type>
  */
-static void append(Nemo *NM, LexerState *lex, SymbolType type)
+static void append(LexerState *lex, SymbolType type)
 {
-  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
   NmDebug_Lexer(lex, type);
   /* initialize */
   new->sym.type = type;
@@ -97,9 +97,9 @@ static void append(Nemo *NM, LexerState *lex, SymbolType type)
   }
 }
 
-static void appendInt(Nemo *NM, LexerState *lex, int i)
+static void appendInt(LexerState *lex, int i)
 {
-  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
   NmDebug_LexerInt(lex, SYM_INTEGER, i);
   /* initialize */
   new->sym.type = SYM_INTEGER;
@@ -123,9 +123,9 @@ static void appendInt(Nemo *NM, LexerState *lex, int i)
   }
 }
 
-static void appendFloat(Nemo *NM, LexerState *lex, double f)
+static void appendFloat(LexerState *lex, double f)
 {
-  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
   NmDebug_LexerFloat(lex, SYM_FLOAT, f);
   /* initialize */
   new->sym.type = SYM_FLOAT;
@@ -149,15 +149,15 @@ static void appendFloat(Nemo *NM, LexerState *lex, double f)
   }
 }
 
-static void appendStr(Nemo *NM, LexerState *lex, SymbolType type, char *s)
+static void appendStr(LexerState *lex, SymbolType type, char *s)
 {
-  SymbolsList *new = NmMem_Malloc(NM, sizeof(SymbolsList));
+  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
   NmDebug_LexerStr(lex, type, s);
   /* initialize */
   new->sym.type = type;
   new->sym.line = lex->line;
   new->sym.column = lex->column;
-  new->sym.value.s = NmMem_Strdup(NM, s);
+  new->sym.value.s = NmMem_Strdup(s);
   /* append it */
   /*   the list is empty */
   if (!lex->head && !lex->tail){
@@ -187,7 +187,7 @@ static void NmLexer_Init(LexerState *lex)
 /*
  * clean after the lexers work
  */
-void NmLexer_Destroy(Nemo *NM, LexerState *lex)
+void NmLexer_Destroy(LexerState *lex)
 {
   SymbolsList *p;
   SymbolsList *next;
@@ -197,13 +197,13 @@ void NmLexer_Destroy(Nemo *NM, LexerState *lex)
     /* TODO: debug */
     if (p->sym.type == SYM_NAME ||
         p->sym.type == SYM_STRING){
-      NmMem_Free(NM, p->sym.value.s);
+      NmMem_Free(p->sym.value.s);
     }
-    NmMem_Free(NM, p);
+    NmMem_Free(p);
   }
 }
 
-void NmLexer_LexFile(Nemo *NM, LexerState *lex, char *fname)
+void NmLexer_LexFile(LexerState *lex, char *fname)
 {
   FILE *fp;
   char *fbuffer = NULL;
@@ -218,7 +218,7 @@ void NmLexer_LexFile(Nemo *NM, LexerState *lex, char *fname)
   flen = ftell(fp);
   fseek(fp, 0, SEEK_SET);
   /* make room for the contents */
-  fbuffer = NmMem_Malloc(NM, flen);
+  fbuffer = NmMem_Malloc(flen);
   /* store the files contents in the fbuffer */
   if (fread(fbuffer, 1, flen, fp) != flen){
     NmError_Fatal("fread failed in " __FILE__ " at line %d", __LINE__);
@@ -226,14 +226,14 @@ void NmLexer_LexFile(Nemo *NM, LexerState *lex, char *fname)
   }
   fbuffer[flen - 1] = '\0';
   /* now, treat the source as a string */
-  NmLexer_LexString(NM, lex, fbuffer);
+  NmLexer_LexString(lex, fbuffer);
   /* free the buffer */
-  NmMem_Free(NM, fbuffer);
+  NmMem_Free(fbuffer);
 
   fclose(fp);
 }
 
-void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
+void NmLexer_LexString(LexerState *lex, char *string)
 {
   char *p, *tmp;
   int i = 0, found = 0;
@@ -245,7 +245,7 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
      * XXX name / keyword
      */
     if (validForNameHead(*p)){
-      tmp = NmMem_Strdup(NM, p);
+      tmp = NmMem_Strdup(p);
       /* fetch the name */
       while (validForNameTail(*p)){
         p++; i++;
@@ -256,16 +256,16 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
       found = 0;
       for (keyword = keywords; keyword->name != NULL; keyword++){
         if (!strcmp(keyword->name, tmp)){
-          append(NM, lex, keyword->sym);
+          append(lex, keyword->sym);
           found = 1;
           break;
         }
       }
       /* it's not a keyword */
       if (!found){
-        appendStr(NM, lex, SYM_NAME, tmp);
+        appendStr(lex, SYM_NAME, tmp);
       }
-      NmMem_Free(NM, tmp);
+      NmMem_Free(tmp);
       /* i is the length of the name */
       lex->column += i;
     }
@@ -273,7 +273,7 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
      * XXX 2
      */
     else if (isdigit(*p)){
-      tmp = NmMem_Strdup(NM, p);
+      tmp = NmMem_Strdup(p);
       p++; i++;
       /* fetch the number */
       while (isdigit(*p)){
@@ -292,30 +292,30 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
             p++; i++;
           }
           *(tmp + i) = '\0';
-          appendFloat(NM, lex, atof(tmp));
+          appendFloat(lex, atof(tmp));
         /*
          * XXX it's just "2.", let's make it be 2.0
          */
         } else {
           *(tmp + i) = '\0';
-          appendFloat(NM, lex, atof(tmp));
+          appendFloat(lex, atof(tmp));
         }
       } else {
-        appendInt(NM, lex, atoi(tmp));
+        appendInt(lex, atoi(tmp));
       }
-      NmMem_Free(NM, tmp);
+      NmMem_Free(tmp);
       p--;
       lex->column += i;
     }
     else if (*p == '='){
-      append(NM, lex, SYM_EQ);
+      append(lex, SYM_EQ);
       lex->column++;
     }
     else if (*p == ' '){
       lex->column++;
     }
     else if (*p == ';'){
-      append(NM, lex, SYM_SEMICOLON);
+      append(lex, SYM_SEMICOLON);
       lex->column++;
     }
     else if (*p == '+'){
@@ -323,21 +323,21 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
        * XXX ++
        */
       if (*(p + 1) == '+'){
-        append(NM, lex, SYM_PLUSPLUS);
+        append(lex, SYM_PLUSPLUS);
         lex->column += 2;
         p++;
       /*
        * XXX +=
        */
       } else if (*(p + 1) == '='){
-        append(NM, lex, SYM_PLUSEQ);
+        append(lex, SYM_PLUSEQ);
         lex->column += 2;
         p++;
       /*
        * XXX +
        */
       } else {
-        append(NM, lex, SYM_PLUS);
+        append(lex, SYM_PLUS);
         lex->column++;
       }
     }
@@ -346,21 +346,21 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
        * XXX --
        */
       if (*(p + 1) == '-'){
-        append(NM, lex, SYM_MINUSMINUS);
+        append(lex, SYM_MINUSMINUS);
         lex->column += 2;
         p++;
       /*
        * XXX -=
        */
       } else if (*(p + 1) == '='){
-        append(NM, lex, SYM_MINUSEQ);
+        append(lex, SYM_MINUSEQ);
         lex->column += 2;
         p++;
       /*
        * XXX -
        */
       } else {
-        append(NM, lex, SYM_MINUS);
+        append(lex, SYM_MINUS);
         lex->column++;
       }
     }
@@ -369,14 +369,14 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
        * XXX *=
        */
       if (*(p + 1) == '='){
-        append(NM, lex, SYM_TIMESEQ);
+        append(lex, SYM_TIMESEQ);
         lex->column += 2;
         p++;
       /*
        * XXX *
        */
       } else {
-        append(NM, lex, SYM_TIMES);
+        append(lex, SYM_TIMES);
         lex->column++;
       }
     }
@@ -401,14 +401,14 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
        * XXX /=
        */
       } else if (*(p + 1) == '='){
-        append(NM, lex, SYM_SLASHEQ);
+        append(lex, SYM_SLASHEQ);
         lex->column += 2;
         p++;
       /*
        * XXX /
        */
       } else {
-        append(NM, lex, SYM_SLASH);
+        append(lex, SYM_SLASH);
         lex->column++;
       }
     }
@@ -417,67 +417,67 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
        * XXX %=
        */
       if (*(p + 1) == '='){
-        append(NM, lex, SYM_MODULOEQ);
+        append(lex, SYM_MODULOEQ);
         lex->column += 2;
         p++;
       /*
        * XXX %
        */
       } else {
-        append(NM, lex, SYM_MODULO);
+        append(lex, SYM_MODULO);
         lex->column++;
       }
     }
     else if (*p == ';'){
-      append(NM, lex, SYM_SEMICOLON);
+      append(lex, SYM_SEMICOLON);
       lex->column++;
     }
     else if (*p == ','){
-      append(NM, lex, SYM_COMMA);
+      append(lex, SYM_COMMA);
       lex->column++;
     }
     else if (*p == '('){
-      append(NM, lex, SYM_LPAREN);
+      append(lex, SYM_LPAREN);
       lex->column++;
     }
     else if (*p == ')'){
-      append(NM, lex, SYM_RPAREN);
+      append(lex, SYM_RPAREN);
       lex->column++;
     }
     else if (*p == '{'){
-      append(NM, lex, SYM_LMUSTASHE);
+      append(lex, SYM_LMUSTASHE);
       lex->column++;
     }
     else if (*p == '}'){
-      append(NM, lex, SYM_RMUSTASHE);
+      append(lex, SYM_RMUSTASHE);
       lex->column++;
     }
     else if (*p == '['){
-      append(NM, lex, SYM_LBRACKET);
+      append(lex, SYM_LBRACKET);
       lex->column++;
     }
     else if (*p == ']'){
-      append(NM, lex, SYM_RBRACKET);
+      append(lex, SYM_RBRACKET);
       lex->column++;
     }
     else if (*p == '<'){
-      append(NM, lex, SYM_LT);
+      append(lex, SYM_LT);
       lex->column++;
     }
     else if (*p == '>'){
-      append(NM, lex, SYM_GT);
+      append(lex, SYM_GT);
       lex->column++;
     }
     else if (*p == '!'){
-      append(NM, lex, SYM_BANG);
+      append(lex, SYM_BANG);
       lex->column++;
     }
     else if (*p == '?'){
-      append(NM, lex, SYM_QUESTION);
+      append(lex, SYM_QUESTION);
       lex->column++;
     }
     else if (*p == ':'){
-      append(NM, lex, SYM_COLON);
+      append(lex, SYM_COLON);
       lex->column++;
     }
     else if (*p == '#'){
@@ -492,7 +492,7 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
      */
     else if (*p == '"'){
       p++; i++;
-      tmp = NmMem_Strdup(NM, p);
+      tmp = NmMem_Strdup(p);
       lex->column++;
       while (*p != '"'){
         if (*p == '\n'){
@@ -506,8 +506,8 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
       *(tmp + i) = '\0';
       /* skip over the '"' */
       p++;
-      appendStr(NM, lex, SYM_STRING, tmp);
-      NmMem_Free(NM, tmp);
+      appendStr(lex, SYM_STRING, tmp);
+      NmMem_Free(tmp);
     }
     else if (*p == '\n'){
       lex->line++;
@@ -518,7 +518,7 @@ void NmLexer_LexString(Nemo *NM, LexerState *lex, char *string)
       lex->column++;
     }
   }
-  append(NM, lex, SYM_EOS);
+  append(lex, SYM_EOS);
 }
 
 /*

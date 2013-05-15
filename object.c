@@ -59,10 +59,10 @@ static struct FreeList {
  * @name - NmObject_NewFromInt
  * @desc - create an object that would contain an int
  */
-NmObject *NmObject_NewFromInt(Nemo *NM, int i)
+NmObject *NmObject_NewFromInt(int i)
 {
-  FreeList *list = NmMem_Malloc(NM, sizeof(FreeList));
-  NmIntObject *ob = NmMem_Malloc(NM, sizeof(NmIntObject));
+  FreeList *list = NmMem_Malloc(sizeof(FreeList));
+  NmIntObject *ob = NmMem_Malloc(sizeof(NmIntObject));
 
   ob->type = OT_INTEGER;
   ob->i = i;
@@ -77,27 +77,24 @@ NmObject *NmObject_NewFromInt(Nemo *NM, int i)
   return (NmObject *)ob;
 }
 
-void NmInt_Print(Nemo *NM, FILE *fp, NmObject *ob)
+void NmInt_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_INTEGER);
-
-  /* unused parameter */
-  (void)NM;
 
   fprintf(fp, "%d", ((NmIntObject *)ob)->i);
 }
 
-void NmInt_Destroy(Nemo *NM, NmObject *ob)
+void NmInt_Destroy(NmObject *ob)
 {
   assert(ob->type == OT_INTEGER);
 
-  NmMem_Free(NM, ob);
+  NmMem_Free(ob);
 }
 
-NmObject *NmObject_NewFromFloat(Nemo *NM, double f)
+NmObject *NmObject_NewFromFloat(double f)
 {
-  FreeList *list = NmMem_Malloc(NM, sizeof(FreeList));
-  NmFloatObject *ob = NmMem_Malloc(NM, sizeof(NmFloatObject));
+  FreeList *list = NmMem_Malloc(sizeof(FreeList));
+  NmFloatObject *ob = NmMem_Malloc(sizeof(NmFloatObject));
 
   ob->type = OT_FLOAT;
   ob->f = f;
@@ -112,30 +109,27 @@ NmObject *NmObject_NewFromFloat(Nemo *NM, double f)
   return (NmObject *)ob;
 }
 
-void NmFloat_Print(Nemo *NM, FILE *fp, NmObject *ob)
+void NmFloat_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
-
-  /* unused parameter */
-  (void)NM;
 
   fprintf(fp, "%f", ((NmFloatObject *)ob)->f);
 }
 
-void NmFloat_Destroy(Nemo *NM, NmObject *ob)
+void NmFloat_Destroy(NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
 
-  NmMem_Free(NM, ob);
+  NmMem_Free(ob);
 }
 
-NmObject *NmObject_NewFromString(Nemo *NM, char *s)
+NmObject *NmObject_NewFromString(char *s)
 {
-  FreeList *list = NmMem_Malloc(NM, sizeof(FreeList));
-  NmStringObject *ob = NmMem_Malloc(NM, sizeof(NmStringObject));
+  FreeList *list = NmMem_Malloc(sizeof(FreeList));
+  NmStringObject *ob = NmMem_Malloc(sizeof(NmStringObject));
 
   ob->type = OT_STRING;
-  ob->s = NmMem_Strdup(NM, s);
+  ob->s = NmMem_Strdup(s);
   ob->fn.dstr = NmString_Destroy;
   ob->fn.print = NmString_Print;
 
@@ -147,38 +141,35 @@ NmObject *NmObject_NewFromString(Nemo *NM, char *s)
   return (NmObject *)ob;
 }
 
-void NmString_Print(Nemo *NM, FILE *fp, NmObject *ob)
+void NmString_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
-
-  /* unused parameter */
-  (void)NM;
 
   fprintf(fp, "%s", ((NmStringObject *)ob)->s);
 }
 
-void NmString_Destroy(Nemo *NM, NmObject *ob)
+void NmString_Destroy(NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  NmMem_Free(NM, ((NmStringObject *)ob)->s);
-  NmMem_Free(NM, ob);
+  NmMem_Free(((NmStringObject *)ob)->s);
+  NmMem_Free(ob);
 }
 
-void NmObject_Destroy(Nemo *NM, NmObject *ob)
+void NmObject_Destroy(NmObject *ob)
 {
-  ob->fn.dstr(NM, ob);
+  ob->fn.dstr(ob);
 }
 
-void NmObject_Tidyup(Nemo *NM)
+void NmObject_Tidyup(void)
 {
   FreeList *list;
   FreeList *next;
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    NmObject_Destroy(NM, (NmObject *)list->ob);
-    NmMem_Free(NM, list);
+    NmObject_Destroy((NmObject *)list->ob);
+    NmMem_Free(list);
   }
 }
 

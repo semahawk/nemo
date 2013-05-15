@@ -106,9 +106,9 @@ typedef struct Symbol Symbol;
 typedef struct SymbolsList SymbolsList;
 typedef struct LexerState LexerState;
 
-void NmLexer_LexFile(Nemo *, LexerState *, char *);
-void NmLexer_LexString(Nemo *, LexerState *, char *);
-void NmLexer_Destroy(Nemo *, LexerState *);
+void NmLexer_LexFile(LexerState *, char *);
+void NmLexer_LexString(LexerState *, char *);
+void NmLexer_Destroy(LexerState *);
 
 BOOL NmLexer_Peek(LexerState *lex, SymbolType);
 BOOL NmLexer_Accept(LexerState *lex, SymbolType);

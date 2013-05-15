@@ -136,28 +136,28 @@ int main(int argc, char *argv[])
   }
 
   /* set the sources name */
-  NM->source = NmMem_Malloc(NM, strlen(input) + 1);
+  NM->source = NmMem_Malloc(strlen(input) + 1);
   strcpy(NM->source, input);
 
   /* parse the file */
   nodest = NmParser_ParseFile(NM, NM->source);
   /* execute the nodes */
-  NmAST_Exec(NM, nodest);
+  NmAST_Exec(nodest);
   /* tidy up after executing */
-  NmAST_FreeBlock(NM, nodest);
+  NmAST_FreeBlock(nodest);
 
   /* iterate through the global variables */
   for (g = NM->globals; g != NULL; g = gnext){
     gnext = g->next;
-    NmMem_Free(NM, g->var->name);
-    NmMem_Free(NM, g->var);
-    NmMem_Free(NM, g);
+    NmMem_Free(g->var->name);
+    NmMem_Free(g->var);
+    NmMem_Free(g);
   }
 
   /* tidy up */
-  NmObject_Tidyup(NM);
-  NmMem_Free(NM, NM->source);
-  NmMem_Free(NM, NM);
+  NmObject_Tidyup();
+  NmMem_Free(NM->source);
+  NmMem_Free(NM);
 
   return EXIT_SUCCESS;
 }
@@ -188,10 +188,10 @@ static int nmInteractive(Nemo *NM)
       return 0;
     }
 
-    ob = NmAST_Exec(NM, NmParser_ParseString(NM, input));
+    ob = NmAST_Exec(NmParser_ParseString(NM, input));
 
     printf("=> ");
-    ob->fn.print(NM, stdout, ob);
+    ob->fn.print(stdout, ob);
     printf("\n");
   }
 

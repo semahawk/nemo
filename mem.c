@@ -45,7 +45,7 @@
 #include "error.h"
 #include "debug.h"
 
-void *NmMem_Malloc(Nemo *NM, size_t size)
+void *NmMem_Malloc(size_t size)
 {
   void *p = malloc(size);
 
@@ -59,7 +59,7 @@ void *NmMem_Malloc(Nemo *NM, size_t size)
   return p;
 }
 
-void *NmMem_Calloc(Nemo *NM, size_t nmemb, size_t size)
+void *NmMem_Calloc(size_t nmemb, size_t size)
 {
   void *p = calloc(nmemb, size);
 
@@ -73,7 +73,7 @@ void *NmMem_Calloc(Nemo *NM, size_t nmemb, size_t size)
   return p;
 }
 
-void *NmMem_Realloc(Nemo *NM, void *ptr, size_t nmemb)
+void *NmMem_Realloc(void *ptr, size_t nmemb)
 {
   void *p = realloc(ptr, nmemb);
 
@@ -87,16 +87,16 @@ void *NmMem_Realloc(Nemo *NM, void *ptr, size_t nmemb)
   return p;
 }
 
-void NmMem_Free(Nemo *NM, void *p)
+void NmMem_Free(void *p)
 {
   NmDebug_FREE(p);
 
   free(p);
 }
 
-char *NmMem_Strdup(Nemo *NM, char *p)
+char *NmMem_Strdup(char *p)
 {
-  char *np = NmMem_Malloc(NM, strlen(p) + 1);
+  char *np = NmMem_Malloc(strlen(p) + 1);
   return np ? strcpy(np, p) : np;
 }
 

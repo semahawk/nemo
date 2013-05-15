@@ -52,9 +52,9 @@ typedef struct FloatObject NmFloatObject;
 typedef struct StringObject NmStringObject;
 
 struct Fn {
-  void (*dstr)(Nemo *, NmObject *);
-  NmObject *(*repr)(Nemo *, NmObject *);
-  void (*print)(Nemo *, FILE *, NmObject *);
+  void (*dstr)(NmObject *);
+  NmObject *(*repr)(NmObject *);
+  void (*print)(FILE *, NmObject *);
 };
 
 #define NMOBJECT_HEAD                      \
@@ -80,21 +80,21 @@ struct StringObject {
   char *s;
 };
 
-NmObject *NmObject_New(Nemo *, const char *);
-void NmObject_Destroy(Nemo *, NmObject *);
-void NmObject_Tidyup(Nemo *);
+NmObject *NmObject_New(const char *);
+void NmObject_Destroy(NmObject *);
+void NmObject_Tidyup(void);
 
-NmObject *NmObject_NewFromInt(Nemo *, int);
-void NmInt_Print(Nemo *, FILE *, NmObject *);
-void NmInt_Destroy(Nemo *, NmObject *);
+NmObject *NmObject_NewFromInt(int);
+void NmInt_Print(FILE *, NmObject *);
+void NmInt_Destroy(NmObject *);
 
-NmObject *NmObject_NewFromFloat(Nemo *, double);
-void NmFloat_Print(Nemo *, FILE *, NmObject *);
-void NmFloat_Destroy(Nemo *, NmObject *);
+NmObject *NmObject_NewFromFloat(double);
+void NmFloat_Print(FILE *, NmObject *);
+void NmFloat_Destroy(NmObject *);
 
-NmObject *NmObject_NewFromString(Nemo *, char *);
-void NmString_Print(Nemo *, FILE *, NmObject *);
-void NmString_Destroy(Nemo *, NmObject *);
+NmObject *NmObject_NewFromString(char *);
+void NmString_Print(FILE *, NmObject *);
+void NmString_Destroy(NmObject *);
 
 #endif /* OBJECT_H */
 
