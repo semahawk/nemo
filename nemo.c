@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
   strcpy(NM->source, input);
 
   /* parse the file */
-  nodest = NmParser_ParseFile(NM, NM->source);
+  nodest = NmParser_ParseFile(NM->source);
   /* execute the nodes */
   NmAST_Exec(nodest);
   /* tidy up after executing */
@@ -188,7 +188,7 @@ static int nmInteractive(Nemo *NM)
       return 0;
     }
 
-    ob = NmAST_Exec(NmParser_ParseString(NM, input));
+    ob = NmAST_Exec(NmParser_ParseString(input));
 
     printf("=> ");
     ob->fn.print(stdout, ob);

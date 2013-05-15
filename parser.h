@@ -34,8 +34,8 @@
 #include "nemo.h"
 #include "ast.h"
 
-Node *NmParser_ParseFile(Nemo *, char *);
-Node *NmParser_ParseString(Nemo *, char *);
+Node *NmParser_ParseFile(char *);
+Node *NmParser_ParseString(char *);
 
 #endif /* PARSER_H */
 
