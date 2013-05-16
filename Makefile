@@ -6,22 +6,22 @@ PREFIX  = /usr/local
 OBJECTS = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o
 
 LIBS = -lreadline
-CFLAGS := $(CFLAGS) $(LIBS)
 
 .PHONY: all install uninstall clean distclean
 all: nemo
 
 nemo: $(OBJECTS)
-	$(CC) $(OBJECTS) $(CFLAGS) -o nemo
+	$(CC) $(CFLAGS) $(LIBS) $(OBJECTS) -o nemo
 
-nemo.o: nemo.c nemo.h parser.h mem.h debug.h error.h
-error.o: error.c error.h
-lexer.o: lexer.c lexer.h nemo.h error.h lexer.h debug.h mem.h
-parser.o: parser.c parser.h nemo.h error.h lexer.h ast.h debug.h
-debug.o: debug.c debug.h nemo.h lexer.h
-mem.o: mem.c mem.h nemo.h error.h debug.h
-ast.o: ast.c ast.h nemo.h mem.h vars.h
-object.o: object.c object.h
+nemo.o: nemo.c nemo.h
+nemo.h: ast.h debug.h error.h lexer.h parser.h debug.h mem.h object.h
+error.o: error.c nemo.h
+lexer.o: lexer.c nemo.h
+parser.o: parser.c nemo.h
+debug.o: debug.c nemo.h
+mem.o: mem.c nemo.h
+ast.o: ast.c nemo.h
+object.o: object.c nemo.h
 
 install: all
 	install -D -m 755 nemo $(PREFIX)/bin/nemo
