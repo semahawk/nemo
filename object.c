@@ -42,8 +42,6 @@
 #include <assert.h>
 
 #include "nemo.h"
-#include "object.h"
-#include "mem.h"
 
 /*
  * Simple singly linked list that contains any object that was allocated and

@@ -51,13 +51,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "nemo.h"
-#include "parser.h"
-#include "error.h"
-#include "debug.h"
-#include "mem.h"
-#include "ast.h"
 #include "vars.h"
+#include "nemo.h"
 
 static int nmInteractive(void);
 

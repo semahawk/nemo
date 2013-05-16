@@ -10,6 +10,7 @@
 /* version of Nemo, obviously */
 #define VERSION "0.14.0"
 
+/* our little own BOOL type */
 #define  BOOL short
 #ifndef  TRUE
 # define TRUE 1
@@ -17,6 +18,15 @@
 #ifndef  FALSE
 # define FALSE 0
 #endif
+
+#include "ast.h"
+#include "debug.h"
+#include "error.h"
+#include "lexer.h"
+#include "mem.h"
+#include "object.h"
+#include "parser.h"
+#include "vars.h"
 
 /*
  * The main type for Nemo

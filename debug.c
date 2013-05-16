@@ -45,8 +45,6 @@
 #include <stdint.h>
 
 #include "nemo.h"
-#include "lexer.h"
-#include "debug.h"
 
 /*
  * Every bit here sets on/off the debugging flags

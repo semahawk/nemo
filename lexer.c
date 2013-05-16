@@ -44,10 +44,6 @@
 #include <ctype.h>
 
 #include "nemo.h"
-#include "error.h"
-#include "lexer.h"
-#include "debug.h"
-#include "mem.h"
 
 /* defines which characters are a valid character for eg. name */
 #define validForNameHead(c) (isalpha((c)) || (c) == '_')

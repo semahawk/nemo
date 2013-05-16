@@ -42,8 +42,6 @@
 #include <string.h>
 
 #include "nemo.h"
-#include "error.h"
-#include "debug.h"
 
 void *NmMem_Malloc(size_t size)
 {

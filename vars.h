@@ -31,7 +31,7 @@
 #ifndef VARS_H
 #define VARS_H
 
-#include "object.h"
+#include "nemo.h"
 
 /*
  * Type for variables in Nemo

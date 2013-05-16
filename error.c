@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "lexer.h"
+#include "nemo.h"
 
 /*
  * TODO: append the errors into some kind of a list, then print them out at

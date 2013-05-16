@@ -42,12 +42,6 @@
 #include <string.h>
 
 #include "nemo.h"
-#include "error.h"
-#include "parser.h"
-#include "debug.h"
-#include "lexer.h"
-#include "ast.h"
-#include "mem.h"
 
 /* <n> is of type { Node * } */
 #define isLiteral(n) (n->type == NT_INTEGER || \
