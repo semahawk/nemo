@@ -96,15 +96,9 @@ static void (*freeFuncs[])(Node *) =
  */
 NmObject *NmAST_Exec(Node *n)
 {
-  NmObject *ret;
-
   assert(n);
 
-  /* do nothing with NOPs */
-  if (execFuncs[n->type])
-    ret = execFuncs[n->type](n);
-
-  return ret;
+  return execFuncs[n->type](n);
 }
 
 /*
@@ -115,9 +109,7 @@ void NmAST_Free(Node *n)
 {
   assert(n);
 
-  /* watch out for NOPs */
-  if (n)
-    freeFuncs[n->type](n);
+  freeFuncs[n->type](n);
 }
 
 /*
