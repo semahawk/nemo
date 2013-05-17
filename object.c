@@ -44,6 +44,18 @@
 #include "nemo.h"
 
 /*
+ * Creating the "null" object
+ */
+NmObject *NmNull = &(NmObject){
+  .type = OT_NULL,
+  .fn = {
+    .dstr  = NULL,
+    .repr  = NULL,
+    .print = NmNull_Print
+  }
+};
+
+/*
  * Simple singly linked list that contains any object that was allocated and
  * needs to be freed.
  */
@@ -52,6 +64,17 @@ static struct FreeList {
   NmObject *ob;
   FreeList *next;
 } *free_list = NULL;
+
+/*
+ * @name - NmNull_Print
+ * @desc - print the "null"
+ */
+void NmNull_Print(FILE *fp, NmObject *ob)
+{
+  assert(ob->type == OT_NULL);
+
+  fprintf(fp, "null");
+}
 
 /*
  * @name - NmObject_NewFromInt

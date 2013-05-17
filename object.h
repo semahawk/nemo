@@ -42,6 +42,7 @@
  */
 
 enum Type {
+  OT_NULL,
   OT_INTEGER,
   OT_FLOAT,
   OT_STRING
@@ -49,6 +50,7 @@ enum Type {
 
 typedef enum Type NmObjectType;
 typedef struct Object NmObject;
+typedef struct NullObject NmNullObject;
 typedef struct IntObject NmIntObject;
 typedef struct FloatObject NmFloatObject;
 typedef struct StringObject NmStringObject;
@@ -67,6 +69,10 @@ struct Object {
   NMOBJECT_HEAD
 };
 
+struct NullObject {
+  NMOBJECT_HEAD
+};
+
 struct IntObject {
   NMOBJECT_HEAD
   int i;
@@ -81,6 +87,8 @@ struct StringObject {
   NMOBJECT_HEAD
   char *s;
 };
+
+void NmNull_Print(FILE *, NmObject *);
 
 NmObject *NmObject_New(const char *);
 void NmObject_Destroy(NmObject *);
@@ -97,6 +105,11 @@ void NmFloat_Destroy(NmObject *);
 NmObject *NmObject_NewFromString(char *);
 void NmString_Print(FILE *, NmObject *);
 void NmString_Destroy(NmObject *);
+
+/*
+ * Extern declaration of the "null" which is definied in object.c
+ */
+extern NmObject *NmNull;
 
 #endif /* OBJECT_H */
 

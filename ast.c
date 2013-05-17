@@ -781,13 +781,12 @@ NmObject *NmAST_ExecCall(Node *n)
       NmObject *value = NmAST_Exec(n->data.call.params[i]);
       /* this the last parameter */
       if (n->data.call.params[i + 1] == NULL){
-        value->fn.print(stdout, value);
-        putchar('\n');
+        NmObject_PRINT(stdout, value);
+        fprintf(stdout, "\n");
       /* this is NOT the last parameter */
       } else {
-        value->fn.print(stdout, value);
-        putchar(',');
-        putchar(' ');
+        NmObject_PRINT(stdout, value);
+        fprintf(stdout, ", ");
       }
     }
   }
