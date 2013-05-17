@@ -519,7 +519,8 @@ NmObject *NmAST_ExecIf(Node *n)
   if (valueToB(NmAST_Exec(guard))){
     NmAST_Exec(body);
   } else {
-    NmAST_Exec(elsee);
+    if (elsee)
+      NmAST_Exec(elsee);
   }
 
   return NmObject_NewFromInt(1);
@@ -588,7 +589,8 @@ NmObject *NmAST_ExecWhile(Node *n)
       NmAST_Exec(body);
     }
   } else {
-    NmAST_Exec(elsee);
+    if (elsee)
+      NmAST_Exec(elsee);
   }
 
   return NmObject_NewFromInt(1);
@@ -886,16 +888,25 @@ void NmAST_FreeFuncDef(Node *n)
 static BOOL valueToB(NmObject *o)
 {
   /*
-   * 0 and 0.0 are false
+   * 0, 0.0 and empty string ("") are false
    * everything else is true
    */
   switch (o->type){
-    /* FIXME */
+    case OT_INTEGER:
+      if (((NmIntObject *)o)->i == 0)
+        return FALSE;
+      else
+        return TRUE;
     case OT_FLOAT:
-      return TRUE;
-    /* FIXME */
+      if (((NmFloatObject *)o)->f == 0.0f)
+        return FALSE;
+      else
+        return TRUE;
     case OT_STRING:
-      return TRUE;
+      if (!strcmp(((NmStringObject *)o)->s, ""))
+        return FALSE;
+      else
+        return TRUE;
     default:
       return FALSE;
   }
