@@ -44,9 +44,10 @@
 
 #include "nemo.h"
 
+/* forward */
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
-static BOOL valueToB(NmObject *);
+static BOOL NmObject_Boolish(NmObject *);
 
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
@@ -129,21 +130,14 @@ Node *NmAST_GenNop(void)
 
 /*
  * @name - NmAST_ExecNop
- * @desc - execute a NOP, actually, it's only for the return
- *         so for example this would work:
- *
- *           while ; {
- *             # do stuff
- *           }
- *
- *         which would result in a infinite loop
+ * @desc - execute a NOP (eg, return null)
  */
 NmObject *NmAST_ExecNop(Node *n)
 {
   /* unused parameter */
   (void)n;
 
-  return NmObject_NewFromInt(1);
+  return NmNull;
 }
 
 /*
@@ -516,7 +510,7 @@ NmObject *NmAST_ExecIf(Node *n)
 
   NmDebug_AST(n, "execute if node");
 
-  if (valueToB(NmAST_Exec(guard))){
+  if (NmObject_Boolish(NmAST_Exec(guard))){
     NmAST_Exec(body);
   } else {
     if (elsee)
@@ -584,8 +578,8 @@ NmObject *NmAST_ExecWhile(Node *n)
 
   NmDebug_AST(n, "execute while node");
 
-  if (valueToB(NmAST_Exec(guard))){
-    while (valueToB(NmAST_Exec(guard))){
+  if (NmObject_Boolish(NmAST_Exec(guard))){
+    while (NmObject_Boolish(NmAST_Exec(guard))){
       NmAST_Exec(body);
     }
   } else {
@@ -884,13 +878,15 @@ void NmAST_FreeFuncDef(Node *n)
  *
  * In Nemo there is no "bool" type as is.
  */
-static BOOL valueToB(NmObject *o)
+static BOOL NmObject_Boolish(NmObject *o)
 {
   /*
-   * 0, 0.0 and empty string ("") are false
+   * null, 0, 0.0 and empty string ("") are false
    * everything else is true
    */
   switch (o->type){
+    case OT_NULL:
+      return FALSE;
     case OT_INTEGER:
       if (((NmIntObject *)o)->i == 0)
         return FALSE;
