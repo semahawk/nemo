@@ -32,10 +32,9 @@
 #define PARSER_H
 
 #include "nemo.h"
-#include "ast.h"
 
-Node *NmParser_ParseFile(char *);
-Node *NmParser_ParseString(char *);
+Node *NmParser_ParseFile(Context *, char *);
+Node *NmParser_ParseString(Context *, char *);
 
 #endif /* PARSER_H */
 

@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
   VariablesList *gnext;
   /* the main node from parsing the given file */
   Node *nodest = NULL;
+  /* the main file's context */
+  Context ctx;
   /* file input */
   char input[255];
   /* used for getopt */
@@ -132,13 +134,13 @@ int main(int argc, char *argv[])
   }
 
   /* set the sources name */
-  NM->source = NmMem_Malloc(strlen(input) + 1);
-  strcpy(NM->source, input);
+  ctx.source = NmMem_Malloc(strlen(input) + 1);
+  strcpy(ctx.source, input);
 
   /* parse the file */
-  nodest = NmParser_ParseFile(NM->source);
+  nodest = NmParser_ParseFile(&ctx, ctx.source);
   /* execute the nodes */
-  NmAST_Exec(nodest);
+  NmAST_Exec(&ctx, nodest);
   /* tidy up after executing */
   NmAST_FreeBlock(nodest);
 
@@ -152,7 +154,7 @@ int main(int argc, char *argv[])
 
   /* tidy up */
   NmObject_Tidyup();
-  NmMem_Free(NM->source);
+  NmMem_Free(ctx.source);
   NmMem_Free(NM);
 
   return EXIT_SUCCESS;
@@ -160,9 +162,15 @@ int main(int argc, char *argv[])
 
 static int nmInteractive(void)
 {
+  /* users input, Nemo's prompt */
   char *input, prompt[64];
+  /* current line user has entered */
   unsigned line = 0;
+  /* result of the executed input */
   NmObject *ob;
+  /* interpreters context */
+  Context ctx;
+  ctx.source = "stdin";
 
   printf("Welcome to the Nemo " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
@@ -184,7 +192,7 @@ static int nmInteractive(void)
       return 0;
     }
 
-    ob = NmAST_Exec(NmParser_ParseString(input));
+    ob = NmAST_Exec(&ctx, NmParser_ParseString(&ctx, input));
 
     printf("=> ");
     ob->fn.print(stdout, ob);

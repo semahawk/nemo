@@ -19,6 +19,7 @@
 # define FALSE 0
 #endif
 
+#include "context.h"
 #include "ast.h"
 #include "debug.h"
 #include "error.h"
@@ -27,6 +28,7 @@
 #include "object.h"
 #include "parser.h"
 #include "vars.h"
+#include "funcs.h"
 
 /*
  * The main type for Nemo
