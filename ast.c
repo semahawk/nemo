@@ -86,7 +86,7 @@ static void (*freeFuncs[])(Node *) =
   NmAST_FreeWhile,
   NmAST_FreeDecl,
   NmAST_FreeBlock,
-  NmAST_FreCall,
+  NmAST_FreeCall,
   NmAST_FreeFuncDef
 };
 
@@ -699,7 +699,7 @@ void NmAST_FreeDecl(Node *n)
 
 NmObject *NmAST_ExecBlock(Node *n)
 {
-  NmObject *ret;
+  NmObject *ret = NmNull;
   Statement *s;
   Statement *next;
 
@@ -799,10 +799,10 @@ NmObject *NmAST_ExecCall(Node *n)
 }
 
 /*
- * @name - NmAST_FreCall
- * @desc - responsible for freeing call n and optionally any params it had
+ * @name - NmAST_FreeCall
+ * @desc - responsible for freeing call node and optionally any params it had
  */
-void NmAST_FreCall(Node *n)
+void NmAST_FreeCall(Node *n)
 {
   unsigned i;
 

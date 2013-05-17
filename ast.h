@@ -181,7 +181,7 @@ void  NmAST_FreeUnop(Node *);
 void  NmAST_FreeIf(Node *);
 void  NmAST_FreeWhile(Node *);
 void  NmAST_FreeDecl(Node *);
-void  NmAST_FreCall(Node *);
+void  NmAST_FreeCall(Node *);
 void  NmAST_FreeBlock(Node *);
 void  NmAST_FreeNop(Node *);
 void  NmAST_FreeFuncDef(Node *);
