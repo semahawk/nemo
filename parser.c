@@ -192,13 +192,14 @@ static Node *postfix_expr(LexerState *lex)
       NmError_Lex(lex, "expected a name for a function call, not %s", symToS(lex->current->sym.type));
       exit(EXIT_FAILURE);
     }
-    name = lex->current->prev->prev->sym.value.s;
-    NmDebug_Parser("%s ", name);
+    name = target->data.s;
     NmDebug_Parser("(");
     params = params_list(lex);
     NmLexer_Force(lex, SYM_RPAREN);
     NmDebug_Parser(")");
     ret = NmAST_GenCall(name, params);
+    /* we only need the char *name, not the whole node, so free it */
+    NmAST_Free(target);
   }
   /*
    * XXX NAME '++'
