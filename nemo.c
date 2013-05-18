@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     /*
      * XXX exitting code here
      */
-    NmInterpState_Destroy(interp);
+    NmInterpState_Destroy();
     return nmInteractive();
   }
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
   /* tidy up */
   NmObject_Tidyup();
-  NmInterpState_Destroy(interp);
+  NmInterpState_Destroy();
   NmMem_Free(NM);
 
   return EXIT_SUCCESS;
@@ -189,7 +189,7 @@ static int nmInteractive(void)
     printf("\n");
   }
 
-  NmInterpState_Destroy(interp);
+  NmInterpState_Destroy();
 
   return 0;
 }

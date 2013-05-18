@@ -47,7 +47,7 @@ typedef struct InterpState InterpState;
 
 InterpState *NmInterpState_New(void);
 InterpState *NmInterpState_GetCurr(void);
-void NmInterpState_Destroy(InterpState *);
+void NmInterpState_Destroy(void);
 
 #endif /* INTERP_H */
 
