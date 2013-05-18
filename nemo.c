@@ -66,6 +66,9 @@ int main(int argc, char *argv[])
   Node *nodest = NULL;
   /* the main file's context */
   Context ctx;
+  /* the main file's interpreter state */
+  /* for now it's for the same purpose as the ctx */
+  InterpState *interp = NmInterpState_New();
   /* file input */
   char input[255];
   /* used for getopt */
@@ -130,12 +133,14 @@ int main(int argc, char *argv[])
     /*
      * XXX exitting code here
      */
+    NmInterpState_Destroy(interp);
     return nmInteractive();
   }
 
   /* set the sources name */
   ctx.source = NmMem_Malloc(strlen(input) + 1);
   strcpy(ctx.source, input);
+  interp->source = NmMem_Strdup(input);
 
   /* parse the file */
   nodest = NmParser_ParseFile(&ctx, ctx.source);
@@ -145,7 +150,7 @@ int main(int argc, char *argv[])
   NmAST_FreeBlock(nodest);
 
   /* iterate through the global variables */
-  for (g = NM->globals; g != NULL; g = gnext){
+  for (g = interp->globals; g != NULL; g = gnext){
     gnext = g->next;
     NmMem_Free(g->var->name);
     NmMem_Free(g->var);
@@ -154,6 +159,7 @@ int main(int argc, char *argv[])
 
   /* tidy up */
   NmObject_Tidyup();
+  NmInterpState_Destroy(interp);
   NmMem_Free(ctx.source);
   NmMem_Free(NM);
 
@@ -171,6 +177,9 @@ static int nmInteractive(void)
   /* interpreters context */
   Context ctx;
   ctx.source = "stdin";
+  /* create the interpreter state */
+  InterpState *interp = NmInterpState_New();
+  interp->source = "stdin";
 
   printf("Welcome to the Nemo " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
@@ -195,9 +204,11 @@ static int nmInteractive(void)
     ob = NmAST_Exec(&ctx, NmParser_ParseString(&ctx, input));
 
     printf("=> ");
-    ob->fn.print(stdout, ob);
+    NmObject_PRINT(stdout, ob);
     printf("\n");
   }
+
+  NmInterpState_Destroy(interp);
 
   return 0;
 }
@@ -206,7 +217,7 @@ static int nmInteractive(void)
  * Megadeth, Running Wild, Gamma Ray, Iron Savior
  * Helloween, Testament
  * Within Temptation, Nightwish, Avantasia
- * Stratovarius, Steve Vai
+ * Stratovarius, Steve Vai, At Vance
  *
  * Family Guy, The Office, Monty Python
  *

@@ -1,8 +1,8 @@
 /*
  *
- * vars.h
+ * funcs.c
  *
- * Created at:  Wed 15 May 2013 20:23:34 CEST 20:23:34
+ * Created at:  Fri 17 May 2013 22:38:22 CEST 22:38:22
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,31 +28,20 @@
  *
  */
 
-#ifndef VARS_H
-#define VARS_H
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "nemo.h"
 
-/*
- * Type for variables in Nemo
- */
-struct Variable {
-  /* obviously */
-  char *name;
-  /* the variables value */
-  NmObject *value;
-};
+void Nm_InsertFuncs(Context *ctx, NmModuleFuncs *funcs)
+{
+  (void)ctx;
+  (void)funcs;
 
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
-};
+  printf("Nm_InserfFuncs called\n");
 
-typedef struct VariablesList VariablesList;
-typedef struct Variable      Variable;
-
-#endif /* VARS_H */
+  for (NmModuleFuncs *f = funcs; f->name != NULL; f++){
+    printf("found function %s\n", f->name);
+  }
+}
 

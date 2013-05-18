@@ -57,9 +57,9 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
   va_start(vl, msg);
 
   if (lex->is_file){
-    fprintf(stderr, "In file %s: ", lex->source);
+    fprintf(stderr, "In file %s: ", NmInterpState_GetCurr()->source);
   } else {
-    fprintf(stderr, "In string \"%s\": ", lex->source);
+    fprintf(stderr, "In string \"%s\": ", NmInterpState_GetCurr()->source);
   }
 
   vfprintf(stderr, msg, vl);

@@ -300,28 +300,20 @@ Node *NmAST_GenName(Context *ctx, char *s)
  */
 NmObject *NmAST_ExecName(Context *ctx, Node *n)
 {
-  NmObject *ret;
+  InterpState *interp = NmInterpState_GetCurr();
   VariablesList *p;
-  BOOL found = FALSE;
 
   NmDebug_AST(n, "execute name node");
 
-  printf("### globals are not working, FIXEM\n");
   /* search for the variable */
-  for (p = NULL; p != NULL; p = p->next){
+  for (p = interp->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
-      found = TRUE;
-      ret = p->var->value;
-      break;
+      return p->var->value;
     }
   }
 
-  if (!found){
-    NmError_Error("variable '%s' was not found");
-    exit(EXIT_FAILURE);
-  }
-
-  return ret;
+  NmError_Error("variable '%s' was not found");
+  exit(EXIT_FAILURE);
 }
 
 /*
@@ -641,13 +633,13 @@ Node *NmAST_GenDecl(Context *ctx, char *name, Node *value)
  */
 NmObject *NmAST_ExecDecl(Context *ctx, Node *n)
 {
+  InterpState *interp = NmInterpState_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *new_var = NmMem_Malloc(sizeof(Variable));
   VariablesList *p;
 
-  printf("### globals are not working, FIXEM\n");
   /* before doing anything, check if that variable was already declared */
-  for (p = NULL; p != NULL; p = p->next){
+  for (p = interp->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
       NmError_Error("global variable '%s' already declared", n->data.decl.name);
       exit(EXIT_FAILURE);
@@ -666,8 +658,8 @@ NmObject *NmAST_ExecDecl(Context *ctx, Node *n)
   /* append to the globals list */
   new_var->name = NmMem_Strdup(n->data.decl.name);
   new_list->var = new_var;
-  /*new_list->next = NM->globals;*/
-  /*NM->globals = new_list;*/
+  new_list->next = interp->globals;
+  interp->globals = new_list;
 
   return NmObject_NewFromInt(1);
 }

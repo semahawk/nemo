@@ -1,8 +1,8 @@
 /*
  *
- * vars.h
+ * builtin.c
  *
- * Created at:  Wed 15 May 2013 20:23:34 CEST 20:23:34
+ * Created at:  Fri 17 May 2013 22:26:42 CEST 22:26:42
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,31 +28,38 @@
  *
  */
 
-#ifndef VARS_H
-#define VARS_H
+/*
+ * "Can't you see
+ *  That in the world we live in
+ *  Political lies
+ *  Are just corporate decisions
+ *  They'll take away
+ *  All the hopes, not their promises
+ *  They'll put an end to this
+ *  Land of the livin"
+ *
+ *  Testament - Souls of Black
+ */
+
+#include <stdio.h>
 
 #include "nemo.h"
 
-/*
- * Type for variables in Nemo
- */
-struct Variable {
-  /* obviously */
-  char *name;
-  /* the variables value */
-  NmObject *value;
+static NmObject *builtin_print(Params *params)
+{
+  (void)params;
+  printf("BULITIN PRINT CALLED\n");
+
+  return NmObject_NewFromInt(1);
+}
+
+static NmModuleFuncs module_funcs[] = {
+  { "print", builtin_print },
+  { NULL, NULL }
 };
 
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
-};
-
-typedef struct VariablesList VariablesList;
-typedef struct Variable      Variable;
-
-#endif /* VARS_H */
+void NmBuiltin_Init(Context *ctx)
+{
+  Nm_InsertFuncs(ctx, module_funcs);
+}
 

@@ -29,6 +29,7 @@
 #include "parser.h"
 #include "vars.h"
 #include "funcs.h"
+#include "interp.h"
 
 /*
  * The main type for Nemo

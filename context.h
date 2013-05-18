@@ -1,8 +1,8 @@
 /*
  *
- * vars.h
+ * context.h
  *
- * Created at:  Wed 15 May 2013 20:23:34 CEST 20:23:34
+ * Created at:  Fri 17 May 2013 20:53:18 CEST 20:53:18
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,31 +28,21 @@
  *
  */
 
-#ifndef VARS_H
-#define VARS_H
+#ifndef CONTEXT_H
+#define CONTEXT_H
 
 #include "nemo.h"
 
-/*
- * Type for variables in Nemo
- */
-struct Variable {
-  /* obviously */
-  char *name;
-  /* the variables value */
-  NmObject *value;
+struct Context {
+  /* files name, strings content etc. */
+  char *source;
+  /* any declared variables */
+  struct VariablesList *vars;
+  /* any definied functions */
+  struct FuncsList *funcs;
 };
 
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
-};
+typedef struct Context Context;
 
-typedef struct VariablesList VariablesList;
-typedef struct Variable      Variable;
-
-#endif /* VARS_H */
+#endif /* CONTEXT_H */
 

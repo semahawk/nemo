@@ -1,8 +1,8 @@
 /*
  *
- * vars.h
+ * interp.c
  *
- * Created at:  Wed 15 May 2013 20:23:34 CEST 20:23:34
+ * Created at:  Sat 18 May 2013 11:31:05 CEST 11:31:05
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,31 +28,30 @@
  *
  */
 
-#ifndef VARS_H
-#define VARS_H
-
 #include "nemo.h"
 
-/*
- * Type for variables in Nemo
- */
-struct Variable {
-  /* obviously */
-  char *name;
-  /* the variables value */
-  NmObject *value;
-};
+static InterpState *curr = NULL;
 
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
-};
+InterpState *NmInterpState_New(void)
+{
+  InterpState *interp = NmMem_Malloc(sizeof(InterpState));
 
-typedef struct VariablesList VariablesList;
-typedef struct Variable      Variable;
+  interp->funcs = NULL;
+  interp->globals = NULL;
 
-#endif /* VARS_H */
+  curr = interp;
 
+  return interp;
+}
+
+InterpState *NmInterpState_GetCurr(void)
+{
+  return curr;
+}
+
+void NmInterpState_Destroy(InterpState *interp)
+{
+  /* FIXME */
+  NmMem_Free(interp->source);
+  NmMem_Free(interp);
+}

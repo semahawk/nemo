@@ -1,8 +1,8 @@
 /*
  *
- * vars.h
+ * funcs.h
  *
- * Created at:  Wed 15 May 2013 20:23:34 CEST 20:23:34
+ * Created at:  Fri 17 May 2013 20:54:08 CEST 20:54:08
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,31 +28,45 @@
  *
  */
 
-#ifndef VARS_H
-#define VARS_H
+#ifndef FUNCS_H
+#define FUNCS_H
 
 #include "nemo.h"
 
-/*
- * Type for variables in Nemo
- */
-struct Variable {
-  /* obviously */
+/* type of the C functions */
+typedef NmObject *(*NmCFunc)(Params *);
+
+struct Func {
+  /* name of the function */
   char *name;
-  /* the variables value */
-  NmObject *value;
+  /* it's body */
+  Node *body;
 };
 
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
+struct CFunc {
+  /* name of the function */
+  char *name;
+  /* it's body */
+  NmCFunc body;
 };
 
-typedef struct VariablesList VariablesList;
-typedef struct Variable      Variable;
+/* Simple singly linked list */
+struct FuncsList {
+  struct Func *func;
+  struct FuncsList *next;
+};
 
-#endif /* VARS_H */
+/* type of the array elements of list of the functions in modules
+ * (ouch, lost myself a bit) */
+typedef struct ModuleFuncs {
+  char *name;
+  NmCFunc ptr;
+} NmModuleFuncs;
+
+typedef struct FuncsList FuncsList;
+typedef struct Func Func;
+
+void Nm_InsertFuncs(Context *, NmModuleFuncs *);
+
+#endif /* FUNCS_H */
 
