@@ -19,7 +19,6 @@
 # define FALSE 0
 #endif
 
-#include "context.h"
 #include "ast.h"
 #include "debug.h"
 #include "error.h"

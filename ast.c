@@ -52,7 +52,7 @@ static BOOL NmObject_Boolish(NmObject *);
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
  */
-static NmObject *(*execFuncs[])(Context *, Node *) =
+static NmObject *(*execFuncs[])(Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
   NmAST_ExecNop,
@@ -95,11 +95,11 @@ static void (*freeFuncs[])(Node *) =
  * @name - NmAST_Exec
  * @desc - executes given node and returns the NmObject *it resulted in
  */
-NmObject *NmAST_Exec(Context *ctx, Node *n)
+NmObject *NmAST_Exec(Node *n)
 {
   assert(n);
 
-  return execFuncs[n->type](ctx, n);
+  return execFuncs[n->type](n);
 }
 
 /*
@@ -117,7 +117,7 @@ void NmAST_Free(Node *n)
  * @name - NmAST_GenNop
  * @desc - create a n that does NOTHING
  */
-Node *NmAST_GenNop(Context *ctx)
+Node *NmAST_GenNop(void)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -132,7 +132,7 @@ Node *NmAST_GenNop(Context *ctx)
  * @name - NmAST_ExecNop
  * @desc - execute a NOP (eg, return null)
  */
-NmObject *NmAST_ExecNop(Context *ctx, Node *n)
+NmObject *NmAST_ExecNop(Node *n)
 {
   /* unused parameter */
   (void)n;
@@ -158,7 +158,7 @@ void NmAST_FreeNop(Node *n)
  * @name - NmAST_GenInt
  * @desc - create a n holding a single literal integer
  */
-Node *NmAST_GenInt(Context *ctx, int i)
+Node *NmAST_GenInt(int i)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -174,7 +174,7 @@ Node *NmAST_GenInt(Context *ctx, int i)
  * @name - NmAST_ExecInt
  * @desc - return the value of the int
  */
-NmObject *NmAST_ExecInt(Context *ctx, Node *n)
+NmObject *NmAST_ExecInt(Node *n)
 {
   NmDebug_AST(n, "execute integer node");
 
@@ -199,7 +199,7 @@ void NmAST_FreeInt(Node *n)
  * @name - NmAST_GenFloat
  * @desc - create a n holding a single literal float
  */
-Node *NmAST_GenFloat(Context *ctx, float f)
+Node *NmAST_GenFloat(float f)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -215,7 +215,7 @@ Node *NmAST_GenFloat(Context *ctx, float f)
  * @name - NmAST_ExecFloat
  * @desc - return the value of the float
  */
-NmObject *NmAST_ExecFloat(Context *ctx, Node *n)
+NmObject *NmAST_ExecFloat(Node *n)
 {
   NmDebug_AST(n, "execute float node");
 
@@ -240,7 +240,7 @@ void NmAST_FreeFloat(Node *n)
  * @name - NmAST_GenString
  * @desc - create a node holding a single literal string
  */
-Node *NmAST_GenString(Context *ctx, char *s)
+Node *NmAST_GenString(char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -256,7 +256,7 @@ Node *NmAST_GenString(Context *ctx, char *s)
  * @name - NmAST_ExecString
  * @desc - return the value of the string
  */
-NmObject *NmAST_ExecString(Context *ctx, Node *n)
+NmObject *NmAST_ExecString(Node *n)
 {
   NmDebug_AST(n, "execute string node");
 
@@ -282,7 +282,7 @@ void NmAST_FreeString(Node *n)
  * @name - NmAST_GenName
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(Context *ctx, char *s)
+Node *NmAST_GenName(char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -298,7 +298,7 @@ Node *NmAST_GenName(Context *ctx, char *s)
  * @name - NmAST_ExecName
  * @desc - return the value the name is carring
  */
-NmObject *NmAST_ExecName(Context *ctx, Node *n)
+NmObject *NmAST_ExecName(Node *n)
 {
   InterpState *interp = NmInterpState_GetCurr();
   VariablesList *p;
@@ -334,7 +334,7 @@ void NmAST_FreeName(Node *n)
  * @name - NmAST_GenBinop
  * @desc - creates a binary operation n
  */
-Node *NmAST_GenBinop(Context *ctx, Node *left, BinaryOp op, Node *right)
+Node *NmAST_GenBinop(Node *left, BinaryOp op, Node *right)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -352,7 +352,7 @@ Node *NmAST_GenBinop(Context *ctx, Node *left, BinaryOp op, Node *right)
  * @name - NmAST_ExecBinop
  * @desc - return the result of the binary operation
  */
-NmObject *NmAST_ExecBinop(Context *ctx, Node *n)
+NmObject *NmAST_ExecBinop(Node *n)
 {
   NmObject *ret;
 
@@ -387,7 +387,7 @@ NmObject *NmAST_ExecBinop(Context *ctx, Node *n)
         exit(EXIT_FAILURE);
       }
       /* actually assign the value */
-      ret = NmAST_Exec(ctx, n->data.binop.right);
+      ret = NmAST_Exec(n->data.binop.right);
       var->value = ret;
       break;
     }
@@ -431,7 +431,7 @@ void NmAST_FreeBinop(Node *n)
  * @name - NmAST_GenUnop
  * @desc - creates a n for unary operation
  */
-Node *NmAST_GenUnop(Context *ctx, Node *expr, UnaryOp op)
+Node *NmAST_GenUnop(Node *expr, UnaryOp op)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -448,7 +448,7 @@ Node *NmAST_GenUnop(Context *ctx, Node *expr, UnaryOp op)
  * @name - NmAST_ExecUnop
  * @desc - return the result of the unary operation
  */
-NmObject *NmAST_ExecUnop(Context *ctx, Node *n)
+NmObject *NmAST_ExecUnop(Node *n)
 {
   /* FIXME */
   NmDebug_AST(n, "execute unary operation node");
@@ -476,7 +476,7 @@ void NmAST_FreeUnop(Node *n)
  * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *NmAST_GenIf(Context *ctx, Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenIf(Node *guard, Node *body, Node *elsee)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -494,7 +494,7 @@ Node *NmAST_GenIf(Context *ctx, Node *guard, Node *body, Node *elsee)
  * @name - NmAST_ExecIf
  * @desc - do the if loop, return actually anything
  */
-NmObject *NmAST_ExecIf(Context *ctx, Node *n)
+NmObject *NmAST_ExecIf(Node *n)
 {
   Node *guard = n->data.iff.guard;
   Node *body = n->data.iff.body;
@@ -502,11 +502,11 @@ NmObject *NmAST_ExecIf(Context *ctx, Node *n)
 
   NmDebug_AST(n, "execute if node");
 
-  if (NmObject_Boolish(NmAST_Exec(ctx, guard))){
-    NmAST_Exec(ctx, body);
+  if (NmObject_Boolish(NmAST_Exec(guard))){
+    NmAST_Exec(body);
   } else {
     if (elsee)
-      NmAST_Exec(ctx, elsee);
+      NmAST_Exec(elsee);
   }
 
   return NmObject_NewFromInt(1);
@@ -544,7 +544,7 @@ void NmAST_FreeIf(Node *n)
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *NmAST_GenWhile(Context *ctx, Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenWhile(Node *guard, Node *body, Node *elsee)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -562,7 +562,7 @@ Node *NmAST_GenWhile(Context *ctx, Node *guard, Node *body, Node *elsee)
  * @name - NmAST_ExecWhile
  * @desc - execute the loop and return, actually anything, it's a statement
  */
-NmObject *NmAST_ExecWhile(Context *ctx, Node *n)
+NmObject *NmAST_ExecWhile(Node *n)
 {
   Node *guard = n->data.iff.guard;
   Node *body = n->data.iff.body;
@@ -570,13 +570,13 @@ NmObject *NmAST_ExecWhile(Context *ctx, Node *n)
 
   NmDebug_AST(n, "execute while node");
 
-  if (NmObject_Boolish(NmAST_Exec(ctx, guard))){
-    while (NmObject_Boolish(NmAST_Exec(ctx, guard))){
-      NmAST_Exec(ctx, body);
+  if (NmObject_Boolish(NmAST_Exec(guard))){
+    while (NmObject_Boolish(NmAST_Exec(guard))){
+      NmAST_Exec(body);
     }
   } else {
     if (elsee)
-      NmAST_Exec(ctx, elsee);
+      NmAST_Exec(elsee);
   }
 
   return NmObject_NewFromInt(1);
@@ -614,7 +614,7 @@ void NmAST_FreeWhile(Node *n)
  *
  *           my variable;
  */
-Node *NmAST_GenDecl(Context *ctx, char *name, Node *value)
+Node *NmAST_GenDecl(char *name, Node *value)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -631,7 +631,7 @@ Node *NmAST_GenDecl(Context *ctx, char *name, Node *value)
  * @name - NmAST_ExecDecl
  * @desc - declare/define the variable and return 1
  */
-NmObject *NmAST_ExecDecl(Context *ctx, Node *n)
+NmObject *NmAST_ExecDecl(Node *n)
 {
   InterpState *interp = NmInterpState_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
@@ -649,7 +649,7 @@ NmObject *NmAST_ExecDecl(Context *ctx, Node *n)
   NmDebug_AST(n, "execute variable declaration node");
 
   if (n->data.decl.value){
-    NmObject *value = NmAST_Exec(ctx, n->data.decl.value);
+    NmObject *value = NmAST_Exec(n->data.decl.value);
     new_var->value = value;
   } else {
     /* declared variables get to be a integer with the value of 0 */
@@ -683,7 +683,7 @@ void NmAST_FreeDecl(Node *n)
   NmMem_Free(n);
 }
 
-NmObject *NmAST_ExecBlock(Context *ctx, Node *n)
+NmObject *NmAST_ExecBlock(Node *n)
 {
   NmObject *ret = NmNull;
   Statement *s;
@@ -697,7 +697,7 @@ NmObject *NmAST_ExecBlock(Context *ctx, Node *n)
   for (s = n->data.block.tail; s != NULL; s = next){
     next = s->next;
     NmDebug_AST(s->stmt, "execute statement node");
-    ret = NmAST_Exec(ctx, s->stmt);
+    ret = NmAST_Exec(s->stmt);
   }
 
   NmDebug_AST(n, "done executing block node");
@@ -734,7 +734,7 @@ void NmAST_FreeBlock(Node *n)
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
-Node *NmAST_GenCall(Context *ctx, char *name, Node **params)
+Node *NmAST_GenCall(char *name, Node **params)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -751,8 +751,9 @@ Node *NmAST_GenCall(Context *ctx, char *name, Node **params)
  * @name - NmAST_ExecCall
  * @desc - call the given function
  */
-NmObject *NmAST_ExecCall(Context *ctx, Node *n)
+NmObject *NmAST_ExecCall(Node *n)
 {
+  InterpState *interp = NmInterpState_GetCurr();
   NmObject *ret;
   unsigned i;
   char *name = n->data.call.name;
@@ -764,7 +765,7 @@ NmObject *NmAST_ExecCall(Context *ctx, Node *n)
    */
   if (!strcmp(name, "print")){
     for (i = 0; n->data.call.params != NULL && n->data.call.params[i] != NULL; i++){
-      NmObject *ob = NmAST_Exec(ctx, n->data.call.params[i]);
+      NmObject *ob = NmAST_Exec(n->data.call.params[i]);
       /* this the last parameter */
       if (n->data.call.params[i + 1] == NULL){
         NmObject_PRINT(stdout, ob);
@@ -779,9 +780,9 @@ NmObject *NmAST_ExecCall(Context *ctx, Node *n)
     }
   /* some non hard-coded function */
   } else {
-    for (FuncsList *list = ctx->funcs; list != NULL; list = list->next){
+    for (FuncsList *list = interp->funcs; list != NULL; list = list->next){
       if (!strcmp(list->func->name, name)){
-        ret = NmAST_Exec(ctx, list->func->body);
+        ret = NmAST_Exec(list->func->body);
         break;
       }
     }
@@ -819,8 +820,9 @@ void NmAST_FreeCall(Node *n)
  * @name - NmAST_GenFuncDef
  * @desc - creates a node for defining a function of a given <name>
  */
-Node *NmAST_GenFuncDef(Context *ctx, char *name, Node *body)
+Node *NmAST_GenFuncDef(char *name, Node *body)
 {
+  InterpState *interp = NmInterpState_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
   Func *f = NmMem_Malloc(sizeof(Func));
   Node *n = NmMem_Malloc(sizeof(Node));
@@ -841,8 +843,8 @@ Node *NmAST_GenFuncDef(Context *ctx, char *name, Node *body)
   f->body = body;
   l->func = f;
   /* append the function */
-  l->next = ctx->funcs;
-  ctx->funcs = l;
+  l->next = interp->funcs;
+  interp->funcs = l;
 
   return n;
 }
@@ -851,11 +853,8 @@ Node *NmAST_GenFuncDef(Context *ctx, char *name, Node *body)
  * @name - NmAST_ExecFuncDef
  * @desc - declare/define given function
  */
-NmObject *NmAST_ExecFuncDef(Context *ctx, Node *n)
+NmObject *NmAST_ExecFuncDef(Node *n)
 {
-  /* unused parameter */
-  (void)ctx;
-
   if (n->data.funcdef.body)
     NmDebug_AST(n, "execute function definition node");
   else

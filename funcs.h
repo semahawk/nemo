@@ -66,7 +66,7 @@ typedef struct ModuleFuncs {
 typedef struct FuncsList FuncsList;
 typedef struct Func Func;
 
-void Nm_InsertFuncs(Context *, NmModuleFuncs *);
+void Nm_InsertFuncs(NmModuleFuncs *);
 
 #endif /* FUNCS_H */
 

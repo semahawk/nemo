@@ -64,10 +64,7 @@ int main(int argc, char *argv[])
   VariablesList *gnext;
   /* the main node from parsing the given file */
   Node *nodest = NULL;
-  /* the main file's context */
-  Context ctx;
   /* the main file's interpreter state */
-  /* for now it's for the same purpose as the ctx */
   InterpState *interp = NmInterpState_New();
   /* file input */
   char input[255];
@@ -138,14 +135,12 @@ int main(int argc, char *argv[])
   }
 
   /* set the sources name */
-  ctx.source = NmMem_Malloc(strlen(input) + 1);
-  strcpy(ctx.source, input);
   interp->source = NmMem_Strdup(input);
 
   /* parse the file */
-  nodest = NmParser_ParseFile(&ctx, ctx.source);
+  nodest = NmParser_ParseFile(interp->source);
   /* execute the nodes */
-  NmAST_Exec(&ctx, nodest);
+  NmAST_Exec(nodest);
   /* tidy up after executing */
   NmAST_FreeBlock(nodest);
 
@@ -160,7 +155,6 @@ int main(int argc, char *argv[])
   /* tidy up */
   NmObject_Tidyup();
   NmInterpState_Destroy(interp);
-  NmMem_Free(ctx.source);
   NmMem_Free(NM);
 
   return EXIT_SUCCESS;
@@ -174,9 +168,6 @@ static int nmInteractive(void)
   unsigned line = 0;
   /* result of the executed input */
   NmObject *ob;
-  /* interpreters context */
-  Context ctx;
-  ctx.source = "stdin";
   /* create the interpreter state */
   InterpState *interp = NmInterpState_New();
   interp->source = "stdin";
@@ -201,7 +192,7 @@ static int nmInteractive(void)
       return 0;
     }
 
-    ob = NmAST_Exec(&ctx, NmParser_ParseString(&ctx, input));
+    ob = NmAST_Exec(NmParser_ParseString(input));
 
     printf("=> ");
     NmObject_PRINT(stdout, ob);
