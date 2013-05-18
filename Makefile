@@ -28,7 +28,7 @@ interp.o: interp.c nemo.h
 builtin.o: builtin.c nemo.h
 
 install: all
-	install -D -m 755 nemo $(PREFIX)/bin/nemo
+	install -m 755 nemo $(PREFIX)/bin/nemo
 
 uninstall:
 	rm -rf $(PREFIX)/bin/nemo
