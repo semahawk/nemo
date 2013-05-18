@@ -97,6 +97,7 @@ void NmObject_Tidyup(void);
 NmObject *NmObject_NewFromInt(int);
 void NmInt_Print(FILE *, NmObject *);
 void NmInt_Destroy(NmObject *);
+NmObject *NmInt_NewFromVoidPtr(void *);
 
 NmObject *NmObject_NewFromFloat(double);
 void NmFloat_Print(FILE *, NmObject *);

@@ -38,6 +38,7 @@ InterpState *NmInterpState_New(void)
   VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *null = NmMem_Malloc(sizeof(Variable));
 
+  interp->cfuncs = NULL;
   interp->funcs = NULL;
   interp->globals = NULL;
 
@@ -61,14 +62,22 @@ InterpState *NmInterpState_GetCurr(void)
 
 void NmInterpState_Destroy(InterpState *interp)
 {
+  CFuncsList *cfuncs = NULL;
+  CFuncsList *cfuncs_next = NULL;
   VariablesList *vars = NULL;
-  VariablesList *next = NULL;
-  /* iterate through the global variables */
-  for (vars = interp->globals; vars != NULL; vars = next){
-    next = vars->next;
+  VariablesList *vars_next = NULL;
+  /* destroy all the global variables */
+  for (vars = interp->globals; vars != NULL; vars = vars_next){
+    vars_next = vars->next;
     NmMem_Free(vars->var->name);
     NmMem_Free(vars->var);
     NmMem_Free(vars);
+  }
+  /* destroy all the C functions */
+  for (cfuncs = interp->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
+    cfuncs_next = cfuncs->next;
+    NmMem_Free(cfuncs->func);
+    NmMem_Free(cfuncs);
   }
 
   NmMem_Free(interp->source);

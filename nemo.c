@@ -51,7 +51,6 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "vars.h"
 #include "nemo.h"
 
 static int nmInteractive(void);
@@ -133,6 +132,9 @@ int main(int argc, char *argv[])
   /* set the sources name */
   interp->source = NmMem_Strdup(input);
 
+  /* fetch the builtin functions */
+  NmBuiltin_Init();
+
   /* parse the file */
   nodest = NmParser_ParseFile(interp->source);
   /* execute the nodes */
@@ -190,6 +192,24 @@ static int nmInteractive(void)
   NmInterpState_Destroy(interp);
 
   return 0;
+}
+
+void Nm_InitModule(NmModuleFuncs *funcs)
+{
+  InterpState *interp = NmInterpState_GetCurr();
+
+  /* append all the C functions to the cfuncs */
+  for (NmModuleFuncs *f = funcs; f->name != NULL; f++){
+    CFuncsList *list = NmMem_Malloc(sizeof(CFuncsList));
+    CFunc *func = NmMem_Malloc(sizeof(CFunc));
+
+    func->name = f->name;
+    func->body = f->ptr;
+    list->func = func;
+    /* append to the list */
+    list->next = interp->cfuncs;
+    interp->cfuncs = list;
+  }
 }
 
 /*

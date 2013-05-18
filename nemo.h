@@ -42,5 +42,7 @@ struct Nemo {
 
 typedef struct Nemo Nemo;
 
+void Nm_InitModule(NmModuleFuncs *);
+
 #endif /* NEMO_H */
 

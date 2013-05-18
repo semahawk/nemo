@@ -764,41 +764,26 @@ Node *NmAST_GenCall(char *name, Node **params)
 NmObject *NmAST_ExecCall(Node *n)
 {
   InterpState *interp = NmInterpState_GetCurr();
-  NmObject *ret;
-  unsigned i;
   char *name = n->data.call.name;
 
   NmDebug_AST(n, "execute function call node");
 
-  /*
-   * calling "print"
-   */
-  if (!strcmp(name, "print")){
-    for (i = 0; n->data.call.params != NULL && n->data.call.params[i] != NULL; i++){
-      NmObject *ob = NmAST_Exec(n->data.call.params[i]);
-      /* this the last parameter */
-      if (n->data.call.params[i + 1] == NULL){
-        NmObject_PRINT(stdout, ob);
-        fprintf(stdout, "\n");
-      /* this is NOT the last parameter */
-      } else {
-        NmObject_PRINT(stdout, ob);
-        fprintf(stdout, ", ");
-      }
-
-      ret = NmObject_NewFromInt(1);
+  /* first check for the C functions */
+  for (CFuncsList *list = interp->cfuncs; list != NULL; list = list->next){
+    if (!strcmp(list->func->name, name)){
+      return list->func->body(n->data.call.params);
     }
-  /* some non hard-coded function */
-  } else {
-    for (FuncsList *list = interp->funcs; list != NULL; list = list->next){
-      if (!strcmp(list->func->name, name)){
-        ret = NmAST_Exec(list->func->body);
-        break;
-      }
+  }
+  /* and then for the Nemo functions */
+  for (FuncsList *list = interp->funcs; list != NULL; list = list->next){
+    if (!strcmp(list->func->name, name)){
+      return NmAST_Exec(list->func->body);
     }
   }
 
-  return ret;
+  NmError_Error("function '%s' not found", name);
+  /* FIXME */
+  exit(EXIT_FAILURE);
 }
 
 /*

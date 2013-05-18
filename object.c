@@ -73,7 +73,7 @@ void NmNull_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_NULL);
 
-  fprintf(fp, "null");
+  fprintf(fp, "(null)");
 }
 
 /*
@@ -110,6 +110,11 @@ void NmInt_Destroy(NmObject *ob)
   assert(ob->type == OT_INTEGER);
 
   NmMem_Free(ob);
+}
+
+NmObject *NmInt_NewFromVoidPtr(void *p)
+{
+  return NmObject_NewFromInt((int)p);
 }
 
 NmObject *NmObject_NewFromFloat(double f)

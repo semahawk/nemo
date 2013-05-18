@@ -39,6 +39,7 @@ struct InterpState {
   /* list of global variables */
   struct VariablesList *globals;
   /* list of the functions */
+  CFuncsList *cfuncs;
   FuncsList *funcs;
 };
 

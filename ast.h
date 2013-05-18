@@ -144,7 +144,6 @@ typedef enum   BinaryOp  BinaryOp;
 typedef enum   UnaryOp   UnaryOp;
 typedef enum   NodeType  NodeType;
 typedef struct Node      Node;
-typedef struct Params    Params;
 typedef struct Statement Statement;
 
 Node *NmAST_GenInt(int);

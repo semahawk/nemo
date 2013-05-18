@@ -34,7 +34,7 @@
 #include "nemo.h"
 
 /* type of the C functions */
-typedef NmObject *(*NmCFunc)(Params *);
+typedef NmObject *(*NmCFunc)(Node **);
 
 struct Func {
   /* name of the function */
@@ -56,6 +56,12 @@ struct FuncsList {
   struct FuncsList *next;
 };
 
+/* Simple singly linked list */
+struct CFuncsList {
+  struct CFunc *func;
+  struct CFuncsList *next;
+};
+
 /* type of the array elements of list of the functions in modules
  * (ouch, lost myself a bit) */
 typedef struct ModuleFuncs {
@@ -63,6 +69,8 @@ typedef struct ModuleFuncs {
   NmCFunc ptr;
 } NmModuleFuncs;
 
+typedef struct CFuncsList CFuncsList;
+typedef struct CFunc CFunc;
 typedef struct FuncsList FuncsList;
 typedef struct Func Func;
 

@@ -45,21 +45,39 @@
 
 #include "nemo.h"
 
-static NmObject *builtin_print(Params *params)
+static NmObject *builtin_print(Node **params)
 {
-  (void)params;
-  printf("BULITIN PRINT CALLED\n");
+  unsigned i;
+
+  for (i = 0; params != NULL && params[i] != NULL; i++){
+    NmObject *ob = NmAST_Exec(params[i]);
+    /* this the last parameter */
+    if (params[i + 1] == NULL){
+      NmObject_PRINT(stdout, ob);
+      fprintf(stdout, "\n");
+    /* this is NOT the last parameter */
+    } else {
+      NmObject_PRINT(stdout, ob);
+      fprintf(stdout, ", ");
+    }
+  }
 
   return NmObject_NewFromInt(1);
 }
 
+static NmObject *builtin_id(Node **params)
+{
+  return NmInt_NewFromVoidPtr((void *)params[0]);
+}
+
 static NmModuleFuncs module_funcs[] = {
   { "print", builtin_print },
+  { "id", builtin_id },
   { NULL, NULL }
 };
 
-void NmBuiltin_Init(Context *ctx)
+void NmBuiltin_Init(void)
 {
-  Nm_InsertFuncs(ctx, module_funcs);
+  Nm_InitModule(module_funcs);
 }
 
