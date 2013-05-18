@@ -1,8 +1,8 @@
 /*
  *
- * object.c
+ * null.c
  *
- * Created at:  Sat 11 May 2013 20:27:13 CEST 20:27:13
+ * Created at:  Sat 18 May 2013 16:31:21 CEST 16:31:21
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,36 +28,28 @@
  *
  */
 
-/*
- * "False sense of pride, satisfies
- *  There's no reason for suicide
- *  Use your mind, and hope to find
- *  Find the meaning of existence..."
- *
- *  Testament - Sins of Omission
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include "nemo.h"
 
 /*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
+ * Creating the "null" object
  */
-static ObFreeList *free_list = NULL;
+NmObject *NmNull = &(NmObject){
+  .type = OT_NULL,
+  .fn = {
+    .dstr  = NULL,
+    .repr  = NULL,
+    .print = NmNull_Print
+  }
+};
 
-void NmObject_Destroy(NmObject *ob)
+/*
+ * @name - NmNull_Print
+ * @desc - print the "null"
+ */
+void NmNull_Print(FILE *fp, NmObject *ob)
 {
-  ob->fn.dstr(ob);
-}
+  assert(ob->type == OT_NULL);
 
-void NmObject_Tidyup(void)
-{
-  NmInt_Tidyup();
-  NmFloat_Tidyup();
-  NmString_Tidyup();
+  fprintf(fp, "(null)");
 }
 

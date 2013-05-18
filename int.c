@@ -1,8 +1,8 @@
 /*
  *
- * object.c
+ * int.c
  *
- * Created at:  Sat 11 May 2013 20:27:13 CEST 20:27:13
+ * Created at:  Sat 18 May 2013 16:27:42 CEST 16:27:42
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,36 +28,59 @@
  *
  */
 
-/*
- * "False sense of pride, satisfies
- *  There's no reason for suicide
- *  Use your mind, and hope to find
- *  Find the meaning of existence..."
- *
- *  Testament - Sins of Omission
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include "nemo.h"
 
-/*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
 static ObFreeList *free_list = NULL;
 
-void NmObject_Destroy(NmObject *ob)
+/*
+ * @name - NmObject_NewFromInt
+ * @desc - create an object that would contain an int
+ */
+NmObject *NmInt_New(int i)
 {
-  ob->fn.dstr(ob);
+  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
+  NmIntObject *ob = NmMem_Malloc(sizeof(NmIntObject));
+
+  ob->type = OT_INTEGER;
+  ob->i = i;
+  ob->fn.dstr = NmInt_Destroy;
+  ob->fn.print = NmInt_Print;
+
+  /* append to the free_list */
+  list->ob = (NmObject *)ob;
+  list->next = free_list;
+  free_list = list;
+
+  return (NmObject *)ob;
 }
 
-void NmObject_Tidyup(void)
+void NmInt_Print(FILE *fp, NmObject *ob)
 {
-  NmInt_Tidyup();
-  NmFloat_Tidyup();
-  NmString_Tidyup();
+  assert(ob->type == OT_INTEGER);
+
+  fprintf(fp, "%d", ((NmIntObject *)ob)->i);
+}
+
+void NmInt_Destroy(NmObject *ob)
+{
+  assert(ob->type == OT_INTEGER);
+
+  NmMem_Free(ob);
+}
+
+NmObject *NmInt_NewFromVoidPtr(void *p)
+{
+  return NmInt_New((int)p);
+}
+
+void NmInt_Tidyup(void){
+  ObFreeList *list;
+  ObFreeList *next;
+
+  for (list = free_list; list != NULL; list = next){
+    next = list->next;
+    NmObject_Destroy((NmObject *)list->ob);
+    NmMem_Free(list);
+  }
 }
 

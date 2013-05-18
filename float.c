@@ -1,8 +1,8 @@
 /*
  *
- * object.c
+ * float.c
  *
- * Created at:  Sat 11 May 2013 20:27:13 CEST 20:27:13
+ * Created at:  Sat 18 May 2013 16:29:19 CEST 16:29:19
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,36 +28,50 @@
  *
  */
 
-/*
- * "False sense of pride, satisfies
- *  There's no reason for suicide
- *  Use your mind, and hope to find
- *  Find the meaning of existence..."
- *
- *  Testament - Sins of Omission
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include "nemo.h"
 
-/*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
 static ObFreeList *free_list = NULL;
 
-void NmObject_Destroy(NmObject *ob)
+NmObject *NmFloat_New(double f)
 {
-  ob->fn.dstr(ob);
+  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
+  NmFloatObject *ob = NmMem_Malloc(sizeof(NmFloatObject));
+
+  ob->type = OT_FLOAT;
+  ob->f = f;
+  ob->fn.dstr = NmFloat_Destroy;
+  ob->fn.print = NmFloat_Print;
+
+  /* append to the free_list */
+  list->ob = (NmObject *)ob;
+  list->next = free_list;
+  free_list = list;
+
+  return (NmObject *)ob;
 }
 
-void NmObject_Tidyup(void)
+void NmFloat_Print(FILE *fp, NmObject *ob)
 {
-  NmInt_Tidyup();
-  NmFloat_Tidyup();
-  NmString_Tidyup();
+  assert(ob->type == OT_FLOAT);
+
+  fprintf(fp, "%f", ((NmFloatObject *)ob)->f);
+}
+
+void NmFloat_Destroy(NmObject *ob)
+{
+  assert(ob->type == OT_FLOAT);
+
+  NmMem_Free(ob);
+}
+
+void NmFloat_Tidyup(void){
+  ObFreeList *list;
+  ObFreeList *next;
+
+  for (list = free_list; list != NULL; list = next){
+    next = list->next;
+    NmObject_Destroy((NmObject *)list->ob);
+    NmMem_Free(list);
+  }
 }
 

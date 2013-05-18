@@ -179,7 +179,7 @@ NmObject *NmAST_ExecInt(Node *n)
 {
   NmDebug_AST(n, "execute integer node");
 
-  return NmObject_NewFromInt(n->data.i);
+  return NmInt_New(n->data.i);
 }
 
 /*
@@ -220,7 +220,7 @@ NmObject *NmAST_ExecFloat(Node *n)
 {
   NmDebug_AST(n, "execute float node");
 
-  return NmObject_NewFromFloat(n->data.f);
+  return NmFloat_New(n->data.f);
 }
 
 /*
@@ -261,7 +261,7 @@ NmObject *NmAST_ExecString(Node *n)
 {
   NmDebug_AST(n, "execute string node");
 
-  return NmObject_NewFromString(n->data.s);
+  return NmString_New(n->data.s);
 }
 
 /*
@@ -412,7 +412,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     case BINARY_GT:
     case BINARY_LT:
       /* FIXME: to be implemented */
-      ret = NmObject_NewFromInt(73753753);
+      ret = NmInt_New(73753753);
       break;
   }
 
@@ -461,7 +461,7 @@ NmObject *NmAST_ExecUnop(Node *n)
   /* FIXME */
   NmDebug_AST(n, "execute unary operation node");
 
-  return NmObject_NewFromInt(8642573);
+  return NmInt_New(8642573);
 }
 
 /*
@@ -517,7 +517,7 @@ NmObject *NmAST_ExecIf(Node *n)
       NmAST_Exec(elsee);
   }
 
-  return NmObject_NewFromInt(1);
+  return NmInt_New(1);
 }
 
 /*
@@ -587,7 +587,7 @@ NmObject *NmAST_ExecWhile(Node *n)
       NmAST_Exec(elsee);
   }
 
-  return NmObject_NewFromInt(1);
+  return NmInt_New(1);
 }
 
 /*
@@ -663,7 +663,7 @@ NmObject *NmAST_ExecDecl(Node *n)
     new_var->value = value;
   } else {
     /* declared variables get to be a integer with the value of 0 */
-    new_var->value = NmObject_NewFromInt(0);
+    new_var->value = NmInt_New(0);
   }
   new_var->flags = n->data.decl.flags;
   /* append to the globals list */
@@ -671,7 +671,7 @@ NmObject *NmAST_ExecDecl(Node *n)
   new_list->next = interp->globals;
   interp->globals = new_list;
 
-  return NmObject_NewFromInt(1);
+  return NmInt_New(1);
 }
 
 /*
@@ -855,7 +855,7 @@ NmObject *NmAST_ExecFuncDef(Node *n)
   else
     NmDebug_AST(n, "execute function declaration node");
 
-  return NmObject_NewFromInt(1);
+  return NmInt_New(1);
 }
 
 /*

@@ -1,8 +1,8 @@
 /*
  *
- * object.c
+ * string.c
  *
- * Created at:  Sat 11 May 2013 20:27:13 CEST 20:27:13
+ * Created at:  Sat 18 May 2013 16:30:05 CEST 16:30:05
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,36 +28,51 @@
  *
  */
 
-/*
- * "False sense of pride, satisfies
- *  There's no reason for suicide
- *  Use your mind, and hope to find
- *  Find the meaning of existence..."
- *
- *  Testament - Sins of Omission
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include "nemo.h"
 
-/*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
 static ObFreeList *free_list = NULL;
 
-void NmObject_Destroy(NmObject *ob)
+NmObject *NmString_New(char *s)
 {
-  ob->fn.dstr(ob);
+  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
+  NmStringObject *ob = NmMem_Malloc(sizeof(NmStringObject));
+
+  ob->type = OT_STRING;
+  ob->s = NmMem_Strdup(s);
+  ob->fn.dstr = NmString_Destroy;
+  ob->fn.print = NmString_Print;
+
+  /* append to the free_list */
+  list->ob = (NmObject *)ob;
+  list->next = free_list;
+  free_list = list;
+
+  return (NmObject *)ob;
 }
 
-void NmObject_Tidyup(void)
+void NmString_Print(FILE *fp, NmObject *ob)
 {
-  NmInt_Tidyup();
-  NmFloat_Tidyup();
-  NmString_Tidyup();
+  assert(ob->type == OT_STRING);
+
+  fprintf(fp, "%s", ((NmStringObject *)ob)->s);
+}
+
+void NmString_Destroy(NmObject *ob)
+{
+  assert(ob->type == OT_STRING);
+
+  NmMem_Free(((NmStringObject *)ob)->s);
+  NmMem_Free(ob);
+}
+
+void NmString_Tidyup(void){
+  ObFreeList *list;
+  ObFreeList *next;
+
+  for (list = free_list; list != NULL; list = next){
+    next = list->next;
+    NmObject_Destroy((NmObject *)list->ob);
+    NmMem_Free(list);
+  }
 }
 

@@ -7,6 +7,9 @@
 #ifndef NEMO_H
 #define NEMO_H
 
+#include <stdio.h>
+#include <assert.h>
+
 /* version of Nemo, obviously */
 #define VERSION "0.15.0"
 

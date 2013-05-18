@@ -62,7 +62,7 @@ static NmObject *builtin_print(Node **params)
     }
   }
 
-  return NmObject_NewFromInt(1);
+  return NmInt_New(1);
 }
 
 static NmObject *builtin_id(Node **params)

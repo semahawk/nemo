@@ -54,6 +54,7 @@ typedef struct NullObject NmNullObject;
 typedef struct IntObject NmIntObject;
 typedef struct FloatObject NmFloatObject;
 typedef struct StringObject NmStringObject;
+typedef struct ObFreeList ObFreeList;
 
 struct Fn {
   void (*dstr)(NmObject *);
@@ -88,27 +89,35 @@ struct StringObject {
   char *s;
 };
 
+struct ObFreeList {
+  NmObject *ob;
+  ObFreeList *next;
+};
+
 void NmNull_Print(FILE *, NmObject *);
 
 NmObject *NmObject_New(const char *);
 void NmObject_Destroy(NmObject *);
 void NmObject_Tidyup(void);
 
-NmObject *NmObject_NewFromInt(int);
+NmObject *NmInt_New(int);
 void NmInt_Print(FILE *, NmObject *);
 void NmInt_Destroy(NmObject *);
+void NmInt_Tidyup(void);
 NmObject *NmInt_NewFromVoidPtr(void *);
 
-NmObject *NmObject_NewFromFloat(double);
+NmObject *NmFloat_New(double);
 void NmFloat_Print(FILE *, NmObject *);
 void NmFloat_Destroy(NmObject *);
+void NmFloat_Tidyup(void);
 
-NmObject *NmObject_NewFromString(char *);
+NmObject *NmString_New(char *);
 void NmString_Print(FILE *, NmObject *);
 void NmString_Destroy(NmObject *);
+void NmString_Tidyup(void);
 
 /*
- * Extern declaration of the "null" which is definied in object.c
+ * Extern declaration of the "null" which is definied in null.c
  */
 extern NmObject *NmNull;
 
