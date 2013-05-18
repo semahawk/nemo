@@ -58,10 +58,6 @@ static int nmInteractive(void);
 
 int main(int argc, char *argv[])
 {
-  /* used to iterate through the variables list
-   * (when tidying up after them) */
-  VariablesList *g;
-  VariablesList *gnext;
   /* the main node from parsing the given file */
   Node *nodest = NULL;
   /* the main file's interpreter state */
@@ -143,14 +139,6 @@ int main(int argc, char *argv[])
   NmAST_Exec(nodest);
   /* tidy up after executing */
   NmAST_FreeBlock(nodest);
-
-  /* iterate through the global variables */
-  for (g = interp->globals; g != NULL; g = gnext){
-    gnext = g->next;
-    NmMem_Free(g->var->name);
-    NmMem_Free(g->var);
-    NmMem_Free(g);
-  }
 
   /* tidy up */
   NmObject_Tidyup();

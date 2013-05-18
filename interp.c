@@ -51,7 +51,16 @@ InterpState *NmInterpState_GetCurr(void)
 
 void NmInterpState_Destroy(InterpState *interp)
 {
-  /* FIXME */
+  VariablesList *vars = NULL;
+  VariablesList *next = NULL;
+  /* iterate through the global variables */
+  for (vars = interp->globals; vars != NULL; vars = next){
+    next = vars->next;
+    NmMem_Free(vars->var->name);
+    NmMem_Free(vars->var);
+    NmMem_Free(vars);
+  }
+
   NmMem_Free(interp->source);
   NmMem_Free(interp);
 }
