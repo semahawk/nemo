@@ -39,6 +39,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 
@@ -386,6 +387,13 @@ NmObject *NmAST_ExecBinop(Node *n)
         NmError_Error("variable '%s' was not found", name);
         exit(EXIT_FAILURE);
       }
+      /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
+       * to be not-assignable*/
+      if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
+        NmError_Error("cannot change the value of a constant variable '%s'", name);
+        /* FIXME */
+        exit(EXIT_FAILURE);
+      }
       /* actually assign the value */
       ret = NmAST_Exec(n->data.binop.right);
       var->value = ret;
@@ -614,13 +622,14 @@ void NmAST_FreeWhile(Node *n)
  *
  *           my variable;
  */
-Node *NmAST_GenDecl(char *name, Node *value)
+Node *NmAST_GenDecl(char *name, Node *value, uint8_t flags)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_DECL;
   n->data.decl.name = NmMem_Strdup(name);
   n->data.decl.value = value;
+  n->data.decl.flags = flags;
 
   NmDebug_AST(n, "create variable declaration node (name: %s)", name);
 
@@ -648,6 +657,7 @@ NmObject *NmAST_ExecDecl(Node *n)
 
   NmDebug_AST(n, "execute variable declaration node");
 
+  new_var->name = NmMem_Strdup(n->data.decl.name);
   if (n->data.decl.value){
     NmObject *value = NmAST_Exec(n->data.decl.value);
     new_var->value = value;
@@ -655,8 +665,8 @@ NmObject *NmAST_ExecDecl(Node *n)
     /* declared variables get to be a integer with the value of 0 */
     new_var->value = NmObject_NewFromInt(0);
   }
+  new_var->flags = n->data.decl.flags;
   /* append to the globals list */
-  new_var->name = NmMem_Strdup(n->data.decl.name);
   new_list->var = new_var;
   new_list->next = interp->globals;
   interp->globals = new_list;

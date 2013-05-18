@@ -44,6 +44,7 @@ InterpState *NmInterpState_New(void)
   /* add the "null" variable to the global scope */
   null->name = NmMem_Strdup("null");
   null->value = NmNull;
+  NmVar_SETFLAG(null, NMVAR_FLAG_CONST);
   null_list->var = null;
   null_list->next = interp->globals;
   interp->globals = null_list;

@@ -31,12 +31,25 @@
 #ifndef VARS_H
 #define VARS_H
 
+#include <stdint.h>
+
 #include "nemo.h"
+
+/* In both the macros <var> is of type { Variable * } */
+/* a handy macro to set the given <flag> in the given <var> */
+#define NmVar_SETFLAG(var,flag) (var->flags |= 1 << (flag))
+/* a handy macro to get the given <flag> from the given <var> */
+#define NmVar_GETFLAG(var,flag) (var->flags & (1 << (flag)))
+
+/* these numbers define at which bit the flag is stored */
+#define NMVAR_FLAG_CONST 0
 
 /*
  * Type for variables in Nemo
  */
 struct Variable {
+  /* flags, that describe different behaviours */
+  uint8_t flags;
   /* obviously */
   char *name;
   /* the variables value */

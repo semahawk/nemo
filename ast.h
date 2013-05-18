@@ -31,6 +31,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdint.h>
+
 #include "nemo.h"
 #include "object.h"
 
@@ -118,6 +120,7 @@ struct Node {
     struct {
       char *name;
       struct Node *value;
+      uint8_t flags;
     } decl;
 
     struct {
@@ -152,7 +155,7 @@ Node *NmAST_GenBinop(Node *, BinaryOp, Node *);
 Node *NmAST_GenUnop(Node *, UnaryOp);
 Node *NmAST_GenIf(Node *, Node *, Node *);
 Node *NmAST_GenWhile(Node *, Node *, Node *);
-Node *NmAST_GenDecl(char *, Node *);
+Node *NmAST_GenDecl(char *, Node *, uint8_t);
 Node *NmAST_GenCall(char *, Node **);
 Node *NmAST_GenFuncDef(char *, Node *);
 Node *NmAST_GenNop(void);

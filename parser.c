@@ -452,7 +452,11 @@ static Node *expr(LexerState *lex)
    * XXX MY
    */
   if (NmLexer_Accept(lex, SYM_MY)){
+    uint8_t flags = 0;
     NmDebug_Parser("my ");
+    if (NmLexer_Accept(lex, SYM_CONST)){
+      flags |= (1 << NMVAR_FLAG_CONST);
+    }
     NmLexer_Force(lex, SYM_NAME);
     /* NmLexer_Force skips the symbol so we have to get to the previous one */
     name = lex->current->prev->sym.value.s;
@@ -464,7 +468,7 @@ static Node *expr(LexerState *lex)
       NmDebug_Parser(" = ");
       value = assign_expr(lex);
     }
-    ret = NmAST_GenDecl(name, value);
+    ret = NmAST_GenDecl(name, value, flags);
   }
   /*
    * XXX PRINT

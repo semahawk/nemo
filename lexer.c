@@ -55,6 +55,7 @@ static struct Keyword {
 } keywords[] =
 {
   { "my",    SYM_MY     },
+  { "const", SYM_CONST  },
   { "if",    SYM_IF     },
   { "while", SYM_WHILE  },
   { "else",  SYM_ELSE   },
