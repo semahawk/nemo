@@ -35,9 +35,18 @@ static InterpState *curr = NULL;
 InterpState *NmInterpState_New(void)
 {
   InterpState *interp = NmMem_Malloc(sizeof(InterpState));
+  VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));
+  Variable *null = NmMem_Malloc(sizeof(Variable));
 
   interp->funcs = NULL;
   interp->globals = NULL;
+
+  /* add the "null" variable to the global scope */
+  null->name = NmMem_Strdup("null");
+  null->value = NmNull;
+  null_list->var = null;
+  null_list->next = interp->globals;
+  interp->globals = null_list;
 
   curr = interp;
 

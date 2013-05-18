@@ -354,6 +354,7 @@ Node *NmAST_GenBinop(Node *left, BinaryOp op, Node *right)
  */
 NmObject *NmAST_ExecBinop(Node *n)
 {
+  InterpState *interp = NmInterpState_GetCurr();
   NmObject *ret;
 
   NmDebug_AST(n, "execute binary operation node");
@@ -372,9 +373,8 @@ NmObject *NmAST_ExecBinop(Node *n)
         exit(EXIT_FAILURE);
       }
       name = n->data.binop.left->data.s;
-      printf("### globals are not working, FIXEM\n");
       /* iterate through the variables */
-      for (p = NULL; p != NULL; p = p->next){
+      for (p = interp->globals; p != NULL; p = p->next){
         if (!strcmp(p->var->name, name)){
           found = TRUE;
           var = p->var;
