@@ -7,13 +7,24 @@ dynamically and strongly typed programming language written entirely in C.
 Install
 =======
 
-*1* Obtain the sources
+**1** Obtain the sources
 
-*2* Compile
+.. code-block:: sh
 
-.. code-block:: bash
-   make
-   make install
+    $ git clone https://github.com/semahawk/nemo.git
+
+**2** Compile
+
+.. code-block:: sh
+
+    $ make
+    $ sudo make install
+
+Dependencies
+============
+
+* a C compiler with C99 support (tested on GCC and Clang)
+* make
 
 License
 =======
