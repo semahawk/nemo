@@ -34,6 +34,7 @@
 #include <stdio.h>
 
 #include "nemo.h"
+#include "ast.h"
 
 #define NmObject_PRINT(fp,ob) ob->fn.print(fp, ob)
 
@@ -45,7 +46,8 @@ enum Type {
   OT_NULL,
   OT_INTEGER,
   OT_FLOAT,
-  OT_STRING
+  OT_STRING,
+  OT_ARRAY
 };
 
 typedef enum Type NmObjectType;
@@ -54,7 +56,11 @@ typedef struct NullObject NmNullObject;
 typedef struct IntObject NmIntObject;
 typedef struct FloatObject NmFloatObject;
 typedef struct StringObject NmStringObject;
+typedef struct ArrayObject NmArrayObject;
 typedef struct ObFreeList ObFreeList;
+
+/* forward */
+struct Node;
 
 struct Fn {
   void (*dstr)(NmObject *);
@@ -89,6 +95,12 @@ struct StringObject {
   char *s;
 };
 
+struct ArrayObject {
+  NMOBJECT_HEAD
+  size_t nmemb;
+  NmObject **a;
+};
+
 struct ObFreeList {
   NmObject *ob;
   ObFreeList *next;
@@ -115,6 +127,14 @@ NmObject *NmString_New(char *);
 void NmString_Print(FILE *, NmObject *);
 void NmString_Destroy(NmObject *);
 void NmString_Tidyup(void);
+
+NmObject *NmArray_New(size_t);
+NmObject *NmArray_NewFromNode(struct Node *);
+void NmArray_Print(FILE *, NmObject *);
+void NmArray_Destroy(NmObject *);
+void NmArray_Tidyup(void);
+
+#define NmArray_SETELEM(arr,i,v) (((NmArrayObject *)arr)->a[i] = v)
 
 /*
  * Extern declaration of the "null" which is definied in null.c

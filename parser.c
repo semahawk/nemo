@@ -65,6 +65,7 @@
 
 static Node *expr(LexerState *lex);
 static Node *block(LexerState *lex);
+static Node **params_list(LexerState *lex);
 
 /*
  * primary_expr: INTEGER
@@ -77,6 +78,7 @@ static Node *block(LexerState *lex);
 static Node *primary_expr(LexerState *lex)
 {
   Node *new = NULL;
+  Node **arr_inside = NULL;
 
   /*
    * XXX INTEGER
@@ -120,6 +122,16 @@ static Node *primary_expr(LexerState *lex)
     NmDebug_Parser(")");
   }
   /*
+   * XXX '[' params_list ']'
+   */
+  else if (NmLexer_Accept(lex, SYM_LBRACKET)){
+    NmDebug_Parser("[");
+    arr_inside = params_list(lex);
+    new = NmAST_GenArray(arr_inside);
+    NmLexer_Force(lex, SYM_RBRACKET);
+    NmDebug_Parser("]");
+  }
+  /*
    * XXX EOS
    */
   else if (NmLexer_Accept(lex, SYM_EOS)){
@@ -155,8 +167,13 @@ static Node **params_list(LexerState *lex)
 
   params[counter++] = first_expr;
   while (NmLexer_Accept(lex, SYM_COMMA)){
+    NmDebug_Parser(", ");
     Node *next_expr = expr(lex);
-    if (counter + 1 > nmemb){
+    /*
+     * Always make the array be one element bigger than supposed to, so the last
+     * element is NULL, so traversing is easy
+     */
+    if (counter + 1 > nmemb - 1){
       nmemb++;
       params = NmMem_Realloc(params, nmemb * sizeof(Node));
     }

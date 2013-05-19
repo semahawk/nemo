@@ -5,7 +5,7 @@ PREFIX  = /usr/local
 
 OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o
 OBJECTS += interp.o builtin.o
-OBJECTS += int.o float.o string.o null.o
+OBJECTS += int.o float.o string.o null.o array.o
 
 LIBS = -lreadline
 

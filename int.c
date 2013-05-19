@@ -30,6 +30,10 @@
 
 #include "nemo.h"
 
+/*
+ * Simple singly linked list that contains any object that was allocated and
+ * needs to be freed.
+ */
 static ObFreeList *free_list = NULL;
 
 /*

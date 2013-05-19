@@ -1,8 +1,8 @@
 /*
  *
- * string.c
+ * array.c
  *
- * Created at:  Sat 18 May 2013 16:30:05 CEST 16:30:05
+ * Created at:  Sun 19 May 2013 15:27:38 CEST 15:27:38
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -36,15 +36,17 @@
  */
 static ObFreeList *free_list = NULL;
 
-NmObject *NmString_New(char *s)
+NmObject *NmArray_New(size_t nmemb)
 {
   ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmStringObject *ob = NmMem_Malloc(sizeof(NmStringObject));
+  NmArrayObject *ob = NmMem_Malloc(sizeof(NmArrayObject));
+  NmObject **arr = NmMem_Malloc(nmemb * sizeof(NmObject));
 
-  ob->type = OT_STRING;
-  ob->s = NmMem_Strdup(s);
-  ob->fn.dstr = NmString_Destroy;
-  ob->fn.print = NmString_Print;
+  ob->type = OT_ARRAY;
+  ob->fn.dstr = NmArray_Destroy;
+  ob->fn.print = NmArray_Print;
+  ob->nmemb = nmemb;
+  ob->a = arr;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -54,22 +56,30 @@ NmObject *NmString_New(char *s)
   return (NmObject *)ob;
 }
 
-void NmString_Print(FILE *fp, NmObject *ob)
+void NmArray_Print(FILE *fp, NmObject *ob)
 {
-  assert(ob->type == OT_STRING);
+  assert(ob);
+  assert(ob->type == OT_ARRAY);
 
-  fprintf(fp, "%s", ((NmStringObject *)ob)->s);
+  NmArrayObject *arr = (NmArrayObject *)ob;
+
+  fprintf(fp, "[");
+  for (size_t i = 0; i < arr->nmemb; i++){
+    NmObject_PRINT(fp, arr->a[i]);
+    if (i < arr->nmemb - 1){
+      fprintf(fp, ", ");
+    }
+  }
+  fprintf(fp, "]");
 }
 
-void NmString_Destroy(NmObject *ob)
+void NmArray_Destroy(NmObject *ob)
 {
-  assert(ob->type == OT_STRING);
-
-  NmMem_Free(((NmStringObject *)ob)->s);
+  NmMem_Free(((NmArrayObject *)ob)->a);
   NmMem_Free(ob);
 }
 
-void NmString_Tidyup(void){
+void NmArray_Tidyup(void){
   ObFreeList *list;
   ObFreeList *next;
 

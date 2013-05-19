@@ -60,6 +60,7 @@ static NmObject *(*execFuncs[])(Node *) =
   NmAST_ExecInt,
   NmAST_ExecFloat,
   NmAST_ExecString,
+  NmAST_ExecArray,
   NmAST_ExecName,
   NmAST_ExecBinop,
   NmAST_ExecUnop,
@@ -81,6 +82,7 @@ static void (*freeFuncs[])(Node *) =
   NmAST_FreeInt,
   NmAST_FreeFloat,
   NmAST_FreeString,
+  NmAST_FreeArray,
   NmAST_FreeName,
   NmAST_FreeBinop,
   NmAST_FreeUnop,
@@ -276,6 +278,65 @@ void NmAST_FreeString(Node *n)
   NmDebug_AST(n, "free string node");
 
   NmMem_Free(n->data.s);
+  NmMem_Free(n);
+}
+
+/*
+ * @name - NmAST_GenArray
+ * @desc - create a node holding a literal array
+ */
+Node *NmAST_GenArray(Node **a)
+{
+  Node *n = NmMem_Malloc(sizeof(Node));
+  size_t nmemb = 0;
+
+  /* count how many elements there are */
+  for (Node **p = a; *p != NULL; p++)
+    nmemb++;
+
+  n->type = NT_ARRAY;
+  n->data.array.nmemb = nmemb;
+  n->data.array.a = a;
+
+  NmDebug_AST(n, "create array node (nmemb: %u, values: %p)", nmemb, (void *)a);
+
+  return n;
+}
+
+/*
+ * @name - NmAST_ExecArray
+ * @desc - return the value of the string
+ */
+NmObject *NmAST_ExecArray(Node *n)
+{
+  NmObject *ob = NmArray_New(n->data.array.nmemb);
+  size_t i = 0;
+
+  NmDebug_AST(n, "execute array node");
+
+  for (Node **p = n->data.array.a; *p != NULL; p++, i++){
+    NmArray_SETELEM(ob, i, NmAST_Exec(*p));
+  }
+
+  return ob;
+}
+
+/*
+ * @name - NmAST_FreeArray
+ * @desc - responsible for freeing literal string node
+ */
+void NmAST_FreeArray(Node *n)
+{
+  assert(n);
+  assert(n->type == NT_ARRAY);
+
+  NmDebug_AST(n, "free array node");
+
+  for (Node **p = n->data.array.a; *p != NULL; p++){
+    NmAST_Free(*p);
+  }
+
+  NmMem_Free(n->data.array.a);
   NmMem_Free(n);
 }
 

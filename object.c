@@ -37,17 +37,7 @@
  *  Testament - Sins of Omission
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include "nemo.h"
-
-/*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
-static ObFreeList *free_list = NULL;
 
 void NmObject_Destroy(NmObject *ob)
 {
@@ -59,5 +49,6 @@ void NmObject_Tidyup(void)
   NmInt_Tidyup();
   NmFloat_Tidyup();
   NmString_Tidyup();
+  NmArray_Tidyup();
 }
 

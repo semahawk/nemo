@@ -41,6 +41,7 @@ enum NodeType {
   NT_INTEGER,
   NT_FLOAT,
   NT_STRING,
+  NT_ARRAY,
   NT_NAME,
   NT_BINOP,
   NT_UNOP,
@@ -90,9 +91,14 @@ struct Statement {
 struct Node {
   enum NodeType type;
   union {
-    int i;
-    float f;
-    char *s;
+    int i;       /* integer */
+    float f;     /* float   */
+    char *s;     /* string  */
+
+    struct {
+      size_t nmemb;
+      struct Node **a;
+    } array;
 
     struct {
       enum BinaryOp op;
@@ -149,6 +155,7 @@ typedef struct Statement Statement;
 Node *NmAST_GenInt(int);
 Node *NmAST_GenFloat(float);
 Node *NmAST_GenString(char *);
+Node *NmAST_GenArray(Node **);
 Node *NmAST_GenName(char *);
 Node *NmAST_GenBinop(Node *, BinaryOp, Node *);
 Node *NmAST_GenUnop(Node *, UnaryOp);
@@ -162,6 +169,7 @@ Node *NmAST_GenNop(void);
 NmObject *NmAST_ExecInt(Node *);
 NmObject *NmAST_ExecFloat(Node *);
 NmObject *NmAST_ExecString(Node *);
+NmObject *NmAST_ExecArray(Node *);
 NmObject *NmAST_ExecName(Node *);
 NmObject *NmAST_ExecBinop(Node *);
 NmObject *NmAST_ExecUnop(Node *);
@@ -174,20 +182,21 @@ NmObject *NmAST_ExecFuncDef(Node *);
 NmObject *NmAST_ExecNop(Node *);
 NmObject *NmAST_Exec(Node *);
 
-void  NmAST_FreeInt(Node *);
-void  NmAST_FreeFloat(Node *);
-void  NmAST_FreeString(Node *);
-void  NmAST_FreeName(Node *);
-void  NmAST_FreeBinop(Node *);
-void  NmAST_FreeUnop(Node *);
-void  NmAST_FreeIf(Node *);
-void  NmAST_FreeWhile(Node *);
-void  NmAST_FreeDecl(Node *);
-void  NmAST_FreeCall(Node *);
-void  NmAST_FreeBlock(Node *);
-void  NmAST_FreeNop(Node *);
-void  NmAST_FreeFuncDef(Node *);
-void  NmAST_Free(Node *);
+void NmAST_FreeInt(Node *);
+void NmAST_FreeFloat(Node *);
+void NmAST_FreeString(Node *);
+void NmAST_FreeArray(Node *);
+void NmAST_FreeName(Node *);
+void NmAST_FreeBinop(Node *);
+void NmAST_FreeUnop(Node *);
+void NmAST_FreeIf(Node *);
+void NmAST_FreeWhile(Node *);
+void NmAST_FreeDecl(Node *);
+void NmAST_FreeCall(Node *);
+void NmAST_FreeBlock(Node *);
+void NmAST_FreeNop(Node *);
+void NmAST_FreeFuncDef(Node *);
+void NmAST_Free(Node *);
 
 #endif /* AST_H */
 
