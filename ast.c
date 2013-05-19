@@ -286,11 +286,27 @@ void NmAST_FreeString(Node *n)
 Node *NmAST_GenName(char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
+  InterpState *interp = NmInterpState_GetCurr();
+  VariablesList *p;
+  BOOL found = FALSE;
 
   n->type = NT_NAME;
   n->data.s = NmMem_Strdup(s);
 
   NmDebug_AST(n, "create name node (name: %s)", s);
+
+  /* search for the variable */
+  for (p = interp->globals; p != NULL; p = p->next){
+    if (!strcmp(p->var->name, n->data.decl.name)){
+      found = TRUE;
+      break;
+    }
+  }
+
+  if (!found){
+    NmError_Error("variable '%s' was not found");
+    exit(EXIT_FAILURE);
+  }
 
   return n;
 }
@@ -633,15 +649,6 @@ Node *NmAST_GenDecl(char *name, Node *value, uint8_t flags)
 
   NmDebug_AST(n, "create variable declaration node (name: %s)", name);
 
-  return n;
-}
-
-/*
- * @name - NmAST_ExecDecl
- * @desc - declare/define the variable and return 1
- */
-NmObject *NmAST_ExecDecl(Node *n)
-{
   InterpState *interp = NmInterpState_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *new_var = NmMem_Malloc(sizeof(Variable));
@@ -654,8 +661,6 @@ NmObject *NmAST_ExecDecl(Node *n)
       exit(EXIT_FAILURE);
     }
   }
-
-  NmDebug_AST(n, "execute variable declaration node");
 
   new_var->name = NmMem_Strdup(n->data.decl.name);
   if (n->data.decl.value){
@@ -670,6 +675,20 @@ NmObject *NmAST_ExecDecl(Node *n)
   new_list->var = new_var;
   new_list->next = interp->globals;
   interp->globals = new_list;
+
+  return n;
+}
+
+/*
+ * @name - NmAST_ExecDecl
+ * @desc - declare/define the variable and return 1
+ */
+NmObject *NmAST_ExecDecl(Node *n)
+{
+  /* unused parameter */
+  (void)n;
+
+  NmDebug_AST(n, "execute variable declaration node");
 
   return NmInt_New(1);
 }

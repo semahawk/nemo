@@ -1,43 +1,22 @@
-# Nemo
+Nemo
+****
 
-# About
+Nemo is a scripting, interpreted (or compiled to bytecode (but not yet)),
+dynamically and strongly typed programming language written entirely in C.
 
-Nemo is a programming language written entirely in C.
-Nemo is a interpreted (or compiled to bytecode), scripting language, dynamically and weakly typed.
+Install
+=======
 
-# Installing
+*1* Obtain the sources
 
-In order to install Nemo, you'd have to download the sources (for example by
-[clicking me](http://github.com/semahawk/nemo/tarball/master)) and then you'd
-have to run:
+*2* Compile
 
-    make
+.. code-block:: bash
+   make
+   make install
 
-to compile the sources, and then
-
-    make install
-
-to install it (you probably would need super user to do it).
-
-__Note:__ at the moment Nemo is installed in `/usr/local`, that will be
-customizable when we have that configure scripts.
-
-# Dependencies
-
-+ gcc (`4.5.4`)
-+ make (`3.82`)
-
-Most distributions should have those out of the box, but still.
-
-Nemo has been tested, and ran multiple number of times, using these versions,
-and it is confirmed that they work. Older versions may be working, but on my
-computer I have only those.
-
-# Language
-
-Nemo is a WIP.
-
-# License
+License
+=======
 
 Copyright (c) 2012-2013 Szymon Urbaś <szymon.urbas@aol.com>
 
