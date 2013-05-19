@@ -11,7 +11,7 @@
 #include <assert.h>
 
 /* version of Nemo, obviously */
-#define VERSION "0.15.0"
+#define VERSION "0.15.1"
 
 /* our little own BOOL type */
 #define  BOOL short
