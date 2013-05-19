@@ -58,7 +58,7 @@ void NmString_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  fprintf(fp, "%s", ((NmStringObject *)ob)->s);
+  fprintf(fp, "\"%s\"", ((NmStringObject *)ob)->s);
 }
 
 void NmString_Destroy(NmObject *ob)

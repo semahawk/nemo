@@ -34,7 +34,6 @@
 #include <stdio.h>
 
 #include "nemo.h"
-#include "ast.h"
 
 #define NmObject_PRINT(fp,ob) ob->fn.print(fp, ob)
 
