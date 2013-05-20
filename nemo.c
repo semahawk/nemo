@@ -117,6 +117,9 @@ int main(int argc, char *argv[])
   }
   NmDebug_CALLOC(NM, 1, sizeof(Nemo));
 
+  /* fetch the builtin functions */
+  NmBuiltin_Init();
+
   /* an argument was passed */
   if (optind < argc){
     strcpy(input, argv[optind++]);
@@ -130,9 +133,6 @@ int main(int argc, char *argv[])
 
   /* set the sources name */
   interp->source = NmMem_Strdup(input);
-
-  /* fetch the builtin functions */
-  NmBuiltin_Init();
 
   /* parse the file */
   nodest = NmParser_ParseFile(interp->source);
