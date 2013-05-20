@@ -39,7 +39,10 @@ NmObject *NmNull = &(NmObject){
     .dstr  = NULL,
     .repr  = NULL,
     .print = NmNull_Print,
-    .binary_index = NULL
+    .binary = {
+      .add = NULL,
+      .index = NULL
+    }
   }
 };
 

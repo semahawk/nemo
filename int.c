@@ -49,7 +49,8 @@ NmObject *NmInt_New(int i)
   ob->i = i;
   ob->fn.dstr = NmInt_Destroy;
   ob->fn.print = NmInt_Print;
-  ob->fn.binary_index = NULL;
+  ob->fn.binary.add = NmInt_Add;
+  ob->fn.binary.index = NULL;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -57,6 +58,11 @@ NmObject *NmInt_New(int i)
   free_list = list;
 
   return (NmObject *)ob;
+}
+
+NmObject *NmInt_Add(NmObject *left, NmObject *right)
+{
+  return NmInt_New(((NmIntObject *)left)->i + ((NmIntObject *)right)->i);
 }
 
 void NmInt_Print(FILE *fp, NmObject *ob)

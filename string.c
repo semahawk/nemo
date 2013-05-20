@@ -45,7 +45,9 @@ NmObject *NmString_New(char *s)
   ob->s = NmMem_Strdup(s);
   ob->fn.dstr = NmString_Destroy;
   ob->fn.print = NmString_Print;
-  ob->fn.binary_index = NmString_Index;
+  /*ob->fn.binary.add = NmString_Add;*/
+  ob->fn.binary.add = NULL;
+  ob->fn.binary.index = NmString_Index;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -67,7 +69,9 @@ NmObject *NmString_NewFromChar(char c)
   ob->s[1] = '\0';
   ob->fn.dstr = NmString_Destroy;
   ob->fn.print = NmString_Print;
-  ob->fn.binary_index = NmString_Index;
+  /*ob->fn.binary.add = NmString_Add;*/
+  ob->fn.binary.add = NULL;
+  ob->fn.binary.index = NmString_Index;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;

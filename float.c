@@ -45,7 +45,8 @@ NmObject *NmFloat_New(double f)
   ob->f = f;
   ob->fn.dstr = NmFloat_Destroy;
   ob->fn.print = NmFloat_Print;
-  ob->fn.binary_index = NULL;
+  ob->fn.binary.add = NmFloat_Add;
+  ob->fn.binary.index = NULL;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -53,6 +54,11 @@ NmObject *NmFloat_New(double f)
   free_list = list;
 
   return (NmObject *)ob;
+}
+
+NmObject *NmFloat_Add(NmObject *left, NmObject *right)
+{
+  return NmFloat_New(((NmFloatObject *)left)->f + ((NmFloatObject *)right)->f);
 }
 
 void NmFloat_Print(FILE *fp, NmObject *ob)

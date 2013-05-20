@@ -433,84 +433,104 @@ Node *NmAST_GenBinop(Node *left, BinaryOp op, Node *right)
 NmObject *NmAST_ExecBinop(Node *n)
 {
   InterpState *interp = NmInterpState_GetCurr();
-  NmObject *ret;
 
   Node *left  = n->data.binop.left;
   Node *right = n->data.binop.right;
 
+  NmObject *ob_left = NmAST_Exec(left);
+  NmObject *ob_right = NmAST_Exec(right);
+  NmObject *ret;
+
   NmDebug_AST(n, "execute binary operation node");
 
-  switch (n->data.binop.op){
-    case BINARY_ASSIGN:
-    {
-      Variable *var;
-      VariablesList *p;
-      char *name;
-      BOOL found = FALSE;
-      /* left-hand side of the assignment must be a name
-       * (at least for now (30 Apr 2013)) */
-      if (n->data.binop.left->type != NT_NAME){
-        NmError_Error("expected an lvalue in assignment");
-        exit(EXIT_FAILURE);
-      }
-      name = n->data.binop.left->data.s;
-      /* iterate through the variables */
-      for (p = interp->globals; p != NULL; p = p->next){
-        if (!strcmp(p->var->name, name)){
-          found = TRUE;
-          var = p->var;
-          break;
-        }
-      }
-      /* error if the variable was not found */
-      if (!found){
-        NmError_Error("variable '%s' was not found", name);
-        exit(EXIT_FAILURE);
-      }
-      /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
-       * to be not-assignable*/
-      if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
-        NmError_Error("cannot change the value of a constant variable '%s'", name);
-        /* FIXME */
-        exit(EXIT_FAILURE);
-      }
-      /* actually assign the value */
-      ret = NmAST_Exec(n->data.binop.right);
-      var->value = ret;
-      break;
+  /* okay, that's easy things here */
+  /*
+   * XXX BINARY_ASSIGN
+   */
+  if (n->data.binop.op == BINARY_ASSIGN){
+    Variable *var;
+    VariablesList *p;
+    char *name;
+    BOOL found = FALSE;
+    /* left-hand side of the assignment must be a name
+     * (at least for now (30 Apr 2013)) */
+    if (n->data.binop.left->type != NT_NAME){
+      NmError_Error("expected an lvalue in assignment");
+      exit(EXIT_FAILURE);
     }
-    case BINARY_ADD:
-    case BINARY_SUB:
-    case BINARY_MUL:
-    case BINARY_DIV:
-    case BINARY_MOD:
-    case BINARY_ASSIGN_ADD:
-    case BINARY_ASSIGN_SUB:
-    case BINARY_ASSIGN_MUL:
-    case BINARY_ASSIGN_DIV:
-    case BINARY_ASSIGN_MOD:
-    case BINARY_GT:
-    case BINARY_LT:
-      /* FIXME: to be implemented */
-      ret = NmInt_New(73753753);
-      break;
-    case BINARY_INDEX: {
-      NmObject *ob_left = NmAST_Exec(left);
-      NmObject *ob_right = NmAST_Exec(right);
-      if (!ob_left->fn.binary_index){
-        NmError_Error("invalid binary operator '[]' for type '%d'", ob_left->type);
-        /* FIXME */
-        exit(EXIT_FAILURE);
+    name = n->data.binop.left->data.s;
+    /* iterate through the variables */
+    for (p = interp->globals; p != NULL; p = p->next){
+      if (!strcmp(p->var->name, name)){
+        found = TRUE;
+        var = p->var;
+        break;
       }
-      if (ob_right->type != OT_INTEGER){
-        NmError_Error("expected type 'int' for the indexing value");
-        /* FIXME */
+    }
+    /* error if the variable was not found */
+    if (!found){
+      NmError_Error("variable '%s' was not found", name);
+      exit(EXIT_FAILURE);
+    }
+    /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
+     * to be not-assignable*/
+    if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
+      NmError_Error("cannot change the value of a constant variable '%s'", name);
+      /* FIXME */
+      exit(EXIT_FAILURE);
+    }
+    /* actually assign the value */
+    ret = NmAST_Exec(n->data.binop.right);
+    var->value = ret;
+
+    return ret;
+  }
+  /*
+   * XXX BINARY_INDEX
+   */
+  else if (n->data.binop.op == BINARY_INDEX){
+    if (!ob_left->fn.binary.index){
+      NmError_Error("invalid binary operator '[]' for type '%d'", ob_left->type);
+      /* FIXME */
+      exit(EXIT_FAILURE);
+    }
+    if (ob_right->type != OT_INTEGER){
+      NmError_Error("expected type 'int' for the indexing value");
+      /* FIXME */
+      exit(EXIT_FAILURE);
+    }
+
+    return ob_left->fn.binary.index(ob_left, ob_right);
+  }
+
+#define op(FUNC,TYPE) \
+  case TYPE: \
+  { \
+    if (!ob_left->fn.binary.FUNC){ \
+      /* FIXME: representing the type */ \
+      NmError_Error("invalid binary operator %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type); \
+      /* FIXME: shouldn't exit here */ \
+      exit(EXIT_FAILURE); \
+    } \
+\
+    ret = ob_left->fn.binary.FUNC(ob_left, ob_right); \
+    break; \
+  }
+
+  /* it's all easy when the two types are the same, just look if the type has
+   * some function that does the operation, and simply run it and simply return
+   * it's result */
+  if (ob_left->type == ob_right->type){
+    switch (n->data.binop.op){
+      op(add, BINARY_ADD);
+      default:
+        NmError_Error("invalid binary operation %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type);
+        /* FIXME: shouldn't exit here */
         exit(EXIT_FAILURE);
-      }
-      ret = ob_left->fn.binary_index(ob_left, ob_right);
-      break;
     }
   }
+
+#undef op
 
   return ret;
 }

@@ -125,7 +125,6 @@ int main(int argc, char *argv[])
     /*
      * XXX exitting code here
      */
-    NmInterpState_Destroy();
     return nmInteractive();
   }
 
@@ -159,8 +158,7 @@ static int nmInteractive(void)
   /* result of the executed input */
   NmObject *ob;
   /* create the interpreter state */
-  InterpState *interp = NmInterpState_New();
-  interp->source = "stdin";
+  NmInterpState_GetCurr()->source = "stdin";
 
   printf("Welcome to the Nemo " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");

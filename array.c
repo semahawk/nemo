@@ -45,7 +45,9 @@ NmObject *NmArray_New(size_t nmemb)
   ob->type = OT_ARRAY;
   ob->fn.dstr = NmArray_Destroy;
   ob->fn.print = NmArray_Print;
-  ob->fn.binary_index = NmArray_Index;
+  /*ob->fn.binary.add = NmArray_Add;*/
+  ob->fn.binary.add = NULL;
+  ob->fn.binary.index = NmArray_Index;
   ob->nmemb = nmemb;
   ob->a = arr;
 
