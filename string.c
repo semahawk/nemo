@@ -45,6 +45,29 @@ NmObject *NmString_New(char *s)
   ob->s = NmMem_Strdup(s);
   ob->fn.dstr = NmString_Destroy;
   ob->fn.print = NmString_Print;
+  ob->fn.binary_index = NmString_Index;
+
+  /* append to the free_list */
+  list->ob = (NmObject *)ob;
+  list->next = free_list;
+  free_list = list;
+
+  return (NmObject *)ob;
+}
+
+NmObject *NmString_NewFromChar(char c)
+{
+  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
+  NmStringObject *ob = NmMem_Malloc(sizeof(NmStringObject));
+
+  ob->type = OT_STRING;
+  /* create this tiny string */
+  ob->s = NmMem_Malloc(2);
+  ob->s[0] = c;
+  ob->s[1] = '\0';
+  ob->fn.dstr = NmString_Destroy;
+  ob->fn.print = NmString_Print;
+  ob->fn.binary_index = NmString_Index;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -59,6 +82,11 @@ void NmString_Print(FILE *fp, NmObject *ob)
   assert(ob->type == OT_STRING);
 
   fprintf(fp, "\"%s\"", ((NmStringObject *)ob)->s);
+}
+
+NmObject *NmString_Index(NmObject *string, NmObject *index)
+{
+  return NmString_NewFromChar(((NmStringObject *)string)->s[((NmIntObject *)index)->i]);
 }
 
 void NmString_Destroy(NmObject *ob)

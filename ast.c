@@ -435,6 +435,9 @@ NmObject *NmAST_ExecBinop(Node *n)
   InterpState *interp = NmInterpState_GetCurr();
   NmObject *ret;
 
+  Node *left  = n->data.binop.left;
+  Node *right = n->data.binop.right;
+
   NmDebug_AST(n, "execute binary operation node");
 
   switch (n->data.binop.op){
@@ -491,6 +494,22 @@ NmObject *NmAST_ExecBinop(Node *n)
       /* FIXME: to be implemented */
       ret = NmInt_New(73753753);
       break;
+    case BINARY_INDEX: {
+      NmObject *ob_left = NmAST_Exec(left);
+      NmObject *ob_right = NmAST_Exec(right);
+      if (!ob_left->fn.binary_index){
+        NmError_Error("invalid binary operator '[]' for type '%d'", ob_left->type);
+        /* FIXME */
+        exit(EXIT_FAILURE);
+      }
+      if (ob_right->type != OT_INTEGER){
+        NmError_Error("expected type 'int' for the indexing value");
+        /* FIXME */
+        exit(EXIT_FAILURE);
+      }
+      ret = ob_left->fn.binary_index(ob_left, ob_right);
+      break;
+    }
   }
 
   return ret;
@@ -1007,6 +1026,7 @@ static const char *binopToS(BinaryOp op)
     case BINARY_ASSIGN_MUL: return "'*='";
     case BINARY_ASSIGN_DIV: return "'/='";
     case BINARY_ASSIGN_MOD: return "'%='";
+    case BINARY_INDEX:      return "'[]'";
   }
 
   return "#unknown#binopToS#";

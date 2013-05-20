@@ -65,6 +65,8 @@ struct Fn {
   void (*dstr)(NmObject *);
   NmObject *(*repr)(NmObject *);
   void (*print)(FILE *, NmObject *);
+  /* binary operation functions */
+  NmObject *(*binary_index)(NmObject *, NmObject *);
 };
 
 #define NMOBJECT_HEAD                      \
@@ -124,16 +126,19 @@ void NmFloat_Tidyup(void);
 
 NmObject *NmString_New(char *);
 void NmString_Print(FILE *, NmObject *);
+NmObject *NmString_Index(NmObject *, NmObject *);
 void NmString_Destroy(NmObject *);
 void NmString_Tidyup(void);
 
 NmObject *NmArray_New(size_t);
 NmObject *NmArray_NewFromNode(struct Node *);
 void NmArray_Print(FILE *, NmObject *);
+NmObject *NmArray_Index(NmObject *, NmObject *);
 void NmArray_Destroy(NmObject *);
 void NmArray_Tidyup(void);
-
+/* some handy macros for array elements getting/setting */
 #define NmArray_SETELEM(arr,i,v) (((NmArrayObject *)arr)->a[i] = v)
+#define NmArray_GETELEM(arr,i)   (((NmArrayObject *)arr)->a[i])
 
 /*
  * Extern declaration of the "null" which is definied in null.c

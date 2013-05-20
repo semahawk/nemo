@@ -45,6 +45,7 @@ NmObject *NmArray_New(size_t nmemb)
   ob->type = OT_ARRAY;
   ob->fn.dstr = NmArray_Destroy;
   ob->fn.print = NmArray_Print;
+  ob->fn.binary_index = NmArray_Index;
   ob->nmemb = nmemb;
   ob->a = arr;
 
@@ -71,6 +72,11 @@ void NmArray_Print(FILE *fp, NmObject *ob)
     }
   }
   fprintf(fp, "]");
+}
+
+NmObject *NmArray_Index(NmObject *array, NmObject *index)
+{
+  return NmArray_GETELEM(array, ((NmIntObject *)index)->i);
 }
 
 void NmArray_Destroy(NmObject *ob)

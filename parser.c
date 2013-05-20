@@ -198,7 +198,8 @@ static Node *postfix_expr(LexerState *lex)
 {
   Node *target = NULL;
   Node *ret = target = primary_expr(lex);
-  Node ** params;
+  Node **params;
+  Node *index;
   char *name = NULL;
 
   /*
@@ -207,6 +208,7 @@ static Node *postfix_expr(LexerState *lex)
   if (NmLexer_Accept(lex, SYM_LPAREN)){
     if (target->type != NT_NAME){
       NmError_Lex(lex, "expected a name for a function call, not %s", symToS(lex->current->sym.type));
+      /* FIXME */
       exit(EXIT_FAILURE);
     }
     name = target->data.s;
@@ -217,6 +219,21 @@ static Node *postfix_expr(LexerState *lex)
     ret = NmAST_GenCall(name, params);
     /* we only need the char *name, not the whole node, so free it */
     NmAST_Free(target);
+  }
+  /*
+   * XXX NAME '[' expr ']'
+   */
+  else if (NmLexer_Accept(lex, SYM_LBRACKET)){
+    if (target->type != NT_NAME){
+      NmError_Lex(lex, "expected a name for an array index, not %s", symToS(lex->current->sym.type));
+      /* FIXME */
+      exit(EXIT_FAILURE);
+    }
+    NmDebug_Parser("[");
+    index = expr(lex);
+    NmLexer_Force(lex, SYM_RBRACKET);
+    NmDebug_Parser("]");
+    ret = NmAST_GenBinop(target, BINARY_INDEX, index);
   }
   /*
    * XXX NAME '++'

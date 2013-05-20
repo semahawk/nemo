@@ -49,6 +49,7 @@ NmObject *NmInt_New(int i)
   ob->i = i;
   ob->fn.dstr = NmInt_Destroy;
   ob->fn.print = NmInt_Print;
+  ob->fn.binary_index = NULL;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
