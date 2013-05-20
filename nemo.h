@@ -8,6 +8,7 @@
 #define NEMO_H
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 /* version of Nemo, obviously */

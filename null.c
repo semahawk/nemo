@@ -42,6 +42,11 @@ NmObject *NmNull = &(NmObject){
     .binary = {
       .add = NULL,
       .index = NULL
+    },
+    .unary = {
+      .plus = NULL,
+      .minus = NULL,
+      .negate = NULL
     }
   }
 };

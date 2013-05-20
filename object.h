@@ -65,11 +65,17 @@ struct Fn {
   void (*dstr)(NmObject *);
   NmObject *(*repr)(NmObject *);
   void (*print)(FILE *, NmObject *);
-  /* binary operation functions */
+  /* binary operations functions */
   struct {
     NmObject *(*add)(NmObject *, NmObject *);
     NmObject *(*index)(NmObject *, NmObject *);
   } binary;
+  /* unary operations functions */
+  struct {
+    NmObject *(*plus)(NmObject *);
+    NmObject *(*minus)(NmObject *);
+    NmObject *(*negate)(NmObject *);
+  } unary;
 };
 
 #define NMOBJECT_HEAD                      \
@@ -115,9 +121,13 @@ void NmNull_Print(FILE *, NmObject *);
 NmObject *NmObject_New(const char *);
 void NmObject_Destroy(NmObject *);
 void NmObject_Tidyup(void);
+BOOL NmObject_Boolish(NmObject *);
 
 NmObject *NmInt_New(int);
 NmObject *NmInt_Add(NmObject *, NmObject *);
+NmObject *NmInt_Plus(NmObject *);
+NmObject *NmInt_Minus(NmObject *);
+NmObject *NmInt_Negate(NmObject *);
 void NmInt_Print(FILE *, NmObject *);
 void NmInt_Destroy(NmObject *);
 void NmInt_Tidyup(void);

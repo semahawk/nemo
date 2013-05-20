@@ -52,3 +52,37 @@ void NmObject_Tidyup(void)
   NmArray_Tidyup();
 }
 
+/*
+ * Check if given value is a true/false boolean-wise.
+ *
+ * In Nemo there is no "bool" type as is.
+ */
+BOOL NmObject_Boolish(NmObject *o)
+{
+  /*
+   * null, 0, 0.0 and empty string ("") are false
+   * everything else is true
+   */
+  switch (o->type){
+    case OT_NULL:
+      return FALSE;
+    case OT_INTEGER:
+      if (((NmIntObject *)o)->i == 0)
+        return FALSE;
+      else
+        return TRUE;
+    case OT_FLOAT:
+      if (((NmFloatObject *)o)->f == 0.0f)
+        return FALSE;
+      else
+        return TRUE;
+    case OT_STRING:
+      if (!strcmp(((NmStringObject *)o)->s, ""))
+        return FALSE;
+      else
+        return TRUE;
+    default:
+      return FALSE;
+  }
+}
+

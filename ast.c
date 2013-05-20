@@ -48,7 +48,6 @@
 /* forward */
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
-static BOOL NmObject_Boolish(NmObject *);
 
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
@@ -503,7 +502,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     return ob_left->fn.binary.index(ob_left, ob_right);
   }
 
-#define op(FUNC,TYPE) \
+#define op(TYPE, FUNC) \
   case TYPE: \
   { \
     if (!ob_left->fn.binary.FUNC){ \
@@ -522,7 +521,7 @@ NmObject *NmAST_ExecBinop(Node *n)
    * it's result */
   if (ob_left->type == ob_right->type){
     switch (n->data.binop.op){
-      op(add, BINARY_ADD);
+      op(BINARY_ADD, add);
       default:
         NmError_Error("invalid binary operation %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type);
         /* FIXME: shouldn't exit here */
@@ -555,15 +554,15 @@ void NmAST_FreeBinop(Node *n)
  * @name - NmAST_GenUnop
  * @desc - creates a n for unary operation
  */
-Node *NmAST_GenUnop(Node *expr, UnaryOp op)
+Node *NmAST_GenUnop(Node *target, UnaryOp op)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_UNOP;
   n->data.unop.op = op;
-  n->data.unop.expr = expr;
+  n->data.unop.target = target;
 
-  NmDebug_AST(n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)expr);
+  NmDebug_AST(n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)target);
 
   return n;
 }
@@ -574,10 +573,39 @@ Node *NmAST_GenUnop(Node *expr, UnaryOp op)
  */
 NmObject *NmAST_ExecUnop(Node *n)
 {
-  /* FIXME */
+  NmObject *ret;
+
+  NmObject *target = NmAST_Exec(n->data.unop.target);
+
   NmDebug_AST(n, "execute unary operation node");
 
-  return NmInt_New(8642573);
+#define op(TYPE, FUNC) \
+  case TYPE: { \
+    if (!target->fn.unary.FUNC){ \
+      /* FIXME: print that type good */ \
+      NmError_Error("invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type); \
+      /* FIXME: shouldn't exit here */ \
+      exit(EXIT_FAILURE); \
+    } \
+\
+    ret = target->fn.unary.FUNC(target); \
+    break; \
+  }
+
+  switch (n->data.unop.op){
+    op(UNARY_PLUS, plus);
+    op(UNARY_MINUS, minus);
+    op(UNARY_NEGATE, negate);
+    default:
+      /* FIXME: print than type good */
+      NmError_Error("invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type);
+      /* FIXME: shouldn't exit here */
+      exit(EXIT_FAILURE);
+  }
+
+#undef op
+
+  return ret;
 }
 
 /*
@@ -589,7 +617,7 @@ void NmAST_FreeUnop(Node *n)
   assert(n);
   assert(n->type == NT_UNOP);
 
-  NmAST_Free(n->data.unop.expr);
+  NmAST_Free(n->data.unop.target);
 
   NmDebug_AST(n, "free unary operation node");
   NmMem_Free(n);
@@ -994,40 +1022,6 @@ void NmAST_FreeFuncDef(Node *n)
     NmDebug_AST(n, "free function declaration node");
   }
   NmMem_Free(n);
-}
-
-/*
- * Check if given value is a true/false boolean-wise.
- *
- * In Nemo there is no "bool" type as is.
- */
-static BOOL NmObject_Boolish(NmObject *o)
-{
-  /*
-   * null, 0, 0.0 and empty string ("") are false
-   * everything else is true
-   */
-  switch (o->type){
-    case OT_NULL:
-      return FALSE;
-    case OT_INTEGER:
-      if (((NmIntObject *)o)->i == 0)
-        return FALSE;
-      else
-        return TRUE;
-    case OT_FLOAT:
-      if (((NmFloatObject *)o)->f == 0.0f)
-        return FALSE;
-      else
-        return TRUE;
-    case OT_STRING:
-      if (!strcmp(((NmStringObject *)o)->s, ""))
-        return FALSE;
-      else
-        return TRUE;
-    default:
-      return FALSE;
-  }
 }
 
 static const char *binopToS(BinaryOp op)

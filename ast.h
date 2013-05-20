@@ -109,7 +109,7 @@ struct Node {
 
     struct {
       enum UnaryOp op;
-      struct Node *expr;
+      struct Node *target;
     } unop;
 
     struct {
