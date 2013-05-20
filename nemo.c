@@ -65,13 +65,6 @@ int main(int argc, char *argv[])
   char input[255];
   /* used for getopt */
   int c;
-  /* creating Nemo's main object */
-  /* (not using NmMem_Calloc, because the -dm flag is not set yet) */
-  Nemo *NM = calloc(1, sizeof(Nemo));
-  if (!NM){
-    NmError_Fatal("calloc failed to create the main object");
-    return EXIT_FAILURE;
-  }
 
   while (1){
     static struct option long_options[] = {
@@ -115,7 +108,6 @@ int main(int argc, char *argv[])
       default: abort();
     }
   }
-  NmDebug_CALLOC(NM, 1, sizeof(Nemo));
 
   /* fetch the builtin functions */
   NmBuiltin_Init();
@@ -144,7 +136,6 @@ int main(int argc, char *argv[])
   /* tidy up */
   NmObject_Tidyup();
   NmInterpState_Destroy();
-  NmMem_Free(NM);
 
   return EXIT_SUCCESS;
 }
