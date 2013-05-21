@@ -50,9 +50,7 @@ static NmObject *builtin_print(Node **params)
   unsigned i;
 
   for (i = 0; params != NULL && params[i] != NULL; i++){
-    NmObject *ob = NmAST_Exec(params[i]);
-    NmObject_PRINT(stdout, ob);
-    fprintf(stdout, " which is of type %s\n", ob->fn.type_repr()->s);
+    NmObject_PRINT(stdout, NmAST_Exec(params[i]));
     /* this the last parameter */
     if (params[i + 1] == NULL){
       fprintf(stdout, "\n");

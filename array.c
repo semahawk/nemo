@@ -60,9 +60,9 @@ NmObject *NmArray_New(size_t nmemb)
   return (NmObject *)ob;
 }
 
-NmStringObject *NmArray_TypeRepr(void)
+NmObject *NmArray_TypeRepr(void)
 {
-  return (NmStringObject *)NmString_New("array");
+  return NmString_New("array");
 }
 
 void NmArray_Print(FILE *fp, NmObject *ob)
@@ -84,12 +84,12 @@ void NmArray_Print(FILE *fp, NmObject *ob)
 
 NmObject *NmArray_Index(NmObject *array, NmObject *index)
 {
-  return NmArray_GETELEM(array, ((NmIntObject *)index)->i);
+  return NmArray_GETELEM(array, NmInt_VAL(index));
 }
 
 void NmArray_Destroy(NmObject *ob)
 {
-  NmMem_Free(((NmArrayObject *)ob)->a);
+  NmMem_Free(NmArray_VAL(ob));
   NmMem_Free(ob);
 }
 

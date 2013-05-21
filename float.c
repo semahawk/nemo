@@ -59,19 +59,19 @@ NmObject *NmFloat_New(double f)
 
 NmObject *NmFloat_Add(NmObject *left, NmObject *right)
 {
-  return NmFloat_New(((NmFloatObject *)left)->f + ((NmFloatObject *)right)->f);
+  return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
 }
 
-NmStringObject *NmFloat_TypeRepr(void)
+NmObject *NmFloat_TypeRepr(void)
 {
-  return (NmStringObject *)NmString_New("float");
+  return NmString_New("float");
 }
 
 void NmFloat_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
 
-  fprintf(fp, "%f", ((NmFloatObject *)ob)->f);
+  fprintf(fp, "%f", NmFloat_VAL(ob));
 }
 
 void NmFloat_Destroy(NmObject *ob)

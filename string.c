@@ -82,28 +82,28 @@ NmObject *NmString_NewFromChar(char c)
   return (NmObject *)ob;
 }
 
-NmStringObject *NmString_TypeRepr(void)
+NmObject *NmString_TypeRepr(void)
 {
-  return (NmStringObject *)NmString_New("string");
+  return NmString_New("string");
 }
 
 void NmString_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  fprintf(fp, "\"%s\"", ((NmStringObject *)ob)->s);
+  fprintf(fp, "\"%s\"", NmString_VAL(ob));
 }
 
 NmObject *NmString_Index(NmObject *string, NmObject *index)
 {
-  return NmString_NewFromChar(((NmStringObject *)string)->s[((NmIntObject *)index)->i]);
+  return NmString_NewFromChar(NmString_VAL(string)[NmInt_VAL(index)]);
 }
 
 void NmString_Destroy(NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  NmMem_Free(((NmStringObject *)ob)->s);
+  NmMem_Free(NmString_VAL(ob));
   NmMem_Free(ob);
 }
 

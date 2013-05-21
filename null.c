@@ -51,7 +51,7 @@ NmObject *NmNull = &(NmObject){
   }
 };
 
-NmStringObject *NmNull_TypeRepr(void)
+NmObject *NmNull_TypeRepr(void)
 {
   return NmString_New("null");
 }

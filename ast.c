@@ -518,7 +518,7 @@ NmObject *NmAST_ExecBinop(Node *n)
   case TYPE: \
   { \
     if (!ob_left->fn.binary.FUNC){ \
-      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), ob_left->fn.type_repr()->s, ob_right->fn.type_repr()->s); \
+      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
     } \
@@ -534,7 +534,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     switch (n->data.binop.op){
       op(BINARY_ADD, add);
       default:
-        NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), ob_left->fn.type_repr()->s, ob_right->fn.type_repr()->s);
+        NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()));
         /* FIXME: shouldn't exit here */
         exit(EXIT_FAILURE);
     }

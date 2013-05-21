@@ -63,7 +63,7 @@ struct Node;
 
 struct Fn {
   void (*dstr)(NmObject *);
-  NmStringObject *(*type_repr)(void);
+  NmObject *(*type_repr)(void);
   void (*print)(FILE *, NmObject *);
   /* binary operations functions */
   struct {
@@ -116,7 +116,7 @@ struct ObFreeList {
   ObFreeList *next;
 };
 
-NmStringObject *NmNull_TypeRepr(void);
+NmObject *NmNull_TypeRepr(void);
 void NmNull_Print(FILE *, NmObject *);
 
 NmObject *NmObject_New(const char *);
@@ -129,36 +129,45 @@ NmObject *NmInt_Add(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
 NmObject *NmInt_Negate(NmObject *);
-NmStringObject *NmInt_TypeRepr(void);
+NmObject *NmInt_TypeRepr(void);
 void NmInt_Print(FILE *, NmObject *);
 void NmInt_Destroy(NmObject *);
 void NmInt_Tidyup(void);
 NmObject *NmInt_NewFromVoidPtr(void *);
+/* a handy macro to simply cast and return the integer value */
+#define NmInt_VAL(ob) (((NmIntObject *)ob)->i)
 
 NmObject *NmFloat_New(double);
 NmObject *NmFloat_Add(NmObject *, NmObject *);
-NmStringObject *NmFloat_TypeRepr(void);
+NmObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);
 void NmFloat_Destroy(NmObject *);
 void NmFloat_Tidyup(void);
+/* a handy macro to simply cast and return the float value */
+#define NmFloat_VAL(ob) (((NmFloatObject *)ob)->f)
 
 NmObject *NmString_New(char *);
-NmStringObject *NmString_TypeRepr(void);
+NmObject *NmString_TypeRepr(void);
 void NmString_Print(FILE *, NmObject *);
 NmObject *NmString_Index(NmObject *, NmObject *);
 void NmString_Destroy(NmObject *);
 void NmString_Tidyup(void);
+/* a handy macro to simply cast and return the string value */
+#define NmString_VAL(ob) (((NmStringObject *)ob)->s)
 
 NmObject *NmArray_New(size_t);
 NmObject *NmArray_NewFromNode(struct Node *);
-NmStringObject *NmArray_TypeRepr(void);
+NmObject *NmArray_TypeRepr(void);
 void NmArray_Print(FILE *, NmObject *);
 NmObject *NmArray_Index(NmObject *, NmObject *);
 void NmArray_Destroy(NmObject *);
 void NmArray_Tidyup(void);
+/* a handy macro to simply cast and return the array */
+#define NmArray_VAL(ob) (((NmArrayObject *)ob)->a)
+#define NmArray_NMEMB(ob) (((NmArrayObject *)ob)->nmemb)
 /* some handy macros for array elements getting/setting */
-#define NmArray_SETELEM(arr,i,v) (((NmArrayObject *)arr)->a[i] = v)
-#define NmArray_GETELEM(arr,i)   (((NmArrayObject *)arr)->a[i])
+#define NmArray_SETELEM(arr,i,v) (NmArray_VAL(arr)[i] = v)
+#define NmArray_GETELEM(arr,i)   (NmArray_VAL(arr)[i])
 
 /*
  * Extern declaration of the "null" which is definied in null.c

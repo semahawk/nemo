@@ -57,27 +57,32 @@ void NmObject_Tidyup(void)
  *
  * In Nemo there is no "bool" type as is.
  */
-BOOL NmObject_Boolish(NmObject *o)
+BOOL NmObject_Boolish(NmObject *ob)
 {
   /*
-   * null, 0, 0.0 and empty string ("") are false
+   * null, 0, 0.0, empty string ("") and an empty array ([]) are false
    * everything else is true
    */
-  switch (o->type){
+  switch (ob->type){
     case OT_NULL:
       return FALSE;
     case OT_INTEGER:
-      if (((NmIntObject *)o)->i == 0)
+      if (NmInt_VAL(ob) == 0)
         return FALSE;
       else
         return TRUE;
     case OT_FLOAT:
-      if (((NmFloatObject *)o)->f == 0.0f)
+      if (NmFloat_VAL(ob) == 0.0f)
         return FALSE;
       else
         return TRUE;
     case OT_STRING:
-      if (!strcmp(((NmStringObject *)o)->s, ""))
+      if (!strcmp(NmString_VAL(ob), ""))
+        return FALSE;
+      else
+        return TRUE;
+    case OT_ARRAY:
+      if (NmArray_NMEMB(ob) == 0)
         return FALSE;
       else
         return TRUE;

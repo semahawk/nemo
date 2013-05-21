@@ -66,7 +66,7 @@ NmObject *NmInt_New(int i)
 
 NmObject *NmInt_Add(NmObject *left, NmObject *right)
 {
-  return NmInt_New(((NmIntObject *)left)->i + ((NmIntObject *)right)->i);
+  return NmInt_New(NmInt_VAL(left) + NmInt_VAL(right));
 }
 
 NmObject *NmInt_Plus(NmObject *target)
@@ -76,7 +76,7 @@ NmObject *NmInt_Plus(NmObject *target)
 
 NmObject *NmInt_Minus(NmObject *target)
 {
-  return NmInt_New(((NmIntObject *)target)->i * (-1));
+  return NmInt_New(NmInt_VAL(target) * (-1));
 }
 
 NmObject *NmInt_Negate(NmObject *target)
@@ -87,16 +87,16 @@ NmObject *NmInt_Negate(NmObject *target)
     return NmInt_New(FALSE);
 }
 
-NmStringObject *NmInt_TypeRepr(void)
+NmObject *NmInt_TypeRepr(void)
 {
-  return (NmStringObject *)NmString_New("int");
+  return NmString_New("int");
 }
 
 void NmInt_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_INTEGER);
 
-  fprintf(fp, "%d", ((NmIntObject *)ob)->i);
+  fprintf(fp, "%d", NmInt_VAL(ob));
 }
 
 void NmInt_Destroy(NmObject *ob)
