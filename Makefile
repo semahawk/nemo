@@ -13,7 +13,7 @@ LIBS = -lreadline
 all: nemo
 
 nemo: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LIBS) $(OBJECTS) -o nemo
+	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o nemo
 
 nemo.o: nemo.c nemo.h
 nemo.h: ast.h debug.h error.h lexer.h parser.h debug.h mem.h object.h
