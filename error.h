@@ -67,6 +67,7 @@ typedef struct ErrorState ErrorState;
 void NmError_Fatal(const char *msg, ...);
 void NmError_Error(const char *msg, ...);
 void NmError_Lex(LexerState *, const char *msg, ...);
+void NmError_Parser(Node *, const char *msg, ...);
 
 #endif /* ERROR_H */
 

@@ -23,16 +23,17 @@
 # define FALSE 0
 #endif
 
+/* order here is quite significant */
+#include "lexer.h"
+#include "object.h"
 #include "ast.h"
 #include "debug.h"
-#include "error.h"
-#include "lexer.h"
-#include "mem.h"
-#include "object.h"
-#include "parser.h"
-#include "vars.h"
 #include "funcs.h"
 #include "interp.h"
+#include "error.h"
+#include "mem.h"
+#include "parser.h"
+#include "vars.h"
 
 /*
  * The main type for Nemo

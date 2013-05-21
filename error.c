@@ -70,3 +70,18 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
   va_end(vl);
 }
 
+void NmError_Parser(Node *n, const char *msg, ...)
+{
+  InterpState *interp = NmInterpState_GetCurr();
+
+  va_list vl;
+  va_start(vl, msg);
+
+  fprintf(stderr, "In file %s: ", interp->source);
+
+  vfprintf(stderr, msg, vl);
+  fprintf(stderr, " at line %u in column %u", n->line, n->column);
+  fprintf(stderr, "\n");
+  va_end(vl);
+}
+

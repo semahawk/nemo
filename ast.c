@@ -49,6 +49,11 @@
 static const char *binopToS(BinaryOp);
 static const char *unopToS(UnaryOp);
 
+/* a tiny little helpful macro to init the line/column field */
+#define INIT_POS() \
+  n->line   = lex->line; \
+  n->column = lex->column;
+
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
  */
@@ -119,11 +124,12 @@ void NmAST_Free(Node *n)
  * @name - NmAST_GenNop
  * @desc - create a n that does NOTHING
  */
-Node *NmAST_GenNop(void)
+Node *NmAST_GenNop(LexerState *lex)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_NOP;
+  INIT_POS();
 
   NmDebug_AST(n, "create NOP node");
 
@@ -160,12 +166,13 @@ void NmAST_FreeNop(Node *n)
  * @name - NmAST_GenInt
  * @desc - create a n holding a single literal integer
  */
-Node *NmAST_GenInt(int i)
+Node *NmAST_GenInt(LexerState *lex, int i)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_INTEGER;
   n->data.i = i;
+  INIT_POS();
 
   NmDebug_AST(n, "create int node (value: %d)", i);
 
@@ -201,12 +208,13 @@ void NmAST_FreeInt(Node *n)
  * @name - NmAST_GenFloat
  * @desc - create a n holding a single literal float
  */
-Node *NmAST_GenFloat(float f)
+Node *NmAST_GenFloat(LexerState *lex, float f)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_FLOAT;
   n->data.f = f;
+  INIT_POS();
 
   NmDebug_AST(n, "create float node (value: %f)", f);
 
@@ -242,12 +250,13 @@ void NmAST_FreeFloat(Node *n)
  * @name - NmAST_GenString
  * @desc - create a node holding a single literal string
  */
-Node *NmAST_GenString(char *s)
+Node *NmAST_GenString(LexerState *lex, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_STRING;
   n->data.s = NmMem_Strdup(s);
+  INIT_POS();
 
   NmDebug_AST(n, "create string node (value: %s)", n->data.s);
 
@@ -284,7 +293,7 @@ void NmAST_FreeString(Node *n)
  * @name - NmAST_GenArray
  * @desc - create a node holding a literal array
  */
-Node *NmAST_GenArray(Node **a)
+Node *NmAST_GenArray(LexerState *lex, Node **a)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
   size_t nmemb = 0;
@@ -296,6 +305,7 @@ Node *NmAST_GenArray(Node **a)
   n->type = NT_ARRAY;
   n->data.array.nmemb = nmemb;
   n->data.array.a = a;
+  INIT_POS();
 
   NmDebug_AST(n, "create array node (nmemb: %u, values: %p)", nmemb, (void *)a);
 
@@ -343,7 +353,7 @@ void NmAST_FreeArray(Node *n)
  * @name - NmAST_GenName
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(char *s)
+Node *NmAST_GenName(LexerState *lex, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
   InterpState *interp = NmInterpState_GetCurr();
@@ -352,6 +362,7 @@ Node *NmAST_GenName(char *s)
 
   n->type = NT_NAME;
   n->data.s = NmMem_Strdup(s);
+  INIT_POS();
 
   NmDebug_AST(n, "create name node (name: %s)", s);
 
@@ -364,7 +375,7 @@ Node *NmAST_GenName(char *s)
   }
 
   if (!found){
-    NmError_Error("variable '%s' was not found");
+    NmError_Parser(n, "variable '%s' was not found", n->data.decl.name);
     exit(EXIT_FAILURE);
   }
 
@@ -389,7 +400,7 @@ NmObject *NmAST_ExecName(Node *n)
     }
   }
 
-  NmError_Error("variable '%s' was not found");
+  NmError_Parser(n, "variable '%s' was not found");
   exit(EXIT_FAILURE);
 }
 
@@ -411,7 +422,7 @@ void NmAST_FreeName(Node *n)
  * @name - NmAST_GenBinop
  * @desc - creates a binary operation n
  */
-Node *NmAST_GenBinop(Node *left, BinaryOp op, Node *right)
+Node *NmAST_GenBinop(LexerState *lex, Node *left, BinaryOp op, Node *right)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -419,6 +430,7 @@ Node *NmAST_GenBinop(Node *left, BinaryOp op, Node *right)
   n->data.binop.op = op;
   n->data.binop.left = left;
   n->data.binop.right = right;
+  INIT_POS();
 
   NmDebug_AST(n, "create binary operation node (op: %s, left: %p, right: %p)", binopToS(op), (void*)left, (void*)right);
 
@@ -454,7 +466,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* left-hand side of the assignment must be a name
      * (at least for now (30 Apr 2013)) */
     if (n->data.binop.left->type != NT_NAME){
-      NmError_Error("expected an lvalue in assignment");
+      NmError_Parser(n, "expected an lvalue in assignment");
       exit(EXIT_FAILURE);
     }
     name = n->data.binop.left->data.s;
@@ -468,13 +480,13 @@ NmObject *NmAST_ExecBinop(Node *n)
     }
     /* error if the variable was not found */
     if (!found){
-      NmError_Error("variable '%s' was not found", name);
+      NmError_Parser(n, "variable '%s' was not found", name);
       exit(EXIT_FAILURE);
     }
     /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
      * to be not-assignable*/
     if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
-      NmError_Error("cannot change the value of a constant variable '%s'", name);
+      NmError_Parser(n, "cannot change the value of a constant variable '%s'", name);
       /* FIXME */
       exit(EXIT_FAILURE);
     }
@@ -489,12 +501,12 @@ NmObject *NmAST_ExecBinop(Node *n)
    */
   else if (n->data.binop.op == BINARY_INDEX){
     if (!ob_left->fn.binary.index){
-      NmError_Error("invalid binary operator '[]' for type '%d'", ob_left->type);
+      NmError_Parser(n, "invalid binary operator '[]' for type '%d'", ob_left->type);
       /* FIXME */
       exit(EXIT_FAILURE);
     }
     if (ob_right->type != OT_INTEGER){
-      NmError_Error("expected type 'int' for the indexing value");
+      NmError_Parser(n, "expected type 'int' for the indexing value");
       /* FIXME */
       exit(EXIT_FAILURE);
     }
@@ -507,7 +519,7 @@ NmObject *NmAST_ExecBinop(Node *n)
   { \
     if (!ob_left->fn.binary.FUNC){ \
       /* FIXME: representing the type */ \
-      NmError_Error("invalid binary operator %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type); \
+      NmError_Parser(n, "invalid binary operator %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
     } \
@@ -523,7 +535,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     switch (n->data.binop.op){
       op(BINARY_ADD, add);
       default:
-        NmError_Error("invalid binary operation %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type);
+        NmError_Parser(n, "invalid binary operation %s for types '%d' and '%d'", binopToS(n->data.binop.op), ob_left->type, ob_right->type);
         /* FIXME: shouldn't exit here */
         exit(EXIT_FAILURE);
     }
@@ -554,13 +566,14 @@ void NmAST_FreeBinop(Node *n)
  * @name - NmAST_GenUnop
  * @desc - creates a n for unary operation
  */
-Node *NmAST_GenUnop(Node *target, UnaryOp op)
+Node *NmAST_GenUnop(LexerState *lex, Node *target, UnaryOp op)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_UNOP;
   n->data.unop.op = op;
   n->data.unop.target = target;
+  INIT_POS();
 
   NmDebug_AST(n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)target);
 
@@ -583,7 +596,7 @@ NmObject *NmAST_ExecUnop(Node *n)
   case TYPE: { \
     if (!target->fn.unary.FUNC){ \
       /* FIXME: print that type good */ \
-      NmError_Error("invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type); \
+      NmError_Parser(n, "invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
     } \
@@ -598,7 +611,7 @@ NmObject *NmAST_ExecUnop(Node *n)
     op(UNARY_NEGATE, negate);
     default:
       /* FIXME: print than type good */
-      NmError_Error("invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type);
+      NmError_Parser(n, "invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type);
       /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
   }
@@ -628,7 +641,7 @@ void NmAST_FreeUnop(Node *n)
  * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *NmAST_GenIf(Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenIf(LexerState *lex, Node *guard, Node *body, Node *elsee)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -636,6 +649,7 @@ Node *NmAST_GenIf(Node *guard, Node *body, Node *elsee)
   n->data.iff.guard = guard;
   n->data.iff.body = body;
   n->data.iff.elsee = elsee;
+  INIT_POS();
 
   NmDebug_AST(n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
 
@@ -696,7 +710,7 @@ void NmAST_FreeIf(Node *n)
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *NmAST_GenWhile(Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenWhile(LexerState *lex, Node *guard, Node *body, Node *elsee)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -704,6 +718,7 @@ Node *NmAST_GenWhile(Node *guard, Node *body, Node *elsee)
   n->data.whilee.guard = guard;
   n->data.whilee.body = body;
   n->data.whilee.elsee = elsee;
+  INIT_POS();
 
   NmDebug_AST(n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
 
@@ -766,7 +781,7 @@ void NmAST_FreeWhile(Node *n)
  *
  *           my variable;
  */
-Node *NmAST_GenDecl(char *name, Node *value, uint8_t flags)
+Node *NmAST_GenDecl(LexerState *lex, char *name, Node *value, uint8_t flags)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -774,6 +789,7 @@ Node *NmAST_GenDecl(char *name, Node *value, uint8_t flags)
   n->data.decl.name = NmMem_Strdup(name);
   n->data.decl.value = value;
   n->data.decl.flags = flags;
+  INIT_POS();
 
   NmDebug_AST(n, "create variable declaration node (name: %s)", name);
 
@@ -785,7 +801,7 @@ Node *NmAST_GenDecl(char *name, Node *value, uint8_t flags)
   /* before doing anything, check if that variable was already declared */
   for (p = interp->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
-      NmError_Error("global variable '%s' already declared", n->data.decl.name);
+      NmError_Parser(n, "global variable '%s' already declared", n->data.decl.name);
       exit(EXIT_FAILURE);
     }
   }
@@ -891,13 +907,14 @@ void NmAST_FreeBlock(Node *n)
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
-Node *NmAST_GenCall(char *name, Node **params)
+Node *NmAST_GenCall(LexerState *lex, char *name, Node **params)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
   n->type = NT_CALL;
   n->data.call.name = NmMem_Strdup(name);
   n->data.call.params = params;
+  INIT_POS();
 
   NmDebug_AST(n, "create call node (name: %s, params: %p)", name, params);
 
@@ -928,7 +945,7 @@ NmObject *NmAST_ExecCall(Node *n)
     }
   }
 
-  NmError_Error("function '%s' not found", name);
+  NmError_Parser(n, "function '%s' not found", name);
   /* FIXME */
   exit(EXIT_FAILURE);
 }
@@ -962,7 +979,7 @@ void NmAST_FreeCall(Node *n)
  * @name - NmAST_GenFuncDef
  * @desc - creates a node for defining a function of a given <name>
  */
-Node *NmAST_GenFuncDef(char *name, Node *body)
+Node *NmAST_GenFuncDef(LexerState *lex, char *name, Node *body)
 {
   InterpState *interp = NmInterpState_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
@@ -971,6 +988,7 @@ Node *NmAST_GenFuncDef(char *name, Node *body)
 
   n->type = NT_FUNCDEF;
   n->data.funcdef.name = NmMem_Strdup(name);
+  INIT_POS();
 
   if (body){
     n->data.funcdef.body = body;

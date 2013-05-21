@@ -91,6 +91,8 @@ struct Statement {
 
 struct Node {
   enum NodeType type;
+  unsigned line;
+  unsigned column;
   union {
     int i;       /* integer */
     float f;     /* float   */
@@ -153,19 +155,19 @@ typedef enum   NodeType  NodeType;
 typedef struct Node      Node;
 typedef struct Statement Statement;
 
-Node *NmAST_GenInt(int);
-Node *NmAST_GenFloat(float);
-Node *NmAST_GenString(char *);
-Node *NmAST_GenArray(Node **);
-Node *NmAST_GenName(char *);
-Node *NmAST_GenBinop(Node *, BinaryOp, Node *);
-Node *NmAST_GenUnop(Node *, UnaryOp);
-Node *NmAST_GenIf(Node *, Node *, Node *);
-Node *NmAST_GenWhile(Node *, Node *, Node *);
-Node *NmAST_GenDecl(char *, Node *, uint8_t);
-Node *NmAST_GenCall(char *, Node **);
-Node *NmAST_GenFuncDef(char *, Node *);
-Node *NmAST_GenNop(void);
+Node *NmAST_GenInt(LexerState *, int);
+Node *NmAST_GenFloat(LexerState *, float);
+Node *NmAST_GenString(LexerState *, char *);
+Node *NmAST_GenArray(LexerState *, Node **);
+Node *NmAST_GenName(LexerState *, char *);
+Node *NmAST_GenBinop(LexerState *, Node *, BinaryOp, Node *);
+Node *NmAST_GenUnop(LexerState *, Node *, UnaryOp);
+Node *NmAST_GenIf(LexerState *, Node *, Node *, Node *);
+Node *NmAST_GenWhile(LexerState *, Node *, Node *, Node *);
+Node *NmAST_GenDecl(LexerState *, char *, Node *, uint8_t);
+Node *NmAST_GenCall(LexerState *, char *, Node **);
+Node *NmAST_GenFuncDef(LexerState *, char *, Node *);
+Node *NmAST_GenNop(LexerState *);
 
 NmObject *NmAST_ExecInt(Node *);
 NmObject *NmAST_ExecFloat(Node *);
