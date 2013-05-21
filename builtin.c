@@ -51,13 +51,13 @@ static NmObject *builtin_print(Node **params)
 
   for (i = 0; params != NULL && params[i] != NULL; i++){
     NmObject *ob = NmAST_Exec(params[i]);
+    NmObject_PRINT(stdout, ob);
+    fprintf(stdout, " which is of type %s\n", ob->fn.type_repr()->s);
     /* this the last parameter */
     if (params[i + 1] == NULL){
-      NmObject_PRINT(stdout, ob);
       fprintf(stdout, "\n");
     /* this is NOT the last parameter */
     } else {
-      NmObject_PRINT(stdout, ob);
       fprintf(stdout, ", ");
     }
   }

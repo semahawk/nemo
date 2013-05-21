@@ -44,6 +44,7 @@ NmObject *NmString_New(char *s)
   ob->type = OT_STRING;
   ob->s = NmMem_Strdup(s);
   ob->fn.dstr = NmString_Destroy;
+  ob->fn.type_repr = NmString_TypeRepr;
   ob->fn.print = NmString_Print;
   /*ob->fn.binary.add = NmString_Add;*/
   ob->fn.binary.add = NULL;
@@ -79,6 +80,11 @@ NmObject *NmString_NewFromChar(char c)
   free_list = list;
 
   return (NmObject *)ob;
+}
+
+NmStringObject *NmString_TypeRepr(void)
+{
+  return (NmStringObject *)NmString_New("string");
 }
 
 void NmString_Print(FILE *fp, NmObject *ob)

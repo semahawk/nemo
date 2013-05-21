@@ -63,7 +63,7 @@ struct Node;
 
 struct Fn {
   void (*dstr)(NmObject *);
-  NmObject *(*repr)(NmObject *);
+  NmStringObject *(*type_repr)(void);
   void (*print)(FILE *, NmObject *);
   /* binary operations functions */
   struct {
@@ -116,6 +116,7 @@ struct ObFreeList {
   ObFreeList *next;
 };
 
+NmStringObject *NmNull_TypeRepr(void);
 void NmNull_Print(FILE *, NmObject *);
 
 NmObject *NmObject_New(const char *);
@@ -128,6 +129,7 @@ NmObject *NmInt_Add(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
 NmObject *NmInt_Negate(NmObject *);
+NmStringObject *NmInt_TypeRepr(void);
 void NmInt_Print(FILE *, NmObject *);
 void NmInt_Destroy(NmObject *);
 void NmInt_Tidyup(void);
@@ -135,11 +137,13 @@ NmObject *NmInt_NewFromVoidPtr(void *);
 
 NmObject *NmFloat_New(double);
 NmObject *NmFloat_Add(NmObject *, NmObject *);
+NmStringObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);
 void NmFloat_Destroy(NmObject *);
 void NmFloat_Tidyup(void);
 
 NmObject *NmString_New(char *);
+NmStringObject *NmString_TypeRepr(void);
 void NmString_Print(FILE *, NmObject *);
 NmObject *NmString_Index(NmObject *, NmObject *);
 void NmString_Destroy(NmObject *);
@@ -147,6 +151,7 @@ void NmString_Tidyup(void);
 
 NmObject *NmArray_New(size_t);
 NmObject *NmArray_NewFromNode(struct Node *);
+NmStringObject *NmArray_TypeRepr(void);
 void NmArray_Print(FILE *, NmObject *);
 NmObject *NmArray_Index(NmObject *, NmObject *);
 void NmArray_Destroy(NmObject *);

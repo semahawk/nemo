@@ -36,8 +36,8 @@
 NmObject *NmNull = &(NmObject){
   .type = OT_NULL,
   .fn = {
-    .dstr  = NULL,
-    .repr  = NULL,
+    .dstr = NULL,
+    .type_repr = NmNull_TypeRepr,
     .print = NmNull_Print,
     .binary = {
       .add = NULL,
@@ -50,6 +50,11 @@ NmObject *NmNull = &(NmObject){
     }
   }
 };
+
+NmStringObject *NmNull_TypeRepr(void)
+{
+  return NmString_New("null");
+}
 
 /*
  * @name - NmNull_Print

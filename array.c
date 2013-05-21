@@ -44,6 +44,7 @@ NmObject *NmArray_New(size_t nmemb)
 
   ob->type = OT_ARRAY;
   ob->fn.dstr = NmArray_Destroy;
+  ob->fn.type_repr = NmArray_TypeRepr;
   ob->fn.print = NmArray_Print;
   /*ob->fn.binary.add = NmArray_Add;*/
   ob->fn.binary.add = NULL;
@@ -57,6 +58,11 @@ NmObject *NmArray_New(size_t nmemb)
   free_list = list;
 
   return (NmObject *)ob;
+}
+
+NmStringObject *NmArray_TypeRepr(void)
+{
+  return (NmStringObject *)NmString_New("array");
 }
 
 void NmArray_Print(FILE *fp, NmObject *ob)

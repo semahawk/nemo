@@ -44,6 +44,7 @@ NmObject *NmFloat_New(double f)
   ob->type = OT_FLOAT;
   ob->f = f;
   ob->fn.dstr = NmFloat_Destroy;
+  ob->fn.type_repr = NmFloat_TypeRepr;
   ob->fn.print = NmFloat_Print;
   ob->fn.binary.add = NmFloat_Add;
   ob->fn.binary.index = NULL;
@@ -59,6 +60,11 @@ NmObject *NmFloat_New(double f)
 NmObject *NmFloat_Add(NmObject *left, NmObject *right)
 {
   return NmFloat_New(((NmFloatObject *)left)->f + ((NmFloatObject *)right)->f);
+}
+
+NmStringObject *NmFloat_TypeRepr(void)
+{
+  return (NmStringObject *)NmString_New("float");
 }
 
 void NmFloat_Print(FILE *fp, NmObject *ob)

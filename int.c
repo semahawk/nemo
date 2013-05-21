@@ -48,6 +48,7 @@ NmObject *NmInt_New(int i)
   ob->type = OT_INTEGER;
   ob->i = i;
   ob->fn.dstr = NmInt_Destroy;
+  ob->fn.type_repr = NmInt_TypeRepr;
   ob->fn.print = NmInt_Print;
   ob->fn.binary.add = NmInt_Add;
   ob->fn.binary.index = NULL;
@@ -84,6 +85,11 @@ NmObject *NmInt_Negate(NmObject *target)
     return NmInt_New(TRUE);
   else
     return NmInt_New(FALSE);
+}
+
+NmStringObject *NmInt_TypeRepr(void)
+{
+  return (NmStringObject *)NmString_New("int");
 }
 
 void NmInt_Print(FILE *fp, NmObject *ob)
