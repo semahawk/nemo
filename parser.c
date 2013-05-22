@@ -202,6 +202,9 @@ static Node *postfix_expr(LexerState *lex)
   Node *index;
   char *name = NULL;
 
+  /* I'm not checking if target is NULL because parenthesis, brackets, ++ and --
+   * could belong to some prefix unary operation or just an expression */
+
   /*
    * XXX NAME '(' [params_list] ')'
    */
@@ -285,26 +288,81 @@ static Node *prefix_expr(LexerState *lex)
   if (NmLexer_Accept(lex, SYM_BANG)){
     NmDebug_Parser("unary! ");
     target = prefix_expr(lex);
+    /* if target is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = !;
+     *
+     */
+    if (!target){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenUnop(lex, target, UNARY_NEGATE);
   }
   else if (NmLexer_Accept(lex, SYM_PLUS)){
     NmDebug_Parser("unary+ ");
     target = prefix_expr(lex);
+    /* if target is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = +;
+     *
+     */
+    if (!target){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenUnop(lex, target, UNARY_PLUS);
   }
   else if (NmLexer_Accept(lex, SYM_MINUS)){
     NmDebug_Parser("unary- ");
     target = prefix_expr(lex);
+    /* if target is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = -;
+     *
+     */
+    if (!target){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenUnop(lex, target, UNARY_MINUS);
   }
   else if (NmLexer_Accept(lex, SYM_PLUSPLUS)){
     NmDebug_Parser("prefix++:");
     target = prefix_expr(lex);
+    /* if target is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = ++;
+     *
+     */
+    if (!target){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenUnop(lex, target, UNARY_PREINC);
   }
   else if (NmLexer_Accept(lex, SYM_MINUSMINUS)){
     NmDebug_Parser("prefix--:");
     target = prefix_expr(lex);
+    /* if target is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = --;
+     *
+     */
+    if (!target){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenUnop(lex, target, UNARY_PREDEC);
   }
   else {
@@ -333,6 +391,17 @@ static Node *mult_expr(LexerState *lex)
   ret = left = prefix_expr(lex);
 
   while (NmLexer_Peek(lex, SYM_TIMES) || NmLexer_Peek(lex, SYM_SLASH)){
+    /* if left is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = * 2;
+     *
+     */
+    if (!left){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     if (NmLexer_Accept(lex, SYM_TIMES)){
       op = BINARY_MUL;
       NmDebug_Parser("* ");
@@ -341,6 +410,17 @@ static Node *mult_expr(LexerState *lex)
       NmDebug_Parser("/ ");
     }
     right = prefix_expr(lex);
+    /* if right is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = 2 * ;
+     *
+     */
+    if (!right){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenBinop(lex, left, BINARY_MUL, right);
     left = ret;
   }
@@ -366,6 +446,8 @@ static Node *add_expr(LexerState *lex)
   ret = left = mult_expr(lex);
 
   while (NmLexer_Peek(lex, SYM_PLUS) || NmLexer_Peek(lex, SYM_MINUS)){
+    /* we are not checking if letf is NULL here, because + and - are also a
+     * prefix unary operations */
     if (NmLexer_Accept(lex, SYM_PLUS)){
       op = BINARY_ADD;
       NmDebug_Parser("+ ");
@@ -374,6 +456,17 @@ static Node *add_expr(LexerState *lex)
       NmDebug_Parser("- ");
     }
     right = mult_expr(lex);
+    /* if right is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = 2 + ;
+     *
+     */
+    if (!right){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenBinop(lex, left, op, right);
     left = ret;
   }
@@ -399,6 +492,17 @@ static Node *cond_expr(LexerState *lex)
   ret = left = add_expr(lex);
 
   while (NmLexer_Peek(lex, SYM_GT) || NmLexer_Peek(lex, SYM_LT)){
+    /* if left is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = > 2;
+     *
+     */
+    if (!left){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     if (NmLexer_Accept(lex, SYM_GT)){
       op = BINARY_GT;
       NmDebug_Parser("> ");
@@ -407,6 +511,17 @@ static Node *cond_expr(LexerState *lex)
       NmDebug_Parser("< ");
     }
     right = add_expr(lex);
+    /* if right is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = 2 > ;
+     *
+     */
+    if (!right){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenBinop(lex, left, op, right);
     left = ret;
   }
@@ -441,6 +556,17 @@ static Node *assign_expr(LexerState *lex)
          NmLexer_Peek(lex, SYM_TIMESEQ) ||
          NmLexer_Peek(lex, SYM_SLASHEQ) ||
          NmLexer_Peek(lex, SYM_MODULOEQ)){
+    /* if left is NULL it means something like that happend:
+     *
+     *    my var;
+     *    = 2;
+     *
+     */
+    if (!left){
+      NmError_Lex(lex, "expected an lvalue");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     if (NmLexer_Accept(lex, SYM_EQ)){
       op = BINARY_ASSIGN;
       NmDebug_Parser("= ");
@@ -466,6 +592,17 @@ static Node *assign_expr(LexerState *lex)
       NmDebug_Parser("%= ");
     }
     right = assign_expr(lex);
+    /* if right is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = ;
+     *
+     */
+    if (!right){
+      NmError_Lex(lex, "expected an expression");
+      /* FIXME: probably shouldn't exit here */
+      exit(EXIT_FAILURE);
+    }
     ret = NmAST_GenBinop(lex, left, op, right);
     left = ret;
   }
