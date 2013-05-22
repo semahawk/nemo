@@ -502,6 +502,15 @@ static Node *expr(LexerState *lex)
       NmDebug_Parser(" = ");
       value = assign_expr(lex);
     }
+    /* if value is NULL, then something like this happend:
+     *
+     *    my var = ;
+     *
+     */
+    if (!value){
+      /* FIXME: probably should be a warning */
+      NmError_Error("nothing initialized");
+    }
     ret = NmAST_GenDecl(lex, name, value, flags);
   }
   /*

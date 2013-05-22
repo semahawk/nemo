@@ -535,10 +535,8 @@ void NmLexer_Force(LexerState *lex, SymbolType type)
   }
 
   if (lex->current->sym.type != type){
-    if (lex->is_file){
-      NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(lex->current->sym.type));
-      exit(EXIT_FAILURE);
-    }
+    NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(lex->current->sym.type));
+    exit(EXIT_FAILURE);
   } else {
     lex->current = lex->current->next;
   }
@@ -644,7 +642,7 @@ const char *symToS(SymbolType type)
 }
 
 /*
- * Rhapsody, Steve Vai
+ * Rhapsody, Steve Vai, Helloween, Ensiferum
  *
  * The Office
  *
