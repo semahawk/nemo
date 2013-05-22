@@ -357,7 +357,6 @@ Node *NmAST_GenName(LexerState *lex, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
   InterpState *interp = NmInterpState_GetCurr();
-  VariablesList *p;
   BOOL found = FALSE;
 
   n->type = NT_NAME;
@@ -367,8 +366,23 @@ Node *NmAST_GenName(LexerState *lex, char *s)
   NmDebug_AST(n, "create name node (name: %s)", s);
 
   /* search for the variable */
-  for (p = interp->globals; p != NULL; p = p->next){
-    if (!strcmp(p->var->name, n->data.decl.name)){
+  for (VariablesList *vars = interp->globals; vars != NULL; vars = vars->next){
+    if (!strcmp(vars->var->name, n->data.decl.name)){
+      found = TRUE;
+      break;
+    }
+  }
+  /* or, it could be a name of a function that's being called */
+  /* search the C functions */
+  for (CFuncsList *cfuncs = interp->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+    if (!strcmp(cfuncs->func->name, n->data.decl.name)){
+      found = TRUE;
+      break;
+    }
+  }
+  /* search the user defined functions */
+  for (FuncsList *funcs = interp->funcs; funcs != NULL; funcs = funcs->next){
+    if (!strcmp(funcs->func->name, n->data.decl.name)){
       found = TRUE;
       break;
     }
@@ -389,14 +403,29 @@ Node *NmAST_GenName(LexerState *lex, char *s)
 NmObject *NmAST_ExecName(Node *n)
 {
   InterpState *interp = NmInterpState_GetCurr();
-  VariablesList *p;
 
   NmDebug_AST(n, "execute name node");
 
   /* search for the variable */
-  for (p = interp->globals; p != NULL; p = p->next){
-    if (!strcmp(p->var->name, n->data.decl.name)){
-      return p->var->value;
+  for (VariablesList *vars = interp->globals; vars != NULL; vars = vars->next){
+    if (!strcmp(vars->var->name, n->data.decl.name)){
+      return vars->var->value;
+    }
+  }
+  /*
+   * FIXME: what should the name of a function itself return?
+   */
+  /* or, it could be a name of a function that's being called */
+  /* search the C functions */
+  for (CFuncsList *cfuncs = interp->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+    if (!strcmp(cfuncs->func->name, n->data.decl.name)){
+      return NmNull;
+    }
+  }
+  /* search the user defined functions */
+  for (FuncsList *funcs = interp->funcs; funcs != NULL; funcs = funcs->next){
+    if (!strcmp(funcs->func->name, n->data.decl.name)){
+      return NmNull;
     }
   }
 
