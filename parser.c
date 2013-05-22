@@ -240,6 +240,8 @@ static Node *postfix_expr(LexerState *lex)
    */
   else if (NmLexer_Accept(lex, SYM_PLUSPLUS)){
     if (isLiteral(target)){
+      /* using NmError_Error not NmError_Lex because lexer's state has gone
+       * further in 'primary_expr' */
       NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.line, lex->current->prev->sym.column);
       exit(EXIT_FAILURE);
     }
@@ -251,6 +253,8 @@ static Node *postfix_expr(LexerState *lex)
    */
   else if (NmLexer_Accept(lex, SYM_MINUSMINUS)){
     if (isLiteral(target)){
+      /* using NmError_Error not NmError_Lex because lexer's state has gone
+       * further in 'primary_expr' */
       NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.line, lex->current->prev->sym.column);
       exit(EXIT_FAILURE);
     }
@@ -508,8 +512,7 @@ static Node *expr(LexerState *lex)
      *
      */
     if (!value){
-      /* FIXME: probably should be a warning */
-      NmError_Error("nothing initialized");
+      NmError_Lex(lex, "nothing was initialized");
     }
     ret = NmAST_GenDecl(lex, name, value, flags);
   }
