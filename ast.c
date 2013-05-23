@@ -576,17 +576,29 @@ NmObject *NmAST_ExecBinop(Node *n)
     binary_ops();
   }
   /*
-   * only ints and floats can be used together in a binary operation
+   * only ints and floats (so far?) can be used together in a binary operation
    */
   else {
     /* XXX int and float */
     if (ob_left->type == OT_INTEGER && ob_right->type == OT_FLOAT){
-      ob_left = NmFloat_NewFromInt(NmInt_VAL(ob_left));
+      /* check if the float is something like 2.0 or 1234.0, and if it is use it
+       * as in int */
+      if ((int)(NmFloat_VAL(ob_right)) == NmFloat_VAL(ob_right)){
+        ob_right = NmInt_New((int)(NmFloat_VAL(ob_right)));
+      } else {
+        ob_left = NmFloat_NewFromInt(NmInt_VAL(ob_left));
+      }
       binary_ops();
     }
     /* XXX float and int */
     else if (ob_left->type == OT_FLOAT && ob_right->type == OT_INTEGER){
-      ob_right = NmFloat_NewFromInt(NmInt_VAL(ob_right));
+      /* check if the float is something like 2.0 or 1234.0, and if it is use it
+       * as in int */
+      if ((int)(NmFloat_VAL(ob_left)) == NmFloat_VAL(ob_left)){
+        ob_left = NmInt_New((int)(NmFloat_VAL(ob_left)));
+      } else {
+        ob_right = NmFloat_NewFromInt(NmInt_VAL(ob_right));
+      }
       binary_ops();
     }
     /* if anything else, the operation is simply not permitted */

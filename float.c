@@ -64,7 +64,12 @@ NmObject *NmFloat_NewFromInt(int i)
 
 NmObject *NmFloat_Add(NmObject *left, NmObject *right)
 {
-  return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
+  /* check if the result could be represented as an int */
+  if ((int)(NmFloat_VAL(left) + NmFloat_VAL(right)) == (NmFloat_VAL(left) + NmFloat_VAL(right))){
+    return NmInt_New((int)(NmFloat_VAL(left) + NmFloat_VAL(right)));
+  } else {
+    return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
+  }
 }
 
 NmObject *NmFloat_TypeRepr(void)
