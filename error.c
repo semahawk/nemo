@@ -57,9 +57,9 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
   va_start(vl, msg);
 
   if (lex->is_file){
-    fprintf(stderr, "In file %s: ", NmInterpState_GetCurr()->source);
+    fprintf(stderr, "In file %s: ", NmScope_GetCurr()->name);
   } else {
-    fprintf(stderr, "In string \"%s\": ", NmInterpState_GetCurr()->source);
+    fprintf(stderr, "In string \"%s\": ", NmScope_GetCurr()->name);
   }
 
   vfprintf(stderr, msg, vl);
@@ -72,12 +72,12 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
 
 void NmError_Parser(Node *n, const char *msg, ...)
 {
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
 
   va_list vl;
   va_start(vl, msg);
 
-  fprintf(stderr, "In file %s: ", interp->source);
+  fprintf(stderr, "In file %s: ", scope->name);
 
   vfprintf(stderr, msg, vl);
   fprintf(stderr, " at line %u in column %u", n->line, n->column);

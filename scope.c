@@ -1,6 +1,6 @@
 /*
  *
- * interp.c
+ * scope.c
  *
  * Created at:  Sat 18 May 2013 11:31:05 CEST 11:31:05
  *
@@ -30,70 +30,75 @@
 
 #include "nemo.h"
 
-/* Doubly linked list of InterpState-s */
-typedef struct InterpStatesList {
-  InterpState *is;
-  struct InterpStatesList *next;
-  struct InterpStatesList *prev;
-} InterpStatesList;
+static ScopesList *head = NULL;
+static ScopesList *tail = NULL;
+static ScopesList *curr = NULL;
 
-static InterpStatesList *head = NULL;
-static InterpStatesList *tail = NULL;
+/* forward */
+static void NmScope_Destroy(Scope *);
 
-InterpState *NmInterpState_New(void)
+Scope *NmScope_New(char *name)
 {
-  InterpState *interp = NmMem_Malloc(sizeof(InterpState));
-  InterpStatesList *interp_list = NmMem_Malloc(sizeof(InterpStatesList));
+  Scope *scope = NmMem_Malloc(sizeof(Scope));
+  ScopesList *scope_list = NmMem_Malloc(sizeof(ScopesList));
   VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *null = NmMem_Malloc(sizeof(Variable));
 
-  interp->cfuncs = NULL;
-  interp->funcs = NULL;
-  interp->globals = NULL;
+  scope->name = NmMem_Strdup(name);
+  scope->cfuncs = NULL;
+  scope->funcs = NULL;
+  scope->globals = NULL;
 
   /* add the "null" variable to the global scope */
   null->name = NmMem_Strdup("null");
   null->value = NmNull;
   NmVar_SETFLAG(null, NMVAR_FLAG_CONST);
   null_list->var = null;
-  null_list->next = interp->globals;
-  interp->globals = null_list;
+  null_list->next = scope->globals;
+  scope->globals = null_list;
 
-  /* append the interp to the interps list */
-  interp_list->is = interp;
+  /* append the scope to the scopes list */
+  scope_list->scope = scope;
   /* the list is empty */
   if (!head && !tail){
-    interp_list->next = head;
-    interp_list->prev = tail;
-    head = interp_list;
-    tail = interp_list;
+    scope_list->next = head;
+    scope_list->prev = tail;
+    head = scope_list;
+    tail = scope_list;
   }
   /* the list is NOT empty */
   else {
-    interp_list->next = head->next;
-    head->next = interp_list;
-    interp_list->prev = head;
-    head = interp_list;
+    scope_list->next = head->next;
+    head->next = scope_list;
+    scope_list->prev = head;
+    head = scope_list;
   }
+  /* set the current point to the new one */
+  curr = scope_list;
 
-  return interp;
+  return scope;
 }
 
-InterpState *NmInterpState_GetCurr(void)
+Scope *NmScope_GetCurr(void)
 {
-  return head->is;
+  return curr->scope;
+}
+
+void NmScope_Restore(void)
+{
+  curr = tail;
 }
 
 /*
- * @name - NmInterpState_Destroy
- * @desc - destroy the current InterpState and all of it's globals and functions
+ * @name - NmScope_Destroy
+ * @desc - destroy the current Scope and all of it's globals and functions
  */
-void NmInterpState_Destroy(void)
+static void NmScope_Destroy(Scope *scope)
 {
   VariablesList *vars;
   VariablesList *vars_next;
   /* destroy all the global variables */
-  for (vars = head->is->globals; vars != NULL; vars = vars_next){
+  for (vars = scope->globals; vars != NULL; vars = vars_next){
     vars_next = vars->next;
     NmMem_Free(vars->var->name);
     NmMem_Free(vars->var);
@@ -103,27 +108,24 @@ void NmInterpState_Destroy(void)
   CFuncsList *cfuncs;
   CFuncsList *cfuncs_next;
   /* destroy all the C functions */
-  for (cfuncs = head->is->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
+  for (cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
     cfuncs_next = cfuncs->next;
     NmMem_Free(cfuncs->func);
     NmMem_Free(cfuncs);
   }
 
-  /* destroy all the elements in the interps list */
-  NmMem_Free(head->is->source);
-  NmMem_Free(head->is);
-  /* and remove it from the interps list */
-  /*   if head->prev is NULL, it means it's the only element in the list */
-  if (head->prev == NULL){
-    NmMem_Free(head);
-    head = NULL;
-    tail = NULL;
-  }
-  /*   if head->prev is NOT NULL then there are others */
-  else {
-    head->prev->next = head->next;
-    InterpStatesList *tmp = head->prev;
-    NmMem_Free(head);
-    head = tmp;
+  /* destroy all the elements in the scopes list */
+  NmMem_Free(scope->name);
+  NmMem_Free(scope);
+}
+
+void NmScope_Tidyup(void)
+{
+  ScopesList *scopes;
+  ScopesList *next;
+
+  for (scopes = tail; scopes != NULL; scopes = next){
+    next = scopes->next;
+    NmScope_Destroy(scopes->scope);
   }
 }

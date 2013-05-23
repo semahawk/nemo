@@ -29,7 +29,7 @@
 #include "ast.h"
 #include "debug.h"
 #include "funcs.h"
-#include "interp.h"
+#include "scope.h"
 #include "error.h"
 #include "mem.h"
 #include "parser.h"
@@ -39,7 +39,7 @@
  * The main type for Nemo
  */
 struct Nemo {
-  /* name of the interpreted file */
+  /* name of the scopereted file */
   char *source;
   /* global variables */
   struct VariablesList *globals;

@@ -1,6 +1,6 @@
 /*
  *
- * interp.h
+ * scope.h
  *
  * Created at:  Sat 18 May 2013 11:05:24 CEST 11:05:24
  *
@@ -32,22 +32,32 @@
 #define INTERP_H
 
 #include "nemo.h"
+#include "vars.h"
 
-struct InterpState {
+struct Scope {
   /* name of the file, or the strings contents, or stdin, whateva */
-  char *source;
+  char *name;
   /* list of global variables */
-  struct VariablesList *globals;
+  VariablesList *globals;
   /* list of the functions */
   CFuncsList *cfuncs;
   FuncsList *funcs;
 };
 
-typedef struct InterpState InterpState;
+/* Doubly linked list of Scope-s */
+struct ScopesList {
+  struct Scope *scope;
+  struct ScopesList *next;
+  struct ScopesList *prev;
+};
 
-InterpState *NmInterpState_New(void);
-InterpState *NmInterpState_GetCurr(void);
-void NmInterpState_Destroy(void);
+typedef struct Scope Scope;
+typedef struct ScopesList ScopesList;
+
+Scope *NmScope_New(char *);
+Scope *NmScope_GetCurr(void);
+void NmScope_Restore(void);
+void NmScope_Tidyup(void);
 
 #endif /* INTERP_H */
 

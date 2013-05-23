@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
 {
   /* the main node from parsing the given file */
   Node *nodest = NULL;
-  /* the main file's interpreter state */
-  InterpState *interp = NmInterpState_New();
+  /* the main file's scopereter state */
+  Scope *main_scope = NmScope_New("main");
   /* file input */
   char input[255];
   /* used for getopt */
@@ -123,11 +123,8 @@ int main(int argc, char *argv[])
     return nmInteractive();
   }
 
-  /* set the sources name */
-  interp->source = NmMem_Strdup(input);
-
   /* parse the file */
-  nodest = NmParser_ParseFile(interp->source);
+  nodest = NmParser_ParseFile(input);
   /* execute the nodes */
   NmAST_Exec(nodest);
   /* tidy up after executing */
@@ -135,7 +132,7 @@ int main(int argc, char *argv[])
 
   /* tidy up */
   NmObject_Tidyup();
-  NmInterpState_Destroy();
+  NmScope_Tidyup();
 
   return EXIT_SUCCESS;
 }
@@ -148,8 +145,6 @@ static int nmInteractive(void)
   unsigned line = 0;
   /* result of the executed input */
   NmObject *ob;
-  /* create the interpreter state */
-  NmInterpState_GetCurr()->source = "stdin";
 
   printf("Welcome to the Nemo " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
@@ -178,14 +173,14 @@ static int nmInteractive(void)
     printf("\n");
   }
 
-  NmInterpState_Destroy();
+  NmScope_Tidyup();
 
   return 0;
 }
 
 void Nm_InitModule(NmModuleFuncs *funcs)
 {
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
 
   /* append all the C functions to the cfuncs */
   for (NmModuleFuncs *f = funcs; f->name != NULL; f++){
@@ -196,8 +191,8 @@ void Nm_InitModule(NmModuleFuncs *funcs)
     func->body = f->ptr;
     list->func = func;
     /* append to the list */
-    list->next = interp->cfuncs;
-    interp->cfuncs = list;
+    list->next = scope->cfuncs;
+    scope->cfuncs = list;
   }
 }
 

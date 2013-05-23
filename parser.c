@@ -733,7 +733,10 @@ static Node *stmt(LexerState *lex)
     if (!strcmp(name, lex->source)){
       ret = NmAST_GenNop(lex);
     } else {
+      Scope *new = NmScope_New(tmp);
       ret = NmParser_ParseFile(name);
+      /* set the current back to main after parsing the file */
+      NmScope_Restore();
     }
     endStmt(lex);
     NmMem_Free(name);

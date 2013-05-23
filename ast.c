@@ -356,7 +356,7 @@ void NmAST_FreeArray(Node *n)
 Node *NmAST_GenName(LexerState *lex, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
   BOOL found = FALSE;
 
   n->type = NT_NAME;
@@ -366,7 +366,7 @@ Node *NmAST_GenName(LexerState *lex, char *s)
   NmDebug_AST(n, "create name node (name: %s)", s);
 
   /* search for the variable */
-  for (VariablesList *vars = interp->globals; vars != NULL; vars = vars->next){
+  for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, n->data.decl.name)){
       found = TRUE;
       break;
@@ -374,14 +374,14 @@ Node *NmAST_GenName(LexerState *lex, char *s)
   }
   /* or, it could be a name of a function that's being called */
   /* search the C functions */
-  for (CFuncsList *cfuncs = interp->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+  for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
     if (!strcmp(cfuncs->func->name, n->data.decl.name)){
       found = TRUE;
       break;
     }
   }
   /* search the user defined functions */
-  for (FuncsList *funcs = interp->funcs; funcs != NULL; funcs = funcs->next){
+  for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
     if (!strcmp(funcs->func->name, n->data.decl.name)){
       found = TRUE;
       break;
@@ -402,12 +402,12 @@ Node *NmAST_GenName(LexerState *lex, char *s)
  */
 NmObject *NmAST_ExecName(Node *n)
 {
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
 
   NmDebug_AST(n, "execute name node");
 
   /* search for the variable */
-  for (VariablesList *vars = interp->globals; vars != NULL; vars = vars->next){
+  for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, n->data.decl.name)){
       return vars->var->value;
     }
@@ -417,13 +417,13 @@ NmObject *NmAST_ExecName(Node *n)
    */
   /* or, it could be a name of a function that's being called */
   /* search the C functions */
-  for (CFuncsList *cfuncs = interp->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+  for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
     if (!strcmp(cfuncs->func->name, n->data.decl.name)){
       return NmNull;
     }
   }
   /* search the user defined functions */
-  for (FuncsList *funcs = interp->funcs; funcs != NULL; funcs = funcs->next){
+  for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
     if (!strcmp(funcs->func->name, n->data.decl.name)){
       return NmNull;
     }
@@ -472,7 +472,7 @@ Node *NmAST_GenBinop(LexerState *lex, Node *left, BinaryOp op, Node *right)
  */
 NmObject *NmAST_ExecBinop(Node *n)
 {
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
 
   Node *left  = n->data.binop.left;
   Node *right = n->data.binop.right;
@@ -500,7 +500,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     }
     name = n->data.binop.left->data.s;
     /* iterate through the variables */
-    for (p = interp->globals; p != NULL; p = p->next){
+    for (p = scope->globals; p != NULL; p = p->next){
       if (!strcmp(p->var->name, name)){
         found = TRUE;
         var = p->var;
@@ -863,13 +863,13 @@ Node *NmAST_GenDecl(LexerState *lex, char *name, Node *value, uint8_t flags)
 
   NmDebug_AST(n, "create variable declaration node (name: %s)", name);
 
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *new_var = NmMem_Malloc(sizeof(Variable));
   VariablesList *p;
 
   /* before doing anything, check if that variable was already declared */
-  for (p = interp->globals; p != NULL; p = p->next){
+  for (p = scope->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
       NmError_Parser(n, "global variable '%s' already declared", n->data.decl.name);
       exit(EXIT_FAILURE);
@@ -887,8 +887,9 @@ Node *NmAST_GenDecl(LexerState *lex, char *name, Node *value, uint8_t flags)
   new_var->flags = n->data.decl.flags;
   /* append to the globals list */
   new_list->var = new_var;
-  new_list->next = interp->globals;
-  interp->globals = new_list;
+  new_list->next = scope->globals;
+  scope->globals = new_list;
+  printf("adding variable %s to scope %s\n", n->data.decl.name, scope->name);
 
   return n;
 }
@@ -997,19 +998,19 @@ Node *NmAST_GenCall(LexerState *lex, char *name, Node **params)
  */
 NmObject *NmAST_ExecCall(Node *n)
 {
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
   char *name = n->data.call.name;
 
   NmDebug_AST(n, "execute function call node");
 
   /* first check for the C functions */
-  for (CFuncsList *list = interp->cfuncs; list != NULL; list = list->next){
+  for (CFuncsList *list = scope->cfuncs; list != NULL; list = list->next){
     if (!strcmp(list->func->name, name)){
       return list->func->body(n->data.call.params);
     }
   }
   /* and then for the Nemo functions */
-  for (FuncsList *list = interp->funcs; list != NULL; list = list->next){
+  for (FuncsList *list = scope->funcs; list != NULL; list = list->next){
     if (!strcmp(list->func->name, name)){
       return NmAST_Exec(list->func->body);
     }
@@ -1051,7 +1052,7 @@ void NmAST_FreeCall(Node *n)
  */
 Node *NmAST_GenFuncDef(LexerState *lex, char *name, Node *body)
 {
-  InterpState *interp = NmInterpState_GetCurr();
+  Scope *scope = NmScope_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
   Func *f = NmMem_Malloc(sizeof(Func));
   Node *n = NmMem_Malloc(sizeof(Node));
@@ -1073,8 +1074,8 @@ Node *NmAST_GenFuncDef(LexerState *lex, char *name, Node *body)
   f->body = body;
   l->func = f;
   /* append the function */
-  l->next = interp->funcs;
-  interp->funcs = l;
+  l->next = scope->funcs;
+  scope->funcs = l;
 
   return n;
 }

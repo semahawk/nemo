@@ -4,7 +4,7 @@ CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
 PREFIX  = /usr/local
 
 OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o
-OBJECTS += interp.o builtin.o
+OBJECTS += scope.o builtin.o
 OBJECTS += int.o float.o string.o null.o array.o
 
 LIBS = -lreadline
@@ -24,7 +24,7 @@ debug.o: debug.c nemo.h
 mem.o: mem.c nemo.h
 ast.o: ast.c nemo.h
 object.o: object.c nemo.h
-interp.o: interp.c nemo.h
+scope.o: scope.c nemo.h
 builtin.o: builtin.c nemo.h
 
 install: all
