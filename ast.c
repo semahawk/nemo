@@ -564,7 +564,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* here are all the binary functions that are available */ \
     op(BINARY_ADD, add); \
     default: \
-      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
+    NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
   }
@@ -591,7 +591,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     }
     /* if anything else, the operation is simply not permitted */
     else {
-      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()));
+      NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op));
       /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
     }
@@ -654,7 +654,7 @@ NmObject *NmAST_ExecUnop(Node *n)
   case TYPE: { \
     if (!target->fn.unary.FUNC){ \
       /* FIXME: print that type good */ \
-      NmError_Parser(n, "invalid unary operator %s for type '%s'", unopToS(n->data.unop.op), NmString_VAL(target->fn.type_repr())); \
+      NmError_Parser(n, "invalid type '%s' for unary operator %s", NmString_VAL(target->fn.type_repr()), unopToS(n->data.unop.op)); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
     } \
