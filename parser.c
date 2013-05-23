@@ -684,6 +684,7 @@ static Node *expr(LexerState *lex)
  *     | '{' block '}'
  *     | function_prototype
  *     | USE NAME ';'
+ *     | INLCLUDE NAME ';'
  *     | IF stmt stmt
  *     | WHILE stmt stmt
  *     | expr IF stmt
@@ -737,6 +738,31 @@ static Node *stmt(LexerState *lex)
       ret = NmParser_ParseFile(name);
       /* set the current back to main after parsing the file */
       NmScope_Restore();
+    }
+    endStmt(lex);
+    NmMem_Free(name);
+  }
+  /*
+   * XXX INCLUDE NAME ';'
+   */
+  else if (NmLexer_Accept(lex, SYM_INCLUDE)){
+    char *tmp;
+    NmDebug_Parser("include ");
+    NmLexer_Force(lex, SYM_NAME);
+    tmp = lex->current->prev->sym.value.s;
+    NmDebug_Parser("%s ", tmp);
+    name = NmMem_Malloc(strlen(tmp) + 4);
+    strncpy(name, tmp, strlen(tmp));
+    name[strlen(tmp)]     = '.';
+    name[strlen(tmp) + 1] = 'n';
+    name[strlen(tmp) + 2] = 'm';
+    name[strlen(tmp) + 3] = '\0';
+    /* return the block that was returned by parsing the file */
+    /* only when the "used" name is different than the current source's name */
+    if (!strcmp(name, lex->source)){
+      ret = NmAST_GenNop(lex);
+    } else {
+      ret = NmParser_ParseFile(name);
     }
     endStmt(lex);
     NmMem_Free(name);

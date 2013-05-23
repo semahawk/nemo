@@ -34,44 +34,45 @@
 #include "nemo.h"
 
 enum SymbolType {
-  SYM_MY,             /* "my"    */
-  SYM_CONST,          /* "const" */
-  SYM_IF,             /* "if"    */
-  SYM_WHILE,          /* "while" */
-  SYM_ELSE,           /* "else"  */
-  SYM_PRINT,          /* "print" */
-  SYM_FN,             /* "fn"    */
-  SYM_USE,            /* "use"   */
-  SYM_INTEGER,        /*         */
-  SYM_FLOAT,          /*         */
-  SYM_STRING,         /*         */
-  SYM_NAME,           /*         */
-  SYM_EQ,             /* "="     */
-  SYM_SEMICOLON,      /* ";"     */
-  SYM_COMMA,          /* ","     */
-  SYM_MINUS,          /* "-"     */
-  SYM_MINUSMINUS,     /* "--"    */
-  SYM_PLUS,           /* "+"     */
-  SYM_PLUSPLUS,       /* "++"    */
-  SYM_TIMES,          /* "*"     */
-  SYM_MODULO,         /* "%"     */
-  SYM_SLASH,          /* "/"     */
-  SYM_LPAREN,         /* "("     */
-  SYM_RPAREN,         /* ")"     */
-  SYM_LMUSTASHE,      /* "{"     */
-  SYM_RMUSTASHE,      /* "}"     */
-  SYM_LBRACKET,       /* "["     */
-  SYM_RBRACKET,       /* "]"     */
-  SYM_LT,             /* "<"     */
-  SYM_GT,             /* ">"     */
-  SYM_BANG,           /* "!"     */
-  SYM_COLON,          /* ":"     */
-  SYM_QUESTION,       /* "?"     */
-  SYM_PLUSEQ,         /* "+="    */
-  SYM_MINUSEQ,        /* "-="    */
-  SYM_TIMESEQ,        /* "*="    */
-  SYM_SLASHEQ,        /* "/="    */
-  SYM_MODULOEQ,       /* "%="    */
+  SYM_MY,             /* "my"      */
+  SYM_CONST,          /* "const"   */
+  SYM_IF,             /* "if"      */
+  SYM_WHILE,          /* "while"   */
+  SYM_ELSE,           /* "else"    */
+  SYM_PRINT,          /* "print"   */
+  SYM_FN,             /* "fn"      */
+  SYM_USE,            /* "use"     */
+  SYM_INCLUDE,        /* "include" */
+  SYM_INTEGER,        /*           */
+  SYM_FLOAT,          /*           */
+  SYM_STRING,         /*           */
+  SYM_NAME,           /*           */
+  SYM_EQ,             /* "="       */
+  SYM_SEMICOLON,      /* ";"       */
+  SYM_COMMA,          /* ","       */
+  SYM_MINUS,          /* "-"       */
+  SYM_MINUSMINUS,     /* "--"      */
+  SYM_PLUS,           /* "+"       */
+  SYM_PLUSPLUS,       /* "++"      */
+  SYM_TIMES,          /* "*"       */
+  SYM_MODULO,         /* "%"       */
+  SYM_SLASH,          /* "/"       */
+  SYM_LPAREN,         /* "("       */
+  SYM_RPAREN,         /* ")"       */
+  SYM_LMUSTASHE,      /* "{"       */
+  SYM_RMUSTASHE,      /* "}"       */
+  SYM_LBRACKET,       /* "["       */
+  SYM_RBRACKET,       /* "]"       */
+  SYM_LT,             /* "<"       */
+  SYM_GT,             /* ">"       */
+  SYM_BANG,           /* "!"       */
+  SYM_COLON,          /* ":"       */
+  SYM_QUESTION,       /* "?"       */
+  SYM_PLUSEQ,         /* "+="      */
+  SYM_MINUSEQ,        /* "-="      */
+  SYM_TIMESEQ,        /* "*="      */
+  SYM_SLASHEQ,        /* "/="      */
+  SYM_MODULOEQ,       /* "%="      */
   SYM_EOS             /* end of script */
 };
 
