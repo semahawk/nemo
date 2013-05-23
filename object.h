@@ -58,6 +58,9 @@ typedef struct StringObject NmStringObject;
 typedef struct ArrayObject NmArrayObject;
 typedef struct ObFreeList ObFreeList;
 
+typedef NmObject *(*BinaryFunc)(NmObject *, NmObject *);
+typedef NmObject *(*UnaryFunc)(NmObject *);
+
 /* forward */
 struct Node;
 
@@ -67,14 +70,14 @@ struct Fn {
   void (*print)(FILE *, NmObject *);
   /* binary operations functions */
   struct {
-    NmObject *(*add)(NmObject *, NmObject *);
-    NmObject *(*index)(NmObject *, NmObject *);
+    BinaryFunc add;
+    BinaryFunc index;
   } binary;
   /* unary operations functions */
   struct {
-    NmObject *(*plus)(NmObject *);
-    NmObject *(*minus)(NmObject *);
-    NmObject *(*negate)(NmObject *);
+    UnaryFunc plus;
+    UnaryFunc minus;
+    UnaryFunc negate;
   } unary;
 };
 
@@ -138,6 +141,7 @@ NmObject *NmInt_NewFromVoidPtr(void *);
 #define NmInt_VAL(ob) (((NmIntObject *)ob)->i)
 
 NmObject *NmFloat_New(double);
+NmObject *NmFloat_NewFromInt(int);
 NmObject *NmFloat_Add(NmObject *, NmObject *);
 NmObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);

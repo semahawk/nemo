@@ -479,7 +479,7 @@ NmObject *NmAST_ExecBinop(Node *n)
 
   NmObject *ob_left = NmAST_Exec(left);
   NmObject *ob_right = NmAST_Exec(right);
-  NmObject *ret;
+  NmObject *ret = NmNull;
 
   NmDebug_AST(n, "execute binary operation node");
 
@@ -543,6 +543,8 @@ NmObject *NmAST_ExecBinop(Node *n)
     return ob_left->fn.binary.index(ob_left, ob_right);
   }
 
+/* <TYPE> is of type { BinaryOp }
+ * <FUNC> is of type { BinaryFunc } */
 #define op(TYPE, FUNC) \
   case TYPE: \
   { \
@@ -556,16 +558,42 @@ NmObject *NmAST_ExecBinop(Node *n)
     break; \
   }
 
+/* DRY */
+#define binary_ops() \
+  switch (n->data.binop.op){ \
+    /* here are all the binary functions that are available */ \
+    op(BINARY_ADD, add); \
+    default: \
+      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
+      /* FIXME: shouldn't exit here */ \
+      exit(EXIT_FAILURE); \
+  }
+
   /* it's all easy when the two types are the same, just look if the type has
    * some function that does the operation, and simply run it and simply return
    * it's result */
   if (ob_left->type == ob_right->type){
-    switch (n->data.binop.op){
-      op(BINARY_ADD, add);
-      default:
-        NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()));
-        /* FIXME: shouldn't exit here */
-        exit(EXIT_FAILURE);
+    binary_ops();
+  }
+  /*
+   * only ints and floats can be used together in a binary operation
+   */
+  else {
+    /* XXX int and float */
+    if (ob_left->type == OT_INTEGER && ob_right->type == OT_FLOAT){
+      ob_left = NmFloat_NewFromInt(NmInt_VAL(ob_left));
+      binary_ops();
+    }
+    /* XXX float and int */
+    else if (ob_left->type == OT_FLOAT && ob_right->type == OT_INTEGER){
+      ob_right = NmFloat_NewFromInt(NmInt_VAL(ob_right));
+      binary_ops();
+    }
+    /* if anything else, the operation is simply not permitted */
+    else {
+      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()));
+      /* FIXME: shouldn't exit here */
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -620,11 +648,13 @@ NmObject *NmAST_ExecUnop(Node *n)
 
   NmDebug_AST(n, "execute unary operation node");
 
+/* <TYPE> is of type { UnaryOp }
+ * <FUNC> is of type { UnaryFunc } */
 #define op(TYPE, FUNC) \
   case TYPE: { \
     if (!target->fn.unary.FUNC){ \
       /* FIXME: print that type good */ \
-      NmError_Parser(n, "invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type); \
+      NmError_Parser(n, "invalid unary operator %s for type '%s'", unopToS(n->data.unop.op), NmString_VAL(target->fn.type_repr())); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
     } \

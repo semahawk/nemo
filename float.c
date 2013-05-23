@@ -57,6 +57,11 @@ NmObject *NmFloat_New(double f)
   return (NmObject *)ob;
 }
 
+NmObject *NmFloat_NewFromInt(int i)
+{
+  return NmFloat_New((double)i);
+}
+
 NmObject *NmFloat_Add(NmObject *left, NmObject *right)
 {
   return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
