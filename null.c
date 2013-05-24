@@ -41,7 +41,8 @@ NmObject *NmNull = &(NmObject){
     .print = NmNull_Print,
     .binary = {
       .add = NULL,
-      .index = NULL
+      .index = NULL,
+      .cmp = NULL
     },
     .unary = {
       .plus = NULL,

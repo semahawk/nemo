@@ -1,5 +1,6 @@
 CC      = gcc
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
+SHELL   = sh
 
 PREFIX  = /usr/local
 
@@ -9,7 +10,7 @@ OBJECTS += int.o float.o string.o null.o array.o
 
 LIBS = -lreadline
 
-.PHONY: all install uninstall clean distclean
+.PHONY: all test install uninstall clean distclean
 all: nemo
 
 nemo: $(OBJECTS)
@@ -26,6 +27,9 @@ ast.o: ast.c nemo.h
 object.o: object.c nemo.h
 scope.o: scope.c nemo.h
 builtin.o: builtin.c nemo.h
+
+test: nemo
+	@$(SHELL) test/runner.sh
 
 install: all
 	install -m 755 nemo $(PREFIX)/bin/nemo

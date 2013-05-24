@@ -70,8 +70,9 @@ struct Fn {
   void (*print)(FILE *, NmObject *);
   /* binary operations functions */
   struct {
-    BinaryFunc add;
-    BinaryFunc index;
+    BinaryFunc add;   /* addition */
+    BinaryFunc index; /* array/string indexing */
+    BinaryFunc cmp;   /* compare */
   } binary;
   /* unary operations functions */
   struct {
@@ -129,6 +130,7 @@ BOOL NmObject_Boolish(NmObject *);
 
 NmObject *NmInt_New(int);
 NmObject *NmInt_Add(NmObject *, NmObject *);
+NmObject *NmInt_Cmp(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
 NmObject *NmInt_Negate(NmObject *);
@@ -143,6 +145,7 @@ NmObject *NmInt_NewFromVoidPtr(void *);
 NmObject *NmFloat_New(double);
 NmObject *NmFloat_NewFromInt(int);
 NmObject *NmFloat_Add(NmObject *, NmObject *);
+NmObject *NmFloat_Cmp(NmObject *, NmObject *);
 NmObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);
 void NmFloat_Destroy(NmObject *);

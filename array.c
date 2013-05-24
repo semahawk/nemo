@@ -39,7 +39,7 @@ static ObFreeList *free_list = NULL;
 NmObject *NmArray_New(size_t nmemb)
 {
   ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmArrayObject *ob = NmMem_Malloc(sizeof(NmArrayObject));
+  NmArrayObject *ob = NmMem_Calloc(1, sizeof(NmArrayObject));
   NmObject **arr = NmMem_Malloc(nmemb * sizeof(NmObject));
 
   ob->type = OT_ARRAY;

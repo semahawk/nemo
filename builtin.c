@@ -42,8 +42,67 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "nemo.h"
+
+static NmObject *builtin_assert(Node **params)
+{
+  unsigned i, count = 0;
+
+  for (i = 0; params != NULL && params[i] != NULL; i++)
+    count++;
+
+  if (count != 2){
+    NmError_Error("wrong number of arguments for function 'assert' (%d when 2 expected)", count);
+    return NULL;
+  }
+
+  NmObject *first  = NmAST_Exec(params[0]);
+  NmObject *second = NmAST_Exec(params[1]);
+
+  /* both are of the same type */
+  if (first->type == second->type){
+    if (!first->fn.binary.cmp){
+      NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+      printf("cmp 1 at %p\n", (void*)first->fn.binary.cmp);
+      return NULL;
+    }
+
+    if (!NmObject_Boolish(first->fn.binary.cmp(first, second))){
+      return NULL;
+    }
+  }
+  /* they are of different types */
+  else {
+    /* XXX int and float */
+    if (first->type == OT_INTEGER && second->type == OT_FLOAT){
+      first = NmFloat_NewFromInt(NmInt_VAL(first));
+      if (!first->fn.binary.cmp){
+        NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+        printf("cmp 2 at %p\n", (void*)first->fn.binary.cmp);
+        return NULL;
+      }
+    }
+    /* XXX float and int */
+    else if (first->type == OT_FLOAT && second->type == OT_INTEGER){
+      second = NmFloat_NewFromInt(NmInt_VAL(second));
+      if (!first->fn.binary.cmp){
+        NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+        printf("cmp 3 at %p\n", (void*)first->fn.binary.cmp);
+        return NULL;
+      }
+    }
+    /* if anything else, the operation is simply not permitted */
+    else {
+      NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+      printf("cmp 4 at %p\n", (void*)first->fn.binary.cmp);
+      return NULL;
+    }
+  }
+
+  return NmInt_New(1);
+}
 
 static NmObject *builtin_print(Node **params)
 {
@@ -69,6 +128,7 @@ static NmObject *builtin_id(Node **params)
 }
 
 static NmModuleFuncs module_funcs[] = {
+  { "assert", builtin_assert },
   { "print", builtin_print },
   { "id", builtin_id },
   { NULL, NULL }

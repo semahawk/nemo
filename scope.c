@@ -127,5 +127,6 @@ void NmScope_Tidyup(void)
   for (scopes = tail; scopes != NULL; scopes = next){
     next = scopes->next;
     NmScope_Destroy(scopes->scope);
+    NmMem_Free(scopes);
   }
 }

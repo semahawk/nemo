@@ -39,7 +39,7 @@ static ObFreeList *free_list = NULL;
 NmObject *NmFloat_New(double f)
 {
   ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmFloatObject *ob = NmMem_Malloc(sizeof(NmFloatObject));
+  NmFloatObject *ob = NmMem_Calloc(1, sizeof(NmFloatObject));
 
   ob->type = OT_FLOAT;
   ob->f = f;
@@ -48,6 +48,7 @@ NmObject *NmFloat_New(double f)
   ob->fn.print = NmFloat_Print;
   ob->fn.binary.add = NmFloat_Add;
   ob->fn.binary.index = NULL;
+  ob->fn.binary.cmp = NmFloat_Cmp;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -70,6 +71,11 @@ NmObject *NmFloat_Add(NmObject *left, NmObject *right)
   } else {
     return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
   }
+}
+
+NmObject *NmFloat_Cmp(NmObject *left, NmObject *right)
+{
+  return NmFloat_VAL(left) == NmFloat_VAL(right) ? NmInt_New(1) : NmInt_New(0);
 }
 
 NmObject *NmFloat_TypeRepr(void)

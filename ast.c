@@ -889,7 +889,6 @@ Node *NmAST_GenDecl(LexerState *lex, char *name, Node *value, uint8_t flags)
   new_list->var = new_var;
   new_list->next = scope->globals;
   scope->globals = new_list;
-  printf("adding variable %s to scope %s\n", n->data.decl.name, scope->name);
 
   return n;
 }
@@ -998,6 +997,7 @@ Node *NmAST_GenCall(LexerState *lex, char *name, Node **params)
  */
 NmObject *NmAST_ExecCall(Node *n)
 {
+  NmObject *ret = NULL;
   Scope *scope = NmScope_GetCurr();
   char *name = n->data.call.name;
 
@@ -1006,13 +1006,29 @@ NmObject *NmAST_ExecCall(Node *n)
   /* first check for the C functions */
   for (CFuncsList *list = scope->cfuncs; list != NULL; list = list->next){
     if (!strcmp(list->func->name, name)){
-      return list->func->body(n->data.call.params);
+      ret = list->func->body(n->data.call.params);
+      /* if a function returns NULL it means something went wrong */
+      if (ret == NULL){
+        NmError_Parser(n, "executing function '%s' went wrong", name);
+        /* FIXME: shouldn't exit here */
+        exit(EXIT_FAILURE);
+      } else {
+        return ret;
+      }
     }
   }
   /* and then for the Nemo functions */
   for (FuncsList *list = scope->funcs; list != NULL; list = list->next){
     if (!strcmp(list->func->name, name)){
-      return NmAST_Exec(list->func->body);
+      ret = NmAST_Exec(list->func->body);
+      /* if a function returns NULL it means something went wrong */
+      if (ret == NULL){
+        NmError_Parser(n, "executing function '%s' went wrong", name);
+        /* FIXME: shouldn't exit here */
+        exit(EXIT_FAILURE);
+      } else {
+        return ret;
+      }
     }
   }
 

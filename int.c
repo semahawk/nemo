@@ -43,7 +43,7 @@ static ObFreeList *free_list = NULL;
 NmObject *NmInt_New(int i)
 {
   ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmIntObject *ob = NmMem_Malloc(sizeof(NmIntObject));
+  NmIntObject *ob = NmMem_Calloc(1, sizeof(NmIntObject));
 
   ob->type = OT_INTEGER;
   ob->i = i;
@@ -52,6 +52,7 @@ NmObject *NmInt_New(int i)
   ob->fn.print = NmInt_Print;
   ob->fn.binary.add = NmInt_Add;
   ob->fn.binary.index = NULL;
+  ob->fn.binary.cmp = NmInt_Cmp;
   ob->fn.unary.plus = NmInt_Plus;
   ob->fn.unary.minus = NmInt_Minus;
   ob->fn.unary.negate = NmInt_Negate;
@@ -67,6 +68,11 @@ NmObject *NmInt_New(int i)
 NmObject *NmInt_Add(NmObject *left, NmObject *right)
 {
   return NmInt_New(NmInt_VAL(left) + NmInt_VAL(right));
+}
+
+NmObject *NmInt_Cmp(NmObject *left, NmObject *right)
+{
+  return NmInt_VAL(left) == NmInt_VAL(right) ? NmInt_New(1) : NmInt_New(0);
 }
 
 NmObject *NmInt_Plus(NmObject *target)

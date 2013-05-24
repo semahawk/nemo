@@ -39,7 +39,7 @@ static ObFreeList *free_list = NULL;
 NmObject *NmString_New(char *s)
 {
   ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmStringObject *ob = NmMem_Malloc(sizeof(NmStringObject));
+  NmStringObject *ob = NmMem_Calloc(1, sizeof(NmStringObject));
 
   ob->type = OT_STRING;
   ob->s = NmMem_Strdup(s);
@@ -61,7 +61,7 @@ NmObject *NmString_New(char *s)
 NmObject *NmString_NewFromChar(char c)
 {
   ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmStringObject *ob = NmMem_Malloc(sizeof(NmStringObject));
+  NmStringObject *ob = NmMem_Calloc(1, sizeof(NmStringObject));
 
   ob->type = OT_STRING;
   /* create this tiny string */
