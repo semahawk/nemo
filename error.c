@@ -64,7 +64,7 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
 
   vfprintf(stderr, msg, vl);
   if (lex->current){
-    fprintf(stderr, " at line %u in column %u", lex->current->sym.line, lex->current->sym.column);
+    fprintf(stderr, " at line %u in column %u", lex->current->sym.pos.line, lex->current->sym.pos.column);
   }
   fprintf(stderr, "\n");
   va_end(vl);
@@ -80,7 +80,7 @@ void NmError_Parser(Node *n, const char *msg, ...)
   fprintf(stderr, "In file %s: ", scope->name);
 
   vfprintf(stderr, msg, vl);
-  fprintf(stderr, " at line %u in column %u", n->line, n->column);
+  fprintf(stderr, " at line %u in column %u", n->pos.line, n->pos.column);
   fprintf(stderr, "\n");
   va_end(vl);
 }

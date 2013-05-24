@@ -45,14 +45,10 @@
 
 #include "nemo.h"
 
-/* forward */
-static const char *binopToS(BinaryOp);
-static const char *unopToS(UnaryOp);
-
 /* a tiny little helpful macro to init the line/column field */
 #define INIT_POS() \
-  n->line   = lex->line; \
-  n->column = lex->column;
+  n->pos.line   = pos.line; \
+  n->pos.column = pos.column;
 
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
@@ -124,7 +120,7 @@ void NmAST_Free(Node *n)
  * @name - NmAST_GenNop
  * @desc - create a n that does NOTHING
  */
-Node *NmAST_GenNop(LexerState *lex)
+Node *NmAST_GenNop(Pos pos)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -166,7 +162,7 @@ void NmAST_FreeNop(Node *n)
  * @name - NmAST_GenInt
  * @desc - create a n holding a single literal integer
  */
-Node *NmAST_GenInt(LexerState *lex, int i)
+Node *NmAST_GenInt(Pos pos, int i)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -208,7 +204,7 @@ void NmAST_FreeInt(Node *n)
  * @name - NmAST_GenFloat
  * @desc - create a n holding a single literal float
  */
-Node *NmAST_GenFloat(LexerState *lex, float f)
+Node *NmAST_GenFloat(Pos pos, float f)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -250,7 +246,7 @@ void NmAST_FreeFloat(Node *n)
  * @name - NmAST_GenString
  * @desc - create a node holding a single literal string
  */
-Node *NmAST_GenString(LexerState *lex, char *s)
+Node *NmAST_GenString(Pos pos, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -293,7 +289,7 @@ void NmAST_FreeString(Node *n)
  * @name - NmAST_GenArray
  * @desc - create a node holding a literal array
  */
-Node *NmAST_GenArray(LexerState *lex, Node **a)
+Node *NmAST_GenArray(Pos pos, Node **a)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
   size_t nmemb = 0;
@@ -353,7 +349,7 @@ void NmAST_FreeArray(Node *n)
  * @name - NmAST_GenName
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(LexerState *lex, char *s)
+Node *NmAST_GenName(Pos pos, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
   Scope *scope = NmScope_GetCurr();
@@ -451,7 +447,7 @@ void NmAST_FreeName(Node *n)
  * @name - NmAST_GenBinop
  * @desc - creates a binary operation n
  */
-Node *NmAST_GenBinop(LexerState *lex, Node *left, BinaryOp op, Node *right)
+Node *NmAST_GenBinop(Pos pos, Node *left, BinaryOp op, Node *right)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -634,7 +630,7 @@ void NmAST_FreeBinop(Node *n)
  * @name - NmAST_GenUnop
  * @desc - creates a n for unary operation
  */
-Node *NmAST_GenUnop(LexerState *lex, Node *target, UnaryOp op)
+Node *NmAST_GenUnop(Pos pos, Node *target, UnaryOp op)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -711,7 +707,7 @@ void NmAST_FreeUnop(Node *n)
  * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *NmAST_GenIf(LexerState *lex, Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -780,7 +776,7 @@ void NmAST_FreeIf(Node *n)
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *NmAST_GenWhile(LexerState *lex, Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -851,7 +847,7 @@ void NmAST_FreeWhile(Node *n)
  *
  *           my variable;
  */
-Node *NmAST_GenDecl(LexerState *lex, char *name, Node *value, uint8_t flags)
+Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -977,7 +973,7 @@ void NmAST_FreeBlock(Node *n)
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
-Node *NmAST_GenCall(LexerState *lex, char *name, Node **params)
+Node *NmAST_GenCall(Pos pos, char *name, Node **params)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -1066,7 +1062,7 @@ void NmAST_FreeCall(Node *n)
  * @name - NmAST_GenFuncDef
  * @desc - creates a node for defining a function of a given <name>
  */
-Node *NmAST_GenFuncDef(LexerState *lex, char *name, Node *body)
+Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body)
 {
   Scope *scope = NmScope_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
@@ -1129,7 +1125,7 @@ void NmAST_FreeFuncDef(Node *n)
   NmMem_Free(n);
 }
 
-static const char *binopToS(BinaryOp op)
+const char *binopToS(BinaryOp op)
 {
   switch (op){
     case BINARY_GT:         return "'>'";
@@ -1151,7 +1147,7 @@ static const char *binopToS(BinaryOp op)
   return "#unknown#binopToS#";
 }
 
-static const char *unopToS(UnaryOp op)
+const char *unopToS(UnaryOp op)
 {
   switch (op){
     case UNARY_PLUS:    return "'+'";

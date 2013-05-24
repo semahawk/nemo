@@ -76,8 +76,8 @@ static void append(LexerState *lex, SymbolType type)
   NmDebug_Lexer(lex, type);
   /* initialize */
   new->sym.type = type;
-  new->sym.line = lex->line;
-  new->sym.column = lex->column;
+  new->sym.pos.line = lex->line;
+  new->sym.pos.column = lex->column;
   /* append it */
   /*   the list is empty */
   if (!lex->head && !lex->tail){
@@ -101,8 +101,8 @@ static void appendInt(LexerState *lex, int i)
   NmDebug_LexerInt(lex, SYM_INTEGER, i);
   /* initialize */
   new->sym.type = SYM_INTEGER;
-  new->sym.line = lex->line;
-  new->sym.column = lex->column;
+  new->sym.pos.line = lex->line;
+  new->sym.pos.column = lex->column;
   new->sym.value.i = i;
   /* append it */
   /*   the list is empty */
@@ -127,8 +127,8 @@ static void appendFloat(LexerState *lex, double f)
   NmDebug_LexerFloat(lex, SYM_FLOAT, f);
   /* initialize */
   new->sym.type = SYM_FLOAT;
-  new->sym.line = lex->line;
-  new->sym.column = lex->column;
+  new->sym.pos.line = lex->line;
+  new->sym.pos.column = lex->column;
   new->sym.value.f = f;
   /* append it */
   /*   the list is empty */
@@ -153,8 +153,8 @@ static void appendStr(LexerState *lex, SymbolType type, char *s)
   NmDebug_LexerStr(lex, type, s);
   /* initialize */
   new->sym.type = type;
-  new->sym.line = lex->line;
-  new->sym.column = lex->column;
+  new->sym.pos.line = lex->line;
+  new->sym.pos.column = lex->column;
   new->sym.value.s = NmMem_Strdup(s);
   /* append it */
   /*   the list is empty */

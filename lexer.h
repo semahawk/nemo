@@ -76,6 +76,12 @@ enum SymbolType {
   SYM_EOS             /* end of script */
 };
 
+/* Position in the code */
+struct Pos {
+  unsigned line;
+  unsigned column;
+};
+
 struct Symbol {
   enum SymbolType type;
   union {
@@ -83,8 +89,7 @@ struct Symbol {
     double f;
     char *s;
   } value;
-  unsigned line;
-  unsigned column;
+  struct Pos pos;
 };
 
 struct SymbolsList {
@@ -103,6 +108,7 @@ struct LexerState {
   struct SymbolsList *current;
 };
 
+typedef struct Pos Pos;
 typedef enum SymbolType SymbolType;
 typedef struct Symbol Symbol;
 typedef struct SymbolsList SymbolsList;
