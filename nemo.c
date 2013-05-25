@@ -50,24 +50,26 @@
 #include <getopt.h>
 #include <errno.h>
 #include <dlfcn.h>
+#include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
 #include "nemo.h"
+#include "config.h"
 
 static int nmInteractive(void);
 
 /* list of all the library handles that need to be dlclosed */
 static LibHandlesList *handles = NULL;
 /* a small tiny handy macro to add a handle to the list */
-#define add_handle(handle) do { \
+#define ADD_HANDLE(handle) do { \
   LibHandlesList *new_list = NmMem_Malloc(sizeof(LibHandlesList)); \
   new_list->handle = handle; \
   new_list->next = handles; \
   handles = new_list; \
 } while (0);
 /* a tiny small macro to dlclose all the handles */
-#define close_handles() do { \
+#define CLOSE_HANDLES() do { \
   LibHandlesList *list; \
   LibHandlesList *next; \
 \
@@ -156,7 +158,7 @@ int main(int argc, char *argv[])
   /* tidy up */
   NmObject_Tidyup();
   NmScope_Tidyup();
-  close_handles();
+  CLOSE_HANDLES();
 
   return EXIT_SUCCESS;
 }
@@ -227,56 +229,101 @@ void Nm_UseModule(char *name)
   NmScope_Restore();
 }
 
+/*
+ * Search paths: (the higher the firster (hehe))
+ *
+ *   - ./
+ *   - /usr/lib/nemo
+ *
+ */
 void Nm_IncludeModule(char *name)
 {
+/* DRY, include a C library */
+#define INCLUDE_SO(PATH) do { \
+  /* fetching the library */ \
+  void  *handle; \
+  void (*lib_init)(void); \
+  char  *error; \
+\
+  handle = dlopen(PATH, RTLD_LAZY); \
+  if (!handle){ \
+    NmError_Error("%s", dlerror()); \
+    exit(EXIT_FAILURE); \
+  } \
+\
+  dlerror(); /* clear any existing error */ \
+\
+  lib_init = dlsym(handle, init_func); \
+\
+  if ((error = dlerror()) != NULL){ \
+    NmError_Error("%s", error); \
+    exit(EXIT_FAILURE); \
+  } \
+\
+  lib_init(); \
+  ADD_HANDLE(handle); \
+  fclose(fp); \
+} while (0);
+
+/* DRY, include a Nemo file */
+#define INCLUDE_NM(PATH) do { \
+  Node *nodest = NmParser_ParseFile(PATH); \
+  NmAST_Exec(nodest); \
+  NmAST_Free(nodest); \
+  fclose(fp); \
+} while (0);
+
   FILE *fp;
-  char so_lib[255];
-  char nm_lib[255];
-  char so_lib_init[32];
+  /* current working directory */
+  char *cwd;
+  /* library path */
+  char lib_path[64];
+  /* function called name_init */
+  char init_func[32];
+  /* library path with name.so appended */
+  char lib_path_so[64];
+  /* library path with name.nm appended */
+  char lib_path_nm[64];
+  /* relative path */
+  char relative_path[64];
+  /* relative path with name.so appended */
+  char relative_path_so[64];
+  /* relative path with name.nm appended */
+  char relative_path_nm[64];
 
-  sprintf(so_lib, "/usr/lib/nemo/%s.so", name);
-  sprintf(so_lib_init, "%s_init", name);
-  sprintf(nm_lib, "./%s.nm", name);
+  /* fetch the cwd */
+  cwd = getcwd(0, 0);
+  /* init the paths */
+  sprintf(lib_path,    LIBDIR "/nemo/");
+  sprintf(lib_path_so, LIBDIR "/nemo/%s.so",   name);
+  sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",   name);
+  sprintf(relative_path,      "%s/",      cwd);
+  sprintf(relative_path_so,   "%s/%s.so", cwd, name);
+  sprintf(relative_path_nm,   "%s/%s.nm", cwd, name);
+  sprintf(init_func,          "%s_init",       name);
 
-  /* there is a file called name.nm in the current directory, use it */
-  if ((fp = fopen(nm_lib, "r")) != NULL){
-    Node *nodest = NmParser_ParseFile(nm_lib);
-    NmAST_Exec(nodest);
-    NmAST_Free(nodest);
-    fclose(fp);
+  /* there is a file called name.so in the current directory */
+  if ((fp = fopen(relative_path_so, "rb")) != NULL){
+    INCLUDE_SO(relative_path_so);
+    return;
+  /* there is a file called name.nm in the current directory */
+  } else if ((fp = fopen(relative_path_nm, "r")) != NULL){
+    INCLUDE_NM(relative_path_nm);
     return;
   }
 
-  /* found a .so library in the LIBPATH directory */
-  if ((fp = fopen(so_lib, "rb")) != NULL){
-    /* fetching the library */
-    void *handle;
-    void (*lib_init)(void);
-    char *error;
-
-    handle = dlopen(so_lib, RTLD_LAZY | RTLD_GLOBAL);
-    if (!handle){
-      NmError_Error("%s", dlerror());
-      exit(EXIT_FAILURE);
-    }
-
-    dlerror(); /* clear any existing error */
-
-    *(void **)(&lib_init) = dlsym(handle, so_lib_init);
-
-    if ((error = dlerror()) != NULL){
-      NmError_Error("%s", error);
-      exit(EXIT_FAILURE);
-    }
-
-    lib_init();
-    add_handle(handle);
-    fclose(fp);
-
+  /* found a .so library in the LIBDIR directory */
+  if ((fp = fopen(lib_path_so, "rb")) != NULL){
+    INCLUDE_SO(lib_path_so);
+    return;
+  /* found a Nemo file in the LIBDIR */
+  } else if ((fp = fopen(lib_path_nm, "r")) != NULL){
+    INCLUDE_NM(lib_path_nm);
     return;
   }
 
-  NmError_Error("couldn't find module '%s'", name);
+  free(cwd); /* getcwd does malloc */
+  NmError_Error("couldn't find module '%s' both in %s and %s", name, relative_path, lib_path);
   exit(EXIT_FAILURE);
 }
 
