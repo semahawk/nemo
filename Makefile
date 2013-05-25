@@ -5,29 +5,21 @@ SHELL   = sh
 LIBPATH = /usr/lib
 PREFIX  = /usr/local
 
-OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o
-OBJECTS += scope.o builtin.o
-OBJECTS += int.o float.o string.o null.o array.o
+OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o builtin.o scope.o int.o float.o string.o null.o array.o
 
 LIBS = -lreadline
 
-.PHONY: all libs test install uninstall clean distclean
+.PHONY: all libnemo libs test install uninstall clean distclean
 all: nemo libs
 
-nemo: $(OBJECTS)
+nemo: $(OBJECTS) libnemo
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o nemo
 
-nemo.o: nemo.c nemo.h
-nemo.h: ast.h debug.h error.h lexer.h parser.h debug.h mem.h object.h
-error.o: error.c nemo.h
-lexer.o: lexer.c nemo.h
-parser.o: parser.c nemo.h
-debug.o: debug.c nemo.h
-mem.o: mem.c nemo.h
-ast.o: ast.c nemo.h
-object.o: object.c nemo.h
-scope.o: scope.c nemo.h
-builtin.o: builtin.c nemo.h
+libnemo:
+	$(CC) $(CFLAGS) $(OBJECTS) -shared -Wl,-soname,libnemo.so -o libnemo.so
+
+%.o: %.c *.h
+	$(CC) $(CFLAGS) $(LIBS) -fPIC -c $< -o $@
 
 libs:
 	@cd lib; make
@@ -38,14 +30,17 @@ test: nemo
 install: all
 	mkdir -p $(LIBPATH)/nemo
 	install -m 644 lib/*.so $(LIBPATH)/nemo
+	install -m 644 lib*.so $(LIBPATH)
 	install -m 755 nemo $(PREFIX)/bin/nemo
 
 uninstall:
+	rm -rf $(LIBPATH)/libnemo*
 	rm -rf $(LIBPATH)/nemo
 	rm -rf $(PREFIX)/bin/nemo
 
 clean:
 	rm -f *.o
+	rm -f *.so*
 	@cd lib; make clean
 
 distclean: clean
