@@ -6,11 +6,12 @@
  *
  * Copyright: (c) 2012-2013 by Szymon Urbaś <szymon.urbas@aol.com>
  *
- * Started at: Sat Sep 15, 16:05:12
+ * Started at: Sat Sep 15, 16:05:12 2012
  *
  * Checkpoints:
- *   Sun Mar 31, 19:47:03 - 300 commits!
- *   Mon Feb  5, 22:18:24 - 200 commits!
+ *   Sat May 25, 14:53:00 2013 - 400 commits!
+ *   Sun Mar 31, 19:47:03 2013 - 300 commits!
+ *   Mon Feb  5, 22:18:24 2013 - 200 commits!
  *
  * License: MIT
  *

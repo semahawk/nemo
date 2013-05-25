@@ -87,7 +87,7 @@ void NmFloat_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
 
-  fprintf(fp, "%f", NmFloat_VAL(ob));
+  fprintf(fp, "%g", NmFloat_VAL(ob));
 }
 
 void NmFloat_Destroy(NmObject *ob)
