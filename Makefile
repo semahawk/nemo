@@ -2,6 +2,7 @@ CC      = gcc
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
 SHELL   = sh
 
+LIBPATH = /usr/lib
 PREFIX  = /usr/local
 
 OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o
@@ -10,8 +11,8 @@ OBJECTS += int.o float.o string.o null.o array.o
 
 LIBS = -lreadline
 
-.PHONY: all test install uninstall clean distclean
-all: nemo
+.PHONY: all libs test install uninstall clean distclean
+all: nemo libs
 
 nemo: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o nemo
@@ -28,17 +29,24 @@ object.o: object.c nemo.h
 scope.o: scope.c nemo.h
 builtin.o: builtin.c nemo.h
 
+libs:
+	@cd lib; make
+
 test: nemo
 	@$(SHELL) test/runner.sh
 
 install: all
+	mkdir -p $(LIBPATH)/nemo
+	install -m 644 lib/*.so $(LIBPATH)/nemo
 	install -m 755 nemo $(PREFIX)/bin/nemo
 
 uninstall:
+	rm -rf $(LIBPATH)/nemo
 	rm -rf $(PREFIX)/bin/nemo
 
 clean:
 	rm -f *.o
+	@cd lib; make clean
 
 distclean: clean
 	rm -f nemo

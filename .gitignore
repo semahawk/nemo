@@ -7,3 +7,4 @@ stdio.nm
 POLIGON
 
 *.o
+*.so
