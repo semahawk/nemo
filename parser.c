@@ -735,7 +735,10 @@ static Node *stmt(LexerState *lex)
     /* return the block that was returned by parsing the file */
     /* only when the "used" name is different than the current source's name */
     if (strcmp(name, lex->source)){
-      Nm_UseModule(tmp);
+      if (!Nm_UseModule(tmp)){
+        NmError_Lex(lex, "using '%s' went wrong", tmp);
+        exit(EXIT_FAILURE);
+      }
       ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
     }
     endStmt(lex);
@@ -759,7 +762,10 @@ static Node *stmt(LexerState *lex)
     /* return the block that was returned by parsing the file */
     /* only when the "used" name is different than the current source's name */
     if (strcmp(name, lex->source)){
-      Nm_IncludeModule(tmp);
+      if (!Nm_IncludeModule(tmp)){
+        NmError_Lex(lex, "including '%s' went wrong", tmp);
+        exit(EXIT_FAILURE);
+      }
       ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
     }
     endStmt(lex);

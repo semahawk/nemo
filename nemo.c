@@ -222,11 +222,15 @@ void Nm_InitModule(NmModuleFuncs *funcs)
   }
 }
 
-void Nm_UseModule(char *name)
+BOOL Nm_UseModule(char *name)
 {
+  BOOL ret;
+
   NmScope_New(name);
-  Nm_IncludeModule(name);
+  ret = Nm_IncludeModule(name);
   NmScope_Restore();
+
+  return ret;
 }
 
 /*
@@ -235,8 +239,11 @@ void Nm_UseModule(char *name)
  *   - ./
  *   - /usr/lib/nemo
  *
+ * Return FALSE if the library couldn't be found
+ *        TRUE  if the library loaded fine
+ *
  */
-void Nm_IncludeModule(char *name)
+BOOL Nm_IncludeModule(char *name)
 {
 /* DRY, include a C library */
 #define INCLUDE_SO(PATH) do { \
@@ -305,26 +312,27 @@ void Nm_IncludeModule(char *name)
   /* there is a file called name.so in the current directory */
   if ((fp = fopen(relative_path_so, "rb")) != NULL){
     INCLUDE_SO(relative_path_so);
-    return;
+    return TRUE;
   /* there is a file called name.nm in the current directory */
   } else if ((fp = fopen(relative_path_nm, "r")) != NULL){
     INCLUDE_NM(relative_path_nm);
-    return;
+    return TRUE;
   }
 
   /* found a .so library in the LIBDIR directory */
   if ((fp = fopen(lib_path_so, "rb")) != NULL){
     INCLUDE_SO(lib_path_so);
-    return;
+    return TRUE;
   /* found a Nemo file in the LIBDIR */
   } else if ((fp = fopen(lib_path_nm, "r")) != NULL){
     INCLUDE_NM(lib_path_nm);
-    return;
+    return TRUE;
   }
 
   free(cwd); /* getcwd does malloc */
   NmError_Error("couldn't find module '%s' both in %s and %s", name, relative_path, lib_path);
-  exit(EXIT_FAILURE);
+
+  return FALSE;
 }
 
 /*

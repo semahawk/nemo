@@ -50,9 +50,10 @@ struct LibHandlesList {
 
 typedef struct LibHandlesList LibHandlesList;
 
+/* TODO: tidy up with the function names */
 void Nm_InitModule(NmModuleFuncs *);
-void Nm_UseModule(char *);
-void Nm_IncludeModule(char *);
+BOOL Nm_UseModule(char *);
+BOOL Nm_IncludeModule(char *);
 void NmBuiltin_Init(void);
 
 #endif /* NEMO_H */
