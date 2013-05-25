@@ -65,6 +65,11 @@ NmObject *NmInt_New(int i)
   return (NmObject *)ob;
 }
 
+NmObject *NmInt_NewFromVoidPtr(void *p)
+{
+  return NmInt_New((intptr_t)p);
+}
+
 NmObject *NmInt_Add(NmObject *left, NmObject *right)
 {
   return NmInt_New(NmInt_VAL(left) + NmInt_VAL(right));
@@ -110,11 +115,6 @@ void NmInt_Destroy(NmObject *ob)
   assert(ob->type == OT_INTEGER);
 
   NmMem_Free(ob);
-}
-
-NmObject *NmInt_NewFromVoidPtr(void *p)
-{
-  return NmInt_New((int)p);
 }
 
 void NmInt_Tidyup(void){

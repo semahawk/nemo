@@ -1,8 +1,8 @@
 /*
  *
- * scope.h
+ * config.h
  *
- * Created at:  Sat 18 May 2013 11:05:24 CEST 11:05:24
+ * Created at:  Sat 25 May 2013 16:08:52 CEST 16:08:52
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,36 +28,10 @@
  *
  */
 
-#ifndef INTERP_H
-#define INTERP_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
-#include "nemo.h"
-#include "vars.h"
+#define HAVE_STDBOOL_H 0
 
-struct Scope {
-  /* name of the file, or the strings contents, or stdin, whateva */
-  char *name;
-  /* list of global variables */
-  VariablesList *globals;
-  /* list of the functions */
-  CFuncsList *cfuncs;
-  FuncsList *funcs;
-};
-
-/* Doubly linked list of Scope-s */
-struct ScopesList {
-  struct Scope *scope;
-  struct ScopesList *next;
-  struct ScopesList *prev;
-};
-
-typedef struct Scope Scope;
-typedef struct ScopesList ScopesList;
-
-Scope *NmScope_GetCurr(void);
-void NmScope_New(char *);
-void NmScope_Restore(void);
-void NmScope_Tidyup(void);
-
-#endif /* INTERP_H */
+#endif /* CONFIG_H */
 

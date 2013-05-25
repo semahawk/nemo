@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
   /* the main node from parsing the given file */
   Node *nodest = NULL;
   /* the main file's scopereter state */
-  Scope *main_scope = NmScope_New("main");
+  NmScope_New("main");
   /* file input */
   char input[255];
   /* used for getopt */
@@ -222,7 +222,7 @@ void Nm_InitModule(NmModuleFuncs *funcs)
 
 void Nm_UseModule(char *name)
 {
-  Scope *new_scope = NmScope_New(name);
+  NmScope_New(name);
   Nm_IncludeModule(name);
   NmScope_Restore();
 }

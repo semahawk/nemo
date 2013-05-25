@@ -4,7 +4,14 @@ foo.nm
 bar.nc
 stdio.nm
 
-POLIGON
-
 *.o
 *.so
+
+# Autotools stuff
+Makefile
+autom4te.cache
+config.status
+config.log
+configure.ac
+configure
+config.h

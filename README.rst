@@ -17,6 +17,7 @@ Install
 
 .. code-block:: sh
 
+    $ ./configure
     $ make
     $ sudo make install
 

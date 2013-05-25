@@ -1,13 +1,13 @@
 #
-# Makefile.  Generated from Makefile.in by configure.
+# @configure_input@
 #
 
 CC      = gcc
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
-SHELL   = /bin/sh
+SHELL   = @SHELL@
 
-LIBDIR = /usr/lib
-PREFIX  = /usr/local
+LIBDIR = @libdir@
+PREFIX  = @prefix@
 
 OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o builtin.o scope.o int.o float.o string.o null.o array.o
 

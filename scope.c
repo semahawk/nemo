@@ -37,7 +37,7 @@ static ScopesList *curr = NULL;
 /* forward */
 static void NmScope_Destroy(Scope *);
 
-Scope *NmScope_New(char *name)
+void NmScope_New(char *name)
 {
   Scope *scope = NmMem_Malloc(sizeof(Scope));
   ScopesList *scope_list = NmMem_Malloc(sizeof(ScopesList));
@@ -75,8 +75,6 @@ Scope *NmScope_New(char *name)
   }
   /* set the current point to the new one */
   curr = scope_list;
-
-  return scope;
 }
 
 Scope *NmScope_GetCurr(void)

@@ -12,19 +12,19 @@
 #include <string.h>
 #include <assert.h>
 
-/* version of Nemo, obviously */
-#define VERSION "0.16.0"
-
-/* our little own BOOL type */
-#define  BOOL short
-#ifndef  TRUE
-# define TRUE 1
-#endif
-#ifndef  FALSE
-# define FALSE 0
+#ifdef HAVE_STDBOOL_H
+#  include <stdbool.h>
+#  define BOOL  bool
+#  define TRUE  true
+#  define FALSE false
+#else
+#  define BOOL  short
+#  define TRUE  1
+#  define FALSE 0
 #endif
 
 /* order here is quite significant */
+#include "config.h"
 #include "lexer.h"
 #include "object.h"
 #include "ast.h"
@@ -35,6 +35,9 @@
 #include "mem.h"
 #include "parser.h"
 #include "vars.h"
+
+/* version of Nemo, obviously */
+#define VERSION "0.16.0"
 
 /*
  * Singly linked list of any dynamically loaded library's handle
