@@ -64,6 +64,8 @@ typedef struct Error      Error;
 typedef struct ErrorState ErrorState;
 #endif
 
+char *NmError_GetCurr(void);
+void NmError_SetString(const char *msg, ...);
 void NmError_Fatal(const char *msg, ...);
 void NmError_Error(const char *msg, ...);
 void NmError_Lex(LexerState *, const char *msg, ...);

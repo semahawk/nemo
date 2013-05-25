@@ -33,6 +33,22 @@
  *       executing/compiling
  */
 
+/* current error message to be printed, changeable via NmError_SetString */
+static char err[255] = "something went wrong";
+
+char *NmError_GetCurr(void)
+{
+  return err;
+}
+
+void NmError_SetString(const char *msg, ...)
+{
+  va_list vl;
+  va_start(vl, msg);
+  vsprintf(err, msg, vl);
+  va_end(vl);
+}
+
 void NmError_Fatal(const char *msg, ...){
   va_list vl;
   va_start(vl, msg);

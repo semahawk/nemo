@@ -1005,7 +1005,7 @@ NmObject *NmAST_ExecCall(Node *n)
       ret = list->func->body(n->data.call.params);
       /* if a function returns NULL it means something went wrong */
       if (ret == NULL){
-        NmError_Parser(n, "executing function '%s' went wrong", name);
+        NmError_Parser(n, NmError_GetCurr());
         /* FIXME: shouldn't exit here */
         exit(EXIT_FAILURE);
       } else {

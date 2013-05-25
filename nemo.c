@@ -254,8 +254,8 @@ BOOL Nm_IncludeModule(char *name)
 \
   handle = dlopen(PATH, RTLD_LAZY); \
   if (!handle){ \
-    NmError_Error("%s", dlerror()); \
-    exit(EXIT_FAILURE); \
+    NmError_SetString("%s", dlerror()); \
+    return FALSE; \
   } \
 \
   dlerror(); /* clear any existing error */ \
@@ -263,8 +263,8 @@ BOOL Nm_IncludeModule(char *name)
   lib_init = dlsym(handle, init_func); \
 \
   if ((error = dlerror()) != NULL){ \
-    NmError_Error("%s", error); \
-    exit(EXIT_FAILURE); \
+    NmError_SetString("%s", error); \
+    return FALSE; \
   } \
 \
   lib_init(); \
@@ -330,7 +330,7 @@ BOOL Nm_IncludeModule(char *name)
   }
 
   free(cwd); /* getcwd does malloc */
-  NmError_Error("couldn't find module '%s' both in %s and %s", name, relative_path, lib_path);
+  NmError_SetString("couldn't find module '%s' both in %s and %s", name, relative_path, lib_path);
 
   return FALSE;
 }

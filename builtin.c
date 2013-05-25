@@ -54,7 +54,7 @@ static NmObject *builtin_assert(Node **params)
     count++;
 
   if (count != 2){
-    NmError_Error("wrong number of arguments for function 'assert' (%d when 2 expected)", count);
+    NmError_SetString("wrong number of arguments for function 'assert' (%d when 2 expected)", count);
     return NULL;
   }
 
@@ -64,8 +64,7 @@ static NmObject *builtin_assert(Node **params)
   /* both are of the same type */
   if (first->type == second->type){
     if (!first->fn.binary.cmp){
-      NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
-      printf("cmp 1 at %p\n", (void*)first->fn.binary.cmp);
+      NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
       return NULL;
     }
 
@@ -79,8 +78,7 @@ static NmObject *builtin_assert(Node **params)
     if (first->type == OT_INTEGER && second->type == OT_FLOAT){
       first = NmFloat_NewFromInt(NmInt_VAL(first));
       if (!first->fn.binary.cmp){
-        NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
-        printf("cmp 2 at %p\n", (void*)first->fn.binary.cmp);
+        NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
         return NULL;
       }
     }
@@ -88,15 +86,13 @@ static NmObject *builtin_assert(Node **params)
     else if (first->type == OT_FLOAT && second->type == OT_INTEGER){
       second = NmFloat_NewFromInt(NmInt_VAL(second));
       if (!first->fn.binary.cmp){
-        NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
-        printf("cmp 3 at %p\n", (void*)first->fn.binary.cmp);
+        NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
         return NULL;
       }
     }
     /* if anything else, the operation is simply not permitted */
     else {
-      NmError_Error("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
-      printf("cmp 4 at %p\n", (void*)first->fn.binary.cmp);
+      NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
       return NULL;
     }
   }

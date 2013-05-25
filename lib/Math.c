@@ -39,14 +39,14 @@ static NmObject *Math_sqrt(Node **params)
     count++;
 
   if (count != 1){
-    NmError_Error("wrong number of arguments for function 'sqrt' (%d when 1 expected)", count);
+    NmError_SetString("wrong number of arguments for function 'sqrt' (%d when 1 expected)", count);
     return NULL;
   }
 
   NmObject *param  = NmAST_Exec(params[0]);
 
   if (param->type != OT_INTEGER){
-    NmError_Error("wrong type '%s' for function 'sqrt', 'int' expected", NmString_VAL(param->fn.type_repr()));
+    NmError_SetString("wrong type '%s' for function 'sqrt', 'int' expected", NmString_VAL(param->fn.type_repr()));
     return NULL;
   }
 

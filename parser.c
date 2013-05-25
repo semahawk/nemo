@@ -736,7 +736,7 @@ static Node *stmt(LexerState *lex)
     /* only when the "used" name is different than the current source's name */
     if (strcmp(name, lex->source)){
       if (!Nm_UseModule(tmp)){
-        NmError_Lex(lex, "using '%s' went wrong", tmp);
+        NmError_Lex(lex, NmError_GetCurr());
         exit(EXIT_FAILURE);
       }
       ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
@@ -763,7 +763,7 @@ static Node *stmt(LexerState *lex)
     /* only when the "used" name is different than the current source's name */
     if (strcmp(name, lex->source)){
       if (!Nm_IncludeModule(tmp)){
-        NmError_Lex(lex, "including '%s' went wrong", tmp);
+        NmError_Lex(lex, NmError_GetCurr());
         exit(EXIT_FAILURE);
       }
       ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
