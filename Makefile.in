@@ -32,7 +32,6 @@ test: nemo
 	@$(SHELL) test/runner.sh
 
 install: all
-	mkdir -p $(LIBDIR)/nemo
 	install -m 755 lib/*.so $(LIBDIR)/nemo
 	install -m 755 lib*.so $(LIBDIR)
 	install -m 755 nemo $(PREFIX)/bin/nemo
