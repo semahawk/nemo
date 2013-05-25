@@ -12,6 +12,9 @@
 #include <string.h>
 #include <assert.h>
 
+/* version of Nemo, obviously */
+#define VERSION "0.16.1"
+
 #ifdef HAVE_STDBOOL_H
 #  include <stdbool.h>
 #  define BOOL  bool
@@ -35,9 +38,6 @@
 #include "mem.h"
 #include "parser.h"
 #include "vars.h"
-
-/* version of Nemo, obviously */
-#define VERSION "0.16.0"
 
 /*
  * Singly linked list of any dynamically loaded library's handle
