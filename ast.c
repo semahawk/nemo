@@ -96,7 +96,7 @@ static void (*freeFuncs[])(Node *) =
 
 /*
  * @name - NmAST_Exec
- * @desc - executes given node and returns the NmObject *it resulted in
+ * @desc - executes given node and returns the { NmObject * } it resulted in
  */
 NmObject *NmAST_Exec(Node *n)
 {

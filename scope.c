@@ -81,6 +81,11 @@ Scope *NmScope_New(char *name)
 
 Scope *NmScope_GetCurr(void)
 {
+  if (!curr){
+    NmError_Error("ran out of scopes!");
+    exit(EXIT_FAILURE);
+  }
+
   return curr->scope;
 }
 
@@ -110,6 +115,7 @@ static void NmScope_Destroy(Scope *scope)
   /* destroy all the C functions */
   for (cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
     cfuncs_next = cfuncs->next;
+    NmMem_Free(cfuncs->func->name);
     NmMem_Free(cfuncs->func);
     NmMem_Free(cfuncs);
   }

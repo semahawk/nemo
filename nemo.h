@@ -8,6 +8,7 @@
 #define NEMO_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -36,18 +37,19 @@
 #include "vars.h"
 
 /*
- * The main type for Nemo
+ * Singly linked list of any dynamically loaded library's handle
+ * so that we can dlclose them and not leak any memory
  */
-struct Nemo {
-  /* name of the scopereted file */
-  char *source;
-  /* global variables */
-  struct VariablesList *globals;
+struct LibHandlesList {
+  void *handle;
+  struct LibHandlesList *next;
 };
 
-typedef struct Nemo Nemo;
+typedef struct LibHandlesList LibHandlesList;
 
 void Nm_InitModule(NmModuleFuncs *);
+void Nm_UseModule(char *);
+void Nm_IncludeModule(char *);
 void NmBuiltin_Init(void);
 
 #endif /* NEMO_H */

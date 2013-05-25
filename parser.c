@@ -734,13 +734,9 @@ static Node *stmt(LexerState *lex)
     name[strlen(tmp) + 3] = '\0';
     /* return the block that was returned by parsing the file */
     /* only when the "used" name is different than the current source's name */
-    if (!strcmp(name, lex->source)){
-      ret = NmAST_GenNop(lex->current->sym.pos);
-    } else {
-      Scope *new = NmScope_New(tmp);
-      ret = NmParser_ParseFile(name);
-      /* set the current back to main after parsing the file */
-      NmScope_Restore();
+    if (strcmp(name, lex->source)){
+      Nm_UseModule(tmp);
+      ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
     }
     endStmt(lex);
     NmMem_Free(name);
@@ -762,10 +758,9 @@ static Node *stmt(LexerState *lex)
     name[strlen(tmp) + 3] = '\0';
     /* return the block that was returned by parsing the file */
     /* only when the "used" name is different than the current source's name */
-    if (!strcmp(name, lex->source)){
-      ret = NmAST_GenNop(lex->current->sym.pos);
-    } else {
-      ret = NmParser_ParseFile(name);
+    if (strcmp(name, lex->source)){
+      Nm_IncludeModule(tmp);
+      ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
     }
     endStmt(lex);
     NmMem_Free(name);

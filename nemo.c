@@ -48,12 +48,34 @@
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
+#include <dlfcn.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
 #include "nemo.h"
 
 static int nmInteractive(void);
+
+/* list of all the library handles that need to be dlclosed */
+static LibHandlesList *handles = NULL;
+/* a small tiny handy macro to add a handle to the list */
+#define add_handle(handle) do { \
+  LibHandlesList *new_list = NmMem_Malloc(sizeof(LibHandlesList)); \
+  new_list->handle = handle; \
+  new_list->next = handles; \
+  handles = new_list; \
+} while (0);
+/* a tiny small macro to dlclose all the handles */
+#define close_handles() do { \
+  LibHandlesList *list; \
+  LibHandlesList *next; \
+\
+  for (list = handles; list != NULL; list = next){ \
+    next = list->next; \
+    dlclose(list->handle); \
+    NmMem_Free(list); \
+  } \
+} while (0);
 
 int main(int argc, char *argv[])
 {
@@ -133,6 +155,7 @@ int main(int argc, char *argv[])
   /* tidy up */
   NmObject_Tidyup();
   NmScope_Tidyup();
+  close_handles();
 
   return EXIT_SUCCESS;
 }
@@ -187,7 +210,7 @@ void Nm_InitModule(NmModuleFuncs *funcs)
     CFuncsList *list = NmMem_Malloc(sizeof(CFuncsList));
     CFunc *func = NmMem_Malloc(sizeof(CFunc));
 
-    func->name = f->name;
+    func->name = NmMem_Strdup(f->name);
     func->body = f->ptr;
     list->func = func;
     /* append to the list */
@@ -196,11 +219,71 @@ void Nm_InitModule(NmModuleFuncs *funcs)
   }
 }
 
+void Nm_UseModule(char *name)
+{
+  Scope *new_scope = NmScope_New(name);
+  Nm_IncludeModule(name);
+  NmScope_Restore();
+}
+
+void Nm_IncludeModule(char *name)
+{
+  FILE *fp;
+  char so_lib[255];
+  char nm_lib[255];
+  char so_lib_init[32];
+
+  sprintf(so_lib, "/usr/lib/nemo/%s.so", name);
+  sprintf(so_lib_init, "%s_init", name);
+  sprintf(nm_lib, "./%s.nm", name);
+
+  /* there is a file called name.nm in the current directory, use it */
+  if ((fp = fopen(nm_lib, "r")) != NULL){
+    Node *nodest = NmParser_ParseFile(nm_lib);
+    NmAST_Exec(nodest);
+    NmAST_Free(nodest);
+    fclose(fp);
+    return;
+  }
+
+  /* found a .so library in the LIBPATH directory */
+  if ((fp = fopen(so_lib, "rb")) != NULL){
+    /* fetching the library */
+    void *handle;
+    void (*lib_init)(void);
+    char *error;
+
+    handle = dlopen(so_lib, RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle){
+      NmError_Error("%s", dlerror());
+      exit(EXIT_FAILURE);
+    }
+
+    dlerror(); /* clear any existing error */
+
+    *(void **)(&lib_init) = dlsym(handle, so_lib_init);
+
+    if ((error = dlerror()) != NULL){
+      NmError_Error("%s", error);
+      exit(EXIT_FAILURE);
+    }
+
+    lib_init();
+    add_handle(handle);
+    fclose(fp);
+
+    return;
+  }
+
+  NmError_Error("couldn't find module '%s'", name);
+  exit(EXIT_FAILURE);
+}
+
 /*
  * Megadeth, Running Wild, Gamma Ray, Iron Savior
  * Helloween, Testament
  * Within Temptation, Nightwish, Avantasia
- * Stratovarius, Steve Vai, At Vance
+ * Stratovarius, Steve Vai, At Vance, Rhapsody of Fire
  *
  * Family Guy, The Office, Monty Python
  *
