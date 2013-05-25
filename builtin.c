@@ -46,20 +46,15 @@
 
 #include "nemo.h"
 
-static NmObject *builtin_assert(Node **params)
+static NmObject *builtin_assert(NmObject *args)
 {
-  unsigned i, count = 0;
-
-  for (i = 0; params != NULL && params[i] != NULL; i++)
-    count++;
-
-  if (count != 2){
-    NmError_SetString("wrong number of arguments for function 'assert' (%d when 2 expected)", count);
+  if (NmArray_NMEMB(args) != 2){
+    NmError_SetString("wrong number of arguments for function 'assert' (%d when 2 expected)", NmArray_NMEMB(args));
     return NULL;
   }
 
-  NmObject *first  = NmAST_Exec(params[0]);
-  NmObject *second = NmAST_Exec(params[1]);
+  NmObject *first  = NmArray_GETELEM(args, 0);
+  NmObject *second = NmArray_GETELEM(args, 1);
 
   /* both are of the same type */
   if (first->type == second->type){
@@ -100,14 +95,12 @@ static NmObject *builtin_assert(Node **params)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_print(Node **params)
+static NmObject *builtin_print(NmObject *args)
 {
-  unsigned i;
-
-  for (i = 0; params != NULL && params[i] != NULL; i++){
-    NmObject_PRINT(stdout, NmAST_Exec(params[i]));
+  for (size_t i = 0; i < NmArray_NMEMB(args); i++){
+    NmObject_PRINT(stdout, NmArray_GETELEM(args, i));
     /* this the last parameter */
-    if (params[i + 1] == NULL){
+    if (i + 1 == NmArray_NMEMB(args)){
       fprintf(stdout, "\n");
     /* this is NOT the last parameter */
     } else {
@@ -118,9 +111,14 @@ static NmObject *builtin_print(Node **params)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_id(Node **params)
+static NmObject *builtin_id(NmObject *args)
 {
-  return NmInt_NewFromVoidPtr((void *)params[0]);
+  if (NmArray_NMEMB(args) != 1){
+    NmError_SetString("wrong number of arguments for function 'assert' (%d when 1 expected)", NmArray_NMEMB(args));
+    return NULL;
+  }
+
+  return NmInt_NewFromVoidPtr((void *)NmArray_GETELEM(args, 0));
 }
 
 static NmModuleFuncs module_funcs[] = {

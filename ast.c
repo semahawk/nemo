@@ -1002,7 +1002,19 @@ NmObject *NmAST_ExecCall(Node *n)
   /* first check for the C functions */
   for (CFuncsList *list = scope->cfuncs; list != NULL; list = list->next){
     if (!strcmp(list->func->name, name)){
-      ret = list->func->body(n->data.call.params);
+      size_t nmemb = 0;
+      size_t i = 0;
+      /* count how many elements there are */
+      for (Node **p = n->data.call.params; *p != NULL; p++)
+        nmemb++;
+      /* parameters are stored as an array */
+      NmObject *array = NmArray_New(nmemb);
+      /* set the arrays elements */
+      for (Node **p = n->data.array.a; *p != NULL; p++, i++){
+        NmArray_SETELEM(array, i, NmAST_Exec(*p));
+      }
+      /* execute the function */
+      ret = list->func->body(array);
       /* if a function returns NULL it means something went wrong */
       if (ret == NULL){
         NmError_Parser(n, NmError_GetCurr());

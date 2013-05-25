@@ -31,19 +31,14 @@
 #include <math.h>
 #include <nemo.h>
 
-static NmObject *Math_sqrt(Node **params)
+static NmObject *Math_sqrt(NmObject *args)
 {
-  unsigned i, count = 0;
-
-  for (i = 0; params != NULL && params[i] != NULL; i++)
-    count++;
-
-  if (count != 1){
-    NmError_SetString("wrong number of arguments for function 'sqrt' (%d when 1 expected)", count);
+  if (NmArray_NMEMB(args) != 1){
+    NmError_SetString("wrong number of arguments for function 'sqrt' (%d when 1 expected)", NmArray_NMEMB(args));
     return NULL;
   }
 
-  NmObject *param  = NmAST_Exec(params[0]);
+  NmObject *param  = NmArray_GETELEM(args, 0);
 
   if (param->type != OT_INTEGER){
     NmError_SetString("wrong type '%s' for function 'sqrt', 'int' expected", NmString_VAL(param->fn.type_repr()));

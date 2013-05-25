@@ -34,7 +34,7 @@
 #include "nemo.h"
 
 /* type of the C functions */
-typedef NmObject *(*NmCFunc)(Node **);
+typedef NmObject *(*NmCFunc)(NmObject /* array */ *);
 
 struct Func {
   /* name of the function */
