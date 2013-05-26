@@ -31,6 +31,23 @@
 #include <math.h>
 #include <nemo.h>
 
+static NmObject *Math_sin(NmObject *args)
+{
+  if (NmArray_NMEMB(args) != 1){
+    NmError_SetString("wrong number of arguments for function 'sin' (%d when 1 expected)", NmArray_NMEMB(args));
+    return NULL;
+  }
+
+  NmObject *param  = NmArray_GETELEM(args, 0);
+
+  if (param->type != OT_FLOAT){
+    NmError_SetString("wrong type '%s' for function 'sin', 'float' expected", NmString_VAL(param->fn.type_repr()));
+    return NULL;
+  }
+
+  return NmFloat_New(sin(NmFloat_VAL(NmArray_GETELEM(args, 0))));
+}
+
 static NmObject *Math_sqrt(NmObject *args)
 {
   if (NmArray_NMEMB(args) != 1){
@@ -51,6 +68,7 @@ static NmObject *Math_sqrt(NmObject *args)
 static NmModuleFuncs Math_funcs[] =
 {
   { "sqrt", Math_sqrt },
+  { "sin", Math_sin },
   { NULL, NULL }
 };
 
