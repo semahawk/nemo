@@ -29,7 +29,7 @@ libs: libnemo.so
 test:
 	@$(SHELL) test/runner.sh
 
-install: all
+install: nemo
 	mkdir -p $(LIBDIR)/nemo
 	install -m 755 lib/*.so $(LIBDIR)/nemo/
 	install -m 755 lib*.so $(LIBDIR)

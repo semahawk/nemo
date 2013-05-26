@@ -217,7 +217,7 @@ static int nmInteractive(void)
   /* result of the executed input */
   NmObject *ob;
 
-  printf("Welcome to the Nemo " VERSION " interactive!\n");
+  printf("Welcome to the \e[1;34mNemo\e[0;0m " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
 
   for (;;){

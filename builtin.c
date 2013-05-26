@@ -96,6 +96,150 @@ static NmObject *builtin_assert(NmObject *args)
   return NmInt_New(1);
 }
 
+static NmObject *builtin_printf(NmObject *args)
+{
+  /* skip over the formatting string */
+  size_t i = 1;
+  /* number of arguments without the formatting string */
+  size_t count = 0;
+  char *p;
+
+  if (NmArray_NMEMB(args) < 1){
+    NmError_SetString("wrong number of arguments for function 'printf' (%d when at least 1 expected)", NmArray_NMEMB(args));
+    return NULL;
+  }
+
+  NmObject *format = NmArray_GETELEM(args, 0);
+
+  for (p = NmString_VAL(format); *p != '\0'; p++){
+    if (*p == '%'){
+      switch (*(p + 1)){
+        case 'i': /* fall */
+        case 'f': /* through */
+        case 's':
+        case 'a':
+        case '%':
+          count++;
+          break;
+        default: NmError_SetString("unknown format '%c' in 'printf'", *(p + 1));
+                 return NULL;
+      }
+    }
+  }
+
+  /* search if all the formats are valid */
+  for (p = NmString_VAL(format); *p != '\0'; p++){
+    if (*p == '\\'){
+      switch (*(p + 1)){
+        case  'n': /* fall */
+        case  't': /* through */
+        case  'a':
+        case  '%':
+        case '\\':
+          p++;
+          break;
+        default: NmError_SetString("unknown escaping sequence '%c%c' in 'printf'", '\\', *(p + 1));
+                 return NULL;
+      }
+    } else if (*p == '%'){
+      if (count + 1 > NmArray_NMEMB(args)){
+        NmError_SetString("not enough formatting arguments for 'printf' (%d when %d expected)", NmArray_NMEMB(args) - 1, count);
+        return NULL;
+      }
+      /* fetch the next argument */
+      NmObject *ob = NmArray_GETELEM(args, i);
+      switch (*(p + 1)){
+        case 'i':
+          if (ob->type != OT_INTEGER){
+            NmError_SetString("wrong type '%s' for format 'i'", NmString_VAL(ob->fn.type_repr()));
+            return NULL;
+          }
+          i++; p++;
+          break;
+        case 'f':
+          if (ob->type != OT_FLOAT){
+            NmError_SetString("wrong type '%s' for format 'f'", NmString_VAL(ob->fn.type_repr()));
+            return NULL;
+          }
+          i++; p++;
+          break;
+        case 's':
+          if (ob->type != OT_STRING){
+            NmError_SetString("wrong type '%s' for format 's'", NmString_VAL(ob->fn.type_repr()));
+            return NULL;
+          }
+          i++; p++;
+          break;
+        case 'a':
+          if (ob->type != OT_ARRAY){
+            NmError_SetString("wrong type '%s' for format 'a'", NmString_VAL(ob->fn.type_repr()));
+            return NULL;
+          }
+          i++; p++;
+          break;
+        case '%':
+          p++;
+          break;
+        default: /* should never get here as it should've been already checked up there */
+                 return NULL;
+      }
+    }
+  }
+
+  /* check if the number of arguments is correct */
+  if (NmArray_NMEMB(args) > i){
+    NmError_SetString("too much formatting arguments for 'printf' (%d when %d expected)", NmArray_NMEMB(args) - 1, count);
+    return NULL;
+  }
+
+  /* skip over the formatting string */
+  i = 1;
+
+  for (p = NmString_VAL(format); *p != '\0'; p++){
+    if (*p == '\\'){
+      switch (*(p + 1)){
+        case 'n':  putchar('\n');
+                   p++;
+                   break;
+        case 't':  putchar('\t');
+                   p++;
+                   break;
+        case 'a':  putchar('\a');
+                   p++;
+                   break;
+        case '%':  putchar('%');
+                   p++;
+        case '\\': putchar('\\');
+                   p++;
+                   break;
+        default: /* should never get here as it should've been already checked up there */
+                   return NULL;
+      }
+    } else if (*p == '%'){
+      /* fetch the next argument */
+      NmObject *ob = NmArray_GETELEM(args, i);
+      switch (*(p + 1)){
+        case 'i': /* fall */
+        case 'f': /* through */
+        case 's':
+        case 'a':
+          NmObject_PRINT(stdout, ob);
+          p++;
+          break;
+        case '%': putchar('%');
+                  break;
+        default: /* should never get here as it should've been already checked up there */
+                 return NULL;
+      }
+      i++;
+    } else {
+      putchar(*p);
+    }
+  }
+
+  return NmInt_New(1);
+}
+
 static NmObject *builtin_print(NmObject *args)
 {
   for (size_t i = 0; i < NmArray_NMEMB(args); i++){
@@ -124,8 +268,9 @@ static NmObject *builtin_id(NmObject *args)
 
 static NmModuleFuncs module_funcs[] = {
   { "assert", builtin_assert },
-  { "print", builtin_print },
-  { "id", builtin_id },
+  { "printf", builtin_printf },
+  { "print",  builtin_print  },
+  { "id",     builtin_id     },
   { NULL, NULL }
 };
 
