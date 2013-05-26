@@ -90,9 +90,16 @@ int main(int argc, char *argv[])
   char input[255];
   /* used for getopt */
   int c;
+  /* if the --eval flag was supplied, this gets set to TRUE and the interactive
+   * mode is not run when an argument was not supplied */
+  BOOL met_e_flag = FALSE;
+
+  /* fetch the builtin functions */
+  NmBuiltin_Init();
 
   while (1){
     static struct option long_options[] = {
+      { "eval", required_argument, 0, 'e' },
       { "debug", required_argument, 0, 'd' },
       { "version", no_argument, 0, 'v' },
       { 0, 0, 0, 0 }
@@ -100,42 +107,51 @@ int main(int argc, char *argv[])
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "d:v", long_options, &option_index);
+    c = getopt_long(argc, argv, "e:d:v", long_options, &option_index);
 
     if (c == -1)
       break;
 
     switch (c){
-      case 'd': {
-                  switch (*optarg){
-                    case 'h': printf("\nDebug options include:\n");
-                              printf("  a   abstract syntax tree nodes creation and deallocation\n");
-                              printf("  m   memory allocation, deallocation and so-on\n");
-                              printf("  p   parser messages\n");
-                              printf("  l   lexer messages\n\n");
-                              return EXIT_SUCCESS;
-                    case 'a': NmDebug_SetFlag(DEBUG_FLAG_AST);
-                              break;
-                    case 'l': NmDebug_SetFlag(DEBUG_FLAG_LEXER);
-                              break;
-                    case 'm': NmDebug_SetFlag(DEBUG_FLAG_MEMORY);
-                              break;
-                    case 'p': NmDebug_SetFlag(DEBUG_FLAG_PARSER);
-                              break;
-                    default:  NmError_Error("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
-                              return EXIT_FAILURE;
-                  }
-                  break;
-                }
+      case 'e':
+      {
+        met_e_flag = TRUE;
+        /* parse the file */
+        Node *node = NmParser_ParseString(optarg);
+        /* execute the nodes */
+        NmAST_Exec(node);
+        /* tidy up after executing */
+        NmAST_FreeBlock(node);
+        break;
+      }
+      case 'd':
+      {
+        switch (*optarg){
+          case 'h': printf("\nDebug options include:\n");
+                    printf("  a   abstract syntax tree nodes creation and deallocation\n");
+                    printf("  m   memory allocation, deallocation and so-on\n");
+                    printf("  p   parser messages\n");
+                    printf("  l   lexer messages\n\n");
+                    return EXIT_SUCCESS;
+          case 'a': NmDebug_SetFlag(DEBUG_FLAG_AST);
+                    break;
+          case 'l': NmDebug_SetFlag(DEBUG_FLAG_LEXER);
+                    break;
+          case 'm': NmDebug_SetFlag(DEBUG_FLAG_MEMORY);
+                    break;
+          case 'p': NmDebug_SetFlag(DEBUG_FLAG_PARSER);
+                    break;
+          default:  NmError_Error("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
+                    return EXIT_FAILURE;
+        }
+        break;
+      }
       case 'v': printf("Nemo v" VERSION ", " __DATE__ " " __TIME__"\n");
                 return EXIT_SUCCESS;
-      case '?': break;
+      case '?': return EXIT_FAILURE;
       default: abort();
     }
   }
-
-  /* fetch the builtin functions */
-  NmBuiltin_Init();
 
   /* an argument was passed */
   if (optind < argc){
@@ -145,7 +161,10 @@ int main(int argc, char *argv[])
     /*
      * XXX exitting code here
      */
-    return nmInteractive();
+    if (met_e_flag)
+      return EXIT_SUCCESS;
+    else
+      return nmInteractive();
   }
 
   /* parse the file */
