@@ -18,11 +18,9 @@ for i in test/*.nm; do
   fi
 done
 
-echo -n "Done"
-
 if [ $fail -eq 1 ]; then
-  echo ", but something went wrong."
   exit 1
 else
-  echo "!"
+  echo "Done!"
+  exit 0
 fi

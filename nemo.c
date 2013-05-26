@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 {
   /* the main node from parsing the given file */
   Node *nodest = NULL;
-  /* the main file's scopereter state */
+  /* the main file's scope */
   NmScope_New("main");
   /* file input */
   char input[255];
@@ -99,24 +99,50 @@ int main(int argc, char *argv[])
 
   while (1){
     static struct option long_options[] = {
-      { "eval", required_argument, 0, 'e' },
-      { "debug", required_argument, 0, 'd' },
-      { "version", no_argument, 0, 'v' },
+      { "use",     required_argument, 0, 'u' },
+      { "include", required_argument, 0, 'i' },
+      { "eval",    required_argument, 0, 'e' },
+      { "debug",   required_argument, 0, 'd' },
+      { "version", no_argument,       0, 'v' },
       { 0, 0, 0, 0 }
     };
 
     int option_index = 0;
 
-    c = getopt_long(argc, argv, "e:d:v", long_options, &option_index);
+    c = getopt_long(argc, argv, "u:i:e:d:v", long_options, &option_index);
 
     if (c == -1)
       break;
 
     switch (c){
+      case 'u':
+      {
+        char line[64];
+        sprintf(line, "use %s", optarg);
+        /* parse the string */
+        Node *node = NmParser_ParseString(line);
+        /* execute the nodes */
+        NmAST_Exec(node);
+        /* tidy up after executing */
+        NmAST_FreeBlock(node);
+        break;
+      }
+      case 'i':
+      {
+        char line[64];
+        sprintf(line, "include %s", optarg);
+        /* parse the string */
+        Node *node = NmParser_ParseString(line);
+        /* execute the nodes */
+        NmAST_Exec(node);
+        /* tidy up after executing */
+        NmAST_FreeBlock(node);
+        break;
+      }
       case 'e':
       {
         met_e_flag = TRUE;
-        /* parse the file */
+        /* parse the string */
         Node *node = NmParser_ParseString(optarg);
         /* execute the nodes */
         NmAST_Exec(node);

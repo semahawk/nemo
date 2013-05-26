@@ -35,7 +35,7 @@
 #include "vars.h"
 
 struct Scope {
-  /* name of the file, or the strings contents, or stdin, whateva */
+  /* name of scope, eg. main, Math */
   char *name;
   /* list of global variables */
   VariablesList *globals;

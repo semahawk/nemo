@@ -6,9 +6,7 @@ OBJECTS = Math.o
 
 LIBS = -lnemo -lm
 
-.PHONY: all clean
-all: libs
-
+.PHONY: libs clean
 libs: $(OBJECTS)
 
 %.o: %.c

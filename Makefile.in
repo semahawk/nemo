@@ -11,24 +11,22 @@ PREFIX  = @prefix@
 
 OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o builtin.o scope.o int.o float.o string.o null.o array.o
 
-LIBS = -lnemo -lreadline
+LIBS = -lnemo @LIBS@
 
-.PHONY: all libnemo libs test install uninstall clean distclean
-all: nemo libs
-
-nemo: $(OBJECTS) libnemo
+.PHONY: libs test install uninstall clean distclean
+nemo: libnemo.so libs
 	$(CC) $(CFLAGS) -L. $(LIBS) -o nemo
 
-libnemo:
+libnemo.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -shared -Wl,-soname,libnemo.so -o libnemo.so
 
 %.o: %.c *.h
-	$(CC) $(CFLAGS) $(LIBS) -fPIC -c $< -o $@
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
-libs: libnemo
+libs: libnemo.so
 	@cd lib; make
 
-test: nemo
+test:
 	@$(SHELL) test/runner.sh
 
 install: all

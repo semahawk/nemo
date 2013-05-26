@@ -64,6 +64,7 @@ static NmObject *builtin_assert(NmObject *args)
     }
 
     if (!NmObject_Boolish(first->fn.binary.cmp(first, second))){
+      NmError_SetString("assertion failed");
       return NULL;
     }
   }
