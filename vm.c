@@ -24,8 +24,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "nvm.h"
-#include "grammar.h"
+#include "vm.h"
 
 /*
  * FOS - First On Stack

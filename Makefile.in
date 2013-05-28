@@ -9,23 +9,29 @@ SHELL   = @SHELL@
 LIBDIR = @libdir@
 PREFIX  = @prefix@
 
-OBJECTS  = nemo.o object.o lexer.o parser.o error.o debug.o mem.o ast.o builtin.o scope.o int.o float.o string.o null.o array.o
+# every .c file
+OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
 
 LIBS = -lnemo @LIBS@
 
 .PHONY: libs test install uninstall clean distclean
+# the executable
 nemo: libnemo.so libs
 	$(CC) $(CFLAGS) -L. $(LIBS) -o nemo
 
+# Nemo's main library, the one that gets linked with third-party libraries
 libnemo.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -shared -Wl,-soname,libnemo.so -o libnemo.so
 
+# yup, every .c file should have it's own .h file
 %.o: %.c *.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
+# the standard libraries
 libs: libnemo.so
 	@cd lib; make
 
+# test cases
 test:
 	@$(SHELL) test/runner.sh
 
