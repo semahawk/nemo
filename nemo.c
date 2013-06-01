@@ -193,6 +193,22 @@ int main(int argc, char *argv[])
       return nmInteractive();
   }
 
+  /* first, count how many arguments the are after the input file */
+  int ARGV_count = 0;
+  for (int i = optind; i < argc; i++)
+    ARGV_count++;
+
+  /* create the ARGC variable and the ARGV array if any args are present */
+  Variable *ARGC = NmVar_New("ARGC", NmInt_New(ARGV_count));
+  NmVar_SETFLAG(ARGC, NMVAR_FLAG_CONST);
+  /* NOTE: set it's members after the command line parsing */
+  Variable *ARGV = NmVar_New("ARGV", NmArray_New(ARGV_count));
+  for (int i = 0; i < ARGV_count; i++){
+    /*printf("ARG: %s\n", argv[i + optind]);*/
+    NmArray_SETELEM(ARGV->value, i, NmString_New(argv[i + optind]));
+  }
+  NmVar_SETFLAG(ARGV, NMVAR_FLAG_CONST);
+
   /* parse the file */
   nodest = NmParser_ParseFile(input);
   /* execute the nodes */

@@ -1,8 +1,8 @@
 /*
  *
- * vars.h
+ * vars.c
  *
- * Created at:  Wed 15 May 2013 20:23:34 CEST 20:23:34
+ * Created at:  Sat 01 Jun 2013 18:08:13 CEST 18:08:13
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,46 +28,28 @@
  *
  */
 
-#ifndef VARS_H
-#define VARS_H
-
-#include <stdint.h>
-
 #include "nemo.h"
 
-/* In both the macros <var> is of type { Variable * } */
-/* a handy macro to set the given <flag> in the given <var> */
-#define NmVar_SETFLAG(var,flag) (var->flags |= 1 << (flag))
-/* a handy macro to get the given <flag> from the given <var> */
-#define NmVar_GETFLAG(var,flag) (var->flags & (1 << (flag)))
-
-/* these numbers define at which bit the flag is stored */
-#define NMVAR_FLAG_CONST 0
-
 /*
- * Type for variables in Nemo
+ * Creates a new variable of name <name> and value <value> in the current scope.
+ *
+ * Note: One have to set flag manually for it (using NmVar_SETFLAG)
+ *
+ * Returns the variable that was created
  */
-struct Variable {
-  /* flags, that describe different behaviours */
-  uint8_t flags;
-  /* obviously */
-  char *name;
-  /* the variables value */
-  NmObject *value;
-};
+Variable *NmVar_New(char *name, NmObject *value)
+{
+  Scope *scope = NmScope_GetCurr();
+  VariablesList *vars_list = NmMem_Malloc(sizeof(VariablesList));
+  Variable *var = NmMem_Malloc(sizeof(Variable));
 
-/*
- * Singly linked list for variables
- */
-struct VariablesList {
-  struct Variable *var;
-  struct VariablesList *next;
-};
+  /* add the newly created variable to the global scope */
+  var->name = NmMem_Strdup(name);
+  var->value = value;
+  vars_list->var = var;
+  vars_list->next = scope->globals;
+  scope->globals = vars_list;
 
-typedef struct VariablesList VariablesList;
-typedef struct Variable      Variable;
-
-Variable *NmVar_New(char *name, NmObject *value);
-
-#endif /* VARS_H */
+  return var;
+}
 
