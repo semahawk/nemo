@@ -46,6 +46,27 @@
 
 #include "nemo.h"
 
+static NmObject *builtin_len(NmObject *args)
+{
+  if (NmArray_NMEMB(args) != 1){
+    NmError_SetString("wrong number of arguments for function 'len' (%d when 2 expected)", NmArray_NMEMB(args));
+    return NULL;
+  }
+
+  NmObject *ob = NmArray_GETELEM(args, 0);
+
+  if (ob->type != OT_ARRAY && ob->type != OT_STRING){
+    NmError_SetString("wrong argument type for function 'len' (%s when 'string' or 'array' expected)", NmString_VAL(ob->fn.type_repr()));
+    return NULL;
+  }
+
+  if (ob->type == OT_ARRAY)
+    return NmInt_New(NmArray_NMEMB(ob));
+  /* it can't be anything else than string down here */
+  else
+    return NmInt_New(strlen(NmString_VAL(ob)));
+}
+
 static NmObject *builtin_assert(NmObject *args)
 {
   if (NmArray_NMEMB(args) != 2){
@@ -268,9 +289,10 @@ static NmObject *builtin_id(NmObject *args)
 
 static NmModuleFuncs module_funcs[] = {
   { "assert", builtin_assert },
-  { "printf", builtin_printf },
-  { "print",  builtin_print  },
   { "id",     builtin_id     },
+  { "len",    builtin_len    },
+  { "print",  builtin_print  },
+  { "printf", builtin_printf },
   { NULL, NULL }
 };
 

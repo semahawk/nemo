@@ -295,8 +295,9 @@ Node *NmAST_GenArray(Pos pos, Node **a)
   size_t nmemb = 0;
 
   /* count how many elements there are */
-  for (Node **p = a; *p != NULL; p++)
-    nmemb++;
+  if (a)
+    for (Node **p = a; *p != NULL; p++)
+      nmemb++;
 
   n->type = NT_ARRAY;
   n->data.array.nmemb = nmemb;
@@ -319,9 +320,9 @@ NmObject *NmAST_ExecArray(Node *n)
 
   NmDebug_AST(n, "execute array node");
 
-  for (Node **p = n->data.array.a; *p != NULL; p++, i++){
-    NmArray_SETELEM(ob, i, NmAST_Exec(*p));
-  }
+  if (n->data.array.a)
+    for (Node **p = n->data.array.a; *p != NULL; p++, i++)
+      NmArray_SETELEM(ob, i, NmAST_Exec(*p));
 
   return ob;
 }
@@ -337,9 +338,9 @@ void NmAST_FreeArray(Node *n)
 
   NmDebug_AST(n, "free array node");
 
-  for (Node **p = n->data.array.a; *p != NULL; p++){
-    NmAST_Free(*p);
-  }
+  if (n->data.array.a)
+    for (Node **p = n->data.array.a; *p != NULL; p++)
+      NmAST_Free(*p);
 
   NmMem_Free(n->data.array.a);
   NmMem_Free(n);
