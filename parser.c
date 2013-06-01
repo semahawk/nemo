@@ -708,6 +708,7 @@ static Node *stmt(LexerState *lex)
   Node *body  = NULL;
   Node *elsee = NULL;
   char *name  = NULL;
+  char *path  = NULL;
 
   /*
    * XXX ';'
@@ -732,10 +733,17 @@ static Node *stmt(LexerState *lex)
     name[strlen(tmp) + 1] = 'n';
     name[strlen(tmp) + 2] = 'm';
     name[strlen(tmp) + 3] = '\0';
+    /*
+     * XXX USE NAME PATH ';'
+     */
+    if (NmLexer_Peek(lex, SYM_STRING)){
+      path = lex->current->sym.value.s;
+      NmLexer_Skip(lex);
+    }
     /* return the block that was returned by parsing the file */
     /* only when the "used" name is different than the current source's name */
     if (strcmp(name, lex->source)){
-      if (!Nm_UseModule(tmp)){
+      if (!Nm_UseModule(tmp, path)){
         NmError_Lex(lex, NmError_GetCurr());
         exit(EXIT_FAILURE);
       }
@@ -759,10 +767,17 @@ static Node *stmt(LexerState *lex)
     name[strlen(tmp) + 1] = 'n';
     name[strlen(tmp) + 2] = 'm';
     name[strlen(tmp) + 3] = '\0';
+    /*
+     * XXX INCLUDE NAME PATH ';'
+     */
+    if (NmLexer_Peek(lex, SYM_STRING)){
+      path = lex->current->sym.value.s;
+      NmLexer_Skip(lex);
+    }
     /* return the block that was returned by parsing the file */
     /* only when the "used" name is different than the current source's name */
     if (strcmp(name, lex->source)){
-      if (!Nm_IncludeModule(tmp)){
+      if (!Nm_IncludeModule(tmp, path)){
         NmError_Lex(lex, NmError_GetCurr());
         exit(EXIT_FAILURE);
       }

@@ -201,10 +201,9 @@ int main(int argc, char *argv[])
   /* create the ARGC variable and the ARGV array if any args are present */
   Variable *ARGC = NmVar_New("ARGC", NmInt_New(ARGV_count));
   NmVar_SETFLAG(ARGC, NMVAR_FLAG_CONST);
-  /* NOTE: set it's members after the command line parsing */
+  /* set it's members */
   Variable *ARGV = NmVar_New("ARGV", NmArray_New(ARGV_count));
   for (int i = 0; i < ARGV_count; i++){
-    /*printf("ARG: %s\n", argv[i + optind]);*/
     NmArray_SETELEM(ARGV->value, i, NmString_New(argv[i + optind]));
   }
   NmVar_SETFLAG(ARGV, NMVAR_FLAG_CONST);
@@ -283,12 +282,12 @@ void Nm_InitModule(NmModuleFuncs *funcs)
   }
 }
 
-BOOL Nm_UseModule(char *name)
+BOOL Nm_UseModule(char *name, char *path)
 {
   BOOL ret;
 
   NmScope_New(name);
-  ret = Nm_IncludeModule(name);
+  ret = Nm_IncludeModule(name, path);
   NmScope_Restore();
 
   return ret;
@@ -297,6 +296,7 @@ BOOL Nm_UseModule(char *name)
 /*
  * Search paths: (the higher the firster (hehe))
  *
+ *   - <path>
  *   - ./
  *   - /usr/lib/nemo
  *
@@ -304,7 +304,7 @@ BOOL Nm_UseModule(char *name)
  *        TRUE  if the library loaded fine
  *
  */
-BOOL Nm_IncludeModule(char *name)
+BOOL Nm_IncludeModule(char *name, char *path)
 {
 /* DRY, include a C library */
 #define INCLUDE_SO(PATH) do { \
@@ -352,6 +352,12 @@ BOOL Nm_IncludeModule(char *name)
   char lib_path_so[64];
   /* library path with name.nm appended */
   char lib_path_nm[64];
+  /* custom path */
+  char custom_path[64];
+  /* custom path with name.so appended */
+  char custom_path_so[64];
+  /* custom path with name.nm appended */
+  char custom_path_nm[64];
   /* relative path */
   char relative_path[64];
   /* relative path with name.so appended */
@@ -363,18 +369,31 @@ BOOL Nm_IncludeModule(char *name)
   cwd = getcwd(0, 0);
   /* init the paths */
   sprintf(lib_path,    LIBDIR "/nemo/");
-  sprintf(lib_path_so, LIBDIR "/nemo/%s.so",   name);
-  sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",   name);
+  sprintf(lib_path_so, LIBDIR "/nemo/%s.so",    name);
+  sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",    name);
+  sprintf(custom_path,        "%s/",      path);
+  sprintf(custom_path_so,     "%s/%s.so", path, name);
+  sprintf(custom_path_nm,     "%s/%s.nm", path, name);
   sprintf(relative_path,      "%s/",      cwd);
-  sprintf(relative_path_so,   "%s/%s.so", cwd, name);
-  sprintf(relative_path_nm,   "%s/%s.nm", cwd, name);
-  sprintf(init_func,          "%s_init",       name);
+  sprintf(relative_path_so,   "%s/%s.so", cwd,  name);
+  sprintf(relative_path_nm,   "%s/%s.nm", cwd,  name);
+  sprintf(init_func,          "%s_init",        name);
 
-  /* there is a file called name.so in the current directory */
+  /* there is a .so library in the custom path */
+  if ((fp = fopen(custom_path_so, "rb")) != NULL){
+    INCLUDE_SO(custom_path_so);
+    return TRUE;
+  /* there is a Nemo file in the custom path */
+  } else if ((fp = fopen(custom_path_nm, "r")) != NULL){
+    INCLUDE_NM(custom_path_nm);
+    return TRUE;
+  }
+
+  /* there is a .so library in the current directory */
   if ((fp = fopen(relative_path_so, "rb")) != NULL){
     INCLUDE_SO(relative_path_so);
     return TRUE;
-  /* there is a file called name.nm in the current directory */
+  /* there is a Nemo file in the current directory */
   } else if ((fp = fopen(relative_path_nm, "r")) != NULL){
     INCLUDE_NM(relative_path_nm);
     return TRUE;
@@ -391,7 +410,10 @@ BOOL Nm_IncludeModule(char *name)
   }
 
   free(cwd); /* getcwd does malloc */
-  NmError_SetString("couldn't find module '%s' both in %s and %s", name, relative_path, lib_path);
+  if (path)
+    NmError_SetString("couldn't find module '%s' in any of the following: %s, %s, %s", name, custom_path, relative_path, lib_path);
+  else
+    NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
 
   return FALSE;
 }
