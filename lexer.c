@@ -208,7 +208,7 @@ void NmLexer_LexFile(LexerState *lex, char *fname)
   size_t flen = 0;
 
   if ((fp = fopen(fname, "r")) == NULL){
-    NmError_Fatal("cannot open file '%s'", fname);
+    NmError_Fatal("cannot open file '%s': %s", fname, strerror(errno));
     exit(EXIT_FAILURE);
   }
   /* get the files length */

@@ -59,6 +59,10 @@
 
 static int nmInteractive(void);
 
+/* list of all modules that were included */
+/* by included it's meant that were include-d or use-d */
+static Included *included = NULL;
+
 /* list of all the library handles that need to be dlclosed */
 static LibHandlesList *handles = NULL;
 /* a small tiny handy macro to add a handle to the list */
@@ -79,6 +83,32 @@ static LibHandlesList *handles = NULL;
     NmMem_Free(list); \
   } \
 } while (0);
+
+/*
+ * Add another position in the included list
+ */
+static inline void included_new(char *name)
+{
+  Included *new = NmMem_Malloc(sizeof(Included));
+  new->name = NmMem_Strdup(name);
+  new->next = included;
+  included  = new;
+}
+
+/*
+ * Free the included list
+ */
+static inline void included_tidyup(void)
+{
+  Included *curr;
+  Included *next;
+
+  for (curr = included; curr != NULL; curr = next){
+    next = curr->next;
+    NmMem_Free(curr->name);
+    NmMem_Free(curr);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -219,6 +249,7 @@ int main(int argc, char *argv[])
   NmObject_Tidyup();
   NmScope_Tidyup();
   CLOSE_HANDLES();
+  included_tidyup();
 
   return EXIT_SUCCESS;
 }
@@ -306,6 +337,10 @@ BOOL Nm_UseModule(char *name, char *path)
  */
 BOOL Nm_IncludeModule(char *name, char *path)
 {
+  /*
+   * NOTE: both macros goto included which is at the very end of the function
+   */
+
 /* DRY, include a C library */
 #define INCLUDE_SO(PATH) do { \
   /* fetching the library */ \
@@ -331,6 +366,7 @@ BOOL Nm_IncludeModule(char *name, char *path)
   lib_init(); \
   ADD_HANDLE(handle); \
   fclose(fp); \
+  goto included; \
 } while (0);
 
 /* DRY, include a Nemo file */
@@ -339,6 +375,7 @@ BOOL Nm_IncludeModule(char *name, char *path)
   NmAST_Exec(nodest); \
   NmAST_Free(nodest); \
   fclose(fp); \
+  goto included; \
 } while (0);
 
   FILE *fp;
@@ -382,31 +419,25 @@ BOOL Nm_IncludeModule(char *name, char *path)
   /* there is a .so library in the custom path */
   if ((fp = fopen(custom_path_so, "rb")) != NULL){
     INCLUDE_SO(custom_path_so);
-    return TRUE;
   /* there is a Nemo file in the custom path */
   } else if ((fp = fopen(custom_path_nm, "r")) != NULL){
     INCLUDE_NM(custom_path_nm);
-    return TRUE;
   }
 
   /* there is a .so library in the current directory */
   if ((fp = fopen(relative_path_so, "rb")) != NULL){
     INCLUDE_SO(relative_path_so);
-    return TRUE;
   /* there is a Nemo file in the current directory */
   } else if ((fp = fopen(relative_path_nm, "r")) != NULL){
     INCLUDE_NM(relative_path_nm);
-    return TRUE;
   }
 
   /* found a .so library in the LIBDIR directory */
   if ((fp = fopen(lib_path_so, "rb")) != NULL){
     INCLUDE_SO(lib_path_so);
-    return TRUE;
   /* found a Nemo file in the LIBDIR */
   } else if ((fp = fopen(lib_path_nm, "r")) != NULL){
     INCLUDE_NM(lib_path_nm);
-    return TRUE;
   }
 
   free(cwd); /* getcwd does malloc */
@@ -414,6 +445,28 @@ BOOL Nm_IncludeModule(char *name, char *path)
     NmError_SetString("couldn't find module '%s' in any of the following: %s, %s, %s", name, custom_path, relative_path, lib_path);
   else
     NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
+
+  return FALSE;
+
+included: {
+    free(cwd); /* getcwd does malloc */
+    /* add the modules name to the included list */
+    included_new(name);
+    return TRUE;
+  }
+}
+
+/*
+ * Searches the list of included modules and return TRUE if encountered one
+ * called <name>, FALSE if not
+ */
+BOOL NmModule_WasIncluded(char *name)
+{
+  for (Included *module = included; module != NULL; module = module->next)
+    if (!strcmp(name, module->name)){
+      printf("checking %s == %s\n", name, module->name);
+      return TRUE;
+    }
 
   return FALSE;
 }

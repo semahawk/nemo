@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 /* version of Nemo, obviously */
 #define VERSION "0.16.4"
@@ -48,13 +49,24 @@ struct LibHandlesList {
   struct LibHandlesList *next;
 };
 
+/*
+ * Singly linked list that holds a names of modules/libraries/files
+ * (same thing) that were included/used.
+ */
+struct Included {
+  char *name;
+  struct Included *next;
+};
+
 typedef struct LibHandlesList LibHandlesList;
+typedef struct Included Included;
 
 /* TODO: these function names may be confusing */
 void Nm_InitModule(NmModuleFuncs *);
 BOOL Nm_UseModule(char *name, char *path);
 BOOL Nm_IncludeModule(char *name, char *path);
 void NmBuiltin_Init(void);
+BOOL NmModule_WasIncluded(char *name);
 
 #endif /* NEMO_H */
 
