@@ -408,20 +408,24 @@ BOOL Nm_IncludeModule(char *name, char *path)
   sprintf(lib_path,    LIBDIR "/nemo/");
   sprintf(lib_path_so, LIBDIR "/nemo/%s.so",    name);
   sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",    name);
-  sprintf(custom_path,        "%s/",      path);
-  sprintf(custom_path_so,     "%s/%s.so", path, name);
-  sprintf(custom_path_nm,     "%s/%s.nm", path, name);
+  if (path){
+    sprintf(custom_path,        "%s/",      path);
+    sprintf(custom_path_so,     "%s/%s.so", path, name);
+    sprintf(custom_path_nm,     "%s/%s.nm", path, name);
+  }
   sprintf(relative_path,      "%s/",      cwd);
   sprintf(relative_path_so,   "%s/%s.so", cwd,  name);
   sprintf(relative_path_nm,   "%s/%s.nm", cwd,  name);
   sprintf(init_func,          "%s_init",        name);
 
-  /* there is a .so library in the custom path */
-  if ((fp = fopen(custom_path_so, "rb")) != NULL){
-    INCLUDE_SO(custom_path_so);
-  /* there is a Nemo file in the custom path */
-  } else if ((fp = fopen(custom_path_nm, "r")) != NULL){
-    INCLUDE_NM(custom_path_nm);
+  if (path){
+    /* there is a .so library in the custom path */
+    if ((fp = fopen(custom_path_so, "rb")) != NULL){
+      INCLUDE_SO(custom_path_so);
+    /* there is a Nemo file in the custom path */
+    } else if ((fp = fopen(custom_path_nm, "r")) != NULL){
+      INCLUDE_NM(custom_path_nm);
+    }
   }
 
   /* there is a .so library in the current directory */
@@ -464,7 +468,6 @@ BOOL NmModule_WasIncluded(char *name)
 {
   for (Included *module = included; module != NULL; module = module->next)
     if (!strcmp(name, module->name)){
-      printf("checking %s == %s\n", name, module->name);
       return TRUE;
     }
 

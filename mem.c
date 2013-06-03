@@ -92,8 +92,14 @@ void NmMem_Free(void *p)
   free(p);
 }
 
+/*
+ * Returns a copyied string or NULL if the string is NULL.
+ */
 char *NmMem_Strdup(char *p)
 {
+  if (!p)
+    return NULL;
+
   char *np = NmMem_Malloc(strlen(p) + 1);
   return np ? strcpy(np, p) : np;
 }

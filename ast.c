@@ -69,7 +69,8 @@ static NmObject *(*execFuncs[])(Node *) =
   NmAST_ExecDecl,
   NmAST_ExecBlock,
   NmAST_ExecCall,
-  NmAST_ExecFuncDef
+  NmAST_ExecFuncDef,
+  NmAST_ExecInclude
 };
 
 /*
@@ -91,7 +92,8 @@ static void (*freeFuncs[])(Node *) =
   NmAST_FreeDecl,
   NmAST_FreeBlock,
   NmAST_FreeCall,
-  NmAST_FreeFuncDef
+  NmAST_FreeFuncDef,
+  NmAST_FreeInclude
 };
 
 /*
@@ -102,7 +104,10 @@ NmObject *NmAST_Exec(Node *n)
 {
   assert(n);
 
-  return execFuncs[n->type](n);
+  if (execFuncs[n->type])
+    return execFuncs[n->type](n);
+  else
+    return NmNull;
 }
 
 /*
@@ -362,26 +367,31 @@ Node *NmAST_GenName(Pos pos, char *s)
 
   NmDebug_AST(n, "create name node (name: %s)", s);
 
-  /* search for the variable */
-  for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
-    if (!strcmp(vars->var->name, n->data.decl.name)){
-      found = TRUE;
-      break;
+  /* iterate through all (well, not all, from the current one, through it's
+   * parents, to the main) the scopes */
+  for (scope = NmScope_GetCurr(); scope != NULL; scope = scope->parent){
+    /* search for the variable */
+    for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
+      if (!strcmp(vars->var->name, n->data.decl.name)){
+        found = TRUE;
+        break;
+      }
     }
-  }
-  /* or, it could be a name of a function that's being called */
-  /* search the C functions */
-  for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
-    if (!strcmp(cfuncs->func->name, n->data.decl.name)){
-      found = TRUE;
-      break;
+    /* or, it could be a name of a function that's being called */
+    /* search the C functions */
+    for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+      if (!strcmp(cfuncs->func->name, n->data.decl.name)){
+        printf("found a cfunc in scope %s\n", scope->name);
+        found = TRUE;
+        break;
+      }
     }
-  }
-  /* search the user defined functions */
-  for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
-    if (!strcmp(funcs->func->name, n->data.decl.name)){
-      found = TRUE;
-      break;
+    /* search the user defined functions */
+    for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
+      if (!strcmp(funcs->func->name, n->data.decl.name)){
+        found = TRUE;
+        break;
+      }
     }
   }
 
@@ -936,8 +946,10 @@ NmObject *NmAST_ExecBlock(Node *n)
 
   for (s = n->data.block.tail; s != NULL; s = next){
     next = s->next;
-    NmDebug_AST(s->stmt, "execute statement node");
-    ret = NmAST_Exec(s->stmt);
+    if (s->stmt){
+      NmDebug_AST(s->stmt, "execute statement node");
+      ret = NmAST_Exec(s->stmt);
+    }
   }
 
   NmDebug_AST(n, "done executing block node");
@@ -995,54 +1007,58 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params)
 NmObject *NmAST_ExecCall(Node *n)
 {
   NmObject *ret = NULL;
-  Scope *scope = NmScope_GetCurr();
+  Scope *scope;
   char *name = n->data.call.name;
 
   NmDebug_AST(n, "execute function call node");
 
-  /* first check for the C functions */
-  for (CFuncsList *list = scope->cfuncs; list != NULL; list = list->next){
-    if (!strcmp(list->func->name, name)){
-      size_t nmemb = 0;
-      size_t i = 0;
-      /* count how many elements there are */
-      if (n->data.call.params)
-        for (Node **p = n->data.call.params; *p != NULL; p++)
-          nmemb++;
-      /* parameters are stored as an array */
-      NmObject *array = NmArray_New(nmemb);
-      /* set the arrays elements */
-      if (n->data.array.a)
-        for (Node **p = n->data.array.a; *p != NULL; p++, i++)
-          NmArray_SETELEM(array, i, NmAST_Exec(*p));
-      /* execute the function */
-      ret = list->func->body(array);
-      /* if a function returns NULL it means something went wrong */
-      if (ret == NULL){
-        NmError_Parser(n, NmError_GetCurr());
-        /* FIXME: shouldn't exit here */
-        exit(EXIT_FAILURE);
-      } else {
-        return ret;
+  /* iterate through all (well, not all, from the current one, through it's
+   * parents, to the main) the scopes */
+  for (scope = NmScope_GetCurr(); scope != NULL; scope = scope->parent){
+    /* first check for the C functions */
+    for (CFuncsList *list = scope->cfuncs; list != NULL; list = list->next){
+      if (!strcmp(list->func->name, name)){
+        size_t nmemb = 0;
+        size_t i = 0;
+        /* count how many elements there are */
+        if (n->data.call.params)
+          for (Node **p = n->data.call.params; *p != NULL; p++)
+            nmemb++;
+        /* parameters are stored as an array */
+        NmObject *array = NmArray_New(nmemb);
+        /* set the arrays elements */
+        if (n->data.array.a)
+          for (Node **p = n->data.array.a; *p != NULL; p++, i++)
+            NmArray_SETELEM(array, i, NmAST_Exec(*p));
+        /* execute the function */
+        ret = list->func->body(array);
+        /* if a function returns NULL it means something went wrong */
+        if (ret == NULL){
+          NmError_Parser(n, NmError_GetCurr());
+          /* FIXME: shouldn't exit here */
+          exit(EXIT_FAILURE);
+        } else {
+          return ret;
+        }
       }
     }
-  }
-  /* and then for the Nemo functions */
-  for (FuncsList *list = scope->funcs; list != NULL; list = list->next){
-    if (!strcmp(list->func->name, name)){
-      ret = NmAST_Exec(list->func->body);
-      /* if a function returns NULL it means something went wrong */
-      if (ret == NULL){
-        NmError_Parser(n, "executing function '%s' went wrong", name);
-        /* FIXME: shouldn't exit here */
-        exit(EXIT_FAILURE);
-      } else {
-        return ret;
+    /* and then for the Nemo functions */
+    for (FuncsList *list = scope->funcs; list != NULL; list = list->next){
+      if (!strcmp(list->func->name, name)){
+        ret = NmAST_Exec(list->func->body);
+        /* if a function returns NULL it means something went wrong */
+        if (ret == NULL){
+          NmError_Parser(n, "executing function '%s' went wrong", name);
+          /* FIXME: shouldn't exit here */
+          exit(EXIT_FAILURE);
+        } else {
+          return ret;
+        }
       }
     }
   }
 
-  NmError_Parser(n, "function '%s' not found", name);
+  NmError_Parser(n, "function '%s' not found", name, scope->name);
   /* FIXME */
   exit(EXIT_FAILURE);
 }
@@ -1117,6 +1133,8 @@ NmObject *NmAST_ExecFuncDef(Node *n)
   else
     NmDebug_AST(n, "execute function declaration node");
 
+  printf("funcdef %s in scope %s\n", n->data.funcdef.name, NmScope_GetCurr()->name);
+
   return NmInt_New(1);
 }
 
@@ -1137,6 +1155,59 @@ void NmAST_FreeFuncDef(Node *n)
     NmDebug_AST(n, "free function declaration node");
   }
   NmMem_Free(n);
+}
+
+/*
+ * @name - NmAST_GenInclude
+ * @desc - creates a node that creates does the including thing
+ */
+Node *NmAST_GenInclude(Pos pos, char *fname, char *custom_path, BOOL use)
+{
+  Node *n = NmMem_Malloc(sizeof(Node));
+
+  n->type = NT_INCLUDE;
+  n->data.include.fname = NmMem_Strdup(fname);
+  n->data.include.custom_path = NmMem_Strdup(custom_path);
+  n->data.include.use = use;
+  INIT_POS();
+
+  NmDebug_AST(n, "create include node (fname: %s, custom_path: %p, use: %d)", fname, custom_path, use);
+
+  return n;
+}
+
+/*
+ * @name - NmAST_ExecInclude
+ * @desc - actually does the including thing
+ * @return 1 if everything went fine
+ */
+NmObject *NmAST_ExecInclude(Node *n)
+{
+  assert(n);
+  assert(n->type == NT_INCLUDE);
+
+  if (n->data.include.use){
+    if (!Nm_UseModule(n->data.include.fname, n->data.include.custom_path)){
+      NmError_Parser(n, NmError_GetCurr());
+      return NmInt_New(0);
+    }
+  } else {
+    if (!Nm_IncludeModule(n->data.include.fname, n->data.include.custom_path)){
+      NmError_Parser(n, NmError_GetCurr());
+      return NmInt_New(0);
+    }
+  }
+
+  return NmInt_New(1);
+}
+
+void NmAST_FreeInclude(Node *n)
+{
+  assert(n);
+  assert(n->type == NT_INCLUDE);
+
+  NmMem_Free(n->data.include.fname);
+  NmMem_Free(n->data.include.custom_path);
 }
 
 const char *binopToS(BinaryOp op)

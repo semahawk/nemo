@@ -42,6 +42,8 @@ struct Scope {
   /* list of the functions */
   CFuncsList *cfuncs;
   FuncsList *funcs;
+  /* a pointer to the parent scope */
+  struct Scope *parent;
 };
 
 /* Doubly linked list of Scope-s */

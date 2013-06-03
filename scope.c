@@ -48,6 +48,10 @@ void NmScope_New(char *name)
   scope->cfuncs = NULL;
   scope->funcs = NULL;
   scope->globals = NULL;
+  if (curr)
+    scope->parent = curr->scope;
+  else
+    scope->parent = NULL;
 
   /* add the "null" variable to the global scope */
   null->name = NmMem_Strdup("null");

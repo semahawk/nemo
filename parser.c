@@ -710,8 +710,6 @@ static Node *stmt(LexerState *lex)
   char *name  = NULL;
   char *path  = NULL;
 
-  NmDebug_AST(ret, "create statement");
-
   /*
    * XXX ';'
    */
@@ -722,48 +720,33 @@ static Node *stmt(LexerState *lex)
   }
   /*
    * XXX USE NAME ';'
+   * XXX INCLUDE NAME ';'
    */
-  else if (NmLexer_Accept(lex, SYM_USE)){
-    NmDebug_Parser("use ");
+  else if (NmLexer_Peek(lex, SYM_USE) ||
+           NmLexer_Peek(lex, SYM_INCLUDE)){
+    BOOL use;
+    if (NmLexer_Accept(lex, SYM_USE)){
+      use = TRUE;
+      NmDebug_Parser("use ");
+    } else {
+      use = FALSE;
+      NmDebug_Parser("include ");
+      NmLexer_Skip(lex);
+    }
     NmLexer_Force(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
     NmDebug_Parser("%s ", name);
     /*
      * XXX USE NAME PATH ';'
-     */
-    if (NmLexer_Peek(lex, SYM_STRING)){
-      path = lex->current->sym.value.s;
-      NmLexer_Skip(lex);
-    }
-    /* return the block that was returned by parsing the file */
-    if (!Nm_UseModule(name, path)){
-      NmError_Lex(lex, NmError_GetCurr());
-      exit(EXIT_FAILURE);
-    }
-    ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
-    endStmt(lex);
-  }
-  /*
-   * XXX INCLUDE NAME ';'
-   */
-  else if (NmLexer_Accept(lex, SYM_INCLUDE)){
-    NmDebug_Parser("include ");
-    NmLexer_Force(lex, SYM_NAME);
-    name = lex->current->prev->sym.value.s;
-    NmDebug_Parser("%s ", name);
-    /*
      * XXX INCLUDE NAME PATH ';'
      */
     if (NmLexer_Peek(lex, SYM_STRING)){
       path = lex->current->sym.value.s;
       NmLexer_Skip(lex);
+    } else {
+      path = NULL;
     }
-    /* return the block that was returned by parsing the file */
-    if (!Nm_IncludeModule(name, path)){
-      NmError_Lex(lex, NmError_GetCurr());
-      exit(EXIT_FAILURE);
-    }
-    ret = NmAST_GenInt(lex->current->prev->prev->sym.pos, 1);
+    ret = NmAST_GenInclude(lex->current->prev->prev->sym.pos, name, path, use);
     endStmt(lex);
   }
   /*
@@ -881,6 +864,8 @@ static Node *stmt(LexerState *lex)
      */
     else endStmt(lex);
   }
+
+  NmDebug_AST(ret, "create statement");
 
   return ret;
 }
