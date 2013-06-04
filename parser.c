@@ -58,6 +58,7 @@
   NmDebug_Parser(";\n"); \
 } while (0);
 
+/* forward */
 static Node *expr(LexerState *lex);
 static Node *block(LexerState *lex);
 static Node **params_list(LexerState *lex);

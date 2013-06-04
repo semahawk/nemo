@@ -366,19 +366,19 @@ Node *NmAST_GenName(Pos pos, char *s)
   INIT_POS();
 
   NmDebug_AST(n, "create name node (name: %s)", s);
-
-  /* iterate through all (well, not all, from the current one, through it's
-   * parents, to the main) the scopes */
+/*
+  [> iterate through all (well, not all, from the current one, through it's
+   * parents, to the main) the scopes <]
   for (scope = NmScope_GetCurr(); scope != NULL; scope = scope->parent){
-    /* search for the variable */
+    [> search for the variable <]
     for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
       if (!strcmp(vars->var->name, n->data.decl.name)){
         found = TRUE;
         break;
       }
     }
-    /* or, it could be a name of a function that's being called */
-    /* search the C functions */
+    [> or, it could be a name of a function that's being called <]
+    [> search the C functions <]
     for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
       if (!strcmp(cfuncs->func->name, n->data.decl.name)){
         printf("found a cfunc in scope %s\n", scope->name);
@@ -386,7 +386,7 @@ Node *NmAST_GenName(Pos pos, char *s)
         break;
       }
     }
-    /* search the user defined functions */
+    [> search the user defined functions <]
     for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
       if (!strcmp(funcs->func->name, n->data.decl.name)){
         found = TRUE;
@@ -399,7 +399,7 @@ Node *NmAST_GenName(Pos pos, char *s)
     NmError_Parser(n, "variable '%s' was not found", n->data.decl.name);
     exit(EXIT_FAILURE);
   }
-
+*/
   return n;
 }
 
