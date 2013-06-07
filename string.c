@@ -91,7 +91,7 @@ void NmString_Print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  fprintf(fp, "\"%s\"", NmString_VAL(ob));
+  fprintf(fp, "%s", NmString_VAL(ob));
 }
 
 NmObject *NmString_Index(NmObject *string, NmObject *index)
