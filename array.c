@@ -46,8 +46,7 @@ NmObject *NmArray_New(size_t nmemb)
   ob->fn.dstr = NmArray_Destroy;
   ob->fn.type_repr = NmArray_TypeRepr;
   ob->fn.print = NmArray_Print;
-  /*ob->fn.binary.add = NmArray_Add;*/
-  ob->fn.binary.add = NULL;
+  ob->fn.binary.add = NmArray_Add;
   ob->fn.binary.index = NmArray_Index;
   ob->nmemb = nmemb;
   ob->a = arr;
@@ -63,6 +62,23 @@ NmObject *NmArray_New(size_t nmemb)
 NmObject *NmArray_TypeRepr(void)
 {
   return NmString_New("array");
+}
+
+NmObject *NmArray_Add(NmObject *left, NmObject *right)
+{
+  NmObject *new = NmArray_New(NmArray_NMEMB(left) + NmArray_NMEMB(right));
+
+  unsigned i;
+
+  for (i = 0; i < NmArray_NMEMB(left); i++){
+    NmArray_SETELEM(new, i, NmArray_GETELEM(left, i));
+  }
+
+  for (; i < NmArray_NMEMB(left) + NmArray_NMEMB(right); i++){
+    NmArray_SETELEM(new, i, NmArray_GETELEM(right, i - NmArray_NMEMB(left)));
+  }
+
+  return new;
 }
 
 void NmArray_Print(FILE *fp, NmObject *ob)

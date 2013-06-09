@@ -166,6 +166,7 @@ NmObject *NmArray_New(size_t);
 NmObject *NmArray_NewFromNode(struct Node *);
 NmObject *NmArray_TypeRepr(void);
 void NmArray_Print(FILE *, NmObject *);
+NmObject *NmArray_Add(NmObject *, NmObject *);
 NmObject *NmArray_Index(NmObject *, NmObject *);
 void NmArray_Destroy(NmObject *);
 void NmArray_Tidyup(void);
