@@ -229,11 +229,6 @@ static Node *postfix_expr(LexerState *lex)
   else if (NmLexer_Accept(lex, SYM_LBRACKET)){
     /* store the position of the left bracket */
     Pos pos = lex->current->prev->sym.pos;
-    if (target->type != NT_NAME && target->type != NT_STRING){
-      NmError_Lex(lex, "expected a name or a string for an indexing, not %s", symToS(lex->current->sym.type));
-      /* FIXME */
-      exit(EXIT_FAILURE);
-    }
     NmDebug_Parser("[");
     index = expr(lex);
     NmLexer_Force(lex, SYM_RBRACKET);
