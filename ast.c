@@ -537,7 +537,7 @@ NmObject *NmAST_ExecBinop(Node *n)
    */
   else if (n->data.binop.op == BINARY_INDEX){
     if (!ob_left->fn.binary.index){
-      NmError_Parser(n, "invalid binary operator '[]' for type '%d'", ob_left->type);
+      NmError_Parser(n, "invalid binary operator '[]' for type '%s'", NmString_VAL(ob_left->fn.type_repr()));
       /* FIXME */
       exit(EXIT_FAILURE);
     }
