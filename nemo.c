@@ -147,26 +147,12 @@ int main(int argc, char *argv[])
     switch (c){
       case 'u':
       {
-        char line[64];
-        sprintf(line, "use %s", optarg);
-        /* parse the string */
-        Node *node = NmParser_ParseString(line);
-        /* execute the nodes */
-        NmAST_Exec(node);
-        /* tidy up after executing */
-        NmAST_FreeBlock(node);
+        Nm_UseModule(optarg, NULL);
         break;
       }
       case 'i':
       {
-        char line[64];
-        sprintf(line, "include %s", optarg);
-        /* parse the string */
-        Node *node = NmParser_ParseString(line);
-        /* execute the nodes */
-        NmAST_Exec(node);
-        /* tidy up after executing */
-        NmAST_FreeBlock(node);
+        Nm_IncludeModule(optarg, NULL);
         break;
       }
       case 'e':
