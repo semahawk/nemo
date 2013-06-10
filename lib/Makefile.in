@@ -15,7 +15,7 @@ libs: $(OBJECTS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
-	$(CC) $(CFLAGS) -L.. $(LIBS) -shared -Wl,-soname,$(patsubst %.c,%.so,$<) -o $(patsubst %.c,%.so,$<) $@
+	$(CC) $(CFLAGS) -L.. -shared -Wl,-soname,$(patsubst %.c,%.so,$<) -o $(patsubst %.c,%.so,$<) $@ $(LIBS)
 
 clean:
 	rm -rf *.o
