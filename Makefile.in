@@ -17,7 +17,7 @@ LIBS = @LIBS@
 .PHONY: libs test install uninstall clean distclean
 # the executable
 nemo: libnemo.so libs
-	$(CC) $(CFLAGS) -L. -o nemo $(LIBS)
+	$(CC) $(CFLAGS) -L. -o nemo -lnemo $(LIBS)
 
 # Nemo's main library, the one that gets linked with third-party libraries
 libnemo.so: $(OBJECTS)
