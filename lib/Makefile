@@ -8,7 +8,7 @@ CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99 -I..
 # every .c file
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
 
-LIBS = -lnemo -lm -lreadline 
+LIBS = -lnemo -lm -lreadline -ldl 
 
 .PHONY: libs clean
 libs: $(OBJECTS)
