@@ -25,7 +25,7 @@ Dependencies
 ============
 
 * a C compiler with C99 support (tested on GCC and Clang)
-* make
+* make (Note: on a \*BSD system you may want to need gmake)
 
 License
 =======

@@ -2,7 +2,7 @@
 # @configure_input@
 #
 
-CC      = gcc
+CC      = @CC@
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
 SHELL   = @SHELL@
 
@@ -23,13 +23,12 @@ nemo: libnemo.so libs
 libnemo.so: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -shared -Wl,-soname,libnemo.so -o libnemo.so
 
-# yup, every .c file should have it's own .h file
 %.o: %.c *.h
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 # the standard libraries
 libs: libnemo.so
-	@cd lib; make
+	@cd lib; $(MAKE)
 
 # test cases
 test:
@@ -49,7 +48,7 @@ uninstall:
 clean:
 	rm -f *.o
 	rm -f *.so*
-	@cd lib; make clean
+	@cd lib; $(MAKE) clean
 
 distclean: clean
 	rm -f nemo

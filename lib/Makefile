@@ -1,8 +1,7 @@
-CC      = gcc
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99 -I..
-SHELL   = sh
 
-OBJECTS = Math.o
+# every .c file
+OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
 
 LIBS = -lnemo -lm
 
@@ -10,7 +9,7 @@ LIBS = -lnemo -lm
 libs: $(OBJECTS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(LIBS) -fPIC -c $< -o $@
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 	$(CC) $(CFLAGS) -L.. $(LIBS) -shared -Wl,-soname,$(patsubst %.c,%.so,$<) -o $(patsubst %.c,%.so,$<) $@
 
 clean:
