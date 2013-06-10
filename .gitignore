@@ -8,7 +8,7 @@ stdio.nm
 *.so
 
 # Autotools stuff
-/Makefile
+Makefile
 autom4te.cache
 config.status
 config.log

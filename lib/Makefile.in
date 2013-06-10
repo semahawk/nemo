@@ -1,14 +1,14 @@
 #
-# lib/Makefile.  Generated from Makefile.in by configure.
+# @configure_input@
 #
 
-CC      = gcc
+CC      = @CC@
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99 -I..
 
 # every .c file
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
 
-LIBS = -lnemo -lm -lreadline 
+LIBS = -lnemo @LIBS@
 
 .PHONY: libs clean
 libs: $(OBJECTS)
