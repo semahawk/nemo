@@ -811,7 +811,23 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenIf(lex->current->sym.pos, guard, body, elsee);
+    ret = NmAST_GenIf(lex->current->sym.pos, guard, body, elsee, FALSE);
+  }
+  /*
+   * XXX UNLESS stmt stmt
+   */
+  else if (NmLexer_Accept(lex, SYM_UNLESS)){
+    NmDebug_Parser("unless ");
+    guard = stmt(lex);
+    body = stmt(lex);
+    /*
+     * XXX UNLESS stmt stmt ELSE stmt
+     */
+    if (NmLexer_Accept(lex, SYM_ELSE)){
+      NmDebug_Parser("else ");
+      elsee = stmt(lex);
+    }
+    ret = NmAST_GenIf(lex->current->sym.pos, guard, body, elsee, TRUE);
   }
   /*
    * XXX WHILE stmt stmt
@@ -845,7 +861,15 @@ static Node *stmt(LexerState *lex)
     if (NmLexer_Accept(lex, SYM_IF)){
       NmDebug_Parser("if ");
       guard = stmt(lex);
-      ret = NmAST_GenIf(lex->current->sym.pos, ret, guard, NULL);
+      ret = NmAST_GenIf(lex->current->sym.pos, ret, guard, NULL, FALSE);
+    }
+    /*
+     * XXX expr UNLESS stmt
+     */
+    else if (NmLexer_Accept(lex, SYM_UNLESS)){
+      NmDebug_Parser("unless ");
+      guard = stmt(lex);
+      ret = NmAST_GenIf(lex->current->sym.pos, ret, guard, NULL, TRUE);
     }
     /*
      * XXX expr WHILE stmt

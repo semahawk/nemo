@@ -718,7 +718,7 @@ void NmAST_FreeUnop(Node *n)
  * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, BOOL unless)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -726,9 +726,13 @@ Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee)
   n->data.iff.guard = guard;
   n->data.iff.body = body;
   n->data.iff.elsee = elsee;
+  n->data.iff.unless = unless;
   INIT_POS();
 
-  NmDebug_AST(n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+  if (unless)
+    NmDebug_AST(n, "create unless node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+  else
+    NmDebug_AST(n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
 
   return n;
 }
@@ -742,14 +746,27 @@ NmObject *NmAST_ExecIf(Node *n)
   Node *guard = n->data.iff.guard;
   Node *body = n->data.iff.body;
   Node *elsee = n->data.iff.elsee;
+  BOOL unless = n->data.iff.unless;
 
-  NmDebug_AST(n, "execute if node");
+  if (unless)
+    NmDebug_AST(n, "execute unless node");
+  else
+    NmDebug_AST(n, "execute if node");
 
-  if (NmObject_Boolish(NmAST_Exec(guard))){
-    NmAST_Exec(body);
+  if (unless){
+    if (!NmObject_Boolish(NmAST_Exec(guard))){
+      NmAST_Exec(body);
+    } else {
+      if (elsee)
+        NmAST_Exec(elsee);
+    }
   } else {
-    if (elsee)
-      NmAST_Exec(elsee);
+    if (NmObject_Boolish(NmAST_Exec(guard))){
+      NmAST_Exec(body);
+    } else {
+      if (elsee)
+        NmAST_Exec(elsee);
+    }
   }
 
   return NmInt_New(1);

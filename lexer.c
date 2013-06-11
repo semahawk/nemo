@@ -57,6 +57,7 @@ static struct Keyword {
   { "my",      SYM_MY      },
   { "const",   SYM_CONST   },
   { "if",      SYM_IF      },
+  { "unless",  SYM_UNLESS  },
   { "while",   SYM_WHILE   },
   { "else",    SYM_ELSE    },
   { "print",   SYM_PRINT   },

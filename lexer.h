@@ -37,6 +37,7 @@ enum SymbolType {
   SYM_MY,             /* "my"      */
   SYM_CONST,          /* "const"   */
   SYM_IF,             /* "if"      */
+  SYM_UNLESS,         /* "unless"  */
   SYM_WHILE,          /* "while"   */
   SYM_ELSE,           /* "else"    */
   SYM_PRINT,          /* "print"   */
