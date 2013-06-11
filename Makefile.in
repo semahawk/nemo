@@ -6,8 +6,9 @@ CC      = @CC@
 CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
 SHELL   = @SHELL@
 
-LIBDIR = @libdir@
-PREFIX  = @prefix@
+prefix  = @prefix@
+includedir = @includedir@
+libdir = @libdir@
 
 # every .c file
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
@@ -35,15 +36,18 @@ test:
 	@$(SHELL) test/runner.sh
 
 install: nemo
-	mkdir -p $(LIBDIR)/nemo
-	install -m 755 lib/*.so $(LIBDIR)/nemo/
-	install -m 755 lib*.so $(LIBDIR)
-	install -m 755 nemo $(PREFIX)/bin/nemo
+	mkdir -p $(libdir)/nemo
+	install -m 755 lib/*.so $(libdir)/nemo/
+	install -m 755 lib*.so $(libdir)
+	mkdir -p $(includedir)/nemo
+	install -m 644 *.h $(includedir)/nemo
+	install -m 755 nemo $(bindir)/nemo
 
 uninstall:
-	rm -rf $(LIBDIR)/libnemo*
-	rm -rf $(LIBDIR)/nemo
-	rm -rf $(PREFIX)/bin/nemo
+	rm -rf $(libdir)/libnemo*
+	rm -rf $(libdir)/nemo
+	rm -rf $(includedir)/nemo
+	rm -rf $(bindir)/nemo
 
 clean:
 	rm -f *.o
