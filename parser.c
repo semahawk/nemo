@@ -746,27 +746,27 @@ static Node *stmt(LexerState *lex)
     endStmt(lex);
   }
   /*
-   * XXX FN NAME
+   * XXX FUN NAME
    */
-  else if (NmLexer_Accept(lex, SYM_FN)){
+  else if (NmLexer_Accept(lex, SYM_FUN)){
     NmDebug_Parser("fn ");
     NmDebug_Parser("%s ", symToS(lex->current->sym.type));
     NmLexer_Force(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
     NmDebug_Parser("%s ", name);
     /*
-     * XXX FN NAME '('
+     * XXX FUN NAME '('
      */
     NmLexer_Force(lex, SYM_LPAREN);
     NmDebug_Parser("(");
     /*
-     * XXX FN NAME '(' ')'
+     * XXX FUN NAME '(' ')'
      */
     if (NmLexer_Accept(lex, SYM_RPAREN)){
       NmDebug_Parser(")");
     } else {
       /*
-       * XXX FN NAME '(' [NAME[',' NAME]*]+ ')'
+       * XXX FUN NAME '(' [NAME[',' NAME]*]+ ')'
        */
       do {
          NmLexer_Force(lex, SYM_NAME);
@@ -779,14 +779,14 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser(")");
     }
     /*
-     * XXX FN NAME ... ';'
+     * XXX FUN NAME ... ';'
      */
     if (NmLexer_Accept(lex, SYM_SEMICOLON)){
       NmDebug_Parser(";\n");
       ret = NmAST_GenFuncDef(lex->current->sym.pos, name, NULL);
     }
     /*
-     * XXX FN NAME ... block
+     * XXX FUN NAME ... block
      */
     else {
       NmLexer_Force(lex, SYM_LMUSTASHE);
