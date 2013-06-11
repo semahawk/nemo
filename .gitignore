@@ -6,6 +6,7 @@ stdio.nm
 
 *.o
 *.so
+*.so.*
 
 # Autotools stuff
 Makefile
