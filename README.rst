@@ -4,6 +4,11 @@ Nemo
 Nemo is a scripting, interpreted (or compiled to bytecode (but not yet)),
 dynamically and strongly typed programming language written entirely in C.
 
+Build status
+============
+
+.. image:: https://travis-ci.org/semahawk/nemo.png?branch=master
+
 Install
 =======
 
