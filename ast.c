@@ -358,8 +358,8 @@ void NmAST_FreeArray(Node *n)
 Node *NmAST_GenName(Pos pos, char *s)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
-  Scope *scope = NmScope_GetCurr();
-  BOOL found = FALSE;
+  /*Scope *scope = NmScope_GetCurr();*/
+  /*BOOL found = FALSE;*/
 
   n->type = NT_NAME;
   n->data.s = NmMem_Strdup(s);
@@ -793,7 +793,10 @@ void NmAST_FreeIf(Node *n)
   if (n->data.iff.elsee)
     NmAST_Free(n->data.iff.elsee);
 
-  NmDebug_AST(n, "free if node");
+  if (n->data.iff.unless)
+    NmDebug_AST(n, "free unless node");
+  else
+    NmDebug_AST(n, "free if node");
   NmMem_Free(n);
 }
 
@@ -804,7 +807,7 @@ void NmAST_FreeIf(Node *n)
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee)
+Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, BOOL until)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
 
@@ -812,9 +815,13 @@ Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee)
   n->data.whilee.guard = guard;
   n->data.whilee.body = body;
   n->data.whilee.elsee = elsee;
+  n->data.whilee.until = until;
   INIT_POS();
 
-  NmDebug_AST(n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+  if (until)
+    NmDebug_AST(n, "create until node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+  else
+    NmDebug_AST(n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
 
   return n;
 }
@@ -825,19 +832,34 @@ Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee)
  */
 NmObject *NmAST_ExecWhile(Node *n)
 {
-  Node *guard = n->data.iff.guard;
-  Node *body = n->data.iff.body;
-  Node *elsee = n->data.iff.elsee;
+  Node *guard = n->data.whilee.guard;
+  Node *body = n->data.whilee.body;
+  Node *elsee = n->data.whilee.elsee;
+  BOOL until = n->data.whilee.until;
 
-  NmDebug_AST(n, "execute while node");
+  if (until)
+    NmDebug_AST(n, "execute until node");
+  else
+    NmDebug_AST(n, "execute while node");
 
-  if (NmObject_Boolish(NmAST_Exec(guard))){
-    while (NmObject_Boolish(NmAST_Exec(guard))){
-      NmAST_Exec(body);
+  if (until){
+    if (!NmObject_Boolish(NmAST_Exec(guard))){
+      while (!NmObject_Boolish(NmAST_Exec(guard))){
+        NmAST_Exec(body);
+      }
+    } else {
+      if (elsee)
+        NmAST_Exec(elsee);
     }
   } else {
-    if (elsee)
-      NmAST_Exec(elsee);
+    if (NmObject_Boolish(NmAST_Exec(guard))){
+      while (NmObject_Boolish(NmAST_Exec(guard))){
+        NmAST_Exec(body);
+      }
+    } else {
+      if (elsee)
+        NmAST_Exec(elsee);
+    }
   }
 
   return NmInt_New(1);
@@ -863,7 +885,10 @@ void NmAST_FreeWhile(Node *n)
   if (n->data.whilee.elsee)
     NmAST_Free(n->data.whilee.elsee);
 
-  NmDebug_AST(n, "free while node");
+  if (n->data.whilee.until)
+    NmDebug_AST(n, "free until node");
+  else
+    NmDebug_AST(n, "free while node");
   NmMem_Free(n);
 }
 

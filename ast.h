@@ -128,6 +128,9 @@ struct Node {
       struct Node *guard;
       struct Node *body;
       struct Node *elsee;
+      /* whiles and untils are pretty much identical, and this is what
+       * distinguishes them */
+      BOOL until;
     } whilee;
 
     struct {
@@ -173,7 +176,7 @@ Node *NmAST_GenName(Pos, char *);
 Node *NmAST_GenBinop(Pos, Node *, BinaryOp, Node *);
 Node *NmAST_GenUnop(Pos, Node *, UnaryOp);
 Node *NmAST_GenIf(Pos, Node *, Node *, Node *, BOOL);
-Node *NmAST_GenWhile(Pos, Node *, Node *, Node *);
+Node *NmAST_GenWhile(Pos, Node *, Node *, Node *, BOOL);
 Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
 Node *NmAST_GenCall(Pos, char *, Node **);
 Node *NmAST_GenFuncDef(Pos, char *, Node *);
