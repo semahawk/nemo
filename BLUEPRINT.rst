@@ -1,9 +1,12 @@
 On how I see Nemo would look like
 =================================
 
+* Ifs/unlesses and whiles/untils actually expect a statement, instead of an
+  expression, like pretty much every other language.
 * Statements end with a semicolon (unless it's last statement in the block)
 * Comments start with the sign ``#`` or as a block, enclosed with ``/*`` and ``*/``
 * Basic functions are actually keywords (still thinking about it)(additionally, no need for parenthesises)
+* Functions can take shell-like options, eg. -n
 * Support for metaprogramming
 
 Declaring a variable
@@ -55,15 +58,38 @@ Defining a function
 
 .. code-block:: nemo
 
-   fn hello(){
-     print "hello, world!";
-   }
-
 .. code-block:: nemo
 
-   fn hello(name){
-     print "hello, " + name + "!\n";
+   fun puts # put string
+       -n   # prints the newline
+       msg  # the message to be printed
+   {
+     print msg;
+     unless n {
+       print "\n";
+     }
    }
+
+   fun sort # sorts a given array
+       -r   # reverse order
+       arr  # the array
+   {
+     if r {
+       # sort in reverse order
+     } else {
+       # sort normally
+     }
+   }
+
+   # Here, puts is the function name, and the option -n is supplied
+   puts-n("sorted array: ");
+   # Here, sort is the function name, and the options -r and -q is supplied
+   my array = [4, 2, 3, 6, 10];
+   puts(sort-rq(array));
+
+   # And, if the parenthesisless thing works out, the above could be
+   # written like this:
+   puts sort-rq array;
 
 If
 --
@@ -102,18 +128,4 @@ Metaprogramming
 
 Yup, they look a lot like comments, but it's gonna look nice when there are
 comments around preprocessor declarations.
-
-Documentation in comments
--------------------------
-
-.. code-block:: nemo
-
-    #
-    # \name    greet
-    # \param   name    name of the person to be greeted
-    # \return  null
-    #
-    fn greet(name){
-      print "hello, " + name + "!";
-    }
 
