@@ -570,6 +570,7 @@ NmObject *NmAST_ExecBinop(Node *n)
   switch (n->data.binop.op){ \
     /* here are all the binary functions that are available */ \
     op(BINARY_ADD, add); \
+    op(BINARY_SUB, sub); \
     default: \
     NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
       /* FIXME: shouldn't exit here */ \

@@ -51,7 +51,7 @@ NmObject *NmInt_New(int i)
   ob->fn.type_repr = NmInt_TypeRepr;
   ob->fn.print = NmInt_Print;
   ob->fn.binary.add = NmInt_Add;
-  ob->fn.binary.index = NULL;
+  ob->fn.binary.sub = NmInt_Sub;
   ob->fn.binary.cmp = NmInt_Cmp;
   ob->fn.unary.plus = NmInt_Plus;
   ob->fn.unary.minus = NmInt_Minus;
@@ -73,6 +73,11 @@ NmObject *NmInt_NewFromVoidPtr(void *p)
 NmObject *NmInt_Add(NmObject *left, NmObject *right)
 {
   return NmInt_New(NmInt_VAL(left) + NmInt_VAL(right));
+}
+
+NmObject *NmInt_Sub(NmObject *left, NmObject *right)
+{
+  return NmInt_New(NmInt_VAL(left) - NmInt_VAL(right));
 }
 
 NmObject *NmInt_Cmp(NmObject *left, NmObject *right)

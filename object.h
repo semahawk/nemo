@@ -71,6 +71,7 @@ struct Fn {
   /* binary operations functions */
   struct {
     BinaryFunc add;   /* addition */
+    BinaryFunc sub;   /* substraction */
     BinaryFunc index; /* array/string indexing */
     BinaryFunc cmp;   /* compare */
   } binary;
@@ -130,6 +131,7 @@ BOOL NmObject_Boolish(NmObject *);
 
 NmObject *NmInt_New(int);
 NmObject *NmInt_Add(NmObject *, NmObject *);
+NmObject *NmInt_Sub(NmObject *, NmObject *);
 NmObject *NmInt_Cmp(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
