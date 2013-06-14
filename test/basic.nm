@@ -11,6 +11,8 @@ assert(1.0, 1.0);
 # Basic arithmetic
 assert(4, 2 + 2);
 assert(2 + 2, 4);
+assert(2, 4 - 2);
+assert(4, 2 - (-2));
 
 # Unary operations
 assert(-2, -2);
