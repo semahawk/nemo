@@ -146,8 +146,10 @@ struct Node {
     } call;
 
     struct {
-      /* TODO: make it support multiple expressions through the ',' operator */
-      struct Node *expr;
+      /* number of expressions */
+      size_t nmemb;
+      /* an array of Node pointers */
+      struct Node **exprs;
     } stmt;
 
     struct {
@@ -228,6 +230,8 @@ void NmAST_Free(Node *);
 
 const char *binopToS(BinaryOp);
 const char *unopToS(UnaryOp);
+
+void NmAST_StmtAppendExpr(Node *, Node *);
 
 #endif /* AST_H */
 

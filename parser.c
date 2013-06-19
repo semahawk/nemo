@@ -705,6 +705,8 @@ static Node *stmt(LexerState *lex)
   Node *elsee = NULL;
   char *name  = NULL;
   char *path  = NULL;
+  /* holds weather the "ret" was already created using the NmAST_GenStmt */
+  BOOL is_gend = FALSE;
 
   /*
    * XXX ';'
@@ -906,10 +908,25 @@ static Node *stmt(LexerState *lex)
     /*
      * XXX expr ';'
      */
-    else endStmt(lex);
+    else {
+      /*
+       * XXX expr ',' expr+ ';'
+       */
+      if (NmLexer_Peek(lex, SYM_COMMA)){
+        is_gend = TRUE;
+        ret = NmAST_GenStmt(lex->current->sym.pos, ret);
+
+        while (NmLexer_Accept(lex, SYM_COMMA)){
+          NmDebug_Parser(", ");
+          NmAST_StmtAppendExpr(ret, expr(lex));
+        }
+      }
+
+      endStmt(lex);
+    }
   }
 
-  return NmAST_GenStmt(ret->pos, ret);
+  return is_gend ? ret : NmAST_GenStmt(ret->pos, ret);
 }
 
 /*

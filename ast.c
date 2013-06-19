@@ -1086,12 +1086,19 @@ void NmAST_FreeCall(Node *n)
   NmMem_Free(n);
 }
 
+/*
+ * @name - NmAST_GenStmt
+ * @desc - create a statement node, but with only one expression
+ */
 Node *NmAST_GenStmt(Pos pos, Node *expr)
 {
   Node *n = NmMem_Malloc(sizeof(Node));
+  Node **exprs = NmMem_Malloc(sizeof(Node) * 1);
 
   n->type = NT_STMT;
-  n->data.stmt.expr = expr;
+  n->data.stmt.nmemb = 1;
+  n->data.stmt.exprs = exprs;
+  n->data.stmt.exprs[0] = expr;
   INIT_POS();
 
   NmDebug_AST(n, "create statement node (expr: %p)", expr);
@@ -1099,10 +1106,35 @@ Node *NmAST_GenStmt(Pos pos, Node *expr)
   return n;
 }
 
+/*
+ * @name - NmAST_StmtAppendExpr
+ * @desc - appends another expression to the given statement
+ */
+void NmAST_StmtAppendExpr(Node *stmt, Node *expr)
+{
+  assert(stmt);
+  assert(expr);
+  assert(stmt->type == NT_STMT);
+
+  stmt->data.stmt.nmemb++;
+  stmt->data.stmt.exprs = NmMem_Realloc(stmt->data.stmt.exprs, sizeof(Node) * stmt->data.stmt.nmemb);
+  stmt->data.stmt.exprs[stmt->data.stmt.nmemb - 1] = expr;
+}
+
 NmObject *NmAST_ExecStmt(Node *n)
 {
-  /* TODO: make it supports multiple expressions through the ',' operator */
-  return NmAST_Exec(n->data.stmt.expr);
+  /* a statement node is pretty much guaranteed to have at least one expression */
+  NmObject *ret = NmAST_Exec(n->data.stmt.exprs[0]);
+
+  size_t nmemb = n->data.stmt.nmemb;
+  size_t i;
+  /* execute the rest of expressions, but in reverse order because
+   * the parser already creates it in reverse order */
+  for (i = 1; i < nmemb; i++){
+    NmAST_Exec(n->data.stmt.exprs[i]);
+  }
+
+  return ret;
 }
 
 void NmAST_FreeStmt(Node *n)
@@ -1111,7 +1143,13 @@ void NmAST_FreeStmt(Node *n)
   assert(n->type == NT_STMT);
 
   NmDebug_AST(n, "free statement node");
-  NmAST_Free(n->data.stmt.expr);
+
+  size_t i;
+  /* free every expression that's a part of the statement */
+  for (i = 0; i < n->data.stmt.nmemb; i++){
+    NmAST_Free(n->data.stmt.exprs[i]);
+  }
+
   NmMem_Free(n);
 }
 

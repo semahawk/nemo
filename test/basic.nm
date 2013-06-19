@@ -3,6 +3,12 @@
 # Basic stuff here
 #
 
+# Variable creation
+my var = 2.71;
+
+assert(var, 2.71);
+
+# Never too sure
 assert(0, 0);
 assert(1, 1);
 assert(0.0, 0.0);
@@ -17,4 +23,8 @@ assert(4, 2 - (-2));
 # Unary operations
 assert(-2, -2);
 assert(-(-2), 2);
+
+# The ',' operator
+my comma = 2, 16;
+assert(comma, 2);
 
