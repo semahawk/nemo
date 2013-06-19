@@ -67,8 +67,9 @@ static NmObject *(*execFuncs[])(Node *) =
   NmAST_ExecIf,
   NmAST_ExecWhile,
   NmAST_ExecDecl,
-  NmAST_ExecBlock,
   NmAST_ExecCall,
+  NmAST_ExecStmt,
+  NmAST_ExecBlock,
   NmAST_ExecFuncDef,
   NmAST_ExecInclude
 };
@@ -90,8 +91,9 @@ static void (*freeFuncs[])(Node *) =
   NmAST_FreeIf,
   NmAST_FreeWhile,
   NmAST_FreeDecl,
-  NmAST_FreeBlock,
   NmAST_FreeCall,
+  NmAST_FreeStmt,
+  NmAST_FreeBlock,
   NmAST_FreeFuncDef,
   NmAST_FreeInclude
 };
@@ -976,53 +978,6 @@ void NmAST_FreeDecl(Node *n)
   NmMem_Free(n);
 }
 
-NmObject *NmAST_ExecBlock(Node *n)
-{
-  NmObject *ret = NmNull;
-  Statement *s;
-  Statement *next;
-
-  assert(n);
-  assert(n->type == NT_BLOCK);
-
-  NmDebug_AST(n, "execute block node");
-
-  for (s = n->data.block.tail; s != NULL; s = next){
-    next = s->next;
-    if (s->stmt){
-      NmDebug_AST(s->stmt, "execute statement node");
-      ret = NmAST_Exec(s->stmt);
-    }
-  }
-
-  NmDebug_AST(n, "done executing block node");
-
-  return ret;
-}
-
-/*
- * @name - freeBlock
- * @desc - frees given block and every statement it holds
- */
-void NmAST_FreeBlock(Node *n)
-{
-  Statement *s;
-  Statement *next;
-
-  assert(n);
-  assert(n->type == NT_BLOCK);
-
-  for (s = n->data.block.tail; s != NULL; s = next){
-    next = s->next;
-    NmAST_Free(s->stmt);
-    NmDebug_AST(n, "free statement node");
-    NmMem_Free(s);
-  }
-
-  NmDebug_AST(n, "free block node");
-  NmMem_Free(n);
-}
-
 /*
  * @name - NmAST_GenCall
  * @desc - creates a n for calling a function of a given <name>
@@ -1128,6 +1083,82 @@ void NmAST_FreeCall(Node *n)
   }
 
   NmDebug_AST(n, "free call node");
+  NmMem_Free(n);
+}
+
+Node *NmAST_GenStmt(Pos pos, Node *expr)
+{
+  Node *n = NmMem_Malloc(sizeof(Node));
+
+  n->type = NT_STMT;
+  n->data.stmt.expr = expr;
+  INIT_POS();
+
+  NmDebug_AST(n, "create statement node (expr: %p)", expr);
+
+  return n;
+}
+
+NmObject *NmAST_ExecStmt(Node *n)
+{
+  /* TODO: make it supports multiple expressions through the ',' operator */
+  return NmAST_Exec(n->data.stmt.expr);
+}
+
+void NmAST_FreeStmt(Node *n)
+{
+  assert(n);
+  assert(n->type == NT_STMT);
+
+  NmDebug_AST(n, "free statement node");
+  NmAST_Free(n->data.stmt.expr);
+  NmMem_Free(n);
+}
+
+NmObject *NmAST_ExecBlock(Node *n)
+{
+  NmObject *ret = NmNull;
+  Statement *s;
+  Statement *next;
+
+  assert(n);
+  assert(n->type == NT_BLOCK);
+
+  NmDebug_AST(n, "execute block node");
+
+  for (s = n->data.block.tail; s != NULL; s = next){
+    next = s->next;
+    if (s->stmt){
+      NmDebug_AST(s->stmt, "execute statement node");
+      ret = NmAST_Exec(s->stmt);
+    }
+  }
+
+  NmDebug_AST(n, "done executing block node");
+
+  return ret;
+}
+
+/*
+ * @name - freeBlock
+ * @desc - frees given block and every statement it holds
+ */
+void NmAST_FreeBlock(Node *n)
+{
+  Statement *s;
+  Statement *next;
+
+  assert(n);
+  assert(n->type == NT_BLOCK);
+
+  for (s = n->data.block.tail; s != NULL; s = next){
+    next = s->next;
+    NmAST_Free(s->stmt);
+    NmDebug_AST(n, "free statement node");
+    NmMem_Free(s);
+  }
+
+  NmDebug_AST(n, "free block node");
   NmMem_Free(n);
 }
 

@@ -909,9 +909,7 @@ static Node *stmt(LexerState *lex)
     else endStmt(lex);
   }
 
-  NmDebug_AST(ret, "create statement");
-
-  return ret;
+  return NmAST_GenStmt(ret->pos, ret);
 }
 
 /*

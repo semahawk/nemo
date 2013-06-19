@@ -265,7 +265,7 @@ static int nmInteractive(void)
     line++;
     /* "quit" hit */
     if (!strcmp(input, "quit")){
-      printf("\n  Have a good day!\n\n");
+      printf("=> Have a good day!\n");
       return 0;
     }
 

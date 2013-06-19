@@ -48,8 +48,9 @@ enum NodeType {
   NT_IF,
   NT_WHILE,
   NT_DECL,
-  NT_BLOCK,
   NT_CALL,
+  NT_STMT,
+  NT_BLOCK,
   NT_FUNCDEF,
   /* actually, both use and include */
   NT_INCLUDE
@@ -140,14 +141,19 @@ struct Node {
     } decl;
 
     struct {
-      struct Statement *head;
-      struct Statement *tail;
-    } block;
-
-    struct {
       char *name;
       struct Node **params;
     } call;
+
+    struct {
+      /* TODO: make it support multiple expressions through the ',' operator */
+      struct Node *expr;
+    } stmt;
+
+    struct {
+      struct Statement *head;
+      struct Statement *tail;
+    } block;
 
     struct {
       char *name;
@@ -179,6 +185,7 @@ Node *NmAST_GenIf(Pos, Node *, Node *, Node *, BOOL);
 Node *NmAST_GenWhile(Pos, Node *, Node *, Node *, BOOL);
 Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
 Node *NmAST_GenCall(Pos, char *, Node **);
+Node *NmAST_GenStmt(Pos, Node *);
 Node *NmAST_GenFuncDef(Pos, char *, Node *);
 Node *NmAST_GenInclude(Pos, char *, char *, BOOL);
 Node *NmAST_GenNop(Pos);
@@ -194,6 +201,7 @@ NmObject *NmAST_ExecIf(Node *);
 NmObject *NmAST_ExecWhile(Node *);
 NmObject *NmAST_ExecDecl(Node *);
 NmObject *NmAST_ExecCall(Node *);
+NmObject *NmAST_ExecStmt(Node *);
 NmObject *NmAST_ExecBlock(Node *);
 NmObject *NmAST_ExecFuncDef(Node *);
 NmObject *NmAST_ExecInclude(Node *);
@@ -211,6 +219,7 @@ void NmAST_FreeIf(Node *);
 void NmAST_FreeWhile(Node *);
 void NmAST_FreeDecl(Node *);
 void NmAST_FreeCall(Node *);
+void NmAST_FreeStmt(Node *);
 void NmAST_FreeBlock(Node *);
 void NmAST_FreeNop(Node *);
 void NmAST_FreeFuncDef(Node *);
