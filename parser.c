@@ -941,6 +941,8 @@ static Node *block(LexerState *lex)
   new_block->data.block.head = NULL;
   new_block->data.block.tail = NULL;
 
+  NmDebug_AST(new_block, "create block node");
+
   while (!NmLexer_Peek(lex, SYM_RMUSTASHE) && !NmLexer_Peek(lex, SYM_EOS)){
     Statement *new_stmt = NmMem_Malloc(sizeof(Statement));
     new_stmt->stmt = stmt(lex);
@@ -959,8 +961,6 @@ static Node *block(LexerState *lex)
       new_block->data.block.head = new_stmt;
     }
   }
-
-  NmDebug_AST(new_block, "create block node");
 
   return new_block;
 }

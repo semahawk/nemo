@@ -1126,11 +1126,9 @@ NmObject *NmAST_ExecStmt(Node *n)
   /* a statement node is pretty much guaranteed to have at least one expression */
   NmObject *ret = NmAST_Exec(n->data.stmt.exprs[0]);
 
-  size_t nmemb = n->data.stmt.nmemb;
   size_t i;
-  /* execute the rest of expressions, but in reverse order because
-   * the parser already creates it in reverse order */
-  for (i = 1; i < nmemb; i++){
+  /* execute the expressions */
+  for (i = 1; i < n->data.stmt.nmemb; i++){
     NmAST_Exec(n->data.stmt.exprs[i]);
   }
 
@@ -1150,6 +1148,7 @@ void NmAST_FreeStmt(Node *n)
     NmAST_Free(n->data.stmt.exprs[i]);
   }
 
+  NmMem_Free(n->data.stmt.exprs);
   NmMem_Free(n);
 }
 
