@@ -554,16 +554,26 @@ NmObject *NmAST_ExecBinop(Node *n)
     return ob_left->fn.binary.index(ob_left, ob_right);
   }
 
+/* a handy macro to check if an object supports given binary operation
+ * <func>, and if not, print an error, and exit
+ *
+ * <ob> is of type { NmObject * }
+ * <func> is pretty much of type { void *(*)(NmObject *, NmObject *) }
+ *
+ * Note: both left and right operands should be of the same type */
+#define ensure_ob_has_func(FUNC) \
+  if (!ob_left->fn.binary.FUNC){ \
+    NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
+    /* FIXME: shouldn't exit here */ \
+    exit(EXIT_FAILURE); \
+  }
+
 /* <TYPE> is of type { BinaryOp }
  * <FUNC> is of type { BinaryFunc } */
 #define op(TYPE, FUNC) \
   case TYPE: \
   { \
-    if (!ob_left->fn.binary.FUNC){ \
-      NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
-      /* FIXME: shouldn't exit here */ \
-      exit(EXIT_FAILURE); \
-    } \
+    ensure_ob_has_func(FUNC); \
 \
     ret = ob_left->fn.binary.FUNC(ob_left, ob_right); \
     /* if a binop function returns NULL it means something bad happend */ \
@@ -577,11 +587,7 @@ NmObject *NmAST_ExecBinop(Node *n)
 
 #define cmpop(TYPE, CMPRES) \
   case TYPE: { \
-    if (!ob_left->fn.binary.cmp){ \
-      NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
-      /* FIXME: shouldn't exit here */ \
-      exit(EXIT_FAILURE); \
-    } \
+    ensure_ob_has_func(cmp); \
 \
     ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMPRES ? \
           NmInt_New(1) : NmInt_New(0); \
@@ -601,11 +607,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     cmpop(BINARY_GT, CMP_GT); \
     cmpop(BINARY_EQ, CMP_EQ); \
     case BINARY_LE: { \
-      if (!ob_left->fn.binary.cmp){ \
-        NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
-        /* FIXME: shouldn't exit here */ \
-        exit(EXIT_FAILURE); \
-      } \
+      ensure_ob_has_func(cmp); \
 \
       ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
             ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
@@ -613,11 +615,7 @@ NmObject *NmAST_ExecBinop(Node *n)
       break; \
     } \
     case BINARY_GE: { \
-      if (!ob_left->fn.binary.cmp){ \
-        NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
-        /* FIXME: shouldn't exit here */ \
-        exit(EXIT_FAILURE); \
-      } \
+      ensure_ob_has_func(cmp); \
 \
       ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
             ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT ? \
@@ -625,11 +623,7 @@ NmObject *NmAST_ExecBinop(Node *n)
       break; \
     } \
     case BINARY_NE: { \
-      if (!ob_left->fn.binary.cmp){ \
-        NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
-        /* FIXME: shouldn't exit here */ \
-        exit(EXIT_FAILURE); \
-      } \
+      ensure_ob_has_func(cmp); \
 \
       ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT || \
             ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
@@ -683,6 +677,7 @@ NmObject *NmAST_ExecBinop(Node *n)
   }
 
 #undef op
+#undef binop_ob_has_func
 
   return ret;
 }
