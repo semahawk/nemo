@@ -52,6 +52,9 @@ NmObject *NmInt_New(int i)
   ob->fn.print = NmInt_Print;
   ob->fn.binary.add = NmInt_Add;
   ob->fn.binary.sub = NmInt_Sub;
+  ob->fn.binary.mul = NmInt_Mul;
+  ob->fn.binary.div = NmInt_Div;
+  ob->fn.binary.mod = NmInt_Mod;
   ob->fn.binary.cmp = NmInt_Cmp;
   ob->fn.unary.plus = NmInt_Plus;
   ob->fn.unary.minus = NmInt_Minus;
@@ -78,6 +81,26 @@ NmObject *NmInt_Add(NmObject *left, NmObject *right)
 NmObject *NmInt_Sub(NmObject *left, NmObject *right)
 {
   return NmInt_New(NmInt_VAL(left) - NmInt_VAL(right));
+}
+
+NmObject *NmInt_Mul(NmObject *left, NmObject *right)
+{
+  return NmInt_New(NmInt_VAL(left) * NmInt_VAL(right));
+}
+
+NmObject *NmInt_Div(NmObject *left, NmObject *right)
+{
+  if (NmInt_VAL(right) == 0){
+    NmError_SetString("zero division!");
+    return NULL;
+  }
+
+  return NmFloat_New((float)NmInt_VAL(left) / (float)NmInt_VAL(right));
+}
+
+NmObject *NmInt_Mod(NmObject *left, NmObject *right)
+{
+  return NmInt_New(NmInt_VAL(left) % NmInt_VAL(right));
 }
 
 NmObject *NmInt_Cmp(NmObject *left, NmObject *right)

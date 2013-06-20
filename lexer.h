@@ -57,7 +57,7 @@ enum SymbolType {
   SYM_PLUS,           /* "+"       */
   SYM_PLUSPLUS,       /* "++"      */
   SYM_TIMES,          /* "*"       */
-  SYM_MODULO,         /* "%"       */
+  SYM_PERCENT,        /* "%"       */
   SYM_SLASH,          /* "/"       */
   SYM_LPAREN,         /* "("       */
   SYM_RPAREN,         /* ")"       */

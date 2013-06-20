@@ -564,6 +564,12 @@ NmObject *NmAST_ExecBinop(Node *n)
     } \
 \
     ret = ob_left->fn.binary.FUNC(ob_left, ob_right); \
+    /* if a binop function returns NULL it means something bad happend */ \
+    if (!ret){ \
+      NmError_Parser(n, NmError_GetCurr()); \
+      /* FIXME: shouldn't exit here */ \
+      exit(EXIT_FAILURE); \
+    } \
     break; \
   }
 
@@ -573,6 +579,9 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* here are all the binary functions that are available */ \
     op(BINARY_ADD, add); \
     op(BINARY_SUB, sub); \
+    op(BINARY_MUL, mul); \
+    op(BINARY_DIV, div); \
+    op(BINARY_MOD, mod); \
     default: \
     NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
       /* FIXME: shouldn't exit here */ \

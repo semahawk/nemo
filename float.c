@@ -47,6 +47,9 @@ NmObject *NmFloat_New(double f)
   ob->fn.type_repr = NmFloat_TypeRepr;
   ob->fn.print = NmFloat_Print;
   ob->fn.binary.add = NmFloat_Add;
+  ob->fn.binary.sub = NmFloat_Sub;
+  ob->fn.binary.mul = NmFloat_Mul;
+  ob->fn.binary.div = NmFloat_Div;
   ob->fn.binary.index = NULL;
   ob->fn.binary.cmp = NmFloat_Cmp;
 
@@ -70,6 +73,36 @@ NmObject *NmFloat_Add(NmObject *left, NmObject *right)
     return NmInt_New((int)(NmFloat_VAL(left) + NmFloat_VAL(right)));
   } else {
     return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
+  }
+}
+
+NmObject *NmFloat_Sub(NmObject *left, NmObject *right)
+{
+  /* check if the result could be represented as an int */
+  if ((int)(NmFloat_VAL(left) - NmFloat_VAL(right)) == (NmFloat_VAL(left) - NmFloat_VAL(right))){
+    return NmInt_New((int)(NmFloat_VAL(left) - NmFloat_VAL(right)));
+  } else {
+    return NmFloat_New(NmFloat_VAL(left) - NmFloat_VAL(right));
+  }
+}
+
+NmObject *NmFloat_Mul(NmObject *left, NmObject *right)
+{
+  /* check if the result could be represented as an int */
+  if ((int)(NmFloat_VAL(left) * NmFloat_VAL(right)) == (NmFloat_VAL(left) * NmFloat_VAL(right))){
+    return NmInt_New((int)(NmFloat_VAL(left) * NmFloat_VAL(right)));
+  } else {
+    return NmFloat_New(NmFloat_VAL(left) * NmFloat_VAL(right));
+  }
+}
+
+NmObject *NmFloat_Div(NmObject *left, NmObject *right)
+{
+  /* check if the result could be represented as an int */
+  if ((int)(NmFloat_VAL(left) / NmFloat_VAL(right)) == (NmFloat_VAL(left) / NmFloat_VAL(right))){
+    return NmInt_New((int)(NmFloat_VAL(left) / NmFloat_VAL(right)));
+  } else {
+    return NmFloat_New(NmFloat_VAL(left) / NmFloat_VAL(right));
   }
 }
 

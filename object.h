@@ -72,6 +72,9 @@ struct Fn {
   struct {
     BinaryFunc add;   /* addition */
     BinaryFunc sub;   /* substraction */
+    BinaryFunc mul;   /* multiplication */
+    BinaryFunc div;   /* division */
+    BinaryFunc mod;   /* modulo */
     BinaryFunc index; /* array/string indexing */
     BinaryFunc cmp;   /* compare */
   } binary;
@@ -132,6 +135,9 @@ BOOL NmObject_Boolish(NmObject *);
 NmObject *NmInt_New(int);
 NmObject *NmInt_Add(NmObject *, NmObject *);
 NmObject *NmInt_Sub(NmObject *, NmObject *);
+NmObject *NmInt_Mul(NmObject *, NmObject *);
+NmObject *NmInt_Div(NmObject *, NmObject *);
+NmObject *NmInt_Mod(NmObject *, NmObject *);
 NmObject *NmInt_Cmp(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
@@ -147,6 +153,9 @@ NmObject *NmInt_NewFromVoidPtr(void *);
 NmObject *NmFloat_New(double);
 NmObject *NmFloat_NewFromInt(int);
 NmObject *NmFloat_Add(NmObject *, NmObject *);
+NmObject *NmFloat_Sub(NmObject *, NmObject *);
+NmObject *NmFloat_Mul(NmObject *, NmObject *);
+NmObject *NmFloat_Div(NmObject *, NmObject *);
 NmObject *NmFloat_Cmp(NmObject *, NmObject *);
 NmObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);

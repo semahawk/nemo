@@ -389,7 +389,9 @@ static Node *mult_expr(LexerState *lex)
 
   ret = left = prefix_expr(lex);
 
-  while (NmLexer_Peek(lex, SYM_TIMES) || NmLexer_Peek(lex, SYM_SLASH)){
+  while (NmLexer_Peek(lex, SYM_TIMES) ||
+         NmLexer_Peek(lex, SYM_SLASH) ||
+         NmLexer_Peek(lex, SYM_PERCENT)){
     /* if left is NULL it means something like that happend:
      *
      *    my var;
@@ -407,6 +409,9 @@ static Node *mult_expr(LexerState *lex)
     } else if (NmLexer_Accept(lex, SYM_SLASH)){
       op = BINARY_DIV;
       NmDebug_Parser("/ ");
+    } else if (NmLexer_Accept(lex, SYM_PERCENT)){
+      op = BINARY_MOD;
+      NmDebug_Parser("% ");
     }
     right = prefix_expr(lex);
     /* if right is NULL it means something like that happend:
@@ -420,7 +425,7 @@ static Node *mult_expr(LexerState *lex)
       /* FIXME: probably shouldn't exit here */
       exit(EXIT_FAILURE);
     }
-    ret = NmAST_GenBinop(lex->current->sym.pos, left, BINARY_MUL, right);
+    ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
     left = ret;
   }
 

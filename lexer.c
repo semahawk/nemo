@@ -424,7 +424,7 @@ void NmLexer_LexString(LexerState *lex, char *string)
        * XXX %
        */
       } else {
-        append(lex, SYM_MODULO);
+        append(lex, SYM_PERCENT);
         lex->column++;
       }
     }
@@ -622,7 +622,7 @@ const char *symToS(SymbolType type)
     case SYM_PLUS:       return "'+'";
     case SYM_PLUSPLUS:   return "'++'";
     case SYM_TIMES:      return "'*'";
-    case SYM_MODULO:     return "'%'";
+    case SYM_PERCENT:    return "'%'";
     case SYM_SLASH:      return "'/'";
     case SYM_LPAREN:     return "'('";
     case SYM_RPAREN:     return "')'";
