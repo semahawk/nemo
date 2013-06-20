@@ -65,8 +65,12 @@ enum SymbolType {
   SYM_RMUSTASHE,      /* "}"       */
   SYM_LBRACKET,       /* "["       */
   SYM_RBRACKET,       /* "]"       */
-  SYM_LT,             /* "<"       */
-  SYM_GT,             /* ">"       */
+  SYM_LCHEVRON,       /* "<"       */
+  SYM_RCHEVRON,       /* ">"       */
+  SYM_LCHEVRONEQ,     /* "<="      */
+  SYM_RCHEVRONEQ,     /* ">="      */
+  SYM_EQEQ,           /* "=="      */
+  SYM_BANGEQ,         /* "!="      */
   SYM_BANG,           /* "!"       */
   SYM_COLON,          /* ":"       */
   SYM_QUESTION,       /* "?"       */

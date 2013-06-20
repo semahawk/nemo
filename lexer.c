@@ -308,8 +308,21 @@ void NmLexer_LexString(LexerState *lex, char *string)
       lex->column += i;
     }
     else if (*p == '='){
-      append(lex, SYM_EQ);
-      lex->column++;
+      /*
+       * XXX '=='
+       */
+      if (*(p + 1) == '='){
+        append(lex, SYM_EQEQ);
+        lex->column += 2;
+        p++;
+      }
+      /*
+       * XXX '='
+       */
+      else {
+        append(lex, SYM_EQ);
+        lex->column++;
+      }
     }
     else if (*p == ' '){
       lex->column++;
@@ -461,16 +474,55 @@ void NmLexer_LexString(LexerState *lex, char *string)
       lex->column++;
     }
     else if (*p == '<'){
-      append(lex, SYM_LT);
-      lex->column++;
+      /*
+       * XXX '<='
+       */
+      if (*(p + 1) == '='){
+        append(lex, SYM_LCHEVRONEQ);
+        lex->column += 2;
+        p++;
+      }
+      /*
+       * XXX '<'
+       */
+      else {
+        append(lex, SYM_LCHEVRON);
+        lex->column++;
+      }
     }
     else if (*p == '>'){
-      append(lex, SYM_GT);
-      lex->column++;
+      /*
+       * XXX '>='
+       */
+      if (*(p + 1) == '='){
+        append(lex, SYM_RCHEVRONEQ);
+        lex->column += 2;
+        p++;
+      }
+      /*
+       * XXX '>'
+       */
+      else {
+        append(lex, SYM_RCHEVRON);
+        lex->column++;
+      }
     }
     else if (*p == '!'){
-      append(lex, SYM_BANG);
-      lex->column++;
+      /*
+       * XXX '!='
+       */
+      if (*(p + 1) == '='){
+        append(lex, SYM_BANGEQ);
+        lex->column += 2;
+        p++;
+      }
+      /*
+       * XXX '!'
+       */
+      else {
+        append(lex, SYM_BANG);
+        lex->column++;
+      }
     }
     else if (*p == '?'){
       append(lex, SYM_QUESTION);
@@ -630,8 +682,12 @@ const char *symToS(SymbolType type)
     case SYM_RMUSTASHE:  return "'}'";
     case SYM_LBRACKET:   return "'['";
     case SYM_RBRACKET:   return "']'";
-    case SYM_LT:         return "'<'";
-    case SYM_GT:         return "'>'";
+    case SYM_LCHEVRON:   return "'<'";
+    case SYM_RCHEVRON:   return "'>'";
+    case SYM_LCHEVRONEQ: return "'<='";
+    case SYM_RCHEVRONEQ: return "'>='";
+    case SYM_EQEQ:       return "'=='";
+    case SYM_BANGEQ:     return "'!='";
     case SYM_BANG:       return "'!'";
     case SYM_QUESTION:   return "'?'";
     case SYM_COLON:      return "':'";

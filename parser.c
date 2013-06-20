@@ -481,6 +481,10 @@ static Node *add_expr(LexerState *lex)
 /*
  *   cond_op: '>'
  *          | '<'
+ *          | '>='
+ *          | '<='
+ *          | '=='
+ *          | '!='
  *          ;
  *
  * cond_expr: add_expr [cond_op add_expr]*
@@ -495,7 +499,12 @@ static Node *cond_expr(LexerState *lex)
 
   ret = left = add_expr(lex);
 
-  while (NmLexer_Peek(lex, SYM_GT) || NmLexer_Peek(lex, SYM_LT)){
+  while (NmLexer_Peek(lex, SYM_RCHEVRON) ||
+         NmLexer_Peek(lex, SYM_LCHEVRON) ||
+         NmLexer_Peek(lex, SYM_RCHEVRONEQ) ||
+         NmLexer_Peek(lex, SYM_LCHEVRONEQ) ||
+         NmLexer_Peek(lex, SYM_EQEQ) ||
+         NmLexer_Peek(lex, SYM_BANGEQ)){
     /* if left is NULL it means something like that happend:
      *
      *    my var;
@@ -507,12 +516,24 @@ static Node *cond_expr(LexerState *lex)
       /* FIXME: probably shouldn't exit here */
       exit(EXIT_FAILURE);
     }
-    if (NmLexer_Accept(lex, SYM_GT)){
+    if (NmLexer_Accept(lex, SYM_RCHEVRON)){
       op = BINARY_GT;
       NmDebug_Parser("> ");
-    } else if (NmLexer_Accept(lex, SYM_LT)){
+    } else if (NmLexer_Accept(lex, SYM_LCHEVRON)){
       op = BINARY_LT;
       NmDebug_Parser("< ");
+    } else if (NmLexer_Accept(lex, SYM_RCHEVRONEQ)){
+      op = BINARY_GE;
+      NmDebug_Parser(">= ");
+    } else if (NmLexer_Accept(lex, SYM_LCHEVRONEQ)){
+      op = BINARY_LE;
+      NmDebug_Parser("<= ");
+    } else if (NmLexer_Accept(lex, SYM_EQEQ)){
+      op = BINARY_EQ;
+      NmDebug_Parser("== ");
+    } else if (NmLexer_Accept(lex, SYM_BANGEQ)){
+      op = BINARY_NE;
+      NmDebug_Parser("!= ");
     }
     right = add_expr(lex);
     /* if right is NULL it means something like that happend:

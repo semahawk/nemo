@@ -103,9 +103,11 @@ NmObject *NmInt_Mod(NmObject *left, NmObject *right)
   return NmInt_New(NmInt_VAL(left) % NmInt_VAL(right));
 }
 
-NmObject *NmInt_Cmp(NmObject *left, NmObject *right)
+CmpRes NmInt_Cmp(NmObject *left, NmObject *right)
 {
-  return NmInt_VAL(left) == NmInt_VAL(right) ? NmInt_New(1) : NmInt_New(0);
+  return NmInt_VAL(left) >  NmInt_VAL(right) ? CMP_GT :
+         NmInt_VAL(left) <  NmInt_VAL(right) ? CMP_LT :
+                                               CMP_EQ ;
 }
 
 NmObject *NmInt_Plus(NmObject *target)

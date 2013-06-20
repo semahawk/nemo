@@ -14,7 +14,7 @@ assert(1, 1);
 assert(0.0, 0.0);
 assert(1.0, 1.0);
 
-# Basic integer arithmetic
+# Integer arithmetic
 assert(4, 2 + 2);
 assert(2 + 2, 4);
 assert(2, 4 - 2);
@@ -26,7 +26,21 @@ assert(1, 7 / 7);
 assert(7 % 2, 1);
 assert(7 % 7, 0);
 
-# Basic float arithmetic
+# Integer comparision
+assert(2 <  4, 1);
+assert(4 <  4, 0);
+assert(2 <= 4, 1);
+assert(2 <= 2, 1);
+assert(4 >  2, 1);
+assert(4 >  7, 0);
+assert(4 >= 2, 1);
+assert(4 >= 4, 1);
+assert(4 == 4, 1);
+assert(4 == 3, 0);
+assert(4 != 4, 0);
+assert(4 != 3, 1);
+
+# Float arithmetic
 assert(4.0, 2.0 + 2.0);
 assert(0.0, 0.0 + 0.0);
 assert(8.5 - 2.4, 6.1);
@@ -36,6 +50,20 @@ assert(0.0 * 2.0, 0.0);
 assert(5.0 / 2.0, 2.5);
 assert(5   / 2  , 2.5);
 assert(2.5 / 2.0, 1.25);
+
+# Float comparision
+assert(2.0 <  4.0, 1);
+assert(4.0 <  4.0, 0);
+assert(2.0 <= 4.0, 1);
+assert(2.0 <= 2.0, 1);
+assert(4.0 >  2.0, 1);
+assert(4.0 >  7.0, 0);
+assert(4.0 >= 2.0, 1);
+assert(4.0 >= 4.0, 1);
+assert(4.0 == 4.0, 1);
+assert(4.0 == 3.0, 0);
+assert(4.0 != 4.0, 0);
+assert(4.0 != 3.0, 1);
 
 # Unary operations
 assert(-2, -2);

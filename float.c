@@ -106,9 +106,11 @@ NmObject *NmFloat_Div(NmObject *left, NmObject *right)
   }
 }
 
-NmObject *NmFloat_Cmp(NmObject *left, NmObject *right)
+CmpRes NmFloat_Cmp(NmObject *left, NmObject *right)
 {
-  return NmFloat_VAL(left) == NmFloat_VAL(right) ? NmInt_New(1) : NmInt_New(0);
+  return NmFloat_VAL(left) >  NmFloat_VAL(right) ? CMP_GT :
+         NmFloat_VAL(left) <  NmFloat_VAL(right) ? CMP_LT :
+                                                   CMP_EQ ;
 }
 
 NmObject *NmFloat_TypeRepr(void)

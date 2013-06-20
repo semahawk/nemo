@@ -59,6 +59,10 @@ enum NodeType {
 enum BinaryOp {
   BINARY_GT,
   BINARY_LT,
+  BINARY_GE,
+  BINARY_LE,
+  BINARY_EQ,
+  BINARY_NE,
   BINARY_ADD,
   BINARY_SUB,
   BINARY_MUL,

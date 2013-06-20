@@ -58,6 +58,13 @@ typedef struct StringObject NmStringObject;
 typedef struct ArrayObject NmArrayObject;
 typedef struct ObFreeList ObFreeList;
 
+/* result of the *_Cmp function */
+typedef enum {
+  CMP_EQ,
+  CMP_GT,
+  CMP_LT
+} CmpRes;
+
 typedef NmObject *(*BinaryFunc)(NmObject *, NmObject *);
 typedef NmObject *(*UnaryFunc)(NmObject *);
 
@@ -76,7 +83,9 @@ struct Fn {
     BinaryFunc div;   /* division */
     BinaryFunc mod;   /* modulo */
     BinaryFunc index; /* array/string indexing */
-    BinaryFunc cmp;   /* compare */
+    /* the NmAST_ExecBinop function is taking care to turn
+     * this { CmpRes } into { NmObject * } */
+    CmpRes (*cmp)(NmObject *, NmObject *); /* compare */
   } binary;
   /* unary operations functions */
   struct {
@@ -86,8 +95,8 @@ struct Fn {
   } unary;
 };
 
-#define NMOBJECT_HEAD                      \
-  enum Type type;                          \
+#define NMOBJECT_HEAD \
+  enum Type type;     \
   struct Fn fn;
 
 struct Object {
@@ -138,7 +147,7 @@ NmObject *NmInt_Sub(NmObject *, NmObject *);
 NmObject *NmInt_Mul(NmObject *, NmObject *);
 NmObject *NmInt_Div(NmObject *, NmObject *);
 NmObject *NmInt_Mod(NmObject *, NmObject *);
-NmObject *NmInt_Cmp(NmObject *, NmObject *);
+CmpRes    NmInt_Cmp(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
 NmObject *NmInt_Negate(NmObject *);
@@ -156,7 +165,7 @@ NmObject *NmFloat_Add(NmObject *, NmObject *);
 NmObject *NmFloat_Sub(NmObject *, NmObject *);
 NmObject *NmFloat_Mul(NmObject *, NmObject *);
 NmObject *NmFloat_Div(NmObject *, NmObject *);
-NmObject *NmFloat_Cmp(NmObject *, NmObject *);
+CmpRes    NmFloat_Cmp(NmObject *, NmObject *);
 NmObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);
 void NmFloat_Destroy(NmObject *);

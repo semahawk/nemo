@@ -505,6 +505,7 @@ NmObject *NmAST_ExecBinop(Node *n)
      * (at least for now (30 Apr 2013)) */
     if (n->data.binop.left->type != NT_NAME){
       NmError_Parser(n, "expected an lvalue in assignment");
+      /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
     }
     name = n->data.binop.left->data.s;
@@ -519,13 +520,14 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* error if the variable was not found */
     if (!found){
       NmError_Parser(n, "variable '%s' was not found", name);
+      /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
     }
     /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
      * to be not-assignable*/
     if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
       NmError_Parser(n, "cannot change the value of a constant variable '%s'", name);
-      /* FIXME */
+      /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
     }
     /* actually assign the value */
@@ -540,12 +542,12 @@ NmObject *NmAST_ExecBinop(Node *n)
   else if (n->data.binop.op == BINARY_INDEX){
     if (!ob_left->fn.binary.index){
       NmError_Parser(n, "invalid binary operator '[]' for type '%s'", NmString_VAL(ob_left->fn.type_repr()));
-      /* FIXME */
+      /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
     }
     if (ob_right->type != OT_INTEGER){
       NmError_Parser(n, "expected type 'int' for the indexing value");
-      /* FIXME */
+      /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
     }
 
@@ -573,6 +575,19 @@ NmObject *NmAST_ExecBinop(Node *n)
     break; \
   }
 
+#define cmpop(TYPE, CMPRES) \
+  case TYPE: { \
+    if (!ob_left->fn.binary.cmp){ \
+      NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
+      /* FIXME: shouldn't exit here */ \
+      exit(EXIT_FAILURE); \
+    } \
+\
+    ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMPRES ? \
+          NmInt_New(1) : NmInt_New(0); \
+    break; \
+  }
+
 /* DRY */
 #define binary_ops() \
   switch (n->data.binop.op){ \
@@ -582,8 +597,47 @@ NmObject *NmAST_ExecBinop(Node *n)
     op(BINARY_MUL, mul); \
     op(BINARY_DIV, div); \
     op(BINARY_MOD, mod); \
+    cmpop(BINARY_LT, CMP_LT); \
+    cmpop(BINARY_GT, CMP_GT); \
+    cmpop(BINARY_EQ, CMP_EQ); \
+    case BINARY_LE: { \
+      if (!ob_left->fn.binary.cmp){ \
+        NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
+        /* FIXME: shouldn't exit here */ \
+        exit(EXIT_FAILURE); \
+      } \
+\
+      ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
+            ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
+            NmInt_New(1) : NmInt_New(0); \
+      break; \
+    } \
+    case BINARY_GE: { \
+      if (!ob_left->fn.binary.cmp){ \
+        NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
+        /* FIXME: shouldn't exit here */ \
+        exit(EXIT_FAILURE); \
+      } \
+\
+      ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
+            ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT ? \
+            NmInt_New(1) : NmInt_New(0); \
+      break; \
+    } \
+    case BINARY_NE: { \
+      if (!ob_left->fn.binary.cmp){ \
+        NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
+        /* FIXME: shouldn't exit here */ \
+        exit(EXIT_FAILURE); \
+      } \
+\
+      ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT || \
+            ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
+            NmInt_New(1) : NmInt_New(0); \
+      break; \
+    } \
     default: \
-    NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
+      NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
       /* FIXME: shouldn't exit here */ \
       exit(EXIT_FAILURE); \
   }
@@ -1253,8 +1307,6 @@ NmObject *NmAST_ExecFuncDef(Node *n)
   else
     NmDebug_AST(n, "execute function declaration node");
 
-  printf("funcdef %s in scope %s\n", n->data.funcdef.name, NmScope_GetCurr()->name);
-
   return NmInt_New(1);
 }
 
@@ -1335,6 +1387,10 @@ const char *binopToS(BinaryOp op)
   switch (op){
     case BINARY_GT:         return "'>'";
     case BINARY_LT:         return "'<'";
+    case BINARY_GE:         return "'>='";
+    case BINARY_LE:         return "'<='";
+    case BINARY_EQ:         return "'=='";
+    case BINARY_NE:         return "'!='";
     case BINARY_ADD:        return "'+'";
     case BINARY_SUB:        return "'-'";
     case BINARY_MUL:        return "'*'";
