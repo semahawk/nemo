@@ -52,6 +52,8 @@ NmObject *NmFloat_New(double f)
   ob->fn.binary.div = NmFloat_Div;
   ob->fn.binary.index = NULL;
   ob->fn.binary.cmp = NmFloat_Cmp;
+  ob->fn.unary.increment = NmFloat_Increment;
+  ob->fn.unary.decrement = NmFloat_Decrement;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -111,6 +113,20 @@ CmpRes NmFloat_Cmp(NmObject *left, NmObject *right)
   return NmFloat_VAL(left) >  NmFloat_VAL(right) ? CMP_GT :
          NmFloat_VAL(left) <  NmFloat_VAL(right) ? CMP_LT :
                                                    CMP_EQ ;
+}
+
+NmObject *NmFloat_Increment(NmObject *target)
+{
+  NmFloat_VAL(target) = NmFloat_VAL(target) + 1;
+
+  return target;
+}
+
+NmObject *NmFloat_Decrement(NmObject *target)
+{
+  NmFloat_VAL(target) = NmFloat_VAL(target) - 1;
+
+  return target;
 }
 
 NmObject *NmFloat_TypeRepr(void)

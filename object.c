@@ -53,6 +53,18 @@ void NmObject_Tidyup(void)
 }
 
 /*
+ * Duplicates given object and returns the copy.
+ */
+NmObject *NmObject_Dup(NmObject *ob)
+{
+  NmObject *new = NmMem_Malloc(sizeof(*ob));
+
+  new = ob;
+
+  return ob;
+}
+
+/*
  * Check if given value is a true/false boolean-wise.
  *
  * In Nemo there is no "bool" type as is.

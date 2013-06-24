@@ -92,6 +92,8 @@ struct Fn {
     UnaryFunc plus;
     UnaryFunc minus;
     UnaryFunc negate;
+    UnaryFunc increment;
+    UnaryFunc decrement;
   } unary;
 };
 
@@ -140,6 +142,7 @@ NmObject *NmObject_New(const char *);
 void NmObject_Destroy(NmObject *);
 void NmObject_Tidyup(void);
 BOOL NmObject_Boolish(NmObject *);
+NmObject *NmObject_Dup(NmObject *);
 
 NmObject *NmInt_New(int);
 NmObject *NmInt_Add(NmObject *, NmObject *);
@@ -151,6 +154,8 @@ CmpRes    NmInt_Cmp(NmObject *, NmObject *);
 NmObject *NmInt_Plus(NmObject *);
 NmObject *NmInt_Minus(NmObject *);
 NmObject *NmInt_Negate(NmObject *);
+NmObject *NmInt_Increment(NmObject *);
+NmObject *NmInt_Decrement(NmObject *);
 NmObject *NmInt_TypeRepr(void);
 void NmInt_Print(FILE *, NmObject *);
 void NmInt_Destroy(NmObject *);
@@ -166,6 +171,8 @@ NmObject *NmFloat_Sub(NmObject *, NmObject *);
 NmObject *NmFloat_Mul(NmObject *, NmObject *);
 NmObject *NmFloat_Div(NmObject *, NmObject *);
 CmpRes    NmFloat_Cmp(NmObject *, NmObject *);
+NmObject *NmFloat_Increment(NmObject *);
+NmObject *NmFloat_Decrement(NmObject *);
 NmObject *NmFloat_TypeRepr(void);
 void NmFloat_Print(FILE *, NmObject *);
 void NmFloat_Destroy(NmObject *);

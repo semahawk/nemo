@@ -677,7 +677,7 @@ NmObject *NmAST_ExecBinop(Node *n)
   }
 
 #undef op
-#undef binop_ob_has_func
+#undef ensure_ob_has_func
 
   return ret;
 }
@@ -728,16 +728,24 @@ NmObject *NmAST_ExecUnop(Node *n)
 
   NmDebug_AST(n, "execute unary operation node");
 
+/* a handy macro to check if an object supports given unary operation
+ * <func>, and if not, print an error, and exit
+ *
+ * <ob> is of type { NmObject * }
+ * <func> is of type { UnaryFunc }
+ */
+#define ensure_ob_has_func(FUNC) \
+  if (!target->fn.unary.FUNC){ \
+    NmError_Parser(n, "invalid type '%s' for unary operator %s", NmString_VAL(target->fn.type_repr()), unopToS(n->data.unop.op)); \
+    /* FIXME: shouldn't exit here */ \
+    exit(EXIT_FAILURE); \
+  }
+
 /* <TYPE> is of type { UnaryOp }
  * <FUNC> is of type { UnaryFunc } */
 #define op(TYPE, FUNC) \
   case TYPE: { \
-    if (!target->fn.unary.FUNC){ \
-      /* FIXME: print that type good */ \
-      NmError_Parser(n, "invalid type '%s' for unary operator %s", NmString_VAL(target->fn.type_repr()), unopToS(n->data.unop.op)); \
-      /* FIXME: shouldn't exit here */ \
-      exit(EXIT_FAILURE); \
-    } \
+    ensure_ob_has_func(FUNC); \
 \
     ret = target->fn.unary.FUNC(target); \
     break; \
@@ -747,14 +755,38 @@ NmObject *NmAST_ExecUnop(Node *n)
     op(UNARY_PLUS, plus);
     op(UNARY_MINUS, minus);
     op(UNARY_NEGATE, negate);
+    case UNARY_PREINC: {
+      ensure_ob_has_func(increment);
+      ret = target->fn.unary.increment(target);
+      break;
+    }
+    case UNARY_PREDEC: {
+      ensure_ob_has_func(decrement);
+      ret = target->fn.unary.decrement(target);
+      break;
+    }
+    case UNARY_POSTINC: {
+      ensure_ob_has_func(increment);
+      NmObject *save = NmObject_Dup(target);
+      target->fn.unary.increment(target);
+      ret = save;
+      break;
+    }
+    case UNARY_POSTDEC: {
+      ensure_ob_has_func(decrement);
+      NmObject *save = NmObject_Dup(target);
+      target->fn.unary.decrement(target);
+      ret = save;
+      break;
+    }
     default:
-      /* FIXME: print than type good */
-      NmError_Parser(n, "invalid unary operator %s for type '%d'", unopToS(n->data.unop.op), target->type);
+      NmError_Parser(n, "invalid unary operator %s for type '%s'", unopToS(n->data.unop.op), NmString_VAL(target->fn.type_repr()));
       /* FIXME: shouldn't exit here */
       exit(EXIT_FAILURE);
   }
 
 #undef op
+#undef ensure_ob_has_func
 
   return ret;
 }

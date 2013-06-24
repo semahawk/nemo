@@ -59,6 +59,8 @@ NmObject *NmInt_New(int i)
   ob->fn.unary.plus = NmInt_Plus;
   ob->fn.unary.minus = NmInt_Minus;
   ob->fn.unary.negate = NmInt_Negate;
+  ob->fn.unary.increment = NmInt_Increment;
+  ob->fn.unary.decrement = NmInt_Decrement;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -126,6 +128,20 @@ NmObject *NmInt_Negate(NmObject *target)
     return NmInt_New(TRUE);
   else
     return NmInt_New(FALSE);
+}
+
+NmObject *NmInt_Increment(NmObject *target)
+{
+  NmInt_VAL(target) = NmInt_VAL(target) + 1;
+
+  return target;
+}
+
+NmObject *NmInt_Decrement(NmObject *target)
+{
+  NmInt_VAL(target) = NmInt_VAL(target) - 1;
+
+  return target;
 }
 
 NmObject *NmInt_TypeRepr(void)
