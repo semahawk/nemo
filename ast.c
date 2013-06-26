@@ -46,9 +46,6 @@
 #include "nemo.h"
 #include "object.h"
 
-/* create the operand stack, used when evaluating expressions */
-stack_new(operand, NmObject *);
-
 /* a tiny little helpful macro to init the line/column field */
 #define INIT_POS() \
   n->pos.line   = pos.line; \
@@ -403,7 +400,7 @@ Node *NmAST_GenName(Pos pos, char *s)
 
   if (!found){
     NmError_Parser(n, "variable '%s' was not found", n->data.decl.name);
-    exit(EXIT_FAILURE);
+    Nm_Exit();
   }
 */
   return n;
@@ -422,8 +419,6 @@ NmObject *NmAST_ExecName(Node *n)
   /* search for the variable */
   for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, n->data.decl.name)){
-      /* DEV: push some value to the stack */
-      stack_push(operand, vars->var->value);
       return vars->var->value;
     }
   }
@@ -445,7 +440,7 @@ NmObject *NmAST_ExecName(Node *n)
   }
 
   NmError_Parser(n, "variable '%s' was not found");
-  exit(EXIT_FAILURE);
+  Nm_Exit();
 }
 
 /*
@@ -511,8 +506,7 @@ NmObject *NmAST_ExecBinop(Node *n)
      * (at least for now (30 Apr 2013)) */
     if (n->data.binop.left->type != NT_NAME){
       NmError_Parser(n, "expected an lvalue in assignment");
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     name = n->data.binop.left->data.s;
     /* iterate through the variables */
@@ -526,15 +520,13 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* error if the variable was not found */
     if (!found){
       NmError_Parser(n, "variable '%s' was not found", name);
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
      * to be not-assignable*/
     if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
       NmError_Parser(n, "cannot change the value of a constant variable '%s'", name);
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     /* actually assign the value */
     ret = NmAST_Exec(n->data.binop.right);
@@ -548,13 +540,11 @@ NmObject *NmAST_ExecBinop(Node *n)
   else if (n->data.binop.op == BINARY_INDEX){
     if (!ob_left->fn.binary.index){
       NmError_Parser(n, "invalid binary operator '[]' for type '%s'", NmString_VAL(ob_left->fn.type_repr()));
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     if (ob_right->type != OT_INTEGER){
       NmError_Parser(n, "expected type 'int' for the indexing value");
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
 
     return ob_left->fn.binary.index(ob_left, ob_right);
@@ -570,8 +560,7 @@ NmObject *NmAST_ExecBinop(Node *n)
 #define ensure_ob_has_func(FUNC) \
   if (!ob_left->fn.binary.FUNC){ \
     NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(n->data.binop.op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
-    /* FIXME: shouldn't exit here */ \
-    exit(EXIT_FAILURE); \
+    Nm_Exit(); \
   }
 
 /* <TYPE> is of type { BinaryOp }
@@ -585,8 +574,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* if a binop function returns NULL it means something bad happend */ \
     if (!ret){ \
       NmError_Parser(n, NmError_GetCurr()); \
-      /* FIXME: shouldn't exit here */ \
-      exit(EXIT_FAILURE); \
+      Nm_Exit(); \
     } \
     break; \
   }
@@ -638,8 +626,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     } \
     default: \
       NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op)); \
-      /* FIXME: shouldn't exit here */ \
-      exit(EXIT_FAILURE); \
+    Nm_Exit(); \
   }
 
   /* it's all easy when the two types are the same, just look if the type has
@@ -677,8 +664,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* if anything else, the operation is simply not permitted */
     else {
       NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(n->data.binop.op));
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
   }
 
@@ -743,8 +729,7 @@ NmObject *NmAST_ExecUnop(Node *n)
 #define ensure_ob_has_func(FUNC) \
   if (!target->fn.unary.FUNC){ \
     NmError_Parser(n, "invalid type '%s' for unary operator %s", NmString_VAL(target->fn.type_repr()), unopToS(n->data.unop.op)); \
-    /* FIXME: shouldn't exit here */ \
-    exit(EXIT_FAILURE); \
+    Nm_Exit(); \
   }
 
 /* <TYPE> is of type { UnaryOp }
@@ -787,8 +772,7 @@ NmObject *NmAST_ExecUnop(Node *n)
     }
     default:
       NmError_Parser(n, "invalid unary operator %s for type '%s'", unopToS(n->data.unop.op), NmString_VAL(target->fn.type_repr()));
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
   }
 
 #undef op
@@ -1020,7 +1004,7 @@ Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
   for (p = scope->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, n->data.decl.name)){
       NmError_Parser(n, "global variable '%s' already declared", n->data.decl.name);
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
   }
 
@@ -1129,8 +1113,7 @@ NmObject *NmAST_ExecCall(Node *n)
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, NmError_GetCurr());
-          /* FIXME: shouldn't exit here */
-          exit(EXIT_FAILURE);
+          Nm_Exit();
         } else {
           return ret;
         }
@@ -1143,8 +1126,7 @@ NmObject *NmAST_ExecCall(Node *n)
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, "executing function '%s' went wrong", name);
-          /* FIXME: shouldn't exit here */
-          exit(EXIT_FAILURE);
+          Nm_Exit();
         } else {
           return ret;
         }
@@ -1153,8 +1135,7 @@ NmObject *NmAST_ExecCall(Node *n)
   }
 
   NmError_Parser(n, "function '%s' not found", name, scope->name);
-  /* FIXME */
-  exit(EXIT_FAILURE);
+  Nm_Exit();
 }
 
 /*

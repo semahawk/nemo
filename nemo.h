@@ -62,6 +62,8 @@ struct Included {
 typedef struct LibHandlesList LibHandlesList;
 typedef struct Included Included;
 
+void Nm_Exit();
+
 /* TODO: these function names may be confusing */
 void Nm_InitModule(NmModuleFuncs *);
 BOOL Nm_UseModule(char *name, char *path);

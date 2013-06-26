@@ -209,8 +209,7 @@ static Node *postfix_expr(LexerState *lex)
     Pos pos = lex->current->prev->prev->sym.pos;
     if (target->type != NT_NAME){
       NmError_Lex(lex, "expected a name for a function call, not %s", symToS(lex->current->sym.type));
-      /* FIXME */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     name = target->data.s;
     NmDebug_Parser("(");
@@ -243,8 +242,7 @@ static Node *postfix_expr(LexerState *lex)
       /* using NmError_Error not NmError_Lex because lexer's state has gone
        * further in 'primary_expr' */
       NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.pos.line, lex->current->prev->sym.pos.column);
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     NmDebug_Parser(":postfix++");
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_POSTINC);
@@ -257,8 +255,7 @@ static Node *postfix_expr(LexerState *lex)
       /* using NmError_Error not NmError_Lex because lexer's state has gone
        * further in 'primary_expr' */
       NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.pos.line, lex->current->prev->sym.pos.column);
-      /* FIXME: shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     NmDebug_Parser(":postfix--");
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_POSTDEC);
@@ -295,8 +292,7 @@ static Node *prefix_expr(LexerState *lex)
      */
     if (!target){
       NmError_Lex(lex, "expected an expression for the unary negation");
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_NEGATE);
   }
@@ -311,8 +307,7 @@ static Node *prefix_expr(LexerState *lex)
      */
     if (!target){
       NmError_Lex(lex, "expected an expression for the unary plus");
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_PLUS);
   }
@@ -327,8 +322,7 @@ static Node *prefix_expr(LexerState *lex)
      */
     if (!target){
       NmError_Lex(lex, "expected an expression for the unary minus");
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_MINUS);
   }
@@ -343,8 +337,7 @@ static Node *prefix_expr(LexerState *lex)
      */
     if (!target){
       NmError_Lex(lex, "expected an expression for the prefix incrementation");
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_PREINC);
   }
@@ -359,8 +352,7 @@ static Node *prefix_expr(LexerState *lex)
      */
     if (!target){
       NmError_Lex(lex, "expected an expression for the prefix decrementation");
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_PREDEC);
   }
@@ -400,8 +392,7 @@ static Node *mult_expr(LexerState *lex)
      */
     if (!left){
       NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current->sym.type));
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     if (NmLexer_Accept(lex, SYM_TIMES)){
       op = BINARY_MUL;
@@ -422,8 +413,7 @@ static Node *mult_expr(LexerState *lex)
      */
     if (!right){
       NmError_Lex(lex, "expected an expression for the rhs of the binary %s operation", binopToS(op));
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
     left = ret;
@@ -468,8 +458,7 @@ static Node *add_expr(LexerState *lex)
      */
     if (!right){
       NmError_Lex(lex, "expected an expression for the rhs of the binary %s operation", binopToS(op));
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
     left = ret;
@@ -513,8 +502,7 @@ static Node *cond_expr(LexerState *lex)
      */
     if (!left){
       NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current->sym.type));
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     if (NmLexer_Accept(lex, SYM_RCHEVRON)){
       op = BINARY_GT;
@@ -544,8 +532,7 @@ static Node *cond_expr(LexerState *lex)
      */
     if (!right){
       NmError_Lex(lex, "expected an expression for the rhs of the binary %s operation", binopToS(op));
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
     left = ret;
@@ -589,8 +576,7 @@ static Node *assign_expr(LexerState *lex)
      */
     if (!left){
       NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current->sym.type));
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     if (NmLexer_Accept(lex, SYM_EQ)){
       op = BINARY_ASSIGN;
@@ -625,8 +611,7 @@ static Node *assign_expr(LexerState *lex)
      */
     if (!right){
       NmError_Lex(lex, "expected an expression");
-      /* FIXME: probably shouldn't exit here */
-      exit(EXIT_FAILURE);
+      Nm_Exit();
     }
     ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
     left = ret;

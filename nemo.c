@@ -57,6 +57,7 @@
 #include "nemo.h"
 #include "config.h"
 
+static BOOL running_interactive = FALSE;
 static int nmInteractive(void);
 
 /* list of all modules that were included */
@@ -83,6 +84,13 @@ static LibHandlesList *handles = NULL;
     NmMem_Free(list); \
   } \
 } while (0);
+
+/* here are alllll the things that should be done at the exit */
+#define Nm_TIDYUP()  \
+  NmObject_Tidyup(); \
+  NmScope_Tidyup();  \
+  CLOSE_HANDLES();   \
+  included_tidyup()
 
 /*
  * Add another position in the included list
@@ -232,10 +240,7 @@ int main(int argc, char *argv[])
   NmAST_FreeBlock(nodest);
 
   /* tidy up */
-  NmObject_Tidyup();
-  NmScope_Tidyup();
-  CLOSE_HANDLES();
-  included_tidyup();
+  Nm_TIDYUP();
 
   return EXIT_SUCCESS;
 }
@@ -248,6 +253,8 @@ static int nmInteractive(void)
   unsigned line = 0;
   /* result of the executed input */
   NmObject *ob;
+  /* set the running_interactive flag */
+  running_interactive = TRUE;
 
   printf("Welcome to the \e[1;34mNemo\e[0;0m " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
@@ -276,7 +283,6 @@ static int nmInteractive(void)
     printf("\n");
   }
 
-  NmScope_Tidyup();
 
   return 0;
 }
@@ -458,6 +464,19 @@ BOOL NmModule_WasIncluded(char *name)
     }
 
   return FALSE;
+}
+
+/*
+ * Nemo's wrapper around the exit() function.
+ */
+void Nm_Exit()
+{
+  if (!running_interactive){
+    Nm_TIDYUP();
+    exit(EXIT_FAILURE);
+  } else {
+    ;
+  }
 }
 
 /*
