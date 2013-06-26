@@ -13,5 +13,4 @@ Makefile
 autom4te.cache
 config.status
 config.log
-configure.ac
 config.h
