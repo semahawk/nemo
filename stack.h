@@ -77,7 +77,11 @@
 #define stack_init(_name, _type) \
   static inline void _name##_stack_push(_type value){ \
     if (_name##_stack.ptr >= _name##_stack.nmemb){ \
-      _name##_stack.nmemb = floor(_name##_stack.nmemb * STACK_GROW_RATIO); \
+      if (_name##_stack.nmemb == 0){ \
+        _name##_stack.nmemb = INITIAL_STACK_SIZE; \
+      } else { \
+        _name##_stack.nmemb = floor(_name##_stack.nmemb * STACK_GROW_RATIO); \
+      } \
       _name##_stack.it = NmMem_Realloc(_name##_stack.it, sizeof(_type) * _name##_stack.nmemb); \
     } \
 \
@@ -88,6 +92,7 @@
     if (_name##_stack.ptr <= 0){ \
       NmError_Error("popping from the '" #_name "' stack, but it's empty!"); \
       NmError_Error("returning zero"); \
+      return (_type)0; \
     } \
 \
     return _name##_stack.it[--_name##_stack.ptr]; \
@@ -107,7 +112,7 @@
     /* "pointer" to the current member */ \
     int ptr; \
   } _name##_stack = { \
-    NULL, 0, 0\
+    NULL, 0, 0 \
   }; \
 \
   stack_init(_name, _type)
