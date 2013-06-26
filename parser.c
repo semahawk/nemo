@@ -702,10 +702,10 @@ static Node *expr(LexerState *lex)
  *     | expr ';'
  *     ;
  *
- * function_prototype: FN NAME '(' ')' block
- *                   | FN NAME '(' ')' ';'
- *                   | FN NAME '(' [NAME[',' NAME]*]+ ')' block
- *                   | FN NAME '(' [NAME[',' NAME]*]+ ')' ';'
+ * function_prototype: FUN NAME '(' ')' block
+ *                   | FUN NAME '(' ')' ';'
+ *                   | FUN NAME '(' [NAME[',' NAME]*]+ ')' block
+ *                   | FUN NAME '(' [NAME[',' NAME]*]+ ')' ';'
  *                   ;
  */
 static Node *stmt(LexerState *lex)
