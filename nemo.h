@@ -29,6 +29,7 @@
 
 /* order here is quite significant */
 #include "config.h"
+#include "stack.h"
 #include "lexer.h"
 #include "object.h"
 #include "ast.h"

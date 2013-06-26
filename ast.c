@@ -44,6 +44,10 @@
 #include <assert.h>
 
 #include "nemo.h"
+#include "object.h"
+
+/* create the operand stack, used when evaluating expressions */
+stack_new(operand, NmObject *);
 
 /* a tiny little helpful macro to init the line/column field */
 #define INIT_POS() \
@@ -418,6 +422,8 @@ NmObject *NmAST_ExecName(Node *n)
   /* search for the variable */
   for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, n->data.decl.name)){
+      /* DEV: push some value to the stack */
+      stack_push(operand, vars->var->value);
       return vars->var->value;
     }
   }
