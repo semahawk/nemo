@@ -804,7 +804,7 @@ static Node *stmt(LexerState *lex)
     else {
       NmLexer_Force(lex, SYM_LMUSTASHE);
       NmDebug_Parser("{\n");
-      body = stmt(lex);
+      body = block(lex);
       ret = NmAST_GenFuncDef(lex->current->sym.pos, name, body);
       NmLexer_Force(lex, SYM_RMUSTASHE);
       NmDebug_Parser("}\n");
