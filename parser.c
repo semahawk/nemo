@@ -695,15 +695,21 @@ static Node *expr(LexerState *lex)
 /*
  * stmt: ';'
  *     | '{' block '}'
+ *     | label
  *     | function_prototype
  *     | USE NAME ';'
  *     | INLCLUDE NAME ';'
  *     | IF stmt stmt
+ *     | UNLESS stmt stmt
  *     | WHILE stmt stmt
+ *     | UNTIL stmt stmt
  *     | expr IF stmt
  *     | expr WHILE stmt
  *     | expr ';'
  *     ;
+ *
+ * label: NAME ':' stmt
+ *      ;
  *
  * function_prototype: FUN NAME '(' ')' block
  *                   | FUN NAME '(' ')' ';'
@@ -729,6 +735,22 @@ static Node *stmt(LexerState *lex)
     /* that's NOP */
     NmDebug_Parser(";\n");
     ret = NmAST_GenNop(lex->current->sym.pos);
+  }
+  /*
+   * XXX NAME ':' stmt
+   *
+   *     a label
+   */
+  else if (lex->current->sym.type == SYM_NAME &&
+           lex->current->next->sym.type == SYM_COLON){
+    name = lex->current->sym.value.s;
+    NmDebug_Parser("%s", name);
+    NmLexer_Skip(lex);
+    NmDebug_Parser(":", name);
+    NmLexer_Skip(lex);
+    body = stmt(lex);
+    ret = body;
+    NmScope_NewLabel(name, body);
   }
   /*
    * XXX USE NAME ';'
@@ -939,6 +961,8 @@ static Node *stmt(LexerState *lex)
       endStmt(lex);
     }
   }
+
+  /* TODO: "ret" being NULL at this point should be handled somehow */
 
   ret = is_gend ? ret : NmAST_GenStmt(ret->pos, ret);
   /* set the previous statement's "next" */

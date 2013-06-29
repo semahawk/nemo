@@ -48,6 +48,7 @@ void NmScope_New(char *name)
   scope->cfuncs = NULL;
   scope->funcs = NULL;
   scope->globals = NULL;
+  scope->labels = NULL;
   if (curr)
     scope->parent = curr->scope;
   else
@@ -122,6 +123,16 @@ static void NmScope_Destroy(Scope *scope)
     NmMem_Free(cfuncs);
   }
 
+  LabelsList *labels;
+  LabelsList *labels_next;
+  /* destroy all the labels */
+  for (labels = scope->labels; labels != NULL; labels = labels_next){
+    labels_next = labels->next;
+    NmMem_Free(labels->label->name);
+    NmMem_Free(labels->label);
+    NmMem_Free(labels);
+  }
+
   /* destroy all the elements in the scopes list */
   NmMem_Free(scope->name);
   NmMem_Free(scope);
@@ -137,4 +148,25 @@ void NmScope_Tidyup(void)
     NmScope_Destroy(scopes->scope);
     NmMem_Free(scopes);
   }
+}
+
+/*
+ * Creates a new label, of given <name> and <node>
+ * and appends it to the current scope.
+ */
+void NmScope_NewLabel(char *name, Node *node)
+{
+  /* create it */
+  LabelsList *new_list = NmMem_Malloc(sizeof(LabelsList));
+  Label *new_label = NmMem_Malloc(sizeof(Label));
+  Scope *scope = curr->scope;
+
+  /* initialize it */
+  new_label->name = NmMem_Strdup(name);
+  new_label->node = node;
+  new_list->label = new_label;
+
+  /* append it */
+  new_list->next = scope->labels;
+  scope->labels = new_list;
 }

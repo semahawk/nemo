@@ -34,6 +34,30 @@
 #include "nemo.h"
 #include "vars.h"
 
+/*
+ * Example label:
+ *
+ *   bye: print "Goobye!";
+ *
+ * translates to this structure as follows:
+ *
+ *   name = "bye";
+ *   node = 0x68124c0 (that's just random)
+ *
+ */
+struct Label {
+  char *name;
+  Node *node;
+};
+
+/*
+ * A simple singly linked list of labels
+ */
+struct LabelsList {
+  struct Label *label;
+  struct LabelsList *next;
+};
+
 struct Scope {
   /* name of scope, eg. main, Math */
   char *name;
@@ -42,6 +66,8 @@ struct Scope {
   /* list of the functions */
   CFuncsList *cfuncs;
   FuncsList *funcs;
+  /* list of labels in the scope */
+  struct LabelsList *labels;
   /* a pointer to the parent scope */
   struct Scope *parent;
 };
@@ -53,13 +79,16 @@ struct ScopesList {
   struct ScopesList *prev;
 };
 
+typedef struct Label Label;
+typedef struct LabelsList LabelsList;
 typedef struct Scope Scope;
 typedef struct ScopesList ScopesList;
 
 Scope *NmScope_GetCurr(void);
-void NmScope_New(char *);
+void NmScope_New(char *name);
 void NmScope_Restore(void);
 void NmScope_Tidyup(void);
+void NmScope_NewLabel(char *name, Node *node);
 
 #endif /* INTERP_H */
 
