@@ -763,6 +763,11 @@ static Node *stmt(LexerState *lex)
     NmDebug_Parser("%s", name);
     ret = NmAST_GenNop(lex->current->prev->sym.pos);
     ret->next = NmScope_GetLabel(name);
+    /* NmScope_GetLabel returns NULL if didn't find the label */
+    if (!ret->next){
+      NmError_Parser(ret, "label '%s' was not found", name);
+      Nm_Exit();
+    }
   }
   /*
    * XXX USE NAME ';'
