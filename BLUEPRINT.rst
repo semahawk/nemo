@@ -9,6 +9,56 @@ On how I see Nemo would look like
 * Functions can take shell-like options, eg. -n
 * Support for metaprogramming
 
+*Note*: this is just me designing the language, most of the features here don't
+work at all.
+
+Types
+-----
+
+Integer
+
+.. code-block:: nemo
+
+   4
+   32
+   1024
+   0x20
+   0c755
+   0b01110011
+
+Float
+
+.. code-block:: nemo
+
+   2.71
+   3.14
+
+String
+
+.. code-block:: nemo
+
+   "hello world"
+   "ahoy sea"
+
+Array
+
+.. code-block:: nemo
+
+   [1, 2, 3, 4, 5, 6]
+   [1, 1, 2, 3]
+
+Hash
+
+.. code-block:: nemo
+
+   { age => 24, name => "John", lastname => "Doe" }
+
+Null
+
+.. code-block:: nemo
+
+   null
+
 Declaring a variable
 --------------------
 
@@ -25,6 +75,8 @@ Initializing a variable
 
 Block are enclosed with ``{`` and ``}``
 ---------------------------------------
+
+Note: blocks return the value of the last statement evaluated in it.
 
 Statements in blocks
 --------------------
@@ -83,7 +135,7 @@ Defining a function
 
    # Here, puts is the function name, and the option -n is supplied
    puts-n("sorted array: ");
-   # Here, sort is the function name, and the options -r and -q is supplied
+   # Here, sort is the function name, and the options -r and -q are supplied
    my array = [4, 2, 3, 6, 10];
    puts(sort-rq(array));
 
@@ -101,6 +153,10 @@ If
 
    if five == 5;
      print "five is equal 5";
+
+   if five == 5 {
+     print "five is equal 5";
+   }
 
 While
 -----
