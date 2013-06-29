@@ -696,6 +696,7 @@ static Node *expr(LexerState *lex)
  * stmt: ';'
  *     | '{' block '}'
  *     | label
+ *     | GOTO NAME ';'
  *     | function_prototype
  *     | USE NAME ';'
  *     | INLCLUDE NAME ';'
@@ -751,6 +752,17 @@ static Node *stmt(LexerState *lex)
     body = stmt(lex);
     ret = body;
     NmScope_NewLabel(name, body);
+  }
+  /*
+   * XXX GOTO NAME ';'
+   */
+  else if (NmLexer_Accept(lex, SYM_GOTO)){
+    NmDebug_Parser("goto ");
+    NmLexer_Force(lex, SYM_NAME);
+    name = lex->current->prev->sym.value.s;
+    NmDebug_Parser("%s", name);
+    ret = NmAST_GenNop(lex->current->prev->sym.pos);
+    ret->next = NmScope_GetLabel(name);
   }
   /*
    * XXX USE NAME ';'

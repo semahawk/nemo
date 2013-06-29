@@ -170,3 +170,17 @@ void NmScope_NewLabel(char *name, Node *node)
   new_list->next = scope->labels;
   scope->labels = new_list;
 }
+
+/*
+ * Returns the node associated with a label of a given <name>
+ * or NULL if the label was not found.
+ */
+Node *NmScope_GetLabel(char *name)
+{
+  for (LabelsList *p = curr->scope->labels; p != NULL; p = p->next)
+    if (!strcmp(name, p->label->name))
+      return p->label->node;
+
+  return NULL;
+}
+

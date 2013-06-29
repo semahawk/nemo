@@ -89,6 +89,7 @@ void NmScope_New(char *name);
 void NmScope_Restore(void);
 void NmScope_Tidyup(void);
 void NmScope_NewLabel(char *name, Node *node);
+Node *NmScope_GetLabel(char *name);
 
 #endif /* INTERP_H */
 

@@ -65,6 +65,7 @@ static struct Keyword {
   { "fun",     SYM_FUN     },
   { "use",     SYM_USE     },
   { "include", SYM_INCLUDE },
+  { "goto",    SYM_GOTO    },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;

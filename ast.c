@@ -1188,6 +1188,7 @@ Node *NmAST_GenStmt(Pos pos, Node *expr)
   Node *n = NmMem_Calloc(1, sizeof(Node));
   Node **exprs = NmMem_Malloc(sizeof(Node) * 1);
 
+  n->next = expr->next;
   n->type = NT_STMT;
   n->data.stmt.nmemb = 1;
   n->data.stmt.exprs = exprs;
