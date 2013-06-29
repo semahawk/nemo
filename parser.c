@@ -63,6 +63,9 @@ static Node *expr(LexerState *lex);
 static Node *block(LexerState *lex);
 static Node **params_list(LexerState *lex);
 
+/* pointer to the previous statement */
+static Node *prev_stmt = NULL;
+
 /*
  * primary_expr: INTEGER
  *             | FLOAT
@@ -937,7 +940,15 @@ static Node *stmt(LexerState *lex)
     }
   }
 
-  return is_gend ? ret : NmAST_GenStmt(ret->pos, ret);
+  ret = is_gend ? ret : NmAST_GenStmt(ret->pos, ret);
+  /* set the previous statement's "next" */
+  if (prev_stmt){
+    prev_stmt->next = ret;
+  }
+
+  prev_stmt = ret;
+
+  return ret;
 }
 
 /*
@@ -971,6 +982,11 @@ static Node *block(LexerState *lex)
       new_stmt->prev = new_block->data.block.head;
       new_block->data.block.head = new_stmt;
     }
+  }
+
+  /* set the previous statement's "next" */
+  if (prev_stmt){
+    prev_stmt->next = new_block;
   }
 
   return new_block;

@@ -97,8 +97,13 @@ struct Statement {
 };
 
 struct Node {
+  /* pointer to the next node to be executed */
+  struct Node *next;
+  /* type of the node */
   enum NodeType type;
+  /* it's poisition in the code */
   Pos pos;
+  /* type-specific data */
   union {
     int i;       /* integer */
     float f;     /* float   */

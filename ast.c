@@ -100,6 +100,22 @@ static void (*freeFuncs[])(Node *) =
 };
 
 /*
+ * @name - NmAST_ExecNodes
+ * @desc - executes all the statements depending on each node's "next" field
+ * @return - the last executed statement's value
+ * @param - nodest - the first statement to be executed
+ */
+NmObject *NmAST_ExecNodes(Node *nodest)
+{
+  /* TODO
+   *
+   * That one is going to be using the famous "ip", for instance.
+   */
+
+  return NmNull;
+}
+
+/*
  * @name - NmAST_Exec
  * @desc - executes given node and returns the { NmObject * } it resulted in
  */
