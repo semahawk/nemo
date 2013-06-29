@@ -739,7 +739,7 @@ static Node *stmt(LexerState *lex)
   /*
    * XXX NAME ':' stmt
    *
-   *     a label
+   *     basically just a label
    */
   else if (lex->current->sym.type == SYM_NAME &&
            lex->current->next->sym.type == SYM_COLON){
@@ -965,10 +965,11 @@ static Node *stmt(LexerState *lex)
   /* TODO: "ret" being NULL at this point should be handled somehow */
 
   ret = is_gend ? ret : NmAST_GenStmt(ret->pos, ret);
-  /* set the previous statement's "next" */
-  if (prev_stmt){
-    prev_stmt->next = ret;
-  }
+  /* set the previous statement's "next", but only if it's previous value is
+   * different than NULL */
+  if (prev_stmt)
+    if (prev_stmt->next == NULL)
+      prev_stmt->next = ret;
 
   prev_stmt = ret;
 
@@ -1008,10 +1009,11 @@ static Node *block(LexerState *lex)
     }
   }
 
-  /* set the previous statement's "next" */
-  if (prev_stmt){
-    prev_stmt->next = new_block;
-  }
+  /* set the previous statement's "next", but only if it's previous value is
+   * different than NULL */
+  if (prev_stmt)
+    if (prev_stmt->next == NULL)
+      prev_stmt->next = new_block;
 
   return new_block;
 }

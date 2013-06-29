@@ -146,7 +146,7 @@ void NmAST_Free(Node *n)
  */
 Node *NmAST_GenNop(Pos pos)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_NOP;
   INIT_POS();
@@ -188,7 +188,7 @@ void NmAST_FreeNop(Node *n)
  */
 Node *NmAST_GenInt(Pos pos, int i)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_INTEGER;
   n->data.i = i;
@@ -230,7 +230,7 @@ void NmAST_FreeInt(Node *n)
  */
 Node *NmAST_GenFloat(Pos pos, float f)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_FLOAT;
   n->data.f = f;
@@ -272,7 +272,7 @@ void NmAST_FreeFloat(Node *n)
  */
 Node *NmAST_GenString(Pos pos, char *s)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_STRING;
   n->data.s = NmMem_Strdup(s);
@@ -315,7 +315,7 @@ void NmAST_FreeString(Node *n)
  */
 Node *NmAST_GenArray(Pos pos, Node **a)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
   size_t nmemb = 0;
 
   /* count how many elements there are */
@@ -376,7 +376,7 @@ void NmAST_FreeArray(Node *n)
  */
 Node *NmAST_GenName(Pos pos, char *s)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
   /*Scope *scope = NmScope_GetCurr();*/
   /*BOOL found = FALSE;*/
 
@@ -479,7 +479,7 @@ void NmAST_FreeName(Node *n)
  */
 Node *NmAST_GenBinop(Pos pos, Node *left, BinaryOp op, Node *right)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_BINOP;
   n->data.binop.op = op;
@@ -712,7 +712,7 @@ void NmAST_FreeBinop(Node *n)
  */
 Node *NmAST_GenUnop(Pos pos, Node *target, UnaryOp op)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_UNOP;
   n->data.unop.op = op;
@@ -819,7 +819,7 @@ void NmAST_FreeUnop(Node *n)
  */
 Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, BOOL unless)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_IF;
   n->data.iff.guard = guard;
@@ -908,7 +908,7 @@ void NmAST_FreeIf(Node *n)
  */
 Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, BOOL until)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_WHILE;
   n->data.whilee.guard = guard;
@@ -1001,7 +1001,7 @@ void NmAST_FreeWhile(Node *n)
  */
 Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_DECL;
   n->data.decl.name = NmMem_Strdup(name);
@@ -1082,7 +1082,7 @@ void NmAST_FreeDecl(Node *n)
  */
 Node *NmAST_GenCall(Pos pos, char *name, Node **params)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_CALL;
   n->data.call.name = NmMem_Strdup(name);
@@ -1185,7 +1185,7 @@ void NmAST_FreeCall(Node *n)
  */
 Node *NmAST_GenStmt(Pos pos, Node *expr)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
   Node **exprs = NmMem_Malloc(sizeof(Node) * 1);
 
   n->type = NT_STMT;
@@ -1301,7 +1301,7 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body)
   Scope *scope = NmScope_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
   Func *f = NmMem_Malloc(sizeof(Func));
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_FUNCDEF;
   n->data.funcdef.name = NmMem_Strdup(name);
@@ -1365,7 +1365,7 @@ void NmAST_FreeFuncDef(Node *n)
  */
 Node *NmAST_GenInclude(Pos pos, char *fname, char *custom_path, BOOL use)
 {
-  Node *n = NmMem_Malloc(sizeof(Node));
+  Node *n = NmMem_Calloc(1, sizeof(Node));
 
   n->type = NT_INCLUDE;
   n->data.include.fname = NmMem_Strdup(fname);
