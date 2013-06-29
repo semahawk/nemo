@@ -59,9 +59,25 @@ NmObject *NmObject_Dup(NmObject *ob)
 {
   NmObject *new = NmMem_Malloc(sizeof(*ob));
 
-  new = ob;
+  switch (ob->type){
+    case OT_INTEGER:
+      *(NmIntObject *)new = *(NmIntObject *)ob;
+      break;
+    case OT_FLOAT:
+      *(NmFloatObject *)new = *(NmFloatObject *)ob;
+      break;
+    case OT_STRING:
+      *(NmStringObject *)new = *(NmStringObject *)ob;
+      break;
+    case OT_ARRAY:
+      *(NmArrayObject *)new = *(NmArrayObject *)ob;
+      break;
+    case OT_NULL:
+      *(NmNullObject *)new = *(NmNullObject *)ob;
+      break;
+  }
 
-  return ob;
+  return (NmObject *)new;
 }
 
 /*
