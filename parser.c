@@ -188,7 +188,7 @@ static Node **params_list(LexerState *lex, int num)
     return params;
   }
 
-  while (NmLexer_Accept(lex, SYM_COMMA) && counter <= num){
+  while (NmLexer_Accept(lex, SYM_COMMA) && counter <= (unsigned)num){
     NmDebug_Parser(", ");
     Node *next_expr = expr(lex);
     /*
