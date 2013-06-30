@@ -61,7 +61,7 @@
 /* forward */
 static Node *expr(LexerState *lex);
 static Node *block(LexerState *lex);
-static Node **params_list(LexerState *lex);
+static Node **params_list(LexerState *lex, unsigned num);
 
 /* pointer to the previous statement */
 static Node *prev_stmt = NULL;
@@ -125,7 +125,8 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Accept(lex, SYM_LBRACKET)){
     NmDebug_Parser("[");
-    arr_inside = params_list(lex);
+    /* FIXME: set this 100 to -1 when params_list is fixed */
+    arr_inside = params_list(lex, 100);
     new = NmAST_GenArray(lex->current->sym.pos, arr_inside);
     NmLexer_Force(lex, SYM_RBRACKET);
     NmDebug_Parser("]");
@@ -151,12 +152,23 @@ static Node *primary_expr(LexerState *lex)
  *            | expr [',' expr]*
  *            ;
  */
-static Node **params_list(LexerState *lex)
+/*
+ * This function fetches the parameters list, <num> many.
+ *
+ * TODO: If <num> is negative, it will take as many as possible.
+ */
+static Node **params_list(LexerState *lex, unsigned num)
 {
   unsigned nmemb = 5;
   unsigned counter = 0;
   Node **params = NmMem_Calloc(nmemb, sizeof(Node));
-  Node *first_expr = expr(lex);
+  Node *first_expr;
+
+  if (num == 0){
+    return NULL;
+  }
+
+  first_expr = expr(lex);
 
   if (!first_expr){
     NmMem_Free(params);
@@ -164,7 +176,12 @@ static Node **params_list(LexerState *lex)
   }
 
   params[counter++] = first_expr;
-  while (NmLexer_Accept(lex, SYM_COMMA)){
+
+  if (num == 1){
+    return params;
+  }
+
+  while (NmLexer_Accept(lex, SYM_COMMA) && counter <= num){
     NmDebug_Parser(", ");
     Node *next_expr = expr(lex);
     /*
@@ -216,7 +233,8 @@ static Node *postfix_expr(LexerState *lex)
     }
     name = ((Node_String *)target)->s;
     NmDebug_Parser("(");
-    params = params_list(lex);
+    /* FIXME: set this 100 to -1 when params_list is fixed */
+    params = params_list(lex, 100);
     NmLexer_Force(lex, SYM_RPAREN);
     NmDebug_Parser(")");
     /* here, lex->current is the closing paren, so we have to use the stored
@@ -675,15 +693,39 @@ static Node *expr(LexerState *lex)
      * XXX PRINT '(' params_list ')'
      */
     if (NmLexer_Accept(lex, SYM_LPAREN)){
-      params = params_list(lex);
+      /* FIXME: set this 100 to -1 when params_list is fixed */
+      params = params_list(lex, 100);
       NmLexer_Force(lex, SYM_RPAREN);
     /*
      * XXX PRINT params_list
      */
     } else {
-      params = params_list(lex);
+      /* FIXME: set this 100 to -1 when params_list is fixed */
+      params = params_list(lex, 100);
     }
     ret = NmAST_GenCall(lex->current->sym.pos, "print", params);
+  }
+  /*
+   * XXX ID
+   *
+   * FIXME: That, and print as well, is here, but it should disappear from here when we
+   *        have functions working.
+   */
+  else if (NmLexer_Accept(lex, SYM_ID)){
+    NmDebug_Parser("id ");
+    /*
+     * XXX ID '(' params_list ')'
+     */
+    if (NmLexer_Accept(lex, SYM_LPAREN)){
+      params = params_list(lex, 1);
+      NmLexer_Force(lex, SYM_RPAREN);
+    /*
+     * XXX ID params_list
+     */
+    } else {
+      params = params_list(lex, 1);
+    }
+    ret = NmAST_GenCall(lex->current->sym.pos, "id", params);
   }
   else {
     ret = assign_expr(lex);

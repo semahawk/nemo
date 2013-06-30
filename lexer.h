@@ -42,6 +42,7 @@ enum SymbolType {
   SYM_UNTIL,          /* "until"   */
   SYM_ELSE,           /* "else"    */
   SYM_PRINT,          /* "print"   */
+  SYM_ID,             /* "id"      */
   SYM_FUN,            /* "fun"     */
   SYM_USE,            /* "use"     */
   SYM_INCLUDE,        /* "include" */

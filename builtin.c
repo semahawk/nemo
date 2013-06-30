@@ -280,7 +280,7 @@ static NmObject *builtin_print(NmObject *args)
 static NmObject *builtin_id(NmObject *args)
 {
   if (NmArray_NMEMB(args) != 1){
-    NmError_SetString("wrong number of arguments for function 'assert' (%d when 1 expected)", NmArray_NMEMB(args));
+    NmError_SetString("wrong number of arguments for function 'id' (%d when 1 expected)", NmArray_NMEMB(args));
     return NULL;
   }
 
