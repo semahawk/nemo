@@ -1,0 +1,5 @@
+#!/usr/bin/env nemo
+
+my counter = 0;
+
+printf("I'm in an infinite loop #%i!\n", counter++) while 1;
