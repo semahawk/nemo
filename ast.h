@@ -96,93 +96,123 @@ struct Statement {
   struct Statement *prev;
 };
 
+/* forward */
+typedef struct Node Node;
+
+#define NMNODE_HEAD \
+  /* pointer to the next node to be executed */ \
+  struct Node *next; \
+  /* type of the node */ \
+  enum NodeType type; \
+  /* it's position in the code */ \
+  Pos pos
+
 struct Node {
-  /* pointer to the next node to be executed */
-  struct Node *next;
-  /* type of the node */
-  enum NodeType type;
-  /* it's poisition in the code */
-  Pos pos;
-  /* type-specific data */
-  union {
-    int i;       /* integer */
-    float f;     /* float   */
-    char *s;     /* string  */
-
-    struct {
-      size_t nmemb;
-      struct Node **a;
-    } array;
-
-    struct {
-      enum BinaryOp op;
-      struct Node *left;
-      struct Node *right;
-    } binop;
-
-    struct {
-      enum UnaryOp op;
-      struct Node *target;
-    } unop;
-
-    struct {
-      struct Node *guard;
-      struct Node *body;
-      struct Node *elsee;
-      /* ifs and unlesses are pretty much identical, and this is what
-       * distinguishes them */
-      BOOL unless;
-    } iff;
-
-    struct {
-      struct Node *guard;
-      struct Node *body;
-      struct Node *elsee;
-      /* whiles and untils are pretty much identical, and this is what
-       * distinguishes them */
-      BOOL until;
-    } whilee;
-
-    struct {
-      char *name;
-      struct Node *value;
-      uint8_t flags;
-    } decl;
-
-    struct {
-      char *name;
-      struct Node **params;
-    } call;
-
-    struct {
-      /* number of expressions */
-      size_t nmemb;
-      /* an array of Node pointers */
-      struct Node **exprs;
-    } stmt;
-
-    struct {
-      struct Statement *head;
-      struct Statement *tail;
-    } block;
-
-    struct {
-      char *name;
-      struct Node *body;
-    } funcdef;
-
-    struct {
-      char *fname;
-      char *custom_path;
-      BOOL use; /* true if it actually is an use, not an include */
-    } include;
-  } data;
+  NMNODE_HEAD;
 };
+
+typedef struct {
+  NMNODE_HEAD;
+  int i;
+} Node_Int;
+
+typedef struct {
+  NMNODE_HEAD;
+  float f;
+} Node_Float;
+
+typedef struct {
+  NMNODE_HEAD;
+  char *s;
+} Node_String;
+
+typedef struct {
+  NMNODE_HEAD;
+  char *name;
+} Node_Name;
+
+typedef struct {
+  NMNODE_HEAD;
+  size_t nmemb;
+  struct Node **a;
+} Node_Array;
+
+typedef struct {
+  NMNODE_HEAD;
+  enum BinaryOp op;
+  struct Node *left;
+  struct Node *right;
+} Node_Binop;
+
+typedef struct {
+  NMNODE_HEAD;
+  enum UnaryOp op;
+  struct Node *target;
+} Node_Unop;
+
+typedef struct {
+  NMNODE_HEAD;
+  char *name;
+  uint8_t flags;
+  struct Node *value;
+} Node_Decl;
+
+typedef struct {
+  NMNODE_HEAD;
+  char *name;
+  struct Node **params;
+} Node_Call;
+
+typedef struct {
+  NMNODE_HEAD;
+  struct Node *guard;
+  struct Node *body;
+  struct Node *elsee;
+  /* ifs and unlesses are pretty much identical, and this is what
+   * distinguishes them */
+  BOOL unless;
+} Node_If;
+
+typedef struct {
+  NMNODE_HEAD;
+  struct Node *guard;
+  struct Node *body;
+  struct Node *elsee;
+  /* whiles and untils are pretty much identical, and this is what
+   * distinguishes them */
+  BOOL until;
+} Node_While;
+
+typedef struct {
+  NMNODE_HEAD;
+  char *name;
+  struct Node *body;
+} Node_Funcdef;
+
+typedef struct {
+  NMNODE_HEAD;
+  char *fname;
+  char *custom_path;
+  BOOL use; /* true if it actually is an use, not an include */
+} Node_Include;
+
+typedef struct {
+  NMNODE_HEAD;
+  /* number of expressions */
+  size_t nmemb;
+  /* an array of Node pointers */
+  struct Node **exprs;
+} Node_Stmt;
+
+typedef struct {
+  NMNODE_HEAD;
+  struct Statement *head;
+  struct Statement *tail;
+} Node_Block;
 
 typedef enum   BinaryOp  BinaryOp;
 typedef enum   UnaryOp   UnaryOp;
 typedef enum   NodeType  NodeType;
-typedef struct Node      Node;
 typedef struct Statement Statement;
 
 Node *NmAST_GenInt(Pos, int);

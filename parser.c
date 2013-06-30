@@ -84,7 +84,7 @@ static Node *primary_expr(LexerState *lex)
    */
   if (NmLexer_Peek(lex, SYM_INTEGER)){
     new = NmAST_GenInt(lex->current->sym.pos, lex->current->sym.value.i);
-    NmDebug_Parser("%d ", new->data.i);
+    NmDebug_Parser("%d ", ((Node_Int *)new)->i);
     NmLexer_Skip(lex);
   }
   /*
@@ -92,7 +92,7 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Peek(lex, SYM_FLOAT)){
     new = NmAST_GenFloat(lex->current->sym.pos, lex->current->sym.value.f);
-    NmDebug_Parser("%f ", new->data.f);
+    NmDebug_Parser("%f ", ((Node_Float *)new)->f);
     NmLexer_Skip(lex);
   }
   /*
@@ -100,7 +100,7 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Peek(lex, SYM_STRING)){
     new = NmAST_GenString(lex->current->sym.pos, lex->current->sym.value.s);
-    NmDebug_Parser("\"%s\" ", new->data.s);
+    NmDebug_Parser("\"%s\" ", ((Node_String *)new)->s);
     NmLexer_Skip(lex);
   }
   /*
@@ -108,7 +108,7 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
     new = NmAST_GenName(lex->current->sym.pos, lex->current->sym.value.s);
-    NmDebug_Parser("%s ", new->data.s);
+    NmDebug_Parser("%s ", ((Node_String *)new)->s);
     NmLexer_Skip(lex);
   }
   /*
@@ -214,7 +214,7 @@ static Node *postfix_expr(LexerState *lex)
       NmError_Lex(lex, "expected a name for a function call, not %s", symToS(lex->current->sym.type));
       Nm_Exit();
     }
-    name = target->data.s;
+    name = ((Node_String *)target)->s;
     NmDebug_Parser("(");
     params = params_list(lex);
     NmLexer_Force(lex, SYM_RPAREN);
@@ -999,11 +999,11 @@ static Node *stmt(LexerState *lex)
  */
 static Node *block(LexerState *lex)
 {
-  Node *new_block = NmMem_Malloc(sizeof(Node));
+  Node_Block *new_block = NmMem_Malloc(sizeof(Node_Block));
 
   new_block->type = NT_BLOCK;
-  new_block->data.block.head = NULL;
-  new_block->data.block.tail = NULL;
+  new_block->head = NULL;
+  new_block->tail = NULL;
 
   NmDebug_AST(new_block, "create block node");
 
@@ -1012,17 +1012,17 @@ static Node *block(LexerState *lex)
     new_stmt->stmt = stmt(lex);
     /* append that statement to the statements of the block */
     /*   the list is empty */
-    if (!new_block->data.block.head && !new_block->data.block.tail){
-      new_stmt->next = new_block->data.block.head;
-      new_stmt->prev = new_block->data.block.tail;
-      new_block->data.block.head = new_stmt;
-      new_block->data.block.tail = new_stmt;
+    if (!new_block->head && !new_block->tail){
+      new_stmt->next = new_block->head;
+      new_stmt->prev = new_block->tail;
+      new_block->head = new_stmt;
+      new_block->tail = new_stmt;
     /*   the list is NOT empty */
     } else {
-      new_stmt->next = new_block->data.block.head->next;
-      new_block->data.block.head->next = new_stmt;
-      new_stmt->prev = new_block->data.block.head;
-      new_block->data.block.head = new_stmt;
+      new_stmt->next = new_block->head->next;
+      new_block->head->next = new_stmt;
+      new_stmt->prev = new_block->head;
+      new_block->head = new_stmt;
     }
   }
 
@@ -1030,9 +1030,9 @@ static Node *block(LexerState *lex)
    * different than NULL */
   if (prev_stmt)
     if (prev_stmt->next == NULL)
-      prev_stmt->next = new_block;
+      prev_stmt->next = (Node *)new_block;
 
-  return new_block;
+  return (Node *)new_block;
 }
 
 /*
