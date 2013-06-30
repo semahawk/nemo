@@ -61,7 +61,7 @@
 /* forward */
 static Node *expr(LexerState *lex);
 static Node *block(LexerState *lex);
-static Node **params_list(LexerState *lex, unsigned num);
+static Node **params_list(LexerState *lex, int num);
 
 /* pointer to the previous statement */
 static Node *prev_stmt = NULL;
@@ -125,8 +125,7 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Accept(lex, SYM_LBRACKET)){
     NmDebug_Parser("[");
-    /* FIXME: set this 100 to -1 when params_list is fixed */
-    arr_inside = params_list(lex, 100);
+    arr_inside = params_list(lex, -1);
     new = NmAST_GenArray(lex->current->sym.pos, arr_inside);
     NmLexer_Force(lex, SYM_RBRACKET);
     NmDebug_Parser("]");
@@ -155,9 +154,9 @@ static Node *primary_expr(LexerState *lex)
 /*
  * This function fetches the parameters list, <num> many.
  *
- * TODO: If <num> is negative, it will take as many as possible.
+ * If <num> is negative, it will take as many as possible.
  */
-static Node **params_list(LexerState *lex, unsigned num)
+static Node **params_list(LexerState *lex, int num)
 {
   unsigned nmemb = 5;
   unsigned counter = 0;
@@ -166,6 +165,14 @@ static Node **params_list(LexerState *lex, unsigned num)
 
   if (num == 0){
     return NULL;
+  }
+  /* Nasty hack */
+  else if (num < 0){
+    /* If anyone overcomes this, is an idiot.
+     *
+     * I don't want idiots using this language.
+     */
+    num = 1 << 15;
   }
 
   first_expr = expr(lex);
@@ -233,8 +240,7 @@ static Node *postfix_expr(LexerState *lex)
     }
     name = ((Node_String *)target)->s;
     NmDebug_Parser("(");
-    /* FIXME: set this 100 to -1 when params_list is fixed */
-    params = params_list(lex, 100);
+    params = params_list(lex, -1);
     NmLexer_Force(lex, SYM_RPAREN);
     NmDebug_Parser(")");
     /* here, lex->current is the closing paren, so we have to use the stored
@@ -693,15 +699,13 @@ static Node *expr(LexerState *lex)
      * XXX PRINT '(' params_list ')'
      */
     if (NmLexer_Accept(lex, SYM_LPAREN)){
-      /* FIXME: set this 100 to -1 when params_list is fixed */
-      params = params_list(lex, 100);
+      params = params_list(lex, -1);
       NmLexer_Force(lex, SYM_RPAREN);
     /*
      * XXX PRINT params_list
      */
     } else {
-      /* FIXME: set this 100 to -1 when params_list is fixed */
-      params = params_list(lex, 100);
+      params = params_list(lex, -1);
     }
     ret = NmAST_GenCall(lex->current->sym.pos, "print", params);
   }
