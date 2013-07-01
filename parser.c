@@ -60,6 +60,7 @@
 
 /* forward */
 static Node *expr(LexerState *lex);
+static Node *assign_expr(LexerState *lex);
 static Node *block(LexerState *lex);
 static Node **params_list(LexerState *lex, int num);
 
@@ -147,15 +148,15 @@ static Node *primary_expr(LexerState *lex)
     NmDebug_Parser("%s ", name);
 
     if (isafunc){
+      NmDebug_Parser("(");
       if (NmLexer_Peek(lex, SYM_LPAREN)){
-        NmDebug_Parser("(");
         NmLexer_Skip(lex);
         params = params_list(lex, argc);
         NmLexer_Force(lex, SYM_RPAREN);
-        NmDebug_Parser(")");
       } else {
         params = params_list(lex, argc);
       }
+      NmDebug_Parser(")");
       /* if 'params' returns NULL it means something bad happend */
       if (!params){
         NmError_Lex(lex, "wrong number of arguments for function '%s' %s", name, NmError_GetCurr());
@@ -233,7 +234,9 @@ static Node **params_list(LexerState *lex, int num)
 
   NmDebug_AST(params, "create params list");
 
-  first_expr = expr(lex);
+  /* FIXME: if we use assign_expr here, then "my" declarations are not allowed
+   *        in call arguments */
+  first_expr = assign_expr(lex);
 
   /* if 'first_expr' is NULL it means no params were fetched at all */
   if (!first_expr){
@@ -250,7 +253,7 @@ static Node **params_list(LexerState *lex, int num)
 
   while (NmLexer_Accept(lex, SYM_COMMA) && counter <= (unsigned)num){
     NmDebug_Parser(", ");
-    Node *next_expr = expr(lex);
+    Node *next_expr = assign_expr(lex);
     /*
      * Always make the array be one element bigger than supposed to, so the last
      * element is NULL, so traversing is easy
@@ -261,8 +264,6 @@ static Node **params_list(LexerState *lex, int num)
     }
     params[counter++] = next_expr;
   }
-
-  printf("counter: %d, num %d\n", counter, (unsigned)num);
 
   return params;
 }
@@ -684,9 +685,52 @@ static Node *assign_expr(LexerState *lex)
 }
 
 /*
- * expr: MY NAME [= assign_expr]
- *     | PRINT params_list
- *     | assign_expr
+ *   comma_op: ','
+ *           ;
+ *
+ * comma_expr: assign_expr [comma_op assign_expr]*
+ *            ;
+ */
+static Node *comma_expr(LexerState *lex)
+{
+  Node *ret;
+  Node *left;
+  Node *right;
+
+  ret = left = assign_expr(lex);
+
+  while (NmLexer_Accept(lex, SYM_COMMA)){
+    /* if left is NULL it means something like that happend:
+     *
+     *    my var;
+     *    , 2;
+     *
+     */
+    if (!left){
+      NmError_Lex(lex, "expected an expression for the lhs of the binary ',' operation");
+      Nm_Exit();
+    }
+    right = assign_expr(lex);
+    /* if right is NULL it means something like that happend:
+     *
+     *    my var;
+     *    var = 2, ;
+     *
+     */
+    if (!right){
+      NmError_Lex(lex, "expected an expression for the rhs of the binary ',' operation");
+      Nm_Exit();
+    }
+    ret = NmAST_GenBinop(lex->current->sym.pos, left, BINARY_COMMA, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+/*
+ * expr: MY NAME [= comma_expr]
+ *     | comma_expr
  *     ;
  */
 static Node *expr(LexerState *lex)
@@ -709,11 +753,11 @@ static Node *expr(LexerState *lex)
     name = lex->current->prev->sym.value.s;
     NmDebug_Parser("%s", name);
     /*
-     * XXX MY NAME = assign_expr
+     * XXX MY NAME = comma_expr
      */
     if (NmLexer_Accept(lex, SYM_EQ)){
       NmDebug_Parser(" = ");
-      value = assign_expr(lex);
+      value = comma_expr(lex);
     }
     /* if value is NULL, then something like this happend:
      *
@@ -726,7 +770,7 @@ static Node *expr(LexerState *lex)
     ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
   }
   else {
-    ret = assign_expr(lex);
+    ret = comma_expr(lex);
   }
 
   return ret;
@@ -745,17 +789,16 @@ static Node *expr(LexerState *lex)
  *     | WHILE stmt stmt
  *     | UNTIL stmt stmt
  *     | expr IF stmt
+ *     | expr UNLESS stmt
  *     | expr WHILE stmt
+ *     | expr UNTIL stmt
  *     | expr ';'
  *     ;
  *
  * label: NAME ':' stmt
  *      ;
  *
- * function_prototype: FUN NAME '(' ')' block
- *                   | FUN NAME '(' ')' ';'
- *                   | FUN NAME '(' [NAME[',' NAME]*]+ ')' block
- *                   | FUN NAME '(' [NAME[',' NAME]*]+ ')' ';'
+ * function_prototype: FIXME
  *                   ;
  */
 static Node *stmt(LexerState *lex)
@@ -766,8 +809,6 @@ static Node *stmt(LexerState *lex)
   Node *elsee = NULL;
   char *name  = NULL;
   char *path  = NULL;
-  /* holds weather the "ret" was already created using the NmAST_GenStmt */
-  BOOL is_gend = FALSE;
 
   /*
    * XXX ';'
@@ -990,27 +1031,12 @@ static Node *stmt(LexerState *lex)
     /*
      * XXX expr ';'
      */
-    else {
-      /*
-       * XXX expr ',' expr+ ';'
-       */
-      if (NmLexer_Peek(lex, SYM_COMMA)){
-        is_gend = TRUE;
-        ret = NmAST_GenStmt(lex->current->sym.pos, ret);
-
-        while (NmLexer_Accept(lex, SYM_COMMA)){
-          NmDebug_Parser(", ");
-          NmAST_StmtAppendExpr(ret, expr(lex));
-        }
-      }
-
-      endStmt(lex);
-    }
+    else endStmt(lex);
   }
 
   /* TODO: "ret" being NULL at this point should be handled somehow */
 
-  ret = is_gend ? ret : NmAST_GenStmt(ret->pos, ret);
+  ret = NmAST_GenStmt(ret->pos, ret);
   /* set the previous statement's "next", but only if it's previous value is
    * different than NULL */
   if (prev_stmt)

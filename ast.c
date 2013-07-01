@@ -467,8 +467,6 @@ NmObject *NmAST_ExecBinop(Node *n)
   Node *left  = nc->left;
   Node *right = nc->right;
 
-  NmObject *ob_left = NmAST_Exec(left);
-  NmObject *ob_right = NmAST_Exec(right);
   NmObject *ret = NmNull;
 
   NmDebug_AST(n, "execute binary operation node");
@@ -518,6 +516,8 @@ NmObject *NmAST_ExecBinop(Node *n)
    * XXX BINARY_INDEX
    */
   else if (nc->op == BINARY_INDEX){
+    NmObject *ob_left = NmAST_Exec(left);
+    NmObject *ob_right = NmAST_Exec(right);
     if (!ob_left->fn.binary.index){
       NmError_Parser(n, "invalid binary operator '[]' for type '%s'", NmString_VAL(ob_left->fn.type_repr()));
       Nm_Exit();
@@ -528,6 +528,15 @@ NmObject *NmAST_ExecBinop(Node *n)
     }
 
     return ob_left->fn.binary.index(ob_left, ob_right);
+  }
+  /*
+   * XXX BINARY_COMMA
+   */
+  else if (nc->op == BINARY_COMMA){
+    /* discarding the left's value */
+    NmAST_Exec(left);
+    /* returning the right's value */
+    return NmAST_Exec(right);
   }
 
 /* a handy macro to check if an object supports given binary operation
@@ -608,6 +617,9 @@ NmObject *NmAST_ExecBinop(Node *n)
       NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(nc->op)); \
     Nm_Exit(); \
   }
+
+  NmObject *ob_left = NmAST_Exec(left);
+  NmObject *ob_right = NmAST_Exec(right);
 
   /* it's all easy when the two types are the same, just look if the type has
    * some function that does the operation, and simply run it and simply return
@@ -1163,13 +1175,10 @@ void NmAST_FreeCall(Node *n)
 Node *NmAST_GenStmt(Pos pos, Node *expr)
 {
   Node_Stmt *n = NmMem_Calloc(1, sizeof(Node_Stmt));
-  Node **exprs = NmMem_Malloc(sizeof(Node) * 1);
 
   n->next = expr->next;
   n->type = NT_STMT;
-  n->nmemb = 1;
-  n->exprs = exprs;
-  n->exprs[0] = expr;
+  n->expr = expr;
   INIT_POS();
 
   NmDebug_AST(n, "create statement node (expr: %p)", expr);
@@ -1177,36 +1186,9 @@ Node *NmAST_GenStmt(Pos pos, Node *expr)
   return (Node *)n;
 }
 
-/*
- * @name - NmAST_StmtAppendExpr
- * @desc - appends another expression to the given statement
- */
-void NmAST_StmtAppendExpr(Node *stmt, Node *expr)
-{
-  assert(stmt);
-  assert(expr);
-  assert(stmt->type == NT_STMT);
-
-  Node_Stmt *stmtc = (Node_Stmt *)stmt;
-
-  stmtc->nmemb++;
-  stmtc->exprs = NmMem_Realloc(stmtc->exprs, sizeof(Node) * stmtc->nmemb);
-  stmtc->exprs[stmtc->nmemb - 1] = expr;
-}
-
 NmObject *NmAST_ExecStmt(Node *n)
 {
-  Node_Stmt *nc = (Node_Stmt *)n;
-  /* a statement node is pretty much guaranteed to have at least one expression */
-  NmObject *ret = NmAST_Exec(nc->exprs[0]);
-
-  size_t i;
-  /* execute the expressions */
-  for (i = 1; i < nc->nmemb; i++){
-    NmAST_Exec(nc->exprs[i]);
-  }
-
-  return ret;
+  return NmAST_Exec(((Node_Stmt *)n)->expr);
 }
 
 void NmAST_FreeStmt(Node *n)
@@ -1216,15 +1198,7 @@ void NmAST_FreeStmt(Node *n)
 
   NmDebug_AST(n, "free statement node");
 
-  Node_Stmt *nc = (Node_Stmt *)n;
-
-  size_t i;
-  /* free every expression that's a part of the statement */
-  for (i = 0; i < nc->nmemb; i++){
-    NmAST_Free(nc->exprs[i]);
-  }
-
-  NmMem_Free(nc->exprs);
+  NmAST_Free(((Node_Stmt *)n)->expr);
   NmMem_Free(n);
 }
 
@@ -1435,6 +1409,7 @@ const char *binopToS(BinaryOp op)
     case BINARY_ASSIGN_DIV: return "'/='";
     case BINARY_ASSIGN_MOD: return "'%='";
     case BINARY_INDEX:      return "'[]'";
+    case BINARY_COMMA:      return "','";
   }
 
   return "#unknown#binopToS#";

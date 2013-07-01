@@ -74,7 +74,8 @@ enum BinaryOp {
   BINARY_ASSIGN_MUL,
   BINARY_ASSIGN_DIV,
   BINARY_ASSIGN_MOD,
-  BINARY_INDEX
+  BINARY_INDEX,
+  BINARY_COMMA
 };
 
 enum UnaryOp {
@@ -204,8 +205,8 @@ typedef struct {
   NMNODE_HEAD;
   /* number of expressions */
   size_t nmemb;
-  /* an array of Node pointers */
-  struct Node **exprs;
+  /* the expression the statement is holding */
+  struct Node *expr;
 } Node_Stmt;
 
 typedef struct {
