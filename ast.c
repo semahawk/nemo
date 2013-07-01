@@ -1281,7 +1281,9 @@ void NmAST_FreeBlock(Node *n)
  * @name - NmAST_GenFuncDef
  * @desc - creates a node for defining a function of a given <name>
  */
-Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body)
+Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
+                       unsigned argc, unsigned optc,
+                       char **argv, char *optv)
 {
   Scope *scope = NmScope_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
@@ -1290,6 +1292,10 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body)
 
   n->type = NT_FUNCDEF;
   n->name = NmMem_Strdup(name);
+  n->argc = argc;
+  n->optc = optc;
+  n->argv = argv;
+  n->optv = optv;
   INIT_POS();
 
   if (body){

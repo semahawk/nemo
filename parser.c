@@ -139,9 +139,9 @@ static Node *primary_expr(LexerState *lex)
     }
 
     if (isafunc == 1){
-      args_count = cfunc->args_count;
+      args_count = cfunc->argc;
     } else if (isafunc == 2){
-      args_count = func->args_count;
+      args_count = func->argc;
     }
 
     NmDebug_Parser("%s ", name);
@@ -832,56 +832,45 @@ static Node *stmt(LexerState *lex)
     endStmt(lex);
   }
   /*
-   * XXX FUN NAME
+   * XXX FUN NAME [OPT|NAME]* ';'
+   * XXX FUN NAME [OPT|NAME]* block
    */
   else if (NmLexer_Accept(lex, SYM_FUN)){
+    unsigned optc = 0;
+    unsigned argc = 0;
+    /* TODO: implement these vectors */
+    char **argv = NmMem_Malloc(sizeof(char *) * 1);
+    char *optv = NmMem_Malloc(sizeof(char) * 1); /* I know sizeof(char) is 1 */
+    Pos pos = lex->current->prev->sym.pos;
     NmDebug_Parser("fun ");
-    NmDebug_Parser("%s ", symToS(lex->current->sym.type));
     NmLexer_Force(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
-    NmDebug_Parser("%s ", name);
-    /*
-     * XXX FUN NAME '('
-     */
-    NmLexer_Force(lex, SYM_LPAREN);
-    NmDebug_Parser("(");
-    /*
-     * XXX FUN NAME '(' ')'
-     */
-    if (NmLexer_Accept(lex, SYM_RPAREN)){
-      NmDebug_Parser(")");
-    } else {
-      /*
-       * XXX FUN NAME '(' [NAME[',' NAME]*]+ ')'
-       */
-      do {
-         NmLexer_Force(lex, SYM_NAME);
-         NmDebug_Parser("%s ", lex->current->prev->sym.value.s);
-         if (NmLexer_Peek(lex, SYM_COMMA)){
-           NmDebug_Parser(", ");
-         }
-      } while (NmLexer_Accept(lex, SYM_COMMA));
-      NmLexer_Force(lex, SYM_RPAREN);
-      NmDebug_Parser(")");
+    NmDebug_Parser("%s ", lex->current->prev->sym.value.s);
+    while (NmLexer_Peek(lex, SYM_NAME) || NmLexer_Peek(lex, SYM_OPT)){
+      if (NmLexer_Accept(lex, SYM_NAME)){
+        NmDebug_Parser("%s ", lex->current->prev->sym.value.s);
+        argv = NmMem_Realloc(argv, (argc + 1) * sizeof(char *));
+        argv[argc] = NmMem_Strdup(lex->current->prev->sym.value.s);
+        argc++;
+      } else if (NmLexer_Accept(lex, SYM_OPT)){
+        NmDebug_Parser("-%c ", lex->current->prev->sym.value.c);
+        optv = NmMem_Realloc(optv, (optc + 1) * sizeof(char));
+        optv[optc] = lex->current->prev->sym.value.c;
+        optc++;
+      }
     }
-    /*
-     * XXX FUN NAME ... ';'
-     */
+
     if (NmLexer_Accept(lex, SYM_SEMICOLON)){
       NmDebug_Parser(";\n");
-      ret = NmAST_GenFuncDef(lex->current->sym.pos, name, NULL);
-    }
-    /*
-     * XXX FUN NAME ... block
-     */
-    else {
+      body = NULL;
+    } else {
       NmLexer_Force(lex, SYM_LMUSTASHE);
       NmDebug_Parser("{\n");
       body = block(lex);
-      ret = NmAST_GenFuncDef(lex->current->sym.pos, name, body);
       NmLexer_Force(lex, SYM_RMUSTASHE);
       NmDebug_Parser("}\n");
     }
+    ret = NmAST_GenFuncDef(pos, name, body, argc, optc, argv, optv);
   }
   /*
    * XXX IF stmt stmt

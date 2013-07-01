@@ -362,6 +362,9 @@ void NmLexer_LexString(LexerState *lex, char *string)
       lex->column++;
     }
     else if (*p == ';'){
+      /* it could've been a function declaration */
+      if (right_after_fun)
+        right_after_fun = FALSE;
       append(lex, SYM_SEMICOLON);
       lex->column++;
     }
@@ -401,6 +404,8 @@ void NmLexer_LexString(LexerState *lex, char *string)
         name = *(++p);
         while (isalpha(*p++))
           lex->column++;
+        p--;
+        lex->column--;
         appendChar(lex, SYM_OPT, name);
         /* skip over the '-' and the first character after that */
         lex->column += 2;
