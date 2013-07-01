@@ -108,7 +108,7 @@ static Node *primary_expr(LexerState *lex)
    * XXX NAME
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
-    int args_count;
+    int argc;
     CFunc *cfunc;
     Func *func;
     Scope *scope = NmScope_GetCurr();
@@ -139,9 +139,9 @@ static Node *primary_expr(LexerState *lex)
     }
 
     if (isafunc == 1){
-      args_count = cfunc->argc;
+      argc = cfunc->argc;
     } else if (isafunc == 2){
-      args_count = func->argc;
+      argc = func->argc;
     }
 
     NmDebug_Parser("%s ", name);
@@ -150,11 +150,11 @@ static Node *primary_expr(LexerState *lex)
       if (NmLexer_Peek(lex, SYM_LPAREN)){
         NmDebug_Parser("(");
         NmLexer_Skip(lex);
-        params = params_list(lex, args_count);
+        params = params_list(lex, argc);
         NmLexer_Force(lex, SYM_RPAREN);
         NmDebug_Parser(")");
       } else {
-        params = params_list(lex, args_count);
+        params = params_list(lex, argc);
       }
       new = NmAST_GenCall(lex->current->sym.pos, name, params);
     } else {

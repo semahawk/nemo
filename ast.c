@@ -1296,19 +1296,22 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   n->optc = optc;
   n->argv = argv;
   n->optv = optv;
+  n->body = body;
   INIT_POS();
 
-  if (body){
-    n->body = body;
-    NmDebug_AST(n, "create function definition node (name: %s, body: %p)", name, (void*)body);
-  } else {
-    n->body = NULL;
-    NmDebug_AST(n, "create function declaration node (name: %s)", name);
-  }
+  if (body)
+    NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d)", name, (void*)body, argc, optc);
+  else
+    NmDebug_AST(n, "create function declaration node (name: %s, argc: %d, optc: %d)", name, argc, optc);
+
 
   /* initialize */
   f->name = NmMem_Strdup(name);
   f->body = body;
+  f->argc = argc;
+  f->optc = optc;
+  f->argv = argv;
+  f->optv = optv;
   l->func = f;
   /* append the function */
   l->next = scope->funcs;
