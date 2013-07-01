@@ -118,6 +118,13 @@ void NmDebug_LexerStr(LexerState *lex, SymbolType type, char *s)
   }
 }
 
+void NmDebug_LexerChar(LexerState *lex, SymbolType type, char c)
+{
+  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
+    fprintf(stderr, "lex: %05uL, %03uC: found %s (%c)\n", lex->line, lex->column, symToS(type), c);
+  }
+}
+
 void NmDebug_Parser(char const *msg, ...)
 {
   if (NmDebug_GETFLAG(DEBUG_FLAG_PARSER)){

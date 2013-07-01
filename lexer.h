@@ -48,6 +48,7 @@ enum SymbolType {
   SYM_INTEGER,        /*           */
   SYM_FLOAT,          /*           */
   SYM_STRING,         /*           */
+  SYM_OPT,            /* -[a-zA-Z] */
   SYM_NAME,           /*           */
   SYM_EQ,             /* "="       */
   SYM_SEMICOLON,      /* ";"       */
@@ -94,6 +95,7 @@ struct Symbol {
     int i;
     double f;
     char *s;
+    char c;
   } value;
   struct Pos pos;
 };

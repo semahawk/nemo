@@ -49,6 +49,12 @@
 #define validForNameHead(c) (isalpha((c)) || (c) == '_')
 #define validForNameTail(c) (isalpha((c)) || isdigit(c) || (c) == '_')
 
+/* Indicates if the lexing things are just after the "fun" keyword.
+ * It is set to TRUE right after the keyword "fun" was encountered and set to
+ * FALSE after the first left mustache ('{') was encountered.
+ */
+BOOL right_after_fun = FALSE;
+
 static struct Keyword {
   const char * const name;
   SymbolType sym;
@@ -175,6 +181,32 @@ static void appendStr(LexerState *lex, SymbolType type, char *s)
   }
 }
 
+static void appendChar(LexerState *lex, SymbolType type, char c)
+{
+  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
+  NmDebug_LexerChar(lex, type, c);
+  /* initialize */
+  new->sym.type = type;
+  new->sym.pos.line = lex->line;
+  new->sym.pos.column = lex->column;
+  new->sym.value.c = c;
+  /* append it */
+  /*   the list is empty */
+  if (!lex->head && !lex->tail){
+    new->next = lex->head;
+    new->prev = lex->tail;
+    lex->head = new;
+    lex->tail = new;
+    lex->current = new;
+  /*   its not empty */
+  } else {
+    new->next = lex->head->next;
+    lex->head->next = new;
+    new->prev = lex->head;
+    lex->head = new;
+  }
+}
+
 static void NmLexer_Init(LexerState *lex)
 {
   lex->line    = 1;
@@ -194,7 +226,6 @@ void NmLexer_Destroy(LexerState *lex)
 
   for (p = lex->tail; p != NULL; p = next){
     next = p->next;
-    /* TODO: debug */
     if (p->sym.type == SYM_NAME ||
         p->sym.type == SYM_STRING){
       NmMem_Free(p->sym.value.s);
@@ -256,6 +287,9 @@ void NmLexer_LexString(LexerState *lex, char *string)
       found = 0;
       for (keyword = keywords; keyword->name != NULL; keyword++){
         if (!strcmp(keyword->name, tmp)){
+          /* see if it's the "fun" keyword */
+          if (!strcmp(keyword->name, "fun"))
+            right_after_fun = TRUE;
           append(lex, keyword->sym);
           found = 1;
           break;
@@ -266,7 +300,7 @@ void NmLexer_LexString(LexerState *lex, char *string)
         appendStr(lex, SYM_NAME, tmp);
       }
       NmMem_Free(tmp);
-      /* i is the length of the name */
+      /* "i" is the length of the name */
       lex->column += i;
     }
     /*
@@ -356,25 +390,43 @@ void NmLexer_LexString(LexerState *lex, char *string)
     }
     else if (*p == '-'){
       /*
-       * XXX --
+       * XXX -option
        */
-      if (*(p + 1) == '-'){
-        append(lex, SYM_MINUSMINUS);
+      if (right_after_fun){
+        char name;
+        if (!isalpha(*(p + 1))){
+          NmError_Lex(lex, "option's name must be an alphanumeric");
+          Nm_Exit();
+        }
+        name = *(++p);
+        while (isalpha(*p++))
+          lex->column++;
+        appendChar(lex, SYM_OPT, name);
+        /* skip over the '-' and the first character after that */
         lex->column += 2;
-        p++;
-      /*
-       * XXX -=
-       */
-      } else if (*(p + 1) == '='){
-        append(lex, SYM_MINUSEQ);
-        lex->column += 2;
-        p++;
-      /*
-       * XXX -
-       */
-      } else {
-        append(lex, SYM_MINUS);
-        lex->column++;
+      }
+      else {
+        /*
+         * XXX --
+         */
+        if (*(p + 1) == '-'){
+          append(lex, SYM_MINUSMINUS);
+          lex->column += 2;
+          p++;
+        /*
+         * XXX -=
+         */
+        } else if (*(p + 1) == '='){
+          append(lex, SYM_MINUSEQ);
+          lex->column += 2;
+          p++;
+        /*
+         * XXX -
+         */
+        } else {
+          append(lex, SYM_MINUS);
+          lex->column++;
+        }
       }
     }
     else if (*p == '*'){
@@ -458,6 +510,9 @@ void NmLexer_LexString(LexerState *lex, char *string)
       lex->column++;
     }
     else if (*p == '{'){
+      /* a function declaration is forced to have a block, so we can safely set
+       * the "right_after_fun" to FALSE here */
+      right_after_fun = FALSE;
       append(lex, SYM_LMUSTASHE);
       lex->column++;
     }
@@ -664,6 +719,7 @@ const char *symToS(SymbolType type)
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";
     case SYM_STRING:     return "string";
+    case SYM_OPT:        return "option";
     case SYM_NAME:       return "name";
     case SYM_EQ:         return "'='";
     case SYM_SEMICOLON:  return "';'";

@@ -56,6 +56,7 @@ void NmDebug_Lexer(LexerState *, SymbolType);
 void NmDebug_LexerInt(LexerState *, SymbolType, int);
 void NmDebug_LexerFloat(LexerState *, SymbolType, double);
 void NmDebug_LexerStr(LexerState *, SymbolType, char *);
+void NmDebug_LexerChar(LexerState *, SymbolType, char);
 
 void NmDebug_Parser(const char *, ...);
 
