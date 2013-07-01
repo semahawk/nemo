@@ -298,6 +298,7 @@ void Nm_InitModule(NmModuleFuncs *funcs)
 
     func->name = NmMem_Strdup(f->name);
     func->body = f->ptr;
+    func->args_count = f->args_count;
     list->func = func;
     /* append to the list */
     list->next = scope->cfuncs;

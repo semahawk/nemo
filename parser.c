@@ -78,6 +78,8 @@ static Node *primary_expr(LexerState *lex)
 {
   Node *new = NULL;
   Node **arr_inside = NULL;
+  char *name = NULL;
+  Node **params = NULL;
 
   /*
    * XXX INTEGER
@@ -107,9 +109,48 @@ static Node *primary_expr(LexerState *lex)
    * XXX NAME
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
-    new = NmAST_GenName(lex->current->sym.pos, lex->current->sym.value.s);
-    NmDebug_Parser("%s ", ((Node_String *)new)->s);
+    CFunc *cfunc;
+    Func *func;
+    Scope *scope = NmScope_GetCurr();
+    name = lex->current->sym.value.s;
     NmLexer_Skip(lex);
+    /* 0 - is not a function
+     * 1 - is a C function
+     * 2 - is a user defined function
+     */
+    int isafunc = 0;
+    /* it could be a function's name, so let's check it out */
+    /* search the C functions */
+    for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+      if (!strcmp(cfuncs->func->name, name)){
+        cfunc = cfuncs->func;
+        isafunc = 1;
+        break;
+      }
+    }
+    /* search the user defined functions */
+    for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
+      if (!strcmp(funcs->func->name, name)){
+        func = funcs->func;
+        isafunc = 2;
+        break;
+      }
+    }
+
+    if (isafunc == 1){
+      printf("found a C function called '%s', with %d args\n", name, cfunc->args_count);
+      params = params_list(lex, cfunc->args_count);
+      new = NmAST_GenCall(lex->current->sym.pos, name, params);
+    } else if (isafunc == 2){
+      printf("found a userdef function called '%s', with %d args\n", name, func->args_count);
+      params = params_list(lex, func->args_count);
+      new = NmAST_GenCall(lex->current->sym.pos, name, params);
+    } else {
+      printf("'%s' is just a name\n", name);
+      new = NmAST_GenName(lex->current->sym.pos, name);
+      NmDebug_Parser("%s ", name);
+      NmLexer_Skip(lex);
+    }
   }
   /*
    * XXX '(' expr ')'
@@ -708,28 +749,6 @@ static Node *expr(LexerState *lex)
       params = params_list(lex, -1);
     }
     ret = NmAST_GenCall(lex->current->sym.pos, "print", params);
-  }
-  /*
-   * XXX ID
-   *
-   * FIXME: That, and print as well, is here, but it should disappear from here when we
-   *        have functions working.
-   */
-  else if (NmLexer_Accept(lex, SYM_ID)){
-    NmDebug_Parser("id ");
-    /*
-     * XXX ID '(' params_list ')'
-     */
-    if (NmLexer_Accept(lex, SYM_LPAREN)){
-      params = params_list(lex, 1);
-      NmLexer_Force(lex, SYM_RPAREN);
-    /*
-     * XXX ID params_list
-     */
-    } else {
-      params = params_list(lex, 1);
-    }
-    ret = NmAST_GenCall(lex->current->sym.pos, "id", params);
   }
   else {
     ret = assign_expr(lex);

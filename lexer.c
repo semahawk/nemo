@@ -62,7 +62,6 @@ static struct Keyword {
   { "until",   SYM_UNTIL   },
   { "else",    SYM_ELSE    },
   { "print",   SYM_PRINT   },
-  { "id",      SYM_ID      },
   { "fun",     SYM_FUN     },
   { "use",     SYM_USE     },
   { "include", SYM_INCLUDE },
