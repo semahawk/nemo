@@ -758,14 +758,14 @@ static Node *expr(LexerState *lex)
     if (NmLexer_Accept(lex, SYM_EQ)){
       NmDebug_Parser(" = ");
       value = comma_expr(lex);
-    }
-    /* if value is NULL, then something like this happend:
-     *
-     *    my var = ;
-     *
-     */
-    if (!value){
-      NmError_Lex(lex, "nothing was initialized");
+      /* if value is NULL, then something like this happend:
+       *
+       *    my var = ;
+       *
+       */
+      if (!value){
+        NmError_Lex(lex, "nothing was initialized");
+      }
     }
     ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
   }
