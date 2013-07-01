@@ -156,6 +156,11 @@ static Node *primary_expr(LexerState *lex)
       } else {
         params = params_list(lex, argc);
       }
+      /* if 'params' returns NULL it means something bad happend */
+      if (!params){
+        NmError_Lex(lex, "wrong number of arguments for function '%s' %s", name, NmError_GetCurr());
+        Nm_Exit();
+      }
       new = NmAST_GenCall(lex->current->sym.pos, name, params);
     } else {
       new = NmAST_GenName(lex->current->sym.pos, name);
@@ -230,7 +235,9 @@ static Node **params_list(LexerState *lex, int num)
 
   first_expr = expr(lex);
 
+  /* if 'first_expr' is NULL it means no params were fetched at all */
   if (!first_expr){
+    NmError_SetString("(%d when %d expected)", 0, (unsigned)num);
     NmMem_Free(params);
     return NULL;
   }
@@ -254,6 +261,8 @@ static Node **params_list(LexerState *lex, int num)
     }
     params[counter++] = next_expr;
   }
+
+  printf("counter: %d, num %d\n", counter, (unsigned)num);
 
   return params;
 }
