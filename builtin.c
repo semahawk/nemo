@@ -292,7 +292,7 @@ static NmModuleFuncs module_funcs[] = {
   { "id",     builtin_id,      1 },
   { "len",    builtin_len,     1 },
   { "print",  builtin_print,  -1 },
-  { "printf", builtin_printf,  1 },
+  { "printf", builtin_printf, -1 },
   { NULL, NULL, 0 }
 };
 
