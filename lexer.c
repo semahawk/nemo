@@ -61,7 +61,6 @@ static struct Keyword {
   { "while",   SYM_WHILE   },
   { "until",   SYM_UNTIL   },
   { "else",    SYM_ELSE    },
-  { "print",   SYM_PRINT   },
   { "fun",     SYM_FUN     },
   { "use",     SYM_USE     },
   { "include", SYM_INCLUDE },
@@ -583,9 +582,9 @@ void NmLexer_Force(LexerState *lex, SymbolType type)
 {
   if (lex->current == NULL){
     if (lex->is_file){
-      NmError_Lex(lex, "unexpected end of file");
+      NmError_Lex(lex, "unexpected end of file (force)");
     } else {
-      NmError_Lex(lex, "unexpected end of string");
+      NmError_Lex(lex, "unexpected end of string (force)");
     }
     exit(EXIT_FAILURE);
   }
@@ -607,9 +606,9 @@ BOOL NmLexer_Accept(LexerState *lex, SymbolType type)
 {
   if (lex->current == NULL){
     if (lex->is_file){
-      NmError_Lex(lex, "unexpected end of file");
+      NmError_Lex(lex, "unexpected end of file (accept)");
     } else {
-      NmError_Lex(lex, "unexpected end of string");
+      NmError_Lex(lex, "unexpected end of string (accept)");
     }
     exit(EXIT_FAILURE);
   }
@@ -642,9 +641,9 @@ void NmLexer_Skip(LexerState *lex)
 {
   if (lex->current == NULL){
     if (lex->is_file){
-      NmError_Lex(lex, "unexpected end of file");
+      NmError_Lex(lex, "unexpected end of file (skip)");
     } else {
-      NmError_Lex(lex, "unexpected end of string");
+      NmError_Lex(lex, "unexpected end of string (skip)");
     }
     exit(EXIT_FAILURE);
   }
@@ -659,7 +658,6 @@ const char *symToS(SymbolType type)
     case SYM_IF:         return "\"if\"";
     case SYM_WHILE:      return "\"while\"";
     case SYM_ELSE:       return "\"else\"";
-    case SYM_PRINT:      return "\"print\"";
     case SYM_USE:        return "\"use\"";
     case SYM_INCLUDE:    return "\"include\"";
     case SYM_FUN:        return "\"fun\"";

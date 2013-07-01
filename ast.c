@@ -373,51 +373,30 @@ void NmAST_FreeArray(Node *n)
  * @name - NmAST_GenName
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(Pos pos, char *s)
+Node *NmAST_GenName(Pos pos, char *name)
 {
-  Node_String *n = NmMem_Calloc(1, sizeof(Node_String));
-  /*Scope *scope = NmScope_GetCurr();*/
-  /*BOOL found = FALSE;*/
+  Node_Name *n = NmMem_Calloc(1, sizeof(Node_Name));
+  BOOL found = FALSE;
 
   n->type = NT_NAME;
-  n->s = NmMem_Strdup(s);
+  n->name = NmMem_Strdup(name);
   INIT_POS();
 
-  NmDebug_AST(n, "create name node (name: %s)", s);
-/*
-  [> iterate through all (well, not all, from the current one, through it's
-   * parents, to the main) the scopes <]
-  for (scope = NmScope_GetCurr(); scope != NULL; scope = scope->parent){
-    [> search for the variable <]
-    for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
-      if (!strcmp(vars->var->name, n->data.decl.name)){
-        found = TRUE;
-        break;
-      }
-    }
-    [> or, it could be a name of a function that's being called <]
-    [> search the C functions <]
-    for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
-      if (!strcmp(cfuncs->func->name, n->data.decl.name)){
-        printf("found a cfunc in scope %s\n", scope->name);
-        found = TRUE;
-        break;
-      }
-    }
-    [> search the user defined functions <]
-    for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
-      if (!strcmp(funcs->func->name, n->data.decl.name)){
-        found = TRUE;
-        break;
-      }
+  NmDebug_AST(n, "create name node (name: %s)", name);
+
+  /* search for the variable */
+  for (VariablesList *vars = NmScope_GetCurr()->globals; vars != NULL; vars = vars->next){
+    if (!strcmp(vars->var->name, name)){
+      found = TRUE;
+      break;
     }
   }
 
   if (!found){
-    NmError_Parser(n, "variable '%s' was not found", n->data.decl.name);
+    NmError_Parser((Node *)n, "variable '%s' was not found", name);
     Nm_Exit();
   }
-*/
+
   return (Node *)n;
 }
 
@@ -427,31 +406,15 @@ Node *NmAST_GenName(Pos pos, char *s)
  */
 NmObject *NmAST_ExecName(Node *n)
 {
-  Node_Name *n_name = (Node_Name *)n;
+  Node_Name *nc = (Node_Name *)n;
   Scope *scope = NmScope_GetCurr();
 
   NmDebug_AST(n, "execute name node");
 
   /* search for the variable */
   for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
-    if (!strcmp(vars->var->name, n_name->name)){
+    if (!strcmp(vars->var->name, nc->name)){
       return vars->var->value;
-    }
-  }
-  /*
-   * FIXME: what should the name of a function itself return?
-   */
-  /* or, it could be a name of a function that's being called */
-  /* search the C functions */
-  for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
-    if (!strcmp(cfuncs->func->name, n_name->name)){
-      return NmNull;
-    }
-  }
-  /* search the user defined functions */
-  for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
-    if (!strcmp(funcs->func->name, n_name->name)){
-      return NmNull;
     }
   }
 

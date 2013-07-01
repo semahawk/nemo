@@ -79,7 +79,6 @@ static Node *primary_expr(LexerState *lex)
   Node *new = NULL;
   Node **arr_inside = NULL;
   char *name = NULL;
-  Node **params = NULL;
 
   /*
    * XXX INTEGER
@@ -109,9 +108,11 @@ static Node *primary_expr(LexerState *lex)
    * XXX NAME
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
+    int args_count;
     CFunc *cfunc;
     Func *func;
     Scope *scope = NmScope_GetCurr();
+    Node **params = NULL;
     name = lex->current->sym.value.s;
     NmLexer_Skip(lex);
     /* 0 - is not a function
@@ -138,18 +139,26 @@ static Node *primary_expr(LexerState *lex)
     }
 
     if (isafunc == 1){
-      printf("found a C function called '%s', with %d args\n", name, cfunc->args_count);
-      params = params_list(lex, cfunc->args_count);
-      new = NmAST_GenCall(lex->current->sym.pos, name, params);
+      args_count = cfunc->args_count;
     } else if (isafunc == 2){
-      printf("found a userdef function called '%s', with %d args\n", name, func->args_count);
-      params = params_list(lex, func->args_count);
+      args_count = func->args_count;
+    }
+
+    NmDebug_Parser("%s ", name);
+
+    if (isafunc){
+      if (NmLexer_Peek(lex, SYM_LPAREN)){
+        NmDebug_Parser("(");
+        NmLexer_Skip(lex);
+        params = params_list(lex, args_count);
+        NmLexer_Force(lex, SYM_RPAREN);
+        NmDebug_Parser(")");
+      } else {
+        params = params_list(lex, args_count);
+      }
       new = NmAST_GenCall(lex->current->sym.pos, name, params);
     } else {
-      printf("'%s' is just a name\n", name);
       new = NmAST_GenName(lex->current->sym.pos, name);
-      NmDebug_Parser("%s ", name);
-      NmLexer_Skip(lex);
     }
   }
   /*
@@ -205,6 +214,7 @@ static Node **params_list(LexerState *lex, int num)
   Node *first_expr;
 
   if (num == 0){
+    NmMem_Free(params);
     return NULL;
   }
   /* Nasty hack */
@@ -215,6 +225,8 @@ static Node **params_list(LexerState *lex, int num)
      */
     num = 1 << 15;
   }
+
+  NmDebug_AST(params, "create params list");
 
   first_expr = expr(lex);
 
@@ -243,8 +255,6 @@ static Node **params_list(LexerState *lex, int num)
     params[counter++] = next_expr;
   }
 
-  NmDebug_AST(params, "create params list");
-
   return params;
 }
 
@@ -253,8 +263,7 @@ static Node **params_list(LexerState *lex, int num)
  *             | '--'
  *             ;
  *
- * postfix_expr: NAME '(' [expr] ')'
- *             | NAME '[' expr ']'
+ * postfix_expr: NAME '[' expr ']'
  *             | primary_expr postfix_op
  *             ;
  */
@@ -262,38 +271,15 @@ static Node *postfix_expr(LexerState *lex)
 {
   Node *target = NULL;
   Node *ret = target = primary_expr(lex);
-  Node **params;
   Node *index;
-  char *name = NULL;
 
   /* I'm not checking if target is NULL because parenthesis, brackets, ++ and --
    * could belong to some prefix unary operation or just an expression */
 
   /*
-   * XXX NAME '(' [params_list] ')'
-   */
-  if (NmLexer_Accept(lex, SYM_LPAREN)){
-    /* store the function's name position */
-    Pos pos = lex->current->prev->prev->sym.pos;
-    if (target->type != NT_NAME){
-      NmError_Lex(lex, "expected a name for a function call, not %s", symToS(lex->current->sym.type));
-      Nm_Exit();
-    }
-    name = ((Node_String *)target)->s;
-    NmDebug_Parser("(");
-    params = params_list(lex, -1);
-    NmLexer_Force(lex, SYM_RPAREN);
-    NmDebug_Parser(")");
-    /* here, lex->current is the closing paren, so we have to use the stored
-     * position */
-    ret = NmAST_GenCall(pos, name, params);
-    /* we only need the char *name, not the whole node, so free it */
-    NmAST_Free(target);
-  }
-  /*
    * XXX NAME '[' expr ']'
    */
-  else if (NmLexer_Accept(lex, SYM_LBRACKET)){
+  if (NmLexer_Accept(lex, SYM_LBRACKET)){
     /* store the position of the left bracket */
     Pos pos = lex->current->prev->sym.pos;
     NmDebug_Parser("[");
@@ -698,7 +684,6 @@ static Node *expr(LexerState *lex)
 {
   Node *ret = NULL;
   Node *value = NULL;
-  Node **params;
   char *name = NULL;
 
   /*
@@ -730,25 +715,6 @@ static Node *expr(LexerState *lex)
       NmError_Lex(lex, "nothing was initialized");
     }
     ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
-  }
-  /*
-   * XXX PRINT
-   */
-  else if (NmLexer_Accept(lex, SYM_PRINT)){
-    NmDebug_Parser("print ");
-    /*
-     * XXX PRINT '(' params_list ')'
-     */
-    if (NmLexer_Accept(lex, SYM_LPAREN)){
-      params = params_list(lex, -1);
-      NmLexer_Force(lex, SYM_RPAREN);
-    /*
-     * XXX PRINT params_list
-     */
-    } else {
-      params = params_list(lex, -1);
-    }
-    ret = NmAST_GenCall(lex->current->sym.pos, "print", params);
   }
   else {
     ret = assign_expr(lex);
@@ -869,7 +835,7 @@ static Node *stmt(LexerState *lex)
    * XXX FUN NAME
    */
   else if (NmLexer_Accept(lex, SYM_FUN)){
-    NmDebug_Parser("fn ");
+    NmDebug_Parser("fun ");
     NmDebug_Parser("%s ", symToS(lex->current->sym.type));
     NmLexer_Force(lex, SYM_NAME);
     name = lex->current->prev->sym.value.s;
