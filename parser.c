@@ -729,56 +729,18 @@ static Node *comma_expr(LexerState *lex)
 }
 
 /*
- * expr: MY NAME [= comma_expr]
- *     | comma_expr
+ * expr: comma_expr
  *     ;
  */
 static Node *expr(LexerState *lex)
 {
-  Node *ret = NULL;
-  Node *value = NULL;
-  char *name = NULL;
-
-  /*
-   * XXX MY
-   */
-  if (NmLexer_Accept(lex, SYM_MY)){
-    uint8_t flags = 0;
-    NmDebug_Parser("my ");
-    if (NmLexer_Accept(lex, SYM_CONST)){
-      flags |= (1 << NMVAR_FLAG_CONST);
-    }
-    NmLexer_Force(lex, SYM_NAME);
-    /* NmLexer_Force skips the symbol so we have to get to the previous one */
-    name = lex->current->prev->sym.value.s;
-    NmDebug_Parser("%s", name);
-    /*
-     * XXX MY NAME = comma_expr
-     */
-    if (NmLexer_Accept(lex, SYM_EQ)){
-      NmDebug_Parser(" = ");
-      value = comma_expr(lex);
-      /* if value is NULL, then something like this happend:
-       *
-       *    my var = ;
-       *
-       */
-      if (!value){
-        NmError_Lex(lex, "nothing was initialized");
-      }
-    }
-    ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
-  }
-  else {
-    ret = comma_expr(lex);
-  }
-
-  return ret;
+  return comma_expr(lex);
 }
 
 /*
  * stmt: ';'
  *     | '{' block '}'
+ *     | MY NAME '=' expr ';'
  *     | label
  *     | GOTO NAME ';'
  *     | function_prototype
@@ -807,6 +769,7 @@ static Node *stmt(LexerState *lex)
   Node *guard = NULL;
   Node *body  = NULL;
   Node *elsee = NULL;
+  Node *value = NULL;
   char *name  = NULL;
   char *path  = NULL;
 
@@ -817,6 +780,36 @@ static Node *stmt(LexerState *lex)
     /* that's NOP */
     NmDebug_Parser(";\n");
     ret = NmAST_GenNop(lex->current->sym.pos);
+  }
+  /*
+   * XXX MY
+   */
+  else if (NmLexer_Accept(lex, SYM_MY)){
+    uint8_t flags = 0;
+    NmDebug_Parser("my ");
+    if (NmLexer_Accept(lex, SYM_CONST)){
+      flags |= (1 << NMVAR_FLAG_CONST);
+    }
+    NmLexer_Force(lex, SYM_NAME);
+    /* NmLexer_Force skips the symbol so we have to get to the previous one */
+    name = lex->current->prev->sym.value.s;
+    NmDebug_Parser("%s", name);
+    /*
+     * XXX MY NAME = expr
+     */
+    if (NmLexer_Accept(lex, SYM_EQ)){
+      NmDebug_Parser(" = ");
+      value = expr(lex);
+      /* if value is NULL, then something like this happend:
+       *
+       *    my var = ;
+       *
+       */
+      if (!value){
+        NmError_Lex(lex, "nothing was initialized");
+      }
+    }
+    ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
   }
   /*
    * XXX NAME ':' stmt
