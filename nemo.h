@@ -13,9 +13,6 @@
 #include <assert.h>
 #include <errno.h>
 
-/* version of Nemo, obviously */
-#define VERSION "0.16.4"
-
 #ifdef HAVE_STDBOOL_H
 #  include <stdbool.h>
 #  define BOOL  bool
