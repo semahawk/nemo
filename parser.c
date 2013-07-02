@@ -810,6 +810,7 @@ static Node *stmt(LexerState *lex)
       }
     }
     ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
+    endStmt(lex);
   }
   /*
    * XXX NAME ':' stmt
