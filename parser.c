@@ -772,6 +772,7 @@ static Node *stmt(LexerState *lex)
   Node *value = NULL;
   char *name  = NULL;
   char *path  = NULL;
+  Pos savedpos = lex->current->sym.pos;
 
   /*
    * XXX ';'
@@ -842,7 +843,9 @@ static Node *stmt(LexerState *lex)
     if (!ret->next){
       NmError_Parser(ret, "label '%s' was not found", name);
       Nm_Exit();
+      ret = NULL;
     }
+    endStmt(lex);
   }
   /*
    * XXX USE NAME ';'
@@ -882,7 +885,6 @@ static Node *stmt(LexerState *lex)
   else if (NmLexer_Accept(lex, SYM_FUN)){
     unsigned optc = 0;
     unsigned argc = 0;
-    /* TODO: implement these vectors */
     char **argv = NmMem_Malloc(sizeof(char *) * 1);
     char *optv = NmMem_Malloc(sizeof(char) * 1); /* I know sizeof(char) is 1 */
     Pos pos = lex->current->prev->sym.pos;
@@ -1028,7 +1030,10 @@ static Node *stmt(LexerState *lex)
     else endStmt(lex);
   }
 
-  /* TODO: "ret" being NULL at this point should be handled somehow */
+  /* if ret is NULL right here, it means there was some error above
+   * so let's just gently do nothing */
+  if (!ret)
+    ret = NmAST_GenNop(savedpos);
 
   ret = NmAST_GenStmt(ret->pos, ret);
   /* set the previous statement's "next", but only if it's previous value is
