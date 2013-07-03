@@ -109,6 +109,7 @@ struct SymbolsList {
 struct LexerState {
   BOOL is_file; /* either file or a string */
   char *source; /* name of the files name */
+  char *content; /* contents of the file */
   unsigned line;
   unsigned column;
   struct SymbolsList *head;
@@ -122,8 +123,7 @@ typedef struct Symbol Symbol;
 typedef struct SymbolsList SymbolsList;
 typedef struct LexerState LexerState;
 
-void NmLexer_LexFile(LexerState *, char *);
-void NmLexer_LexString(LexerState *, char *);
+void NmLexer_Lex(LexerState *);
 void NmLexer_Destroy(LexerState *);
 
 BOOL NmLexer_Peek(LexerState *lex, SymbolType);

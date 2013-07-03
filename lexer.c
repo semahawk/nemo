@@ -234,44 +234,14 @@ void NmLexer_Destroy(LexerState *lex)
   }
 }
 
-void NmLexer_LexFile(LexerState *lex, char *fname)
-{
-  FILE *fp;
-  char *fbuffer = NULL;
-  size_t flen = 0;
-
-  if ((fp = fopen(fname, "r")) == NULL){
-    NmError_Fatal("cannot open file '%s': %s", fname, strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-  /* get the files length */
-  fseek(fp, 0, SEEK_END);
-  flen = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-  /* make room for the contents */
-  fbuffer = NmMem_Malloc(flen);
-  /* store the files contents in the fbuffer */
-  if (fread(fbuffer, 1, flen, fp) != flen){
-    NmError_Fatal("fread failed in " __FILE__ " at line %d", __LINE__);
-    exit(EXIT_FAILURE);
-  }
-  fbuffer[flen - 1] = '\0';
-  /* now, treat the source as a string */
-  NmLexer_LexString(lex, fbuffer);
-  /* free the buffer */
-  NmMem_Free(fbuffer);
-
-  fclose(fp);
-}
-
-void NmLexer_LexString(LexerState *lex, char *string)
+void NmLexer_Lex(LexerState *lex)
 {
   char *p, *tmp;
   int i = 0, found = 0;
   Keyword *keyword;
   NmLexer_Init(lex);
   /* iterate through the string, and append symbols to the symbols list */
-  for (p = string; *p != '\0'; p++, i = 0){
+  for (p = lex->content; *p != '\0'; p++, i = 0){
     /*
      * XXX name / keyword
      */
