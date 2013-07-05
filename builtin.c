@@ -265,13 +265,6 @@ static NmObject *builtin_print(NmObject *args)
 {
   for (size_t i = 0; i < NmArray_NMEMB(args); i++){
     NmObject_PRINT(stdout, NmArray_GETELEM(args, i));
-    /* this the last parameter */
-    if (i + 1 == NmArray_NMEMB(args)){
-      fprintf(stdout, "\n");
-    /* this is NOT the last parameter */
-    } else {
-      fprintf(stdout, ", ");
-    }
   }
 
   return NmInt_New(1);
