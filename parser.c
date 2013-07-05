@@ -210,7 +210,7 @@ static Node *primary_expr(LexerState *lex)
  *            ;
  */
 /*
- * This function fetches the parameters list, <num> many.
+ * This function fetches the parameters list, which are no more than <num>.
  *
  * If <num> is negative, it will take as many as possible.
  */
@@ -222,8 +222,7 @@ static Node **params_list(LexerState *lex, int num)
   Node *first_expr;
 
   if (num == 0){
-    NmMem_Free(params);
-    return NULL;
+    return params;
   }
   /* Nasty hack */
   else if (num < 0){
@@ -241,8 +240,8 @@ static Node **params_list(LexerState *lex, int num)
   first_expr = assign_expr(lex);
 
   /* if 'first_expr' is NULL it means no params were fetched at all */
-  if (!first_expr){
-    NmError_SetString("(%d when %d expected)", 0, (unsigned)num);
+  if (!first_expr && num != 1 << 15){
+    NmError_SetString("(0 when %d expected)", (unsigned)num);
     NmMem_Free(params);
     return NULL;
   }
