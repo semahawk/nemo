@@ -55,7 +55,7 @@
       !NmLexer_Peek(lex, SYM_EOS)){ \
     NmLexer_Force(lex, SYM_SEMICOLON); \
   } \
-  NmDebug_Parser(";\n"); \
+  NmDebug_Parser("ENDSTMT;\n"); \
 } while (0);
 
 /* forward */
@@ -85,7 +85,7 @@ static Node *primary_expr(LexerState *lex)
    * XXX INTEGER
    */
   if (NmLexer_Peek(lex, SYM_INTEGER)){
-    new = NmAST_GenInt(lex->current->sym.pos, lex->current->sym.value.i);
+    new = NmAST_GenInt(lex->current.pos, lex->current.value.i);
     NmDebug_Parser("%d ", ((Node_Int *)new)->i);
     NmLexer_Skip(lex);
   }
@@ -93,7 +93,7 @@ static Node *primary_expr(LexerState *lex)
    * XXX FLOAT
    */
   else if (NmLexer_Peek(lex, SYM_FLOAT)){
-    new = NmAST_GenFloat(lex->current->sym.pos, lex->current->sym.value.f);
+    new = NmAST_GenFloat(lex->current.pos, lex->current.value.f);
     NmDebug_Parser("%f ", ((Node_Float *)new)->f);
     NmLexer_Skip(lex);
   }
@@ -101,7 +101,7 @@ static Node *primary_expr(LexerState *lex)
    * XXX STRING
    */
   else if (NmLexer_Peek(lex, SYM_STRING)){
-    new = NmAST_GenString(lex->current->sym.pos, lex->current->sym.value.s);
+    new = NmAST_GenString(lex->current.pos, lex->current.value.s);
     NmDebug_Parser("\"%s\" ", ((Node_String *)new)->s);
     NmLexer_Skip(lex);
   }
@@ -114,8 +114,8 @@ static Node *primary_expr(LexerState *lex)
     Func *func;
     Scope *scope = NmScope_GetCurr();
     Node **params = NULL;
-    name = lex->current->sym.value.s;
-    NmLexer_Skip(lex);
+    Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+    name = namesym.value.s;
     /* 0 - is not a function
      * 1 - is a C function
      * 2 - is a user defined function
@@ -163,9 +163,9 @@ static Node *primary_expr(LexerState *lex)
         Nm_Exit();
         return NULL;
       }
-      new = NmAST_GenCall(lex->current->sym.pos, name, params);
+      new = NmAST_GenCall(lex->current.pos, name, params);
     } else {
-      new = NmAST_GenName(lex->current->sym.pos, name);
+      new = NmAST_GenName(lex->current.pos, name);
     }
   }
   /*
@@ -183,7 +183,7 @@ static Node *primary_expr(LexerState *lex)
   else if (NmLexer_Accept(lex, SYM_LBRACKET)){
     NmDebug_Parser("[");
     arr_inside = params_list(lex, -1);
-    new = NmAST_GenArray(lex->current->sym.pos, arr_inside);
+    new = NmAST_GenArray(lex->current.pos, arr_inside);
     NmLexer_Force(lex, SYM_RBRACKET);
     NmDebug_Parser("]");
   }
@@ -191,6 +191,7 @@ static Node *primary_expr(LexerState *lex)
    * XXX EOS
    */
   else if (NmLexer_Accept(lex, SYM_EOS)){
+    lex->eos = TRUE;
     return NULL;
   }
   /*
@@ -291,8 +292,10 @@ static Node *postfix_expr(LexerState *lex)
    * XXX NAME '[' expr ']'
    */
   if (NmLexer_Accept(lex, SYM_LBRACKET)){
-    /* store the position of the left bracket */
-    Pos pos = lex->current->prev->sym.pos;
+    /* TODO: store the position of the left bracket
+     *       right now it's the position of the very first thing after the left
+     *       bracket*/
+    Pos pos = lex->current.pos;
     NmDebug_Parser("[");
     index = expr(lex);
     NmLexer_Force(lex, SYM_RBRACKET);
@@ -306,12 +309,13 @@ static Node *postfix_expr(LexerState *lex)
     if (isLiteral(target)){
       /* using NmError_Error not NmError_Lex because lexer's state has gone
        * further in 'primary_expr' */
-      NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.pos.line, lex->current->prev->sym.pos.column);
+      /* FIXME: store the target's position */
+      NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current.pos.line, lex->current.pos.column);
       Nm_Exit();
       return NULL;
     }
     NmDebug_Parser(":postfix++");
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_POSTINC);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_POSTINC);
   }
   /*
    * XXX NAME '--'
@@ -320,12 +324,13 @@ static Node *postfix_expr(LexerState *lex)
     if (isLiteral(target)){
       /* using NmError_Error not NmError_Lex because lexer's state has gone
        * further in 'primary_expr' */
-      NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current->prev->sym.pos.line, lex->current->prev->sym.pos.column);
+      /* FIXME: store the target's position */
+      NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current.pos.line, lex->current.pos.column);
       Nm_Exit();
       return NULL;
     }
     NmDebug_Parser(":postfix--");
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_POSTDEC);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_POSTDEC);
   }
 
   return ret;
@@ -362,7 +367,7 @@ static Node *prefix_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_NEGATE);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_NEGATE);
   }
   else if (NmLexer_Accept(lex, SYM_PLUS)){
     NmDebug_Parser("unary+ ");
@@ -378,7 +383,7 @@ static Node *prefix_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_PLUS);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_PLUS);
   }
   else if (NmLexer_Accept(lex, SYM_MINUS)){
     NmDebug_Parser("unary- ");
@@ -394,7 +399,7 @@ static Node *prefix_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_MINUS);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_MINUS);
   }
   else if (NmLexer_Accept(lex, SYM_PLUSPLUS)){
     NmDebug_Parser("prefix++:");
@@ -410,7 +415,7 @@ static Node *prefix_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_PREINC);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_PREINC);
   }
   else if (NmLexer_Accept(lex, SYM_MINUSMINUS)){
     NmDebug_Parser("prefix--:");
@@ -426,7 +431,7 @@ static Node *prefix_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenUnop(lex->current->sym.pos, target, UNARY_PREDEC);
+    ret = NmAST_GenUnop(lex->current.pos, target, UNARY_PREDEC);
   }
   else {
     ret = postfix_expr(lex);
@@ -463,7 +468,7 @@ static Node *mult_expr(LexerState *lex)
      *
      */
     if (!left){
-      NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current->sym.type));
+      NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current.type));
       Nm_Exit();
       return NULL;
     }
@@ -489,7 +494,7 @@ static Node *mult_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
+    ret = NmAST_GenBinop(lex->current.pos, left, op, right);
     left = ret;
   }
 
@@ -535,7 +540,7 @@ static Node *add_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
+    ret = NmAST_GenBinop(lex->current.pos, left, op, right);
     left = ret;
   }
 
@@ -576,7 +581,7 @@ static Node *cond_expr(LexerState *lex)
      *
      */
     if (!left){
-      NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current->sym.type));
+      NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current.type));
       Nm_Exit();
       return NULL;
     }
@@ -611,7 +616,7 @@ static Node *cond_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
+    ret = NmAST_GenBinop(lex->current.pos, left, op, right);
     left = ret;
   }
 
@@ -652,7 +657,7 @@ static Node *assign_expr(LexerState *lex)
      *
      */
     if (!left){
-      NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current->sym.type));
+      NmError_Lex(lex, "expected an expression for the lhs of the binary %s operation", symToS(lex->current.type));
       Nm_Exit();
       return NULL;
     }
@@ -692,7 +697,7 @@ static Node *assign_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenBinop(lex->current->sym.pos, left, op, right);
+    ret = NmAST_GenBinop(lex->current.pos, left, op, right);
     left = ret;
   }
 
@@ -738,7 +743,7 @@ static Node *comma_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
-    ret = NmAST_GenBinop(lex->current->sym.pos, left, BINARY_COMMA, right);
+    ret = NmAST_GenBinop(lex->current.pos, left, BINARY_COMMA, right);
     left = ret;
   }
 
@@ -789,15 +794,15 @@ static Node *stmt(LexerState *lex)
   Node *value = NULL;
   char *name  = NULL;
   char *path  = NULL;
-  Pos savedpos = lex->current->sym.pos;
+  Pos savedpos = lex->current.pos;
 
   /*
    * XXX ';'
    */
   if (NmLexer_Accept(lex, SYM_SEMICOLON)){
     /* that's NOP */
-    NmDebug_Parser(";\n");
-    ret = NmAST_GenNop(lex->current->sym.pos);
+    NmDebug_Parser("NOP;\n");
+    ret = NmAST_GenNop(lex->current.pos);
   }
   /*
    * XXX MY
@@ -808,9 +813,9 @@ static Node *stmt(LexerState *lex)
     if (NmLexer_Accept(lex, SYM_CONST)){
       flags |= (1 << NMVAR_FLAG_CONST);
     }
-    NmLexer_Force(lex, SYM_NAME);
+    Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     /* NmLexer_Force skips the symbol so we have to get to the previous one */
-    name = lex->current->prev->sym.value.s;
+    name = namesym.value.s;
     NmDebug_Parser("%s", name);
     /*
      * XXX MY NAME = expr
@@ -827,7 +832,7 @@ static Node *stmt(LexerState *lex)
         NmError_Lex(lex, "nothing was initialized");
       }
     }
-    ret = NmAST_GenDecl(lex->current->sym.pos, name, value, flags);
+    ret = NmAST_GenDecl(lex->current.pos, name, value, flags);
     endStmt(lex);
   }
   /*
@@ -835,9 +840,9 @@ static Node *stmt(LexerState *lex)
    *
    *     basically just a label
    */
-  else if (lex->current->sym.type == SYM_NAME &&
-           lex->current->next->sym.type == SYM_COLON){
-    name = lex->current->sym.value.s;
+  else if (lex->current.type == SYM_NAME &&
+           NmLexer_Peek(lex, SYM_COLON)){
+    name = lex->current.value.s;
     NmDebug_Parser("%s", name);
     NmLexer_Skip(lex);
     NmDebug_Parser(":", name);
@@ -851,10 +856,10 @@ static Node *stmt(LexerState *lex)
    */
   else if (NmLexer_Accept(lex, SYM_GOTO)){
     NmDebug_Parser("goto ");
-    NmLexer_Force(lex, SYM_NAME);
-    name = lex->current->prev->sym.value.s;
+    Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+    name = namesym.value.s;
     NmDebug_Parser("%s", name);
-    ret = NmAST_GenNop(lex->current->prev->sym.pos);
+    ret = NmAST_GenNop(namesym.pos);
     ret->next = NmScope_GetLabel(name);
     /* NmScope_GetLabel returns NULL if didn't find the label */
     if (!ret->next){
@@ -871,6 +876,7 @@ static Node *stmt(LexerState *lex)
   else if (NmLexer_Peek(lex, SYM_USE) ||
            NmLexer_Peek(lex, SYM_INCLUDE)){
     BOOL use;
+    Pos savepos = lex->current.pos;
     if (NmLexer_Accept(lex, SYM_USE)){
       use = TRUE;
       NmDebug_Parser("use ");
@@ -879,20 +885,20 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("include ");
       NmLexer_Skip(lex);
     }
-    NmLexer_Force(lex, SYM_NAME);
-    name = lex->current->prev->sym.value.s;
+    Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+    name = namesym.value.s;
     NmDebug_Parser("%s ", name);
     /*
      * XXX USE NAME PATH ';'
      * XXX INCLUDE NAME PATH ';'
      */
     if (NmLexer_Peek(lex, SYM_STRING)){
-      path = lex->current->sym.value.s;
+      path = lex->current.value.s;
       NmLexer_Skip(lex);
     } else {
       path = NULL;
     }
-    ret = NmAST_GenInclude(lex->current->prev->prev->sym.pos, name, path, use);
+    ret = NmAST_GenInclude(savepos, name, path, use);
     endStmt(lex);
   }
   /*
@@ -904,21 +910,24 @@ static Node *stmt(LexerState *lex)
     unsigned argc = 0;
     char **argv = NmMem_Malloc(sizeof(char *) * 1);
     char *optv = NmMem_Malloc(sizeof(char) * 1); /* I know sizeof(char) is 1 */
-    Pos pos = lex->current->prev->sym.pos;
+    /* FIXME: store the "fun" position */
+    Pos pos = lex->current.pos;
     NmDebug_Parser("fun ");
-    NmLexer_Force(lex, SYM_NAME);
-    name = lex->current->prev->sym.value.s;
-    NmDebug_Parser("%s ", lex->current->prev->sym.value.s);
+    Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+    name = namesym.value.s;
+    NmDebug_Parser("%s ", namesym.value.s);
     while (NmLexer_Peek(lex, SYM_NAME) || NmLexer_Peek(lex, SYM_OPT)){
-      if (NmLexer_Accept(lex, SYM_NAME)){
-        NmDebug_Parser("%s ", lex->current->prev->sym.value.s);
+      if (NmLexer_Peek(lex, SYM_NAME)){
+        Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+        NmDebug_Parser("%s ", namesym.value.s);
         argv = NmMem_Realloc(argv, (argc + 1) * sizeof(char *));
-        argv[argc] = NmMem_Strdup(lex->current->prev->sym.value.s);
+        argv[argc] = NmMem_Strdup(namesym.value.s);
         argc++;
-      } else if (NmLexer_Accept(lex, SYM_OPT)){
-        NmDebug_Parser("-%c ", lex->current->prev->sym.value.c);
+      } else if (NmLexer_Peek(lex, SYM_OPT)){
+        Symbol optsym = NmLexer_Force(lex, SYM_OPT);
+        NmDebug_Parser("-%c ", optsym.value.c);
         optv = NmMem_Realloc(optv, (optc + 1) * sizeof(char));
-        optv[optc] = lex->current->prev->sym.value.c;
+        optv[optc] = optsym.value.c;
         optc++;
       }
     }
@@ -949,7 +958,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenIf(lex->current->sym.pos, guard, body, elsee, FALSE);
+    ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, FALSE);
   }
   /*
    * XXX UNLESS stmt stmt
@@ -965,7 +974,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenIf(lex->current->sym.pos, guard, body, elsee, TRUE);
+    ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, TRUE);
   }
   /*
    * XXX WHILE stmt stmt
@@ -981,7 +990,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenWhile(lex->current->sym.pos, guard, body, elsee, FALSE);
+    ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, FALSE);
   }
   /*
    * XXX UNTIL stmt stmt
@@ -997,7 +1006,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenWhile(lex->current->sym.pos, guard, body, elsee, TRUE);
+    ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, TRUE);
   }
   /*
    * XXX '{' block '}'
@@ -1015,7 +1024,7 @@ static Node *stmt(LexerState *lex)
     if (NmLexer_Accept(lex, SYM_IF)){
       NmDebug_Parser("if ");
       guard = stmt(lex);
-      ret = NmAST_GenIf(lex->current->sym.pos, ret, guard, NULL, FALSE);
+      ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, FALSE);
     }
     /*
      * XXX expr UNLESS stmt
@@ -1023,7 +1032,7 @@ static Node *stmt(LexerState *lex)
     else if (NmLexer_Accept(lex, SYM_UNLESS)){
       NmDebug_Parser("unless ");
       guard = stmt(lex);
-      ret = NmAST_GenIf(lex->current->sym.pos, ret, guard, NULL, TRUE);
+      ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, TRUE);
     }
     /*
      * XXX expr WHILE stmt
@@ -1031,7 +1040,7 @@ static Node *stmt(LexerState *lex)
     else if (NmLexer_Accept(lex, SYM_WHILE)){
       NmDebug_Parser("while ");
       guard = stmt(lex);
-      ret = NmAST_GenWhile(lex->current->sym.pos, ret, guard, NULL, FALSE);
+      ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, FALSE);
     }
     /*
      * XXX expr UNTIL stmt
@@ -1039,20 +1048,26 @@ static Node *stmt(LexerState *lex)
     else if (NmLexer_Accept(lex, SYM_UNTIL)){
       NmDebug_Parser("until ");
       guard = stmt(lex);
-      ret = NmAST_GenWhile(lex->current->sym.pos, ret, guard, NULL, TRUE);
+      ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, TRUE);
     }
     /*
      * XXX expr ';'
      */
-    else endStmt(lex);
+    else if (!lex->eos) endStmt(lex);
   }
 
-  /* if ret is NULL right here, it means there was some error above
-   * so let's just gently do nothing */
-  if (!ret)
-    ret = NmAST_GenNop(savedpos);
+  /* this logic probably could've been done better */
+  if (lex->eos && !ret){
+    return NULL;
+  } else {
+    /* if ret is NULL right here, it means there was some error above
+     * so let's just gently do nothing */
+    if (!ret && !lex->eos)
+      ret = NmAST_GenNop(savedpos);
 
-  ret = NmAST_GenStmt(ret->pos, ret);
+    ret = NmAST_GenStmt(ret->pos, ret);
+  }
+
   /* set the previous statement's "next", but only if it's previous value is
    * different than NULL */
   if (prev_stmt)
@@ -1081,6 +1096,10 @@ static Node *block(LexerState *lex)
   while (!NmLexer_Peek(lex, SYM_RMUSTASHE) && !NmLexer_Peek(lex, SYM_EOS)){
     Statement *new_stmt = NmMem_Malloc(sizeof(Statement));
     new_stmt->stmt = stmt(lex);
+    if (new_stmt->stmt == NULL){
+      NmMem_Free(new_stmt);
+      break;
+    }
     /* append that statement to the statements of the block */
     /*   the list is empty */
     if (!new_block->head && !new_block->tail){
@@ -1136,12 +1155,19 @@ Node *NmParser_ParseFile(char *fname)
     exit(EXIT_FAILURE);
   }
   fbuffer[flen - 1] = '\0';
+  /* initialize */
   lex.is_file = TRUE;
   lex.source = fname;
   lex.content = fbuffer;
-  NmLexer_Lex(&lex);
+  lex.savecontent = fbuffer;
+  lex.line = 1;
+  lex.column = 1;
+  lex.saveline = 1;
+  lex.savecolumn = 1;
+  lex.current.pos.line = 1;
+  lex.current.pos.column = 1;
+  lex.eos = FALSE;
   nodest = block(&lex);
-  NmLexer_Destroy(&lex);
   /* free the buffer */
   NmMem_Free(fbuffer);
   /* close the file handle */
@@ -1164,9 +1190,15 @@ Node *NmParser_ParseString(char *string)
   lex.is_file = FALSE;
   lex.source = string;
   lex.content = string;
-  NmLexer_Lex(&lex);
+  lex.savecontent = string;
+  lex.line = 1;
+  lex.column = 1;
+  lex.saveline = 1;
+  lex.savecolumn = 1;
+  lex.current.pos.line = 1;
+  lex.current.pos.column = 1;
+  lex.eos = FALSE;
   nodest = block(&lex);
-  NmLexer_Destroy(&lex);
 
   return nodest;
 }

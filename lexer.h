@@ -100,36 +100,29 @@ struct Symbol {
   struct Pos pos;
 };
 
-struct SymbolsList {
-  struct Symbol sym;
-  struct SymbolsList *next;
-  struct SymbolsList *prev;
-};
-
 struct LexerState {
   BOOL is_file; /* either file or a string */
   char *source; /* name of the files name */
   char *content; /* contents of the file */
+  char *savecontent;
   unsigned line;
   unsigned column;
-  struct SymbolsList *head;
-  struct SymbolsList *tail;
-  struct SymbolsList *current;
+  unsigned saveline;
+  unsigned savecolumn;
+  struct Symbol current;
+  BOOL eos;
 };
 
 typedef struct Pos Pos;
 typedef enum SymbolType SymbolType;
 typedef struct Symbol Symbol;
-typedef struct SymbolsList SymbolsList;
 typedef struct LexerState LexerState;
 
-void NmLexer_Lex(LexerState *);
-void NmLexer_Destroy(LexerState *);
-
-BOOL NmLexer_Peek(LexerState *lex, SymbolType);
-BOOL NmLexer_Accept(LexerState *lex, SymbolType);
-void NmLexer_Force(LexerState *lex, SymbolType);
-void NmLexer_Skip(LexerState *lex);
+Symbol NmLexer_Fetch(LexerState *);
+BOOL NmLexer_Peek(LexerState *, SymbolType);
+BOOL NmLexer_Accept(LexerState *, SymbolType);
+Symbol NmLexer_Force(LexerState *, SymbolType);
+void NmLexer_Skip(LexerState *);
 
 const char *symToS(SymbolType type);
 

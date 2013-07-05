@@ -73,15 +73,13 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
   va_start(vl, msg);
 
   if (lex->is_file){
-    fprintf(stderr, "In file %s: ", NmScope_GetCurr()->name);
+    fprintf(stderr, "In file %s: ", lex->source);
   } else {
-    fprintf(stderr, "In string \"%s\": ", NmScope_GetCurr()->name);
+    fprintf(stderr, "In string \"%s\": ", lex->source);
   }
 
   vfprintf(stderr, msg, vl);
-  if (lex->current){
-    fprintf(stderr, " at line %u in column %u", lex->current->sym.pos.line, lex->current->sym.pos.column);
-  }
+  fprintf(stderr, " at line %u in column %u", lex->current.pos.line, lex->current.pos.column);
   fprintf(stderr, "\n");
   va_end(vl);
 }

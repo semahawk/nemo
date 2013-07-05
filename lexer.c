@@ -51,7 +51,7 @@
 
 /* Indicates if the lexing things are just after the "fun" keyword.
  * It is set to TRUE right after the keyword "fun" was encountered and set to
- * FALSE after the first left mustache ('{') was encountered.
+ * FALSE after the first left mustache ('{') or the semicolon (';') was encountered.
  */
 BOOL right_after_fun = FALSE;
 
@@ -75,532 +75,455 @@ static struct Keyword {
 };
 typedef struct Keyword Keyword;
 
-/*
- * append a symbol of a given <type>
- */
-static void append(LexerState *lex, SymbolType type)
+static inline void new(LexerState *lex, Symbol *new, SymbolType type)
 {
-  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
-  NmDebug_Lexer(lex, type);
   /* initialize */
-  new->sym.type = type;
-  new->sym.pos.line = lex->line;
-  new->sym.pos.column = lex->column;
-  /* append it */
-  /*   the list is empty */
-  if (!lex->head && !lex->tail){
-    new->next = lex->head;
-    new->prev = lex->tail;
-    lex->head = new;
-    lex->tail = new;
-    lex->current = new;
-  /*   its not empty */
-  } else {
-    new->next = lex->head->next;
-    lex->head->next = new;
-    new->prev = lex->head;
-    lex->head = new;
-  }
+  new->type = type;
+  new->pos.line = lex->line;
+  new->pos.column = lex->column;
 }
 
-static void appendInt(LexerState *lex, int i)
+static inline void newInt(LexerState *lex, Symbol *new, int i)
 {
-  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
-  NmDebug_LexerInt(lex, SYM_INTEGER, i);
   /* initialize */
-  new->sym.type = SYM_INTEGER;
-  new->sym.pos.line = lex->line;
-  new->sym.pos.column = lex->column;
-  new->sym.value.i = i;
-  /* append it */
-  /*   the list is empty */
-  if (!lex->head && !lex->tail){
-    new->next = lex->head;
-    new->prev = lex->tail;
-    lex->head = new;
-    lex->tail = new;
-    lex->current = new;
-  /*   its not empty */
-  } else {
-    new->next = lex->head->next;
-    lex->head->next = new;
-    new->prev = lex->head;
-    lex->head = new;
-  }
+  new->type = SYM_INTEGER;
+  new->pos.line = lex->line;
+  new->pos.column = lex->column;
+  new->value.i = i;
 }
 
-static void appendFloat(LexerState *lex, double f)
+static inline void newFloat(LexerState *lex, Symbol *new, double f)
 {
-  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
-  NmDebug_LexerFloat(lex, SYM_FLOAT, f);
   /* initialize */
-  new->sym.type = SYM_FLOAT;
-  new->sym.pos.line = lex->line;
-  new->sym.pos.column = lex->column;
-  new->sym.value.f = f;
-  /* append it */
-  /*   the list is empty */
-  if (!lex->head && !lex->tail){
-    new->next = lex->head;
-    new->prev = lex->tail;
-    lex->head = new;
-    lex->tail = new;
-    lex->current = new;
-  /*   its not empty */
-  } else {
-    new->next = lex->head->next;
-    lex->head->next = new;
-    new->prev = lex->head;
-    lex->head = new;
-  }
+  new->type = SYM_FLOAT;
+  new->pos.line = lex->line;
+  new->pos.column = lex->column;
+  new->value.f = f;
 }
 
-static void appendStr(LexerState *lex, SymbolType type, char *s)
+static inline void newStr(LexerState *lex, Symbol *new, SymbolType type, char *s)
 {
-  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
-  NmDebug_LexerStr(lex, type, s);
   /* initialize */
-  new->sym.type = type;
-  new->sym.pos.line = lex->line;
-  new->sym.pos.column = lex->column;
-  new->sym.value.s = NmMem_Strdup(s);
-  /* append it */
-  /*   the list is empty */
-  if (!lex->head && !lex->tail){
-    new->next = lex->head;
-    new->prev = lex->tail;
-    lex->head = new;
-    lex->tail = new;
-    lex->current = new;
-  /*   its not empty */
-  } else {
-    new->next = lex->head->next;
-    lex->head->next = new;
-    new->prev = lex->head;
-    lex->head = new;
-  }
+  new->type = type;
+  new->pos.line = lex->line;
+  new->pos.column = lex->column;
+  new->value.s = NmMem_Strdup(s);
 }
 
-static void appendChar(LexerState *lex, SymbolType type, char c)
+static inline void newChar(LexerState *lex, Symbol *new, SymbolType type, char c)
 {
-  SymbolsList *new = NmMem_Malloc(sizeof(SymbolsList));
-  NmDebug_LexerChar(lex, type, c);
   /* initialize */
-  new->sym.type = type;
-  new->sym.pos.line = lex->line;
-  new->sym.pos.column = lex->column;
-  new->sym.value.c = c;
-  /* append it */
-  /*   the list is empty */
-  if (!lex->head && !lex->tail){
-    new->next = lex->head;
-    new->prev = lex->tail;
-    lex->head = new;
-    lex->tail = new;
-    lex->current = new;
-  /*   its not empty */
-  } else {
-    new->next = lex->head->next;
-    lex->head->next = new;
-    new->prev = lex->head;
-    lex->head = new;
-  }
+  new->type = type;
+  new->pos.line = lex->line;
+  new->pos.column = lex->column;
+  new->value.c = c;
 }
 
-static void NmLexer_Init(LexerState *lex)
+Symbol NmLexer_Fetch(LexerState *lex)
 {
-  lex->line    = 1;
-  lex->column  = 1;
-  lex->head    = NULL;
-  lex->tail    = NULL;
-  lex->current = NULL;
-}
-
-/*
- * clean after the lexers work
- */
-void NmLexer_Destroy(LexerState *lex)
-{
-  SymbolsList *p;
-  SymbolsList *next;
-
-  for (p = lex->tail; p != NULL; p = next){
-    next = p->next;
-    if (p->sym.type == SYM_NAME ||
-        p->sym.type == SYM_STRING){
-      NmMem_Free(p->sym.value.s);
-    }
-    NmMem_Free(p);
-  }
-}
-
-void NmLexer_Lex(LexerState *lex)
-{
-  char *p, *tmp;
-  int i = 0, found = 0;
+  char *tmp;
+  int i = 0;
+  BOOL found = TRUE;
   Keyword *keyword;
-  NmLexer_Init(lex);
-  /* iterate through the string, and append symbols to the symbols list */
-  for (p = lex->content; *p != '\0'; p++, i = 0){
-    /*
-     * XXX name / keyword
-     */
-    if (validForNameHead(*p)){
-      tmp = NmMem_Strdup(p);
-      /* fetch the name */
-      while (validForNameTail(*p)){
-        p++; i++;
-      }
-      p--;
-      *(tmp + i) = '\0';
-      /* see if its a keyword */
-      found = 0;
-      for (keyword = keywords; keyword->name != NULL; keyword++){
-        if (!strcmp(keyword->name, tmp)){
-          /* see if it's the "fun" keyword */
-          if (!strcmp(keyword->name, "fun"))
-            right_after_fun = TRUE;
-          append(lex, keyword->sym);
-          found = 1;
-          break;
-        }
-      }
-      /* it's not a keyword */
-      if (!found){
-        appendStr(lex, SYM_NAME, tmp);
-      }
-      NmMem_Free(tmp);
-      /* "i" is the length of the name */
-      lex->column += i;
-    }
-    /*
-     * XXX 2
-     */
-    else if (isdigit(*p)){
-      tmp = NmMem_Strdup(p);
+  Symbol sym;
+  char *p = lex->content;
+
+  /* watch out for the nulls */
+  if (*p == '\0'){
+    new(lex, &sym, SYM_EOS);
+    return sym;
+  }
+
+tryagain:
+  /* tokenizing {{{ */
+  /*
+   * XXX name / keyword
+   */
+  if (validForNameHead(*p)){
+    tmp = NmMem_Strdup(p);
+    /* fetch the name */
+    while (validForNameTail(*p)){
       p++; i++;
-      /* fetch the number */
-      while (isdigit(*p)){
-        p++; i++;
+    }
+    p--;
+    *(tmp + i) = '\0';
+    /* see if its a keyword */
+    found = 0;
+    for (keyword = keywords; keyword->name != NULL; keyword++){
+      if (!strcmp(keyword->name, tmp)){
+        /* see if it's the "fun" keyword */
+        if (!strcmp(keyword->name, "fun"))
+          right_after_fun = TRUE;
+        new(lex, &sym, keyword->sym);
+        found = 1;
+        break;
       }
+    }
+    /* it's not a keyword */
+    if (!found){
+      newStr(lex, &sym, SYM_NAME, tmp);
+    }
+    NmMem_Free(tmp);
+    /* "i" is the length of the name */
+    lex->column += i;
+  }
+  /*
+   * XXX 2
+   */
+  else if (isdigit(*p)){
+    tmp = NmMem_Strdup(p);
+    p++; i++;
+    /* fetch the number */
+    while (isdigit(*p)){
+      p++; i++;
+    }
+    /*
+     * XXX 2.
+     */
+    if (*p == '.'){
+      p++; i++;
       /*
-       * XXX 2.
+       * XXX 2.71
        */
-      if (*p == '.'){
-        p++; i++;
-        /*
-         * XXX 2.71
-         */
-        if (isdigit(*p)){
-          while (isdigit(*p)){
-            p++; i++;
-          }
-          *(tmp + i) = '\0';
-          appendFloat(lex, atof(tmp));
-        /*
-         * XXX it's just "2.", let's make it be 2.0
-         */
-        } else {
-          *(tmp + i) = '\0';
-          appendFloat(lex, atof(tmp));
+      if (isdigit(*p)){
+        while (isdigit(*p)){
+          p++; i++;
         }
-      } else {
-        appendInt(lex, atoi(tmp));
-      }
-      NmMem_Free(tmp);
-      p--;
-      lex->column += i;
-    }
-    else if (*p == '='){
+        *(tmp + i) = '\0';
+        newFloat(lex, &sym, atof(tmp));
       /*
-       * XXX '=='
-       */
-      if (*(p + 1) == '='){
-        append(lex, SYM_EQEQ);
-        lex->column += 2;
-        p++;
-      }
-      /*
-       * XXX '='
-       */
-      else {
-        append(lex, SYM_EQ);
-        lex->column++;
-      }
-    }
-    else if (*p == ' '){
-      lex->column++;
-    }
-    else if (*p == ';'){
-      /* it could've been a function declaration */
-      if (right_after_fun)
-        right_after_fun = FALSE;
-      append(lex, SYM_SEMICOLON);
-      lex->column++;
-    }
-    else if (*p == '+'){
-      /*
-       * XXX ++
-       */
-      if (*(p + 1) == '+'){
-        append(lex, SYM_PLUSPLUS);
-        lex->column += 2;
-        p++;
-      /*
-       * XXX +=
-       */
-      } else if (*(p + 1) == '='){
-        append(lex, SYM_PLUSEQ);
-        lex->column += 2;
-        p++;
-      /*
-       * XXX +
+       * XXX it's just "2.", let's make it be 2.0
        */
       } else {
-        append(lex, SYM_PLUS);
-        lex->column++;
+        *(tmp + i) = '\0';
+        newFloat(lex, &sym, atof(tmp));
       }
+    } else {
+      newInt(lex, &sym, atoi(tmp));
     }
-    else if (*p == '-'){
-      /*
-       * XXX -option
-       */
-      if (right_after_fun){
-        char name;
-        if (!isalpha(*(p + 1))){
-          NmError_Lex(lex, "option's name must be an alphanumeric");
-          Nm_Exit();
-        }
-        name = *(++p);
-        while (isalpha(*p++))
-          lex->column++;
-        p--;
-        lex->column--;
-        appendChar(lex, SYM_OPT, name);
-        /* skip over the '-' and the first character after that */
-        lex->column += 2;
-      }
-      else {
-        /*
-         * XXX --
-         */
-        if (*(p + 1) == '-'){
-          append(lex, SYM_MINUSMINUS);
-          lex->column += 2;
-          p++;
-        /*
-         * XXX -=
-         */
-        } else if (*(p + 1) == '='){
-          append(lex, SYM_MINUSEQ);
-          lex->column += 2;
-          p++;
-        /*
-         * XXX -
-         */
-        } else {
-          append(lex, SYM_MINUS);
-          lex->column++;
-        }
-      }
+    NmMem_Free(tmp);
+    p--;
+    lex->column += i;
+  }
+  else if (*p == '='){
+    /*
+     * XXX '=='
+     */
+    if (*(p + 1) == '='){
+      new(lex, &sym, SYM_EQEQ);
+      lex->column += 2;
+      p++;
     }
-    else if (*p == '*'){
-      /*
-       * XXX *=
-       */
-      if (*(p + 1) == '='){
-        append(lex, SYM_TIMESEQ);
-        lex->column += 2;
-        p++;
-      /*
-       * XXX *
-       */
-      } else {
-        append(lex, SYM_TIMES);
-        lex->column++;
-      }
-    }
-    else if (*p == '/'){
-      /*
-       * XXX /\* comment *\/
-       */
-      if (*(p + 1) == '*'){
-        p += 2;
-        for (;;){
-          if (*p == '\n'){
-            lex->line++;
-            lex->column = 1;
-          } else if (*p == '*' && *(p + 1) == '/'){
-            p += 2;
-            break;
-          }
-          p++;
-        }
-        p--;
-      /*
-       * XXX /=
-       */
-      } else if (*(p + 1) == '='){
-        append(lex, SYM_SLASHEQ);
-        lex->column += 2;
-        p++;
-      /*
-       * XXX /
-       */
-      } else {
-        append(lex, SYM_SLASH);
-        lex->column++;
-      }
-    }
-    else if (*p == '%'){
-      /*
-       * XXX %=
-       */
-      if (*(p + 1) == '='){
-        append(lex, SYM_MODULOEQ);
-        lex->column += 2;
-        p++;
-      /*
-       * XXX %
-       */
-      } else {
-        append(lex, SYM_PERCENT);
-        lex->column++;
-      }
-    }
-    else if (*p == ';'){
-      append(lex, SYM_SEMICOLON);
+    /*
+     * XXX '='
+     */
+    else {
+      new(lex, &sym, SYM_EQ);
       lex->column++;
     }
-    else if (*p == ','){
-      append(lex, SYM_COMMA);
-      lex->column++;
-    }
-    else if (*p == '('){
-      append(lex, SYM_LPAREN);
-      lex->column++;
-    }
-    else if (*p == ')'){
-      append(lex, SYM_RPAREN);
-      lex->column++;
-    }
-    else if (*p == '{'){
-      /* a function declaration is forced to have a block, so we can safely set
-       * the "right_after_fun" to FALSE here */
+  }
+  else if (*p == ' '){
+    lex->column++;
+    p++;
+    goto tryagain;
+  }
+  else if (*p == ';'){
+    /* it could've been a function declaration */
+    if (right_after_fun)
       right_after_fun = FALSE;
-      append(lex, SYM_LMUSTASHE);
-      lex->column++;
-    }
-    else if (*p == '}'){
-      append(lex, SYM_RMUSTASHE);
-      lex->column++;
-    }
-    else if (*p == '['){
-      append(lex, SYM_LBRACKET);
-      lex->column++;
-    }
-    else if (*p == ']'){
-      append(lex, SYM_RBRACKET);
-      lex->column++;
-    }
-    else if (*p == '<'){
-      /*
-       * XXX '<='
-       */
-      if (*(p + 1) == '='){
-        append(lex, SYM_LCHEVRONEQ);
-        lex->column += 2;
-        p++;
-      }
-      /*
-       * XXX '<'
-       */
-      else {
-        append(lex, SYM_LCHEVRON);
-        lex->column++;
-      }
-    }
-    else if (*p == '>'){
-      /*
-       * XXX '>='
-       */
-      if (*(p + 1) == '='){
-        append(lex, SYM_RCHEVRONEQ);
-        lex->column += 2;
-        p++;
-      }
-      /*
-       * XXX '>'
-       */
-      else {
-        append(lex, SYM_RCHEVRON);
-        lex->column++;
-      }
-    }
-    else if (*p == '!'){
-      /*
-       * XXX '!='
-       */
-      if (*(p + 1) == '='){
-        append(lex, SYM_BANGEQ);
-        lex->column += 2;
-        p++;
-      }
-      /*
-       * XXX '!'
-       */
-      else {
-        append(lex, SYM_BANG);
-        lex->column++;
-      }
-    }
-    else if (*p == '?'){
-      append(lex, SYM_QUESTION);
-      lex->column++;
-    }
-    else if (*p == ':'){
-      append(lex, SYM_COLON);
-      lex->column++;
-    }
-    else if (*p == '#'){
-      /* skip over the whole thing */
-      while (*p++ != '\n');
-      p--;
-      lex->line++;
-      lex->column = 1;
-    }
+    new(lex, &sym, SYM_SEMICOLON);
+    lex->column++;
+  }
+  else if (*p == '+'){
     /*
-     * XXX "string"
+     * XXX ++
      */
-    else if (*p == '"'){
-      p++; i++;
-      tmp = NmMem_Strdup(p);
+    if (*(p + 1) == '+'){
+      new(lex, &sym, SYM_PLUSPLUS);
+      lex->column += 2;
+      p++;
+    /*
+     * XXX +=
+     */
+    } else if (*(p + 1) == '='){
+      new(lex, &sym, SYM_PLUSEQ);
+      lex->column += 2;
+      p++;
+    /*
+     * XXX +
+     */
+    } else {
+      new(lex, &sym, SYM_PLUS);
       lex->column++;
-      while (*p != '"'){
+    }
+  }
+  else if (*p == '-'){
+    /*
+     * XXX -option
+     */
+    if (right_after_fun){
+      char name;
+      if (!isalpha(*(p + 1))){
+        NmError_Lex(lex, "option's name must be an alphanumeric");
+        Nm_Exit();
+      }
+      name = *(++p);
+      while (isalpha(*p++))
+        lex->column++;
+      p--;
+      lex->column--;
+      newChar(lex, &sym, SYM_OPT, name);
+      /* skip over the '-' and the first character after that */
+      lex->column += 2;
+    }
+    else {
+      /*
+       * XXX --
+       */
+      if (*(p + 1) == '-'){
+        new(lex, &sym, SYM_MINUSMINUS);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX -=
+       */
+      } else if (*(p + 1) == '='){
+        new(lex, &sym, SYM_MINUSEQ);
+        lex->column += 2;
+        p++;
+      /*
+       * XXX -
+       */
+      } else {
+        new(lex, &sym, SYM_MINUS);
+        lex->column++;
+      }
+    }
+  }
+  else if (*p == '*'){
+    /*
+     * XXX *=
+     */
+    if (*(p + 1) == '='){
+      new(lex, &sym, SYM_TIMESEQ);
+      lex->column += 2;
+      p++;
+    /*
+     * XXX *
+     */
+    } else {
+      new(lex, &sym, SYM_TIMES);
+      lex->column++;
+    }
+  }
+  else if (*p == '/'){
+    /*
+     * XXX /\* comment *\/
+     */
+    if (*(p + 1) == '*'){
+      p += 2;
+      for (;;){
         if (*p == '\n'){
           lex->line++;
           lex->column = 1;
+        } else if (*p == '*' && *(p + 1) == '/'){
+          p += 2;
+          break;
         }
-        p++; i++;
-        lex->column++;
+        p++;
       }
-      p--; i--;
-      *(tmp + i) = '\0';
-      /* skip over the '"' */
+      /*p--;*/
+      goto tryagain;
+    /*
+     * XXX /=
+     */
+    } else if (*(p + 1) == '='){
+      new(lex, &sym, SYM_SLASHEQ);
+      lex->column += 2;
       p++;
-      appendStr(lex, SYM_STRING, tmp);
-      NmMem_Free(tmp);
-    }
-    else if (*p == '\n'){
-      lex->line++;
-      lex->column = 1;
-    }
-    else {
-      printf("unknown character %c\n", *p);
+    /*
+     * XXX /
+     */
+    } else {
+      new(lex, &sym, SYM_SLASH);
       lex->column++;
     }
   }
-  append(lex, SYM_EOS);
+  else if (*p == '%'){
+    /*
+     * XXX %=
+     */
+    if (*(p + 1) == '='){
+      new(lex, &sym, SYM_MODULOEQ);
+      lex->column += 2;
+      p++;
+    /*
+     * XXX %
+     */
+    } else {
+      new(lex, &sym, SYM_PERCENT);
+      lex->column++;
+    }
+  }
+  else if (*p == ';'){
+    new(lex, &sym, SYM_SEMICOLON);
+    lex->column++;
+  }
+  else if (*p == ','){
+    new(lex, &sym, SYM_COMMA);
+    lex->column++;
+  }
+  else if (*p == '('){
+    new(lex, &sym, SYM_LPAREN);
+    lex->column++;
+  }
+  else if (*p == ')'){
+    new(lex, &sym, SYM_RPAREN);
+    lex->column++;
+  }
+  else if (*p == '{'){
+    /* a function declaration is forced to have a block, so we can safely set
+     * the "right_after_fun" to FALSE here */
+    right_after_fun = FALSE;
+    new(lex, &sym, SYM_LMUSTASHE);
+    lex->column++;
+  }
+  else if (*p == '}'){
+    new(lex, &sym, SYM_RMUSTASHE);
+    lex->column++;
+  }
+  else if (*p == '['){
+    new(lex, &sym, SYM_LBRACKET);
+    lex->column++;
+  }
+  else if (*p == ']'){
+    new(lex, &sym, SYM_RBRACKET);
+    lex->column++;
+  }
+  else if (*p == '<'){
+    /*
+     * XXX '<='
+     */
+    if (*(p + 1) == '='){
+      new(lex, &sym, SYM_LCHEVRONEQ);
+      lex->column += 2;
+      p++;
+    }
+    /*
+     * XXX '<'
+     */
+    else {
+      new(lex, &sym, SYM_LCHEVRON);
+      lex->column++;
+    }
+  }
+  else if (*p == '>'){
+    /*
+     * XXX '>='
+     */
+    if (*(p + 1) == '='){
+      new(lex, &sym, SYM_RCHEVRONEQ);
+      lex->column += 2;
+      p++;
+    }
+    /*
+     * XXX '>'
+     */
+    else {
+      new(lex, &sym, SYM_RCHEVRON);
+      lex->column++;
+    }
+  }
+  else if (*p == '!'){
+    /*
+     * XXX '!='
+     */
+    if (*(p + 1) == '='){
+      new(lex, &sym, SYM_BANGEQ);
+      lex->column += 2;
+      p++;
+    }
+    /*
+     * XXX '!'
+     */
+    else {
+      new(lex, &sym, SYM_BANG);
+      lex->column++;
+    }
+  }
+  else if (*p == '?'){
+    new(lex, &sym, SYM_QUESTION);
+    lex->column++;
+  }
+  else if (*p == ':'){
+    new(lex, &sym, SYM_COLON);
+    lex->column++;
+  }
+  else if (*p == '#'){
+    /* skip over the whole thing */
+    while (*p != '\n')
+      p++;
+    p++;
+    lex->line++;
+    lex->column = 1;
+    goto tryagain;
+  }
+  /*
+   * XXX "string"
+   */
+  else if (*p == '"'){
+    p++; i++;
+    tmp = NmMem_Strdup(p);
+    lex->column++;
+    while (*p != '"'){
+      if (*p == '\n'){
+        lex->line++;
+        lex->column = 1;
+      }
+      p++; i++;
+      lex->column++;
+    }
+    p--; i--;
+    *(tmp + i) = '\0';
+    /* skip over the '"' */
+    p++;
+    newStr(lex, &sym, SYM_STRING, tmp);
+    NmMem_Free(tmp);
+  }
+  else if (*p == '\n'){
+    p++;
+    lex->line++;
+    lex->column = 1;
+    goto tryagain;
+  }
+  else if (*p == '\0'){
+    new(lex, &sym, SYM_EOS);
+    return sym;
+  }
+  else {
+    printf("unknown character 0x%02x %d '%c' in line %u, column %u\n", *p, *p, *p, lex->line, lex->column);
+    lex->column++;
+    goto tryagain;
+  }
+  /* }}} */
+
+  lex->content = ++p;
+
+  return sym;
+}
+
+static inline void fallback(LexerState *lex)
+{
+  lex->line    = lex->saveline;
+  lex->column  = lex->savecolumn;
+  lex->content = lex->savecontent;
+}
+
+static inline void advance(LexerState *lex)
+{
+  lex->saveline    = lex->line;
+  lex->savecolumn  = lex->column;
+  lex->savecontent = lex->content;
 }
 
 /*
@@ -608,22 +531,22 @@ void NmLexer_Lex(LexerState *lex)
  * @desc    if the next symbol is not of given <type>, throw an error
  *          grammar is baad
  */
-void NmLexer_Force(LexerState *lex, SymbolType type)
+Symbol NmLexer_Force(LexerState *lex, SymbolType type)
 {
-  if (lex->current == NULL){
-    if (lex->is_file){
-      NmError_Lex(lex, "unexpected end of file (force)");
-    } else {
-      NmError_Lex(lex, "unexpected end of string (force)");
-    }
-    exit(EXIT_FAILURE);
-  }
+  Symbol sym = NmLexer_Fetch(lex);
 
-  if (lex->current->sym.type != type){
-    NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(lex->current->sym.type));
+  /*if (sym.type == SYM_EOS && type != SYM_EOS){*/
+    /*NmError_Lex(lex, "unexpected <EOS>, %s expected (force)", symToS(type));*/
+    /*exit(EXIT_FAILURE);*/
+  /*}*/
+
+  if (sym.type != type){
+    NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(sym.type));
     exit(EXIT_FAILURE);
   } else {
-    lex->current = lex->current->next;
+    advance(lex);
+    lex->current = sym;
+    return sym;
   }
 }
 
@@ -634,19 +557,24 @@ void NmLexer_Force(LexerState *lex, SymbolType type)
  */
 BOOL NmLexer_Accept(LexerState *lex, SymbolType type)
 {
-  if (lex->current == NULL){
-    if (lex->is_file){
-      NmError_Lex(lex, "unexpected end of file (accept)");
-    } else {
-      NmError_Lex(lex, "unexpected end of string (accept)");
-    }
-    exit(EXIT_FAILURE);
-  }
+  Symbol sym = NmLexer_Fetch(lex);
 
-  if (lex->current->sym.type == type){
-    lex->current = lex->current->next;
+  /*if (sym.type == SYM_EOS){*/
+    /*if (lex->is_file){*/
+      /*NmError_Lex(lex, "unexpected end of file (accept)");*/
+    /*} else {*/
+      /*NmError_Lex(lex, "unexpected end of string (accept)");*/
+    /*}*/
+    /*exit(EXIT_FAILURE);*/
+  /*}*/
+
+  if (sym.type == type){
+    advance(lex);
+    lex->current = sym;
     return TRUE;
   }
+
+  fallback(lex);
 
   return FALSE;
 }
@@ -657,8 +585,14 @@ BOOL NmLexer_Accept(LexerState *lex, SymbolType type)
  */
 BOOL NmLexer_Peek(LexerState *lex, SymbolType type)
 {
-  if ((lex->current != NULL) && (lex->current->sym.type == type))
+  Symbol sym = NmLexer_Fetch(lex);
+
+  fallback(lex);
+
+  if (sym.type == type){
+    lex->current = sym;
     return TRUE;
+  }
 
   return FALSE;
 }
@@ -669,7 +603,9 @@ BOOL NmLexer_Peek(LexerState *lex, SymbolType type)
  */
 void NmLexer_Skip(LexerState *lex)
 {
-  if (lex->current == NULL){
+  Symbol sym = NmLexer_Fetch(lex);
+
+  if (sym.type == SYM_EOS){
     if (lex->is_file){
       NmError_Lex(lex, "unexpected end of file (skip)");
     } else {
@@ -678,7 +614,7 @@ void NmLexer_Skip(LexerState *lex)
     exit(EXIT_FAILURE);
   }
 
-  lex->current = lex->current->next;
+  advance(lex);
 }
 
 const char *symToS(SymbolType type)
