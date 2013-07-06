@@ -124,10 +124,10 @@ NmObject *NmInt_Minus(NmObject *target)
 
 NmObject *NmInt_Negate(NmObject *target)
 {
-  if (NmObject_Boolish(target) == FALSE)
-    return NmInt_New(TRUE);
+  if (NmObject_Boolish(target) == false)
+    return NmInt_New(true);
   else
-    return NmInt_New(FALSE);
+    return NmInt_New(false);
 }
 
 NmObject *NmInt_Increment(NmObject *target)

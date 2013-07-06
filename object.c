@@ -89,7 +89,7 @@ NmObject *NmObject_Dup(NmObject *ob)
 NmObject *NmObject_TypeToS(NmObjectType type)
 {
   NmObject *ret = NmString_New("");
-  BOOL first = TRUE;
+  bool first = true;
 
   unsigned num = 7;
   for (unsigned i = 0; i < 7; i++)
@@ -101,7 +101,7 @@ NmObject *NmObject_TypeToS(NmObjectType type)
     if (type & (1 << i)){
       if (!first)
         ret = NmString_Add(ret, NmString_New(" or "));
-      first = FALSE;
+      first = false;
       switch (type & (1 << i)){
         case OT_NULL:
           ret = NmString_Add(ret, NmString_New("null"));
@@ -135,7 +135,7 @@ NmObject *NmObject_TypeToS(NmObjectType type)
  *
  * In Nemo there is no "bool" type as is.
  */
-BOOL NmObject_Boolish(NmObject *ob)
+bool NmObject_Boolish(NmObject *ob)
 {
   /*
    * null, 0, 0.0, empty string ("") and an empty array ([]) are false
@@ -143,29 +143,29 @@ BOOL NmObject_Boolish(NmObject *ob)
    */
   switch (ob->type){
     case OT_NULL:
-      return FALSE;
+      return false;
     case OT_INTEGER:
       if (NmInt_VAL(ob) == 0)
-        return FALSE;
+        return false;
       else
-        return TRUE;
+        return true;
     case OT_FLOAT:
       if (NmFloat_VAL(ob) == 0.0f)
-        return FALSE;
+        return false;
       else
-        return TRUE;
+        return true;
     case OT_STRING:
       if (!strcmp(NmString_VAL(ob), ""))
-        return FALSE;
+        return false;
       else
-        return TRUE;
+        return true;
     case OT_ARRAY:
       if (NmArray_NMEMB(ob) == 0)
-        return FALSE;
+        return false;
       else
-        return TRUE;
+        return true;
     default:
-      return FALSE;
+      return false;
   }
 }
 

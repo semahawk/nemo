@@ -13,15 +13,12 @@
 #include <assert.h>
 #include <errno.h>
 
-#ifdef HAVE_STDBOOL_H
+#ifdef HAVE_STDbool_H
 #  include <stdbool.h>
-#  define BOOL  bool
-#  define TRUE  true
-#  define FALSE false
 #else
-#  define BOOL  short
-#  define TRUE  1
-#  define FALSE 0
+#  define bool short
+#  define true 1
+#  define false 0
 #endif
 
 /* order here is quite significant */
@@ -63,11 +60,11 @@ void Nm_Exit();
 
 /* TODO: these function names may be confusing */
 void Nm_InitModule(NmModuleFuncs *);
-BOOL Nm_UseModule(char *name, char *path);
-BOOL Nm_IncludeModule(char *name, char *path);
+bool Nm_UseModule(char *name, char *path);
+bool Nm_IncludeModule(char *name, char *path);
 void NmBuiltin_Init(void);
 void NmDev_Init(void);
-BOOL NmModule_WasIncluded(char *name);
+bool NmModule_WasIncluded(char *name);
 
 #endif /* NEMO_H */
 

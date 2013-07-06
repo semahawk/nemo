@@ -147,7 +147,7 @@ void NmNull_Print(FILE *, NmObject *);
 NmObject *NmObject_New(const char *);
 void NmObject_Destroy(NmObject *);
 void NmObject_Tidyup(void);
-BOOL NmObject_Boolish(NmObject *);
+bool NmObject_Boolish(NmObject *);
 NmObject *NmObject_Dup(NmObject *);
 NmObject *NmObject_TypeToS(NmObjectType);
 

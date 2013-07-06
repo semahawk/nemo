@@ -57,7 +57,7 @@
 #include "nemo.h"
 #include "config.h"
 
-static BOOL running_interactive = FALSE;
+static bool running_interactive = false;
 static int nmInteractive(void);
 
 /* list of all modules that were included */
@@ -128,9 +128,9 @@ int main(int argc, char *argv[])
   char input[255];
   /* used for getopt */
   int c;
-  /* if the --eval flag was supplied, this gets set to TRUE and the interactive
+  /* if the --eval flag was supplied, this gets set to true and the interactive
    * mode is not run when an argument was not supplied */
-  BOOL met_e_flag = FALSE;
+  bool met_e_flag = false;
 
   /* fetch the builtin functions */
   NmBuiltin_Init();
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
       }
       case 'e':
       {
-        met_e_flag = TRUE;
+        met_e_flag = true;
         /* parse the string */
         Node *node = NmParser_ParseString(optarg);
         /* execute the nodes */
@@ -256,7 +256,7 @@ static int nmInteractive(void)
   /* result of the executed input */
   NmObject *ob;
   /* set the running_interactive flag */
-  running_interactive = TRUE;
+  running_interactive = true;
 
   printf("Welcome to the Nemo " VERSION " interactive!\n");
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
@@ -310,9 +310,9 @@ void Nm_InitModule(NmModuleFuncs *funcs)
   }
 }
 
-BOOL Nm_UseModule(char *name, char *path)
+bool Nm_UseModule(char *name, char *path)
 {
-  BOOL ret;
+  bool ret;
 
   NmScope_New(name);
   ret = Nm_IncludeModule(name, path);
@@ -328,11 +328,11 @@ BOOL Nm_UseModule(char *name, char *path)
  *   - ./
  *   - /usr/lib/nemo
  *
- * Return FALSE if the library couldn't be found
- *        TRUE  if the library loaded fine
+ * Return false if the library couldn't be found
+ *        true  if the library loaded fine
  *
  */
-BOOL Nm_IncludeModule(char *name, char *path)
+bool Nm_IncludeModule(char *name, char *path)
 {
   /*
    * NOTE: both macros goto included which is at the very end of the function
@@ -348,7 +348,7 @@ BOOL Nm_IncludeModule(char *name, char *path)
   handle = dlopen(PATH, RTLD_LAZY); \
   if (!handle){ \
     NmError_SetString("%s", dlerror()); \
-    return FALSE; \
+    return false; \
   } \
 \
   dlerror(); /* clear any existing error */ \
@@ -357,7 +357,7 @@ BOOL Nm_IncludeModule(char *name, char *path)
 \
   if ((error = dlerror()) != NULL){ \
     NmError_SetString("%s", error); \
-    return FALSE; \
+    return false; \
   } \
 \
   lib_init(); \
@@ -447,28 +447,28 @@ BOOL Nm_IncludeModule(char *name, char *path)
   else
     NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
 
-  return FALSE;
+  return false;
 
 included: {
     free(cwd); /* getcwd does malloc */
     /* add the modules name to the included list */
     included_new(name);
-    return TRUE;
+    return true;
   }
 }
 
 /*
- * Searches the list of included modules and return TRUE if encountered one
- * called <name>, FALSE if not
+ * Searches the list of included modules and return true if encountered one
+ * called <name>, false if not
  */
-BOOL NmModule_WasIncluded(char *name)
+bool NmModule_WasIncluded(char *name)
 {
   for (Included *module = included; module != NULL; module = module->next)
     if (!strcmp(name, module->name)){
-      return TRUE;
+      return true;
     }
 
-  return FALSE;
+  return false;
 }
 
 /*

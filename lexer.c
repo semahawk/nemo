@@ -117,7 +117,7 @@ Symbol NmLexer_Fetch(LexerState *lex)
 {
   char *tmp;
   int i = 0;
-  BOOL found = TRUE;
+  bool found = true;
   Keyword *keyword;
   Symbol sym;
   char *p = lex->content;
@@ -548,26 +548,26 @@ Symbol NmLexer_Force(LexerState *lex, SymbolType type)
  * @desc    if the next symbol is of given <type> return true, and skip over it
  *          else return false
  */
-BOOL NmLexer_Accept(LexerState *lex, SymbolType type)
+bool NmLexer_Accept(LexerState *lex, SymbolType type)
 {
   Symbol sym = NmLexer_Fetch(lex);
 
   if (sym.type == type){
     advance(lex);
     lex->current = sym;
-    return TRUE;
+    return true;
   }
 
   fallback(lex);
 
-  return FALSE;
+  return false;
 }
 
 /*
  * @name    NmLexer_Peek
  * @desc    check if the next symbol on the list is of a given <type>
  */
-BOOL NmLexer_Peek(LexerState *lex, SymbolType type)
+bool NmLexer_Peek(LexerState *lex, SymbolType type)
 {
   Symbol sym = NmLexer_Fetch(lex);
 
@@ -575,10 +575,10 @@ BOOL NmLexer_Peek(LexerState *lex, SymbolType type)
 
   if (sym.type == type){
     lex->current = sym;
-    return TRUE;
+    return true;
   }
 
-  return FALSE;
+  return false;
 }
 
 /*

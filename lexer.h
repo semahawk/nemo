@@ -101,7 +101,7 @@ struct Symbol {
 };
 
 struct LexerState {
-  BOOL is_file; /* either file or a string */
+  bool is_file; /* either file or a string */
   char *source; /* name of the files name */
   char *content; /* contents of the file */
   char *savecontent;
@@ -110,17 +110,17 @@ struct LexerState {
   unsigned saveline;
   unsigned savecolumn;
   struct Symbol current;
-  BOOL eos;
+  bool eos;
   /* Indicates if the lexing things are just after the "fun" keyword.
-   * It is set to TRUE right after the keyword "fun" was encountered and set to
-   * FALSE after the first left mustache ('{') or the semicolon (';') was encountered.
+   * It is set to true right after the keyword "fun" was encountered and set to
+   * false after the first left mustache ('{') or the semicolon (';') was encountered.
    */
-  BOOL right_after_fun;
+  bool right_after_fun;
   /* Indicates if the lexing things are after a function's name, preassumbly(?)
    * in a function call.
-   * It is set to TRUE right after that function name and set to FALSE when the
+   * It is set to true right after that function name and set to false when the
    * first non-option symbol was encountered */
-  BOOL right_after_funname;
+  bool right_after_funname;
 };
 
 typedef struct Pos Pos;
@@ -129,8 +129,8 @@ typedef struct Symbol Symbol;
 typedef struct LexerState LexerState;
 
 Symbol NmLexer_Fetch(LexerState *);
-BOOL NmLexer_Peek(LexerState *, SymbolType);
-BOOL NmLexer_Accept(LexerState *, SymbolType);
+bool NmLexer_Peek(LexerState *, SymbolType);
+bool NmLexer_Accept(LexerState *, SymbolType);
 Symbol NmLexer_Force(LexerState *, SymbolType);
 void NmLexer_Skip(LexerState *);
 

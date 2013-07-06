@@ -54,7 +54,7 @@ struct ErrorState {
   /* wheater one of the errors would cause the program to not be able to
    * continue execution/compilation;
    * yeah, errors would cause it */
-  BOOL should_exit;
+  bool should_exit;
   /* pointer to the first error on the list */
   struct Error *errors;
 };

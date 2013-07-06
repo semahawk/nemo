@@ -118,7 +118,7 @@ static Node *primary_expr(LexerState *lex)
     Node **params = NULL;
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
-    BOOL isafunc = FALSE;
+    bool isafunc = false;
     /* it could be a function's name, so let's check it out */
     /* search the C functions */
     for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
@@ -127,7 +127,7 @@ static Node *primary_expr(LexerState *lex)
         argc = cfunc->argc;
         optc = strlen(cfunc->optv);
         optv = cfunc->optv;
-        isafunc = TRUE;
+        isafunc = true;
         break;
       }
     }
@@ -138,7 +138,7 @@ static Node *primary_expr(LexerState *lex)
         argc = func->argc;
         optc = strlen(func->optv);
         optv = func->optv;
-        isafunc = TRUE;
+        isafunc = true;
         break;
       }
     }
@@ -164,7 +164,7 @@ static Node *primary_expr(LexerState *lex)
        * any arguments or options).
        * Although, if it was taking one argument, -4 would be given to it */
       if (optc > 0){
-        lex->right_after_funname = TRUE;
+        lex->right_after_funname = true;
         if (NmLexer_Peek(lex, SYM_OPT)){
           Symbol optsym = NmLexer_Force(lex, SYM_OPT);
           opts = optsym.value.s;
@@ -184,10 +184,10 @@ static Node *primary_expr(LexerState *lex)
             }
           }
         }
-        lex->right_after_funname = FALSE;
+        lex->right_after_funname = false;
       }
       NmDebug_Parser("(");
-      lex->right_after_funname = FALSE;
+      lex->right_after_funname = false;
       if (NmLexer_Peek(lex, SYM_LPAREN)){
         /* FIXME: if there are parenthesis there mustn't be more parameters
          *        passed than requested */
@@ -232,7 +232,7 @@ static Node *primary_expr(LexerState *lex)
    * XXX EOS
    */
   else if (NmLexer_Accept(lex, SYM_EOS)){
-    lex->eos = TRUE;
+    lex->eos = true;
     return NULL;
   }
   /*
@@ -922,13 +922,13 @@ static Node *stmt(LexerState *lex)
    */
   else if (NmLexer_Peek(lex, SYM_USE) ||
            NmLexer_Peek(lex, SYM_INCLUDE)){
-    BOOL use;
+    bool use;
     Pos savepos = lex->current.pos;
     if (NmLexer_Accept(lex, SYM_USE)){
-      use = TRUE;
+      use = true;
       NmDebug_Parser("use ");
     } else {
-      use = FALSE;
+      use = false;
       NmDebug_Parser("include ");
       NmLexer_Skip(lex);
     }
@@ -953,7 +953,7 @@ static Node *stmt(LexerState *lex)
    * XXX FUN NAME [OPT|NAME]* block
    */
   else if (NmLexer_Accept(lex, SYM_FUN)){
-    lex->right_after_fun = TRUE;
+    lex->right_after_fun = true;
     unsigned argc = 0;
     unsigned optc = 0;
     char **argv = NmMem_Malloc(sizeof(char *) * 1);
@@ -982,12 +982,12 @@ static Node *stmt(LexerState *lex)
     optv[optc] = '\0';
 
     if (NmLexer_Accept(lex, SYM_SEMICOLON)){
-      lex->right_after_fun = FALSE;
+      lex->right_after_fun = false;
       NmDebug_Parser(";\n");
       body = NULL;
     } else {
       NmLexer_Force(lex, SYM_LMUSTASHE);
-      lex->right_after_fun = FALSE;
+      lex->right_after_fun = false;
       NmDebug_Parser("{\n");
       body = block(lex);
       NmLexer_Force(lex, SYM_RMUSTASHE);
@@ -1009,7 +1009,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, FALSE);
+    ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, false);
   }
   /*
    * XXX UNLESS stmt stmt
@@ -1025,7 +1025,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, TRUE);
+    ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, true);
   }
   /*
    * XXX WHILE stmt stmt
@@ -1041,7 +1041,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, FALSE);
+    ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, false);
   }
   /*
    * XXX UNTIL stmt stmt
@@ -1057,7 +1057,7 @@ static Node *stmt(LexerState *lex)
       NmDebug_Parser("else ");
       elsee = stmt(lex);
     }
-    ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, TRUE);
+    ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, true);
   }
   /*
    * XXX '{' block '}'
@@ -1075,7 +1075,7 @@ static Node *stmt(LexerState *lex)
     if (NmLexer_Accept(lex, SYM_IF)){
       NmDebug_Parser("if ");
       guard = stmt(lex);
-      ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, FALSE);
+      ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, false);
     }
     /*
      * XXX expr UNLESS stmt
@@ -1083,7 +1083,7 @@ static Node *stmt(LexerState *lex)
     else if (NmLexer_Accept(lex, SYM_UNLESS)){
       NmDebug_Parser("unless ");
       guard = stmt(lex);
-      ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, TRUE);
+      ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, true);
     }
     /*
      * XXX expr WHILE stmt
@@ -1091,7 +1091,7 @@ static Node *stmt(LexerState *lex)
     else if (NmLexer_Accept(lex, SYM_WHILE)){
       NmDebug_Parser("while ");
       guard = stmt(lex);
-      ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, FALSE);
+      ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, false);
     }
     /*
      * XXX expr UNTIL stmt
@@ -1099,7 +1099,7 @@ static Node *stmt(LexerState *lex)
     else if (NmLexer_Accept(lex, SYM_UNTIL)){
       NmDebug_Parser("until ");
       guard = stmt(lex);
-      ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, TRUE);
+      ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, true);
     }
     /*
      * XXX expr ';'
@@ -1184,9 +1184,9 @@ static Node *block(LexerState *lex)
   lex.savecolumn = 1; \
   lex.current.pos.line  = 1; \
   lex.current.pos.column = 1; \
-  lex.eos = FALSE; \
-  lex.right_after_fun = FALSE; \
-  lex.right_after_funname = FALSE;
+  lex.eos = false; \
+  lex.right_after_fun = false; \
+  lex.right_after_funname = false;
 
 /*
  * @name - NmParser_ParseFile
@@ -1219,7 +1219,7 @@ Node *NmParser_ParseFile(char *fname)
   }
   fbuffer[flen - 1] = '\0';
   /* initialize */
-  lex.is_file = TRUE;
+  lex.is_file = true;
   lex.source = fname;
   lex.content = fbuffer;
   lex.savecontent = fbuffer;
@@ -1244,7 +1244,7 @@ Node *NmParser_ParseString(char *string)
 {
   Node *nodest = NULL;
   LexerState lex;
-  lex.is_file = FALSE;
+  lex.is_file = false;
   lex.source = string;
   lex.content = string;
   lex.savecontent = string;

@@ -172,7 +172,7 @@ typedef struct {
   struct Node *elsee;
   /* ifs and unlesses are pretty much identical, and this is what
    * distinguishes them */
-  BOOL unless;
+  bool unless;
 } Node_If;
 
 typedef struct {
@@ -182,7 +182,7 @@ typedef struct {
   struct Node *elsee;
   /* whiles and untils are pretty much identical, and this is what
    * distinguishes them */
-  BOOL until;
+  bool until;
 } Node_While;
 
 typedef struct {
@@ -199,7 +199,7 @@ typedef struct {
   NMNODE_HEAD;
   char *fname;
   char *custom_path;
-  BOOL use; /* true if it actually is an use, not an include */
+  bool use; /* true if it actually is an use, not an include */
 } Node_Include;
 
 typedef struct {
@@ -228,13 +228,13 @@ Node *NmAST_GenArray(Pos, Node **);
 Node *NmAST_GenName(Pos, char *);
 Node *NmAST_GenBinop(Pos, Node *, BinaryOp, Node *);
 Node *NmAST_GenUnop(Pos, Node *, UnaryOp);
-Node *NmAST_GenIf(Pos, Node *, Node *, Node *, BOOL);
-Node *NmAST_GenWhile(Pos, Node *, Node *, Node *, BOOL);
+Node *NmAST_GenIf(Pos, Node *, Node *, Node *, bool);
+Node *NmAST_GenWhile(Pos, Node *, Node *, Node *, bool);
 Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
 Node *NmAST_GenCall(Pos, char *, Node **, char *);
 Node *NmAST_GenStmt(Pos, Node *);
 Node *NmAST_GenFuncDef(Pos, char *, Node *, unsigned, unsigned, char **, char *);
-Node *NmAST_GenInclude(Pos, char *, char *, BOOL);
+Node *NmAST_GenInclude(Pos, char *, char *, bool);
 Node *NmAST_GenNop(Pos);
 
 NmObject *NmAST_ExecInt(Node *);

@@ -376,7 +376,7 @@ void NmAST_FreeArray(Node *n)
 Node *NmAST_GenName(Pos pos, char *name)
 {
   Node_Name *n = NmMem_Calloc(1, sizeof(Node_Name));
-  BOOL found = FALSE;
+  bool found = false;
 
   n->type = NT_NAME;
   n->name = NmMem_Strdup(name);
@@ -387,7 +387,7 @@ Node *NmAST_GenName(Pos pos, char *name)
   /* search for the variable */
   for (VariablesList *vars = NmScope_GetCurr()->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, name)){
-      found = TRUE;
+      found = true;
       break;
     }
   }
@@ -480,7 +480,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     Variable *var;
     VariablesList *p;
     char *name;
-    BOOL found = FALSE;
+    bool found = false;
     /* left-hand side of the assignment must be a name
      * (at least for now (30 Apr 2013)) */
     if (nc->left->type != NT_NAME){
@@ -491,7 +491,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     /* iterate through the variables */
     for (p = scope->globals; p != NULL; p = p->next){
       if (!strcmp(p->var->name, name)){
-        found = TRUE;
+        found = true;
         var = p->var;
         break;
       }
@@ -795,7 +795,7 @@ void NmAST_FreeUnop(Node *n)
  * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, BOOL unless)
+Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
 {
   Node_If *n = NmMem_Calloc(1, sizeof(Node_If));
 
@@ -824,7 +824,7 @@ NmObject *NmAST_ExecIf(Node *n)
   Node *guard = nc->guard;
   Node *body  = nc->body;
   Node *elsee = nc->elsee;
-  BOOL unless = nc->unless;
+  bool unless = nc->unless;
 
   if (unless)
     NmDebug_AST(n, "execute unless node");
@@ -888,7 +888,7 @@ void NmAST_FreeIf(Node *n)
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, BOOL until)
+Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, bool until)
 {
   Node_While *n = NmMem_Calloc(1, sizeof(Node_While));
 
@@ -917,7 +917,7 @@ NmObject *NmAST_ExecWhile(Node *n)
   Node *guard    = nc->guard;
   Node *body     = nc->body;
   Node *elsee    = nc->elsee;
-  BOOL until     = nc->until;
+  bool until     = nc->until;
 
   if (until)
     NmDebug_AST(n, "execute until node");
@@ -1360,7 +1360,7 @@ void NmAST_FreeFuncDef(Node *n)
  * @name - NmAST_GenInclude
  * @desc - creates a node that creates does the including thing
  */
-Node *NmAST_GenInclude(Pos pos, char *fname, char *custom_path, BOOL use)
+Node *NmAST_GenInclude(Pos pos, char *fname, char *custom_path, bool use)
 {
   Node_Include *n = NmMem_Calloc(1, sizeof(Node_Include));
 

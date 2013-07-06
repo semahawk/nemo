@@ -98,8 +98,8 @@
     return _name##_stack.it[--_name##_stack.ptr]; \
   } \
 \
-  static inline BOOL _name##_stack_is_empty(void){ \
-    return _name##_stack.ptr < 0 ? TRUE : FALSE; \
+  static inline bool _name##_stack_is_empty(void){ \
+    return _name##_stack.ptr < 0 ? true : false; \
   }
 
 /* defines the stack */
