@@ -50,11 +50,17 @@ static NmObject *dev_retstr(NmObject *args)
   return NmString_New("Hello");
 }
 
+static NmObject *dev_optfun(NmObject *args)
+{
+  return NmString_New("optfun called.");
+}
+
 static NmModuleFuncs module_funcs[] =
 {
-  { "retarr", dev_retarr, 0 },
-  { "retstr", dev_retstr, 0 },
-  { NULL, NULL, 0 }
+  { "retarr", dev_retarr, 0, "" },
+  { "retstr", dev_retstr, 0, "" },
+  { "optfun", dev_optfun, 0, "t" },
+  { NULL, NULL, 0, 0, NULL }
 };
 
 void NmDev_Init(void)

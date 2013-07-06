@@ -67,9 +67,9 @@ static NmObject *Math_sqrt(NmObject *args)
 
 static NmModuleFuncs Math_funcs[] =
 {
-  { "sqrt", Math_sqrt, 1 },
-  { "sin",  Math_sin,  1 },
-  { NULL, NULL, 0 }
+  { "sqrt", Math_sqrt, 1, "" },
+  { "sin",  Math_sin,  1, "" },
+  { NULL, NULL, 0, NULL }
 };
 
 void Math_init(void)

@@ -49,12 +49,6 @@
 #define validForNameHead(c) (isalpha((c)) || (c) == '_')
 #define validForNameTail(c) (isalpha((c)) || isdigit(c) || (c) == '_')
 
-/* Indicates if the lexing things are just after the "fun" keyword.
- * It is set to TRUE right after the keyword "fun" was encountered and set to
- * FALSE after the first left mustache ('{') or the semicolon (';') was encountered.
- */
-BOOL right_after_fun = FALSE;
-
 static struct Keyword {
   const char * const name;
   SymbolType sym;
@@ -151,9 +145,6 @@ tryagain:
     found = 0;
     for (keyword = keywords; keyword->name != NULL; keyword++){
       if (!strcmp(keyword->name, tmp)){
-        /* see if it's the "fun" keyword */
-        if (!strcmp(keyword->name, "fun"))
-          right_after_fun = TRUE;
         new(lex, &sym, keyword->sym);
         found = 1;
         break;
@@ -228,9 +219,6 @@ tryagain:
     goto tryagain;
   }
   else if (*p == ';'){
-    /* it could've been a function declaration */
-    if (right_after_fun)
-      right_after_fun = FALSE;
     new(lex, &sym, SYM_SEMICOLON);
     lex->column++;
   }
@@ -259,22 +247,35 @@ tryagain:
   }
   else if (*p == '-'){
     /*
-     * XXX -option
+     * XXX FUN -option
      */
-    if (right_after_fun){
+    if (lex->right_after_fun){
       char name;
-      if (!isalpha(*(p + 1))){
-        NmError_Lex(lex, "option's name must be an alphanumeric");
-        Nm_Exit();
-      }
-      name = *(++p);
-      while (isalpha(*p++))
-        lex->column++;
-      p--;
-      lex->column--;
+      p++; /* skip over the '-' */
+      name = *p;
+      p++;
+      /* skip over the rest of options name */
+      while (isalpha(*p) || isdigit(*p))
+        lex->column++, p++;
       newChar(lex, &sym, SYM_OPT, name);
       /* skip over the '-' and the first character after that */
       lex->column += 2;
+    }
+    /*
+     * XXX NAME -options
+     */
+    else if (lex->right_after_funname){
+      p++; /* skip over the '-' */
+      tmp = NmMem_Strdup(p);
+      char name;
+      while (isalpha(*p) || isdigit(*p)){
+        p++; i++;
+      }
+      p--;
+      *(tmp + i) = '\0';
+      newStr(lex, &sym, SYM_OPT, tmp);
+      /* skip over the '-' and the first character after that */
+      NmMem_Free(tmp);
     }
     else {
       /*
@@ -382,9 +383,6 @@ tryagain:
     lex->column++;
   }
   else if (*p == '{'){
-    /* a function declaration is forced to have a block, so we can safely set
-     * the "right_after_fun" to FALSE here */
-    right_after_fun = FALSE;
     new(lex, &sym, SYM_LMUSTASHE);
     lex->column++;
   }
@@ -535,11 +533,6 @@ Symbol NmLexer_Force(LexerState *lex, SymbolType type)
 {
   Symbol sym = NmLexer_Fetch(lex);
 
-  /*if (sym.type == SYM_EOS && type != SYM_EOS){*/
-    /*NmError_Lex(lex, "unexpected <EOS>, %s expected (force)", symToS(type));*/
-    /*exit(EXIT_FAILURE);*/
-  /*}*/
-
   if (sym.type != type){
     NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(sym.type));
     exit(EXIT_FAILURE);
@@ -558,15 +551,6 @@ Symbol NmLexer_Force(LexerState *lex, SymbolType type)
 BOOL NmLexer_Accept(LexerState *lex, SymbolType type)
 {
   Symbol sym = NmLexer_Fetch(lex);
-
-  /*if (sym.type == SYM_EOS){*/
-    /*if (lex->is_file){*/
-      /*NmError_Lex(lex, "unexpected end of file (accept)");*/
-    /*} else {*/
-      /*NmError_Lex(lex, "unexpected end of string (accept)");*/
-    /*}*/
-    /*exit(EXIT_FAILURE);*/
-  /*}*/
 
   if (sym.type == type){
     advance(lex);
@@ -606,12 +590,9 @@ void NmLexer_Skip(LexerState *lex)
   Symbol sym = NmLexer_Fetch(lex);
 
   if (sym.type == SYM_EOS){
-    if (lex->is_file){
-      NmError_Lex(lex, "unexpected end of file (skip)");
-    } else {
-      NmError_Lex(lex, "unexpected end of string (skip)");
-    }
-    exit(EXIT_FAILURE);
+    NmError_Lex(lex, "unexpected <EOS> (skip)");
+    Nm_Exit();
+    lex->current.type = SYM_EOS;
   }
 
   advance(lex);
@@ -669,6 +650,7 @@ const char *symToS(SymbolType type)
 
 /*
  * Rhapsody, Steve Vai, Helloween, Ensiferum
+ * Testament
  *
  * The Office
  *

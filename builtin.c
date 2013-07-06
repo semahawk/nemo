@@ -281,12 +281,12 @@ static NmObject *builtin_id(NmObject *args)
 }
 
 static NmModuleFuncs module_funcs[] = {
-  { "assert", builtin_assert,  2 },
-  { "id",     builtin_id,      1 },
-  { "len",    builtin_len,     1 },
-  { "print",  builtin_print,  -1 },
-  { "printf", builtin_printf, -1 },
-  { NULL, NULL, 0 }
+  { "assert", builtin_assert,  2, "" },
+  { "id",     builtin_id,      1, "" },
+  { "len",    builtin_len,     1, "" },
+  { "print",  builtin_print,  -1, "n" },
+  { "printf", builtin_printf, -1, "" },
+  { NULL, NULL, 0, 0, NULL }
 };
 
 void NmBuiltin_Init(void)

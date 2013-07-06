@@ -111,6 +111,16 @@ struct LexerState {
   unsigned savecolumn;
   struct Symbol current;
   BOOL eos;
+  /* Indicates if the lexing things are just after the "fun" keyword.
+   * It is set to TRUE right after the keyword "fun" was encountered and set to
+   * FALSE after the first left mustache ('{') or the semicolon (';') was encountered.
+   */
+  BOOL right_after_fun;
+  /* Indicates if the lexing things are after a function's name, preassumbly(?)
+   * in a function call.
+   * It is set to TRUE right after that function name and set to FALSE when the
+   * first non-option symbol was encountered */
+  BOOL right_after_funname;
 };
 
 typedef struct Pos Pos;

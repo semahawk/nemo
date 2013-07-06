@@ -110,23 +110,24 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
     int argc;
+    unsigned optc;
+    char *optv;
     CFunc *cfunc;
     Func *func;
     Scope *scope = NmScope_GetCurr();
     Node **params = NULL;
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
-    /* 0 - is not a function
-     * 1 - is a C function
-     * 2 - is a user defined function
-     */
-    int isafunc = 0;
+    BOOL isafunc = FALSE;
     /* it could be a function's name, so let's check it out */
     /* search the C functions */
     for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
       if (!strcmp(cfuncs->func->name, name)){
         cfunc = cfuncs->func;
-        isafunc = 1;
+        argc = cfunc->argc;
+        optc = strlen(cfunc->optv);
+        optv = cfunc->optv;
+        isafunc = TRUE;
         break;
       }
     }
@@ -134,22 +135,65 @@ static Node *primary_expr(LexerState *lex)
     for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
       if (!strcmp(funcs->func->name, name)){
         func = funcs->func;
-        isafunc = 2;
+        argc = func->argc;
+        optc = strlen(func->optv);
+        optv = func->optv;
+        isafunc = TRUE;
         break;
       }
-    }
-
-    if (isafunc == 1){
-      argc = cfunc->argc;
-    } else if (isafunc == 2){
-      argc = func->argc;
     }
 
     NmDebug_Parser("%s ", name);
 
     if (isafunc){
+      /* options are stored in a char array, for instance this:
+       *
+       *   function -e -g -p 6;
+       *
+       * would have options translated to
+       *
+       *   { 'e', 'g', 'p', '\0' }
+       *
+       */
+      char *opts = NmMem_Malloc(optc + 1);
+      /* this guard makes things like:
+       *
+       *   five-4
+       *
+       * possible (given that "five" is a function returning 5 and not taking
+       * any arguments or options).
+       * Although, if it was taking one argument, -4 would be given to it */
+      if (optc > 0){
+        lex->right_after_funname = TRUE;
+        if (NmLexer_Peek(lex, SYM_OPT)){
+          Symbol optsym = NmLexer_Force(lex, SYM_OPT);
+          opts = optsym.value.s;
+          NmDebug_Parser("-%s ", opts);
+          /* check if not too many options were given */
+          if (strlen(opts) > optc){
+            NmError_Lex(lex, "too many options given for the function '%s', supported options are '%s'", name, optv);
+            Nm_Exit();
+            return NULL;
+          }
+          /* check if the function supports given options */
+          for (unsigned i = 0; i < strlen(opts); i++){
+            printf("checking %c option\n", opts[i]);
+            if (!strchr(optv, opts[i])){
+              NmError_Lex(lex, "function '%s' doesn't support the '%c' option", name, opts[i]);
+              Nm_Exit();
+              return NULL;
+            } else {
+              printf("option %c supported\n", opts[i]);
+            }
+          }
+        }
+        lex->right_after_funname = FALSE;
+      }
       NmDebug_Parser("(");
+      lex->right_after_funname = FALSE;
       if (NmLexer_Peek(lex, SYM_LPAREN)){
+        /* FIXME: if there are parenthesis there mustn't be more parameters
+         *        passed than requested */
         NmLexer_Skip(lex);
         params = params_list(lex, argc);
         NmLexer_Force(lex, SYM_RPAREN);
@@ -163,7 +207,7 @@ static Node *primary_expr(LexerState *lex)
         Nm_Exit();
         return NULL;
       }
-      new = NmAST_GenCall(lex->current.pos, name, params);
+      new = NmAST_GenCall(lex->current.pos, name, params, opts);
     } else {
       new = NmAST_GenName(lex->current.pos, name);
     }
@@ -219,10 +263,19 @@ static Node **params_list(LexerState *lex, int num)
   unsigned nmemb = 5;
   unsigned counter = 0;
   Node **params = NmMem_Calloc(nmemb, sizeof(Node));
-  Node *first_expr;
+  /* using assign_expr instead of expr because comma_expr would screw things up
+   * here*/
+  Node *first_expr = assign_expr(lex);
 
   if (num == 0){
-    return params;
+    if (first_expr){
+      NmError_SetString("(1 when 0 expected)");
+      NmAST_Free(first_expr);
+      NmMem_Free(params);
+      return NULL;
+    } else {
+      return params;
+    }
   }
   /* Nasty hack */
   else if (num < 0){
@@ -234,10 +287,6 @@ static Node **params_list(LexerState *lex, int num)
   }
 
   NmDebug_AST(params, "create params list");
-
-  /* using assign_expr instead of expr because comma_expr would screw things up
-   * here*/
-  first_expr = assign_expr(lex);
 
   /* if 'first_expr' is NULL it means no params were fetched at all */
   if (!first_expr && num != 1 << 15){
@@ -730,6 +779,7 @@ static Node *comma_expr(LexerState *lex)
       Nm_Exit();
       return NULL;
     }
+    NmDebug_Parser(", ");
     right = assign_expr(lex);
     /* if right is NULL it means something like that happend:
      *
@@ -781,7 +831,8 @@ static Node *expr(LexerState *lex)
  * label: NAME ':' stmt
  *      ;
  *
- * function_prototype: FIXME
+ * function_prototype: FUN NAME [OPT|NAME]* ';'
+ *                   | FUN NAME [OPT|NAME]* block
  *                   ;
  */
 static Node *stmt(LexerState *lex)
@@ -905,10 +956,11 @@ static Node *stmt(LexerState *lex)
    * XXX FUN NAME [OPT|NAME]* block
    */
   else if (NmLexer_Accept(lex, SYM_FUN)){
-    unsigned optc = 0;
+    lex->right_after_fun = TRUE;
     unsigned argc = 0;
+    unsigned optc = 0;
     char **argv = NmMem_Malloc(sizeof(char *) * 1);
-    char *optv = NmMem_Malloc(sizeof(char) * 1); /* I know sizeof(char) is 1 */
+    char *optv = NmMem_Malloc(sizeof(char) * 1 + 1); /* I know sizeof(char) is 1 */
     /* FIXME: store the "fun" position */
     Pos pos = lex->current.pos;
     NmDebug_Parser("fun ");
@@ -919,7 +971,7 @@ static Node *stmt(LexerState *lex)
       if (NmLexer_Peek(lex, SYM_NAME)){
         Symbol namesym = NmLexer_Force(lex, SYM_NAME);
         NmDebug_Parser("%s ", namesym.value.s);
-        argv = NmMem_Realloc(argv, (argc + 1) * sizeof(char *));
+        argv = NmMem_Realloc(argv, (argc + 1) * sizeof(char *) + 1);
         argv[argc] = NmMem_Strdup(namesym.value.s);
         argc++;
       } else if (NmLexer_Peek(lex, SYM_OPT)){
@@ -930,12 +982,15 @@ static Node *stmt(LexerState *lex)
         optc++;
       }
     }
+    optv[optc] = '\0';
 
     if (NmLexer_Accept(lex, SYM_SEMICOLON)){
+      lex->right_after_fun = FALSE;
       NmDebug_Parser(";\n");
       body = NULL;
     } else {
       NmLexer_Force(lex, SYM_LMUSTASHE);
+      lex->right_after_fun = FALSE;
       NmDebug_Parser("{\n");
       body = block(lex);
       NmLexer_Force(lex, SYM_RMUSTASHE);
@@ -1124,6 +1179,18 @@ static Node *block(LexerState *lex)
   return (Node *)new_block;
 }
 
+/* <lex> is of type { LexerState } */
+#define lexinitrest(lex) \
+  lex.line = 1; \
+  lex.column = 1; \
+  lex.saveline = 1; \
+  lex.savecolumn = 1; \
+  lex.current.pos.line  = 1; \
+  lex.current.pos.column = 1; \
+  lex.eos = FALSE; \
+  lex.right_after_fun = FALSE; \
+  lex.right_after_funname = FALSE;
+
 /*
  * @name - NmParser_ParseFile
  * @desc - parse file of a given <fname> and return a pointer to the node of a
@@ -1159,13 +1226,7 @@ Node *NmParser_ParseFile(char *fname)
   lex.source = fname;
   lex.content = fbuffer;
   lex.savecontent = fbuffer;
-  lex.line = 1;
-  lex.column = 1;
-  lex.saveline = 1;
-  lex.savecolumn = 1;
-  lex.current.pos.line = 1;
-  lex.current.pos.column = 1;
-  lex.eos = FALSE;
+  lexinitrest(lex);
   nodest = block(&lex);
   /* free the buffer */
   NmMem_Free(fbuffer);
@@ -1190,13 +1251,7 @@ Node *NmParser_ParseString(char *string)
   lex.source = string;
   lex.content = string;
   lex.savecontent = string;
-  lex.line = 1;
-  lex.column = 1;
-  lex.saveline = 1;
-  lex.savecolumn = 1;
-  lex.current.pos.line = 1;
-  lex.current.pos.column = 1;
-  lex.eos = FALSE;
+  lexinitrest(lex);
   nodest = block(&lex);
 
   return nodest;

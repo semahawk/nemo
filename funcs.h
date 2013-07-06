@@ -43,11 +43,11 @@ struct Func {
   Node *body;
   /* number of args */
   unsigned argc;
-  /* number of options */
-  unsigned optc;
   /* arguments vector */
   char **argv;
-  /* options vector */
+  /* options for the function
+   * it's a string so to get the number of the options
+   * just do strlen(optv) */
   char *optv;
 };
 
@@ -58,6 +58,10 @@ struct CFunc {
   NmCFunc body;
   /* number of args */
   int argc;
+  /* options for the function
+   * it's a string so to get the number of the options
+   * just do strlen(optv) */
+  char *optv;
 };
 
 /* Simple singly linked list */
@@ -79,6 +83,8 @@ typedef struct ModuleFuncs {
   NmCFunc ptr;
   /* number of arguments it can take */
   int argc;
+  /* the names of the options */
+  char *optv;
 } NmModuleFuncs;
 
 typedef struct CFuncsList CFuncsList;

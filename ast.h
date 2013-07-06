@@ -162,6 +162,7 @@ typedef struct {
   NMNODE_HEAD;
   char *name;
   struct Node **params;
+  char *opts;
 } Node_Call;
 
 typedef struct {
@@ -230,7 +231,7 @@ Node *NmAST_GenUnop(Pos, Node *, UnaryOp);
 Node *NmAST_GenIf(Pos, Node *, Node *, Node *, BOOL);
 Node *NmAST_GenWhile(Pos, Node *, Node *, Node *, BOOL);
 Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
-Node *NmAST_GenCall(Pos, char *, Node **);
+Node *NmAST_GenCall(Pos, char *, Node **, char *);
 Node *NmAST_GenStmt(Pos, Node *);
 Node *NmAST_GenFuncDef(Pos, char *, Node *, unsigned, unsigned, char **, char *);
 Node *NmAST_GenInclude(Pos, char *, char *, BOOL);

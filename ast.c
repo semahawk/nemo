@@ -420,6 +420,7 @@ NmObject *NmAST_ExecName(Node *n)
 
   NmError_Parser(n, "variable '%s' was not found");
   Nm_Exit();
+  return NULL;
 }
 
 /*
@@ -1066,16 +1067,17 @@ void NmAST_FreeDecl(Node *n)
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
-Node *NmAST_GenCall(Pos pos, char *name, Node **params)
+Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts)
 {
   Node_Call *n = NmMem_Calloc(1, sizeof(Node_Call));
 
   n->type = NT_CALL;
   n->name = NmMem_Strdup(name);
   n->params = params;
+  n->opts = opts;
   INIT_POS();
 
-  NmDebug_AST(n, "create call node (name: %s, params: %p)", name, params);
+  NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
 
   return (Node *)n;
 }
@@ -1117,6 +1119,7 @@ NmObject *NmAST_ExecCall(Node *n)
         if (ret == NULL){
           NmError_Parser(n, NmError_GetCurr());
           Nm_Exit();
+          return NULL;
         } else {
           return ret;
         }
@@ -1130,6 +1133,7 @@ NmObject *NmAST_ExecCall(Node *n)
         if (ret == NULL){
           NmError_Parser(n, "executing function '%s' went wrong", name);
           Nm_Exit();
+          return NULL;
         } else {
           return ret;
         }
@@ -1139,6 +1143,7 @@ NmObject *NmAST_ExecCall(Node *n)
 
   NmError_Parser(n, "function '%s' not found", name, scope->name);
   Nm_Exit();
+  return NULL;
 }
 
 /*
@@ -1274,7 +1279,7 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   INIT_POS();
 
   if (body)
-    NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d)", name, (void*)body, argc, optc);
+    NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d, optv: '%s')", name, (void*)body, argc, optc, optv);
   else
     NmDebug_AST(n, "create function declaration node (name: %s, argc: %d, optc: %d)", name, argc, optc);
 
@@ -1283,7 +1288,6 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   f->name = NmMem_Strdup(name);
   f->body = body;
   f->argc = argc;
-  f->optc = optc;
   f->argv = argv;
   f->optv = optv;
   l->func = f;
