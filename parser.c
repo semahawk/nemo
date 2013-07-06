@@ -177,13 +177,10 @@ static Node *primary_expr(LexerState *lex)
           }
           /* check if the function supports given options */
           for (unsigned i = 0; i < strlen(opts); i++){
-            printf("checking %c option\n", opts[i]);
             if (!strchr(optv, opts[i])){
               NmError_Lex(lex, "function '%s' doesn't support the '%c' option", name, opts[i]);
               Nm_Exit();
               return NULL;
-            } else {
-              printf("option %c supported\n", opts[i]);
             }
           }
         }

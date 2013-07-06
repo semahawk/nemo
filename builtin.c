@@ -48,11 +48,6 @@
 
 static NmObject *builtin_len(NmObject *args)
 {
-  if (NmArray_NMEMB(args) != 1){
-    NmError_SetString("wrong number of arguments for function 'len' (%d when 2 expected)", NmArray_NMEMB(args));
-    return NULL;
-  }
-
   NmObject *ob = NmArray_GETELEM(args, 0);
 
   if (ob->type != OT_ARRAY && ob->type != OT_STRING){
@@ -69,11 +64,6 @@ static NmObject *builtin_len(NmObject *args)
 
 static NmObject *builtin_assert(NmObject *args)
 {
-  if (NmArray_NMEMB(args) != 2){
-    NmError_SetString("wrong number of arguments for function 'assert' (%d when 2 expected)", NmArray_NMEMB(args));
-    return NULL;
-  }
-
   NmObject *first  = NmArray_GETELEM(args, 0);
   NmObject *second = NmArray_GETELEM(args, 1);
 
@@ -124,11 +114,6 @@ static NmObject *builtin_printf(NmObject *args)
   /* number of arguments without the formatting string */
   size_t count = 0;
   char *p;
-
-  if (NmArray_NMEMB(args) < 1){
-    NmError_SetString("wrong number of arguments for function 'printf' (%d when at least 1 expected)", NmArray_NMEMB(args));
-    return NULL;
-  }
 
   NmObject *format = NmArray_GETELEM(args, 0);
 
@@ -272,21 +257,29 @@ static NmObject *builtin_print(NmObject *args)
 
 static NmObject *builtin_id(NmObject *args)
 {
-  if (NmArray_NMEMB(args) != 1){
-    NmError_SetString("wrong number of arguments for function 'id' (%d when 1 expected)", NmArray_NMEMB(args));
+  return NmInt_NewFromVoidPtr((void *)NmArray_GETELEM(args, 0));
+}
+
+static NmObject *builtin_eval(NmObject *args)
+{
+  NmObject *ob = NmArray_GETELEM(args, 0);
+
+  if (ob->type != OT_STRING){
+    NmError_SetString("wrong argument type for function 'len' (%s when 'string' expected)", NmString_VAL(ob->fn.type_repr()));
     return NULL;
   }
 
-  return NmInt_NewFromVoidPtr((void *)NmArray_GETELEM(args, 0));
+  return NmAST_Exec(NmParser_ParseString(NmString_VAL(ob)));
 }
 
 static NmModuleFuncs module_funcs[] = {
   { "assert", builtin_assert,  2, "" },
+  { "eval",   builtin_eval,    1, "" },
   { "id",     builtin_id,      1, "" },
   { "len",    builtin_len,     1, "" },
   { "print",  builtin_print,  -1, "n" },
   { "printf", builtin_printf, -1, "" },
-  { NULL, NULL, 0, 0, NULL }
+  { NULL, NULL, 0, NULL }
 };
 
 void NmBuiltin_Init(void)
