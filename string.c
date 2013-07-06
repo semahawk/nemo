@@ -46,8 +46,7 @@ NmObject *NmString_New(char *s)
   ob->fn.dstr = NmString_Destroy;
   ob->fn.type_repr = NmString_TypeRepr;
   ob->fn.print = NmString_Print;
-  /*ob->fn.binary.add = NmString_Add;*/
-  ob->fn.binary.add = NULL;
+  ob->fn.binary.add = NmString_Add;
   ob->fn.binary.index = NmString_Index;
 
   /* append to the free_list */
@@ -80,6 +79,18 @@ NmObject *NmString_NewFromChar(char c)
   free_list = list;
 
   return (NmObject *)ob;
+}
+
+NmObject *NmString_Add(NmObject *left, NmObject *right)
+{
+  size_t leftlen = strlen(NmString_VAL(left));
+  size_t rightlen = strlen(NmString_VAL(right));
+  char *new = NmMem_Malloc(leftlen + rightlen);
+
+  memcpy(new, NmString_VAL(left), leftlen);
+  memcpy(new + leftlen, NmString_VAL(right), rightlen);
+
+  return NmString_New(new);
 }
 
 NmObject *NmString_TypeRepr(void)

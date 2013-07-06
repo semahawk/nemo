@@ -302,6 +302,7 @@ void Nm_InitModule(NmModuleFuncs *funcs)
     func->body = f->ptr;
     func->argc = f->argc;
     func->optv = f->optv;
+    func->types = f->types;
     list->func = func;
     /* append to the list */
     list->next = scope->cfuncs;

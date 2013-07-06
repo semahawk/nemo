@@ -50,11 +50,6 @@ static NmObject *builtin_len(NmObject *args)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
-  if (ob->type != OT_ARRAY && ob->type != OT_STRING){
-    NmError_SetString("wrong argument type for function 'len' (%s when 'string' or 'array' expected)", NmString_VAL(ob->fn.type_repr()));
-    return NULL;
-  }
-
   if (ob->type == OT_ARRAY)
     return NmInt_New(NmArray_NMEMB(ob));
   /* it can't be anything else than string down here */
@@ -264,22 +259,17 @@ static NmObject *builtin_eval(NmObject *args)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
-  if (ob->type != OT_STRING){
-    NmError_SetString("wrong argument type for function 'len' (%s when 'string' expected)", NmString_VAL(ob->fn.type_repr()));
-    return NULL;
-  }
-
   return NmAST_Exec(NmParser_ParseString(NmString_VAL(ob)));
 }
 
 static NmModuleFuncs module_funcs[] = {
-  { "assert", builtin_assert,  2, "" },
-  { "eval",   builtin_eval,    1, "" },
-  { "id",     builtin_id,      1, "" },
-  { "len",    builtin_len,     1, "" },
-  { "print",  builtin_print,  -1, "n" },
-  { "printf", builtin_printf, -1, "" },
-  { NULL, NULL, 0, NULL }
+  { "assert", builtin_assert,  2, { OT_ANY, OT_ANY }, "" },
+  { "eval",   builtin_eval,    1, { OT_STRING }, "" },
+  { "id",     builtin_id,      1, { OT_ANY }, "" },
+  { "len",    builtin_len,     1, { OT_STRING | OT_ARRAY }, "" },
+  { "print",  builtin_print,  -1, { OT_ANY }, "n" },
+  { "printf", builtin_printf, -1, { OT_ANY }, "" },
+  { NULL, NULL, 0, { 0 }, NULL }
 };
 
 void NmBuiltin_Init(void)

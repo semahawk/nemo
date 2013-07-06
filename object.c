@@ -75,9 +75,59 @@ NmObject *NmObject_Dup(NmObject *ob)
     case OT_NULL:
       *(NmNullObject *)new = *(NmNullObject *)ob;
       break;
+    case OT_ANY:
+      /* suspress the warnings */
+      break;
   }
 
   return (NmObject *)new;
+}
+
+/*
+ * Translates given <type> to a string.
+ */
+NmObject *NmObject_TypeToS(NmObjectType type)
+{
+  NmObject *ret = NmString_New("");
+  BOOL first = TRUE;
+
+  unsigned num = 7;
+  for (unsigned i = 0; i < 7; i++)
+    if (type & (1 << i))
+      num++;
+
+  unsigned j = 0;
+  for (unsigned i = 0; i < 7; i++){
+    if (type & (1 << i)){
+      if (!first)
+        ret = NmString_Add(ret, NmString_New(" or "));
+      first = FALSE;
+      switch (type & (1 << i)){
+        case OT_NULL:
+          ret = NmString_Add(ret, NmString_New("null"));
+          j++;
+          break;
+        case OT_INTEGER:
+          ret = NmString_Add(ret, NmString_New("integer"));
+          j++;
+          break;
+        case OT_FLOAT:
+          ret = NmString_Add(ret, NmString_New("float"));
+          j++;
+          break;
+        case OT_STRING:
+          ret = NmString_Add(ret, NmString_New("string"));
+          j++;
+          break;
+        case OT_ARRAY:
+          ret = NmString_Add(ret, NmString_New("array"));
+          j++;
+          break;
+      }
+    }
+  }
+
+  return ret;
 }
 
 /*

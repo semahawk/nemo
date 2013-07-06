@@ -1110,9 +1110,30 @@ NmObject *NmAST_ExecCall(Node *n)
         /* parameters are stored as an array */
         NmObject *array = NmArray_New(nmemb);
         /* set the arrays elements */
-        if (nc->params)
-          for (Node **p = nc->params; *p != NULL; p++, i++)
-            NmArray_SETELEM(array, i, NmAST_Exec(*p));
+        if (nc->params){
+          /* but first, type checking
+           * if the function takes -1 then every argument should of type
+           * <list->func->types[0]>, if the number of arguments is >= 0 then
+           * every argument should be of the matching element in
+           * <list->func->types> */
+          for (Node **p = nc->params; *p != NULL; p++, i++){
+            NmObjectType type;
+            if (list->func->argc < 0){
+              type = list->func->types[0];
+            } else {
+              type = list->func->types[i];
+            }
+            /* actually check the type of the current argument */
+            NmObject *ob = NmAST_Exec(*p);
+            if (!(ob->type & type)){
+              NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(ob->fn.type_repr()), NmString_VAL(NmObject_TypeToS(type)));
+              Nm_Exit();
+              return NULL;
+            }
+            /*printf("fun %s -> arg#%lu type: %d, typewanted: %d, matching? %d\n", name, i, ob->type, type, ob->type & type);*/
+            NmArray_SETELEM(array, i, ob);
+          }
+        }
         /* execute the function */
         ret = list->func->body(array);
         /* if a function returns NULL it means something went wrong */

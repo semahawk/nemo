@@ -33,43 +33,19 @@
 
 static NmObject *Math_sin(NmObject *args)
 {
-  if (NmArray_NMEMB(args) != 1){
-    NmError_SetString("wrong number of arguments for function 'sin' (%d when 1 expected)", NmArray_NMEMB(args));
-    return NULL;
-  }
-
-  NmObject *param  = NmArray_GETELEM(args, 0);
-
-  if (param->type != OT_FLOAT){
-    NmError_SetString("wrong type '%s' for function 'sin', 'float' expected", NmString_VAL(param->fn.type_repr()));
-    return NULL;
-  }
-
   return NmFloat_New(sin(NmFloat_VAL(NmArray_GETELEM(args, 0))));
 }
 
 static NmObject *Math_sqrt(NmObject *args)
 {
-  if (NmArray_NMEMB(args) != 1){
-    NmError_SetString("wrong number of arguments for function 'sqrt' (%d when 1 expected)", NmArray_NMEMB(args));
-    return NULL;
-  }
-
-  NmObject *param  = NmArray_GETELEM(args, 0);
-
-  if (param->type != OT_INTEGER){
-    NmError_SetString("wrong type '%s' for function 'sqrt', 'int' expected", NmString_VAL(param->fn.type_repr()));
-    return NULL;
-  }
-
-  return NmFloat_New(sqrt(NmInt_VAL(param)));
+  return NmFloat_New(sqrt(NmInt_VAL(NmArray_GETELEM(args, 0))));
 }
 
 static NmModuleFuncs Math_funcs[] =
 {
-  { "sqrt", Math_sqrt, 1, "" },
-  { "sin",  Math_sin,  1, "" },
-  { NULL, NULL, 0, NULL }
+  { "sin",  Math_sin,  1, { OT_FLOAT }, "" },
+  { "sqrt", Math_sqrt, 1, { OT_INTEGER }, "" },
+  { NULL, NULL, 0, { 0 }, NULL }
 };
 
 void Math_init(void)

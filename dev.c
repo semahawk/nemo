@@ -38,7 +38,7 @@ static NmObject *dev_retarr(NmObject *args)
 {
   NmObject *ret = NmArray_New(3);
 
-  NmArray_SETELEM(ret, 0, NmInt_New(2));
+  NmArray_SETELEM(ret, 0, NmInt_New(NmInt_VAL(NmArray_GETELEM(args, 0))));
   NmArray_SETELEM(ret, 1, NmInt_New(7));
   NmArray_SETELEM(ret, 2, NmInt_New(1));
 
@@ -57,10 +57,10 @@ static NmObject *dev_optfun(NmObject *args)
 
 static NmModuleFuncs module_funcs[] =
 {
-  { "retarr", dev_retarr, 0, "" },
-  { "retstr", dev_retstr, 0, "" },
-  { "optfun", dev_optfun, 0, "t" },
-  { NULL, NULL, 0, 0, NULL }
+  { "retarr", dev_retarr, 1, { OT_INTEGER }, "" },
+  { "retstr", dev_retstr, 0, { OT_NULL }, "" },
+  { "optfun", dev_optfun, 0, { OT_NULL }, "t" },
+  { NULL, NULL, 0, { 0 }, NULL }
 };
 
 void NmDev_Init(void)

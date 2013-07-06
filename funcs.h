@@ -62,6 +62,9 @@ struct CFunc {
    * it's a string so to get the number of the options
    * just do strlen(optv) */
   char *optv;
+  /* the types of which the arguments can be */
+  /* it's an array of { NmObjectType } */
+  NmObjectType *types;
 };
 
 /* Simple singly linked list */
@@ -83,6 +86,9 @@ typedef struct ModuleFuncs {
   NmCFunc ptr;
   /* number of arguments it can take */
   int argc;
+  /* the types of which the arguments can be */
+  /* it's an array of { NmObjectType } */
+  NmObjectType types[32];
   /* the names of the options */
   char *optv;
 } NmModuleFuncs;

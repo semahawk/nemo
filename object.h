@@ -42,11 +42,17 @@
  */
 
 enum Type {
-  OT_NULL,
-  OT_INTEGER,
-  OT_FLOAT,
-  OT_STRING,
-  OT_ARRAY
+  OT_NULL      = 1 << 0,
+  OT_INTEGER   = 1 << 1,
+  OT_FLOAT     = 1 << 2,
+  OT_STRING    = 1 << 3,
+  OT_ARRAY     = 1 << 4,
+  /* used only when creating a module in C */
+  OT_ANY       = OT_NULL
+               | OT_INTEGER
+               | OT_FLOAT
+               | OT_STRING
+               | OT_ARRAY
 };
 
 typedef enum Type NmObjectType;
@@ -143,6 +149,7 @@ void NmObject_Destroy(NmObject *);
 void NmObject_Tidyup(void);
 BOOL NmObject_Boolish(NmObject *);
 NmObject *NmObject_Dup(NmObject *);
+NmObject *NmObject_TypeToS(NmObjectType);
 
 NmObject *NmInt_New(int);
 NmObject *NmInt_Add(NmObject *, NmObject *);
@@ -183,6 +190,7 @@ void NmFloat_Tidyup(void);
 NmObject *NmString_New(char *);
 NmObject *NmString_TypeRepr(void);
 void NmString_Print(FILE *, NmObject *);
+NmObject *NmString_Add(NmObject *, NmObject *);
 NmObject *NmString_Index(NmObject *, NmObject *);
 void NmString_Destroy(NmObject *);
 void NmString_Tidyup(void);
