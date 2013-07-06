@@ -134,6 +134,8 @@ int main(int argc, char *argv[])
 
   /* fetch the builtin functions */
   NmBuiltin_Init();
+  /* and the dev ones */
+  NmDev_Init();
 
   while (1){
     static struct option long_options[] = {

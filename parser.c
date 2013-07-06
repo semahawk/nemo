@@ -235,8 +235,8 @@ static Node **params_list(LexerState *lex, int num)
 
   NmDebug_AST(params, "create params list");
 
-  /* FIXME: if we use assign_expr here, then "my" declarations are not allowed
-   *        in call arguments */
+  /* using assign_expr instead of expr because comma_expr would screw things up
+   * here*/
   first_expr = assign_expr(lex);
 
   /* if 'first_expr' is NULL it means no params were fetched at all */
@@ -293,7 +293,7 @@ static Node *postfix_expr(LexerState *lex)
   if (NmLexer_Accept(lex, SYM_LBRACKET)){
     /* TODO: store the position of the left bracket
      *       right now it's the position of the very first thing after the left
-     *       bracket*/
+     *       bracket */
     Pos pos = lex->current.pos;
     NmDebug_Parser("[");
     index = expr(lex);
