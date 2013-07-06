@@ -887,17 +887,17 @@ static Node *stmt(LexerState *lex)
    *
    *     basically just a label
    */
-  else if (lex->current.type == SYM_NAME &&
-           NmLexer_Peek(lex, SYM_COLON)){
-    name = lex->current.value.s;
-    NmDebug_Parser("%s", name);
-    NmLexer_Skip(lex);
-    NmDebug_Parser(":", name);
-    NmLexer_Skip(lex);
-    body = stmt(lex);
-    ret = body;
-    NmScope_NewLabel(name, body);
-  }
+  /*else if (lex->current.type == SYM_NAME &&*/
+           /*NmLexer_Peek(lex, SYM_COLON)){*/
+    /*name = lex->current.value.s;*/
+    /*NmDebug_Parser("%s", name);*/
+    /*NmLexer_Skip(lex);*/
+    /*NmDebug_Parser(":", name);*/
+    /*NmLexer_Skip(lex);*/
+    /*body = stmt(lex);*/
+    /*ret = body;*/
+    /*NmScope_NewLabel(name, body);*/
+  /*}*/
   /*
    * XXX GOTO NAME ';'
    */
@@ -1225,6 +1225,7 @@ Node *NmParser_ParseFile(char *fname)
   lex.savecontent = fbuffer;
   lexinitrest(lex);
   nodest = block(&lex);
+  NmLexer_Tidyup();
   /* free the buffer */
   NmMem_Free(fbuffer);
   /* close the file handle */
@@ -1250,6 +1251,7 @@ Node *NmParser_ParseString(char *string)
   lex.savecontent = string;
   lexinitrest(lex);
   nodest = block(&lex);
+  NmLexer_Tidyup();
 
   return nodest;
 }

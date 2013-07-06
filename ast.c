@@ -1190,6 +1190,7 @@ void NmAST_FreeCall(Node *n)
     NmMem_Free(nc->params);
   }
 
+  NmMem_Free(nc->opts);
   NmDebug_AST(n, "free call node");
   NmMem_Free(n);
 }

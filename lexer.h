@@ -128,6 +128,7 @@ typedef enum SymbolType SymbolType;
 typedef struct Symbol Symbol;
 typedef struct LexerState LexerState;
 
+void NmLexer_Tidyup(void);
 Symbol NmLexer_Fetch(LexerState *);
 bool NmLexer_Peek(LexerState *, SymbolType);
 bool NmLexer_Accept(LexerState *, SymbolType);
