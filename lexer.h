@@ -100,6 +100,11 @@ struct Symbol {
   struct Pos pos;
 };
 
+struct lexgc {
+  void *p;
+  struct lexgc *next;
+};
+
 struct LexerState {
   bool is_file; /* either file or a string */
   char *source; /* name of the files name */
@@ -121,6 +126,8 @@ struct LexerState {
    * It is set to true right after that function name and set to false when the
    * first non-option symbol was encountered */
   bool right_after_funname;
+  /* GC */
+  struct lexgc *gc_head;
 };
 
 typedef struct Pos Pos;
@@ -128,7 +135,7 @@ typedef enum SymbolType SymbolType;
 typedef struct Symbol Symbol;
 typedef struct LexerState LexerState;
 
-void NmLexer_Tidyup(void);
+void NmLexer_Tidyup(LexerState *);
 Symbol NmLexer_Fetch(LexerState *);
 bool NmLexer_Peek(LexerState *, SymbolType);
 bool NmLexer_Accept(LexerState *, SymbolType);

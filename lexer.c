@@ -49,12 +49,6 @@
 #define validForNameHead(c) (isalpha((c)) || (c) == '_')
 #define validForNameTail(c) (isalpha((c)) || isdigit(c) || (c) == '_')
 
-/* a little small GC list */
-static struct gc {
-  void *p;
-  struct gc *next;
-} *gc_head = NULL;
-
 static struct Keyword {
   const char * const name;
   SymbolType sym;
@@ -75,12 +69,12 @@ static struct Keyword {
 };
 typedef struct Keyword Keyword;
 
-void NmLexer_Tidyup(void)
+void NmLexer_Tidyup(LexerState *lex)
 {
-  struct gc *curr;
-  struct gc *next;
+  struct lexgc *curr;
+  struct lexgc *next;
 
-  for (curr = gc_head; curr != NULL; curr = next){
+  for (curr = lex->gc_head; curr != NULL; curr = next){
     next = curr->next;
     NmMem_Free(curr->p);
     NmMem_Free(curr);
@@ -115,7 +109,7 @@ static inline void newFloat(LexerState *lex, Symbol *new, double f)
 
 static inline void newStr(LexerState *lex, Symbol *new, SymbolType type, char *s)
 {
-  struct gc *newgc = NmMem_Malloc(sizeof(struct gc));
+  struct lexgc *newgc = NmMem_Malloc(sizeof(struct lexgc));
   /* initialize */
   new->type = type;
   new->pos.line = lex->line;
@@ -123,8 +117,8 @@ static inline void newStr(LexerState *lex, Symbol *new, SymbolType type, char *s
   new->value.s = NmMem_Strdup(s);
   /* append that string to the GC list */
   newgc->p = new->value.s;
-  newgc->next = gc_head;
-  gc_head = newgc;
+  newgc->next = lex->gc_head;
+  lex->gc_head = newgc;
 }
 
 static inline void newChar(LexerState *lex, Symbol *new, SymbolType type, char c)

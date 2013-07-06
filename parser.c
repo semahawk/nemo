@@ -1186,7 +1186,8 @@ static Node *block(LexerState *lex)
   lex.current.pos.column = 1; \
   lex.eos = false; \
   lex.right_after_fun = false; \
-  lex.right_after_funname = false;
+  lex.right_after_funname = false; \
+  lex.gc_head = NULL;
 
 /*
  * @name - NmParser_ParseFile
@@ -1225,7 +1226,7 @@ Node *NmParser_ParseFile(char *fname)
   lex.savecontent = fbuffer;
   lexinitrest(lex);
   nodest = block(&lex);
-  NmLexer_Tidyup();
+  NmLexer_Tidyup(&lex);
   /* free the buffer */
   NmMem_Free(fbuffer);
   /* close the file handle */
@@ -1251,7 +1252,7 @@ Node *NmParser_ParseString(char *string)
   lex.savecontent = string;
   lexinitrest(lex);
   nodest = block(&lex);
-  NmLexer_Tidyup();
+  NmLexer_Tidyup(&lex);
 
   return nodest;
 }
