@@ -287,7 +287,15 @@ Node *NmAST_GenString(Pos pos, char *s)
  */
 NmObject *NmAST_ExecString(Node *n)
 {
+  NmObject *ret = NmString_New(((Node_String *)n)->s);
+
   NmDebug_AST(n, "execute string node");
+
+  if (!ret){
+    NmError_Parser(n, NmError_GetCurr());
+    Nm_Exit();
+    return NULL;
+  }
 
   return NmString_New(((Node_String *)n)->s);
 }

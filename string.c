@@ -42,7 +42,59 @@ NmObject *NmString_New(char *s)
   NmStringObject *ob = NmMem_Calloc(1, sizeof(NmStringObject));
 
   ob->type = OT_STRING;
-  ob->s = NmMem_Strdup(s);
+  ob->s = NmMem_Malloc(strlen(s) + 1);
+  /* set the strings contents, char by char */
+  unsigned i = 0;
+  for (char *p = s; *p != '\0'; p++, i++){
+    if (*p == '\\'){
+      switch (*(p + 1)){
+        case 'a':
+          ob->s[i] = '\a';
+          p++;
+          break;
+        case 'b':
+          ob->s[i] = '\b';
+          p++;
+          break;
+        case 'e':
+          /* huh, my Vim highlights that as an error */
+          ob->s[i] = '\e';
+          p++;
+          break;
+        case 'f':
+          ob->s[i] = '\f';
+          p++;
+          break;
+        case 'n':
+          ob->s[i] = '\n';
+          p++;
+          break;
+        case 'r':
+          ob->s[i] = '\r';
+          p++;
+          break;
+        case 't':
+          ob->s[i] = '\t';
+          p++;
+          break;
+        case '\\':
+          ob->s[i] = '\\';
+          p++;
+          break;
+        case '"':
+          ob->s[i] = '"';
+          p++;
+          break;
+        default:
+          NmError_SetString("unknown escape sequence '%c'", *(p + 1));
+          return NULL;
+      }
+    } else {
+      ob->s[i] = *p;
+    }
+  }
+  ob->s[i] = '\0';
+  /* set it's functions */
   ob->fn.dstr = NmString_Destroy;
   ob->fn.type_repr = NmString_TypeRepr;
   ob->fn.print = NmString_Print;

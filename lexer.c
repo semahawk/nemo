@@ -284,7 +284,6 @@ tryagain:
     else if (lex->right_after_funname){
       p++; /* skip over the '-' */
       tmp = NmMem_Strdup(p);
-      char name;
       while (isalpha(*p) || isdigit(*p)){
         p++; i++;
       }

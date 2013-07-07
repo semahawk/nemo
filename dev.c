@@ -47,11 +47,17 @@ static NmObject *dev_retarr(NmObject *args)
 
 static NmObject *dev_retstr(NmObject *args)
 {
+  /* unused parameter */
+  (void)args;
+
   return NmString_New("Hello");
 }
 
 static NmObject *dev_optfun(NmObject *args)
 {
+  /* unused parameter */
+  (void)args;
+
   return NmString_New("optfun called.");
 }
 

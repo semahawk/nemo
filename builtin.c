@@ -130,19 +130,7 @@ static NmObject *builtin_printf(NmObject *args)
 
   /* search if all the formats are valid */
   for (p = NmString_VAL(format); *p != '\0'; p++){
-    if (*p == '\\'){
-      switch (*(p + 1)){
-        case  'n': /* fall */
-        case  't': /* through */
-        case  'a':
-        case  '%':
-        case '\\':
-          p++;
-          break;
-        default: NmError_SetString("unknown escaping sequence '%c%c' in 'printf'", '\\', *(p + 1));
-                 return NULL;
-      }
-    } else if (*p == '%'){
+    if (*p == '%'){
       if (count + 1 > NmArray_NMEMB(args)){
         NmError_SetString("not enough formatting arguments for 'printf' (%d when %d expected)", NmArray_NMEMB(args) - 1, count);
         return NULL;
@@ -197,26 +185,7 @@ static NmObject *builtin_printf(NmObject *args)
   i = 1;
 
   for (p = NmString_VAL(format); *p != '\0'; p++){
-    if (*p == '\\'){
-      switch (*(p + 1)){
-        case 'n':  putchar('\n');
-                   p++;
-                   break;
-        case 't':  putchar('\t');
-                   p++;
-                   break;
-        case 'a':  putchar('\a');
-                   p++;
-                   break;
-        case '%':  putchar('%');
-                   p++;
-        case '\\': putchar('\\');
-                   p++;
-                   break;
-        default: /* should never get here as it should've been already checked up there */
-                   return NULL;
-      }
-    } else if (*p == '%'){
+    if (*p == '%'){
       /* fetch the next argument */
       NmObject *ob = NmArray_GETELEM(args, i);
       switch (*(p + 1)){
