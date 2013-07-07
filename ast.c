@@ -1082,7 +1082,7 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts)
   n->type = NT_CALL;
   n->name = NmMem_Strdup(name);
   n->params = params;
-  n->opts = opts;
+  n->opts = NmMem_Strdup(opts);
   INIT_POS();
 
   NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);

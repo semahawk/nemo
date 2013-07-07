@@ -155,7 +155,8 @@ static Node *primary_expr(LexerState *lex)
        *   { 'e', 'g', 'p', '\0' }
        *
        */
-      char *opts = NmMem_Malloc(optc + 1);
+      /* C99 ROCKS */
+      char opts[optc + 1];
       /* this guard makes things like:
        *
        *   five-4
@@ -167,7 +168,7 @@ static Node *primary_expr(LexerState *lex)
         lex->right_after_funname = true;
         if (NmLexer_Peek(lex, SYM_OPT)){
           Symbol optsym = NmLexer_Force(lex, SYM_OPT);
-          opts = optsym.value.s;
+          strcpy(opts, optsym.value.s);
           NmDebug_Parser("-%s ", opts);
           /* check if not too many options were given */
           if (strlen(opts) > optc){
