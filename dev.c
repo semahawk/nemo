@@ -69,7 +69,7 @@ static NmModuleFuncs module_funcs[] =
   { NULL, NULL, 0, { 0 }, NULL }
 };
 
-void NmDev_Init(void)
+void dev_init(void)
 {
   Nm_InitModule(module_funcs);
 }

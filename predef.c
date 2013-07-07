@@ -1,6 +1,6 @@
 /*
  *
- * builtin.c
+ * predef.c
  *
  * Created at:  Fri 17 May 2013 22:26:42 CEST 22:26:42
  *
@@ -46,7 +46,7 @@
 
 #include "nemo.h"
 
-static NmObject *builtin_len(NmObject *args, bool *opts)
+static NmObject *predef_len(NmObject *args, bool *opts)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
@@ -57,7 +57,7 @@ static NmObject *builtin_len(NmObject *args, bool *opts)
     return NmInt_New(strlen(NmString_VAL(ob)));
 }
 
-static NmObject *builtin_assert(NmObject *args, bool *opts)
+static NmObject *predef_assert(NmObject *args, bool *opts)
 {
   NmObject *first  = NmArray_GETELEM(args, 0);
   NmObject *second = NmArray_GETELEM(args, 1);
@@ -102,7 +102,7 @@ static NmObject *builtin_assert(NmObject *args, bool *opts)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_printf(NmObject *args, bool *opts)
+static NmObject *predef_printf(NmObject *args, bool *opts)
 {
   /* skip over the formatting string */
   size_t i = 1;
@@ -210,7 +210,7 @@ static NmObject *builtin_printf(NmObject *args, bool *opts)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_print(NmObject *args, bool *opts)
+static NmObject *predef_print(NmObject *args, bool *opts)
 {
   for (size_t i = 0; i < NmArray_NMEMB(args); i++){
     NmObject_PRINT(stdout, NmArray_GETELEM(args, i));
@@ -222,12 +222,12 @@ static NmObject *builtin_print(NmObject *args, bool *opts)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_id(NmObject *args, bool *opts)
+static NmObject *predef_id(NmObject *args, bool *opts)
 {
   return NmInt_NewFromVoidPtr((void *)NmArray_GETELEM(args, 0));
 }
 
-static NmObject *builtin_eval(NmObject *args, bool *opts)
+static NmObject *predef_eval(NmObject *args, bool *opts)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
@@ -235,16 +235,16 @@ static NmObject *builtin_eval(NmObject *args, bool *opts)
 }
 
 static NmModuleFuncs module_funcs[] = {
-  { "assert", builtin_assert,  2, { OT_ANY, OT_ANY }, "" },
-  { "eval",   builtin_eval,    1, { OT_STRING }, "" },
-  { "id",     builtin_id,      1, { OT_ANY }, "" },
-  { "len",    builtin_len,     1, { OT_STRING | OT_ARRAY }, "" },
-  { "print",  builtin_print,  -1, { OT_ANY }, "n" },
-  { "printf", builtin_printf, -1, { OT_ANY }, "" },
+  { "assert", predef_assert,  2, { OT_ANY, OT_ANY }, "" },
+  { "eval",   predef_eval,    1, { OT_STRING }, "" },
+  { "id",     predef_id,      1, { OT_ANY }, "" },
+  { "len",    predef_len,     1, { OT_STRING | OT_ARRAY }, "" },
+  { "print",  predef_print,  -1, { OT_ANY }, "n" },
+  { "printf", predef_printf, -1, { OT_ANY }, "" },
   { NULL, NULL, 0, { 0 }, NULL }
 };
 
-void NmBuiltin_Init(void)
+void predef_init(void)
 {
   Nm_InitModule(module_funcs);
 }

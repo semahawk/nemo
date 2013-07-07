@@ -136,10 +136,10 @@ int main(int argc, char *argv[])
    * mode is not run when an argument was not supplied */
   bool met_e_flag = false;
 
-  /* fetch the builtin functions */
-  NmBuiltin_Init();
+  /* fetch the predefined functions */
+  predef_init();
   /* and the dev ones */
-  NmDev_Init();
+  dev_init();
 
   while (1){
     static struct option long_options[] = {

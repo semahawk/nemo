@@ -62,9 +62,9 @@ void Nm_Exit();
 void Nm_InitModule(NmModuleFuncs *);
 bool Nm_UseModule(char *name, char *path);
 bool Nm_IncludeModule(char *name, char *path);
-void NmBuiltin_Init(void);
-void NmDev_Init(void);
 bool NmModule_WasIncluded(char *name);
+void predef_init(void);
+void dev_init(void);
 
 #endif /* NEMO_H */
 
