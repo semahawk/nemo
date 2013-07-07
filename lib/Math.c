@@ -31,12 +31,12 @@
 #include <math.h>
 #include <nemo.h>
 
-static NmObject *Math_sin(NmObject *args)
+static NmObject *Math_sin(NmObject *args, bool *opts)
 {
   return NmFloat_New(sin(NmFloat_VAL(NmArray_GETELEM(args, 0))));
 }
 
-static NmObject *Math_sqrt(NmObject *args)
+static NmObject *Math_sqrt(NmObject *args, bool *opts)
 {
   return NmFloat_New(sqrt(NmInt_VAL(NmArray_GETELEM(args, 0))));
 }

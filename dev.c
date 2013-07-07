@@ -34,7 +34,7 @@
 
 #include "nemo.h"
 
-static NmObject *dev_retarr(NmObject *args)
+static NmObject *dev_retarr(NmObject *args, bool *opts)
 {
   NmObject *ret = NmArray_New(3);
 
@@ -45,7 +45,7 @@ static NmObject *dev_retarr(NmObject *args)
   return ret;
 }
 
-static NmObject *dev_retstr(NmObject *args)
+static NmObject *dev_retstr(NmObject *args, bool *opts)
 {
   /* unused parameter */
   (void)args;
@@ -53,7 +53,7 @@ static NmObject *dev_retstr(NmObject *args)
   return NmString_New("Hello");
 }
 
-static NmObject *dev_optfun(NmObject *args)
+static NmObject *dev_optfun(NmObject *args, bool *opts)
 {
   /* unused parameter */
   (void)args;

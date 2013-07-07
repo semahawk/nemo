@@ -34,7 +34,54 @@
 #include "nemo.h"
 
 /* type of the C functions */
-typedef NmObject *(*NmCFunc)(NmObject /* array */ *);
+/*
+ * The first parameter is NmArrayObject pointer which stores all the arguments.
+ *
+ * The second parameter is an array of bools which indicate which options
+ * are set and which are not.
+ *
+ * Given an example function initialized as:
+ *
+ *     { "foobar", foobar, 1, { OT_ANY }, "baz" }
+ *
+ * we can clearly see that the function "foobar" supports the three
+ * options: 'b', 'a' and 'z'. The order here is significant!
+ *
+ * If this function "foobar" was called like this:
+ *
+ *     foobar -za "argument";
+ *
+ * then the appropriate elements in the bool array would be set to true, so,
+ * finally, the "opts" argument would look like:
+ *
+ *     { false, true, true }
+ *
+ *
+ * Then in the function's definition, to test if for example the
+ * option 'a' was set, one would write:
+ *
+ *     if (opts[1]){
+ *       // the 'a' option is set
+ *     }
+ *
+ */
+typedef NmObject *(*NmCFunc)(NmObject *args, bool *opts);
+
+struct CFunc {
+  /* name of the function */
+  char *name;
+  /* it's body */
+  NmCFunc body;
+  /* number of args */
+  int argc;
+  /* options for the function
+   * it's a string so to get the number of the options
+   * just do strlen(optv) */
+  char *opts;
+  /* the types of which the arguments can be */
+  /* it's an array of { NmObjectType } */
+  NmObjectType *types;
+};
 
 struct Func {
   /* name of the function */
@@ -48,23 +95,7 @@ struct Func {
   /* options for the function
    * it's a string so to get the number of the options
    * just do strlen(optv) */
-  char *optv;
-};
-
-struct CFunc {
-  /* name of the function */
-  char *name;
-  /* it's body */
-  NmCFunc body;
-  /* number of args */
-  int argc;
-  /* options for the function
-   * it's a string so to get the number of the options
-   * just do strlen(optv) */
-  char *optv;
-  /* the types of which the arguments can be */
-  /* it's an array of { NmObjectType } */
-  NmObjectType *types;
+  char *opts;
 };
 
 /* Simple singly linked list */
@@ -90,7 +121,7 @@ typedef struct ModuleFuncs {
   /* it's an array of { NmObjectType } */
   NmObjectType types[32];
   /* the names of the options */
-  char *optv;
+  char *opts;
 } NmModuleFuncs;
 
 typedef struct CFuncsList CFuncsList;

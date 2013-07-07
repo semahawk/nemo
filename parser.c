@@ -111,7 +111,7 @@ static Node *primary_expr(LexerState *lex)
   else if (NmLexer_Peek(lex, SYM_NAME)){
     int argc;
     unsigned optc;
-    char *optv;
+    char *opts;
     CFunc *cfunc;
     Func *func;
     Scope *scope = NmScope_GetCurr();
@@ -125,8 +125,8 @@ static Node *primary_expr(LexerState *lex)
       if (!strcmp(cfuncs->func->name, name)){
         cfunc = cfuncs->func;
         argc = cfunc->argc;
-        optc = strlen(cfunc->optv);
-        optv = cfunc->optv;
+        optc = strlen(cfunc->opts);
+        opts = cfunc->opts;
         isafunc = true;
         break;
       }
@@ -136,8 +136,8 @@ static Node *primary_expr(LexerState *lex)
       if (!strcmp(funcs->func->name, name)){
         func = funcs->func;
         argc = func->argc;
-        optc = strlen(func->optv);
-        optv = func->optv;
+        optc = strlen(func->opts);
+        opts = func->opts;
         isafunc = true;
         break;
       }
@@ -156,7 +156,7 @@ static Node *primary_expr(LexerState *lex)
        *
        */
       /* C99 ROCKS */
-      char opts[optc + 1];
+      char call_opts[optc + 1];
       /* this guard makes things like:
        *
        *   five-4
@@ -168,18 +168,18 @@ static Node *primary_expr(LexerState *lex)
         lex->right_after_funname = true;
         if (NmLexer_Peek(lex, SYM_OPT)){
           Symbol optsym = NmLexer_Force(lex, SYM_OPT);
-          strcpy(opts, optsym.value.s);
-          NmDebug_Parser("-%s ", opts);
+          strcpy(call_opts, optsym.value.s);
+          NmDebug_Parser("-%s ", call_opts);
           /* check if not too many options were given */
-          if (strlen(opts) > optc){
-            NmError_Lex(lex, "too many options given for the function '%s', supported options are '%s'", name, optv);
+          if (strlen(call_opts) > optc){
+            NmError_Lex(lex, "too many options given for the function '%s', supported options are '%s'", name, opts);
             Nm_Exit();
             return NULL;
           }
           /* check if the function supports given options */
-          for (unsigned i = 0; i < strlen(opts); i++){
-            if (!strchr(optv, opts[i])){
-              NmError_Lex(lex, "function '%s' doesn't support the '%c' option", name, opts[i]);
+          for (unsigned i = 0; i < strlen(call_opts); i++){
+            if (!strchr(opts, call_opts[i])){
+              NmError_Lex(lex, "function '%s' doesn't support the '%c' option", name, call_opts[i]);
               Nm_Exit();
               return NULL;
             }
@@ -205,7 +205,7 @@ static Node *primary_expr(LexerState *lex)
         Nm_Exit();
         return NULL;
       }
-      new = NmAST_GenCall(lex->current.pos, name, params, opts);
+      new = NmAST_GenCall(lex->current.pos, name, params, call_opts);
     } else {
       new = NmAST_GenName(lex->current.pos, name);
     }

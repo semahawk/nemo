@@ -192,7 +192,7 @@ typedef struct {
   unsigned argc;
   unsigned optc;
   char **argv;
-  char *optv;
+  char *opts;
 } Node_Funcdef;
 
 typedef struct {

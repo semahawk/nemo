@@ -1,17 +1,21 @@
 /*
  * Nemo programming language.
  *
- * Not really to be usefull in feature. Learning by
- * writing and being cool by saying "I've created a programming language".
+ * Not really to be usefull in feature.
+ *
+ * Just learning by writing and being cool by
+ * saying "I've created a programming language".
  *
  * Copyright: (c) 2012-2013 by Szymon Urbaś <szymon.urbas@aol.com>
  *
- * Started at: Sat Sep 15, 16:05:12 2012
+ * Started at:
+ *   Sat Sep 15, 16:05:12 +0200 2012
  *
  * Checkpoints:
- *   Sat May 25, 14:53:00 2013 - 400 commits!
- *   Sun Mar 31, 19:47:03 2013 - 300 commits!
- *   Mon Feb  5, 22:18:24 2013 - 200 commits!
+ *   Sun Jul  7, 19:12:26 +0200 2013 - 500 commits!
+ *   Sat May 25, 14:53:00 +0200 2013 - 400 commits!
+ *   Sun Mar 31, 19:47:03 +0200 2013 - 300 commits!
+ *   Mon Feb  5, 22:18:24 +0200 2013 - 200 commits!
  *
  * License: MIT
  *
@@ -301,7 +305,7 @@ void Nm_InitModule(NmModuleFuncs *funcs)
     func->name = NmMem_Strdup(f->name);
     func->body = f->ptr;
     func->argc = f->argc;
-    func->optv = f->optv;
+    func->opts = f->opts;
     func->types = f->types;
     list->func = func;
     /* append to the list */

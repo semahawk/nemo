@@ -1138,12 +1138,23 @@ NmObject *NmAST_ExecCall(Node *n)
               Nm_Exit();
               return NULL;
             }
-            /*printf("fun %s -> arg#%lu type: %d, typewanted: %d, matching? %d\n", name, i, ob->type, type, ob->type & type);*/
             NmArray_SETELEM(array, i, ob);
           }
         }
+        /* now, let's check what options were passed */
+        bool opts[strlen(nc->opts)];
+        /* false-out the options */
+        memset(opts, 0, sizeof(opts));
+        /* actually set the options */
+        unsigned j = 0;
+        for (char *p = nc->opts; *p != '\0'; p++, j++)
+          /* NOTE: we are not checking if the option is not supported, or if
+           *       there are too many options or w/e because the parser already
+           *       did it*/
+          if (strchr(list->func->opts, *p))
+            opts[j] = true;
         /* execute the function */
-        ret = list->func->body(array);
+        ret = list->func->body(array, (bool *)&opts);
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, NmError_GetCurr());
@@ -1292,7 +1303,7 @@ void NmAST_FreeBlock(Node *n)
  */
 Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
                        unsigned argc, unsigned optc,
-                       char **argv, char *optv)
+                       char **argv, char *opts)
 {
   Scope *scope = NmScope_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
@@ -1304,12 +1315,12 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   n->argc = argc;
   n->optc = optc;
   n->argv = argv;
-  n->optv = optv;
+  n->opts = opts;
   n->body = body;
   INIT_POS();
 
   if (body)
-    NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d, optv: '%s')", name, (void*)body, argc, optc, optv);
+    NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d, opts: '%s')", name, (void*)body, argc, optc, opts);
   else
     NmDebug_AST(n, "create function declaration node (name: %s, argc: %d, optc: %d)", name, argc, optc);
 
@@ -1319,7 +1330,7 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   f->body = body;
   f->argc = argc;
   f->argv = argv;
-  f->optv = optv;
+  f->opts = opts;
   l->func = f;
   /* append the function */
   l->next = scope->funcs;

@@ -46,7 +46,7 @@
 
 #include "nemo.h"
 
-static NmObject *builtin_len(NmObject *args)
+static NmObject *builtin_len(NmObject *args, bool *opts)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
@@ -57,7 +57,7 @@ static NmObject *builtin_len(NmObject *args)
     return NmInt_New(strlen(NmString_VAL(ob)));
 }
 
-static NmObject *builtin_assert(NmObject *args)
+static NmObject *builtin_assert(NmObject *args, bool *opts)
 {
   NmObject *first  = NmArray_GETELEM(args, 0);
   NmObject *second = NmArray_GETELEM(args, 1);
@@ -102,7 +102,7 @@ static NmObject *builtin_assert(NmObject *args)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_printf(NmObject *args)
+static NmObject *builtin_printf(NmObject *args, bool *opts)
 {
   /* skip over the formatting string */
   size_t i = 1;
@@ -210,21 +210,24 @@ static NmObject *builtin_printf(NmObject *args)
   return NmInt_New(1);
 }
 
-static NmObject *builtin_print(NmObject *args)
+static NmObject *builtin_print(NmObject *args, bool *opts)
 {
   for (size_t i = 0; i < NmArray_NMEMB(args); i++){
     NmObject_PRINT(stdout, NmArray_GETELEM(args, i));
   }
 
+  if (opts[0])
+    fputc('\n', stdout);
+
   return NmInt_New(1);
 }
 
-static NmObject *builtin_id(NmObject *args)
+static NmObject *builtin_id(NmObject *args, bool *opts)
 {
   return NmInt_NewFromVoidPtr((void *)NmArray_GETELEM(args, 0));
 }
 
-static NmObject *builtin_eval(NmObject *args)
+static NmObject *builtin_eval(NmObject *args, bool *opts)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
