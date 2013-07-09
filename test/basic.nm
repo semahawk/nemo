@@ -84,3 +84,7 @@ my comma = 2, 16;
 # ..although, I'm not sure if this is the right behaviour
 assert(comma, 16);
 
+# Test the namespaceness a bit
+my namespaced = 64;
+assert(namespaced, main::namespaced);
+

@@ -85,6 +85,7 @@ typedef struct Namespace Namespace;
 typedef struct NamespacesList NamespacesList;
 
 Namespace *NmNamespace_GetCurr(void);
+Namespace *NmNamespace_GetByName(char *);
 void NmNamespace_New(char *name);
 void NmNamespace_Restore(void);
 void NmNamespace_Tidyup(void);

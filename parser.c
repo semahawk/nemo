@@ -114,11 +114,33 @@ static Node *primary_expr(LexerState *lex)
     char *opts;
     CFunc *cfunc;
     Func *func;
-    Namespace *namespace = NmNamespace_GetCurr();
+    Namespace *namespace;
     Node **params = NULL;
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
     bool isafunc = false;
+    /* XXX fetch the actual name, eg. when the name here is
+     *     "Foo::Bar::baz", only the name "baz" would be retrieved */
+    /* position of the last colon in the name */
+    char *lastcolon = name;
+    /* that's the part before the colons, including the previous colons, like in
+     * the "Foo::Bar::baz" it would point to "Foo::Bar" */
+    char *where = name;
+    for (char *p = name; *p != '\0'; p++)
+      if (*p == ':') lastcolon = p + 1;
+
+    if (lastcolon != name){
+      name = lastcolon;
+      *(lastcolon - 2) = '\0';
+    } else {
+      where = "main";
+    }
+    /* get the correct namespace */
+    if (!(namespace = NmNamespace_GetByName(where))){
+      NmError_Lex(lex, NmError_GetCurr());
+      Nm_Exit();
+      return NULL;
+    }
     /* it could be a function's name, so let's check it out */
     /* search the C functions */
     for (CFuncsList *cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){

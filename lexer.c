@@ -45,10 +45,6 @@
 
 #include "nemo.h"
 
-/* defines which characters are a valid character for eg. name */
-#define validForNameHead(c) (isalpha((c)) || (c) == '_')
-#define validForNameTail(c) (isalpha((c)) || isdigit(c) || (c) == '_')
-
 static struct Keyword {
   const char * const name;
   SymbolType sym;
@@ -150,10 +146,10 @@ tryagain:
   /*
    * XXX name / keyword
    */
-  if (validForNameHead(*p)){
+  if (isalpha(*p) || *p == '_'){
     tmp = NmMem_Strdup(p);
     /* fetch the name */
-    while (validForNameTail(*p)){
+    while (isalpha(*p) || isdigit(*p) || *p == '_' || (*p == ':' && (*(p + 1) == ':') || *(p - 1) == ':')){
       p++; i++;
     }
     p--;

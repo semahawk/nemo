@@ -92,6 +92,16 @@ Namespace *NmNamespace_GetCurr(void)
   return curr->namespace;
 }
 
+Namespace *NmNamespace_GetByName(char *name)
+{
+  for (NamespacesList *p = tail; p != NULL; p = p->next)
+    if (!strcmp(p->namespace->name, name))
+      return p->namespace;
+
+  NmError_SetString("namespace '%s' not found");
+  return NULL;
+}
+
 void NmNamespace_Restore(void)
 {
   curr = tail;
