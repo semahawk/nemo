@@ -92,7 +92,7 @@ static LibHandlesList *handles = NULL;
 /* here are alllll the things that should be done at the exit */
 #define Nm_TIDYUP()  \
   NmObject_Tidyup(); \
-  NmScope_Tidyup();  \
+  NmNamespace_Tidyup();  \
   CLOSE_HANDLES();   \
   included_tidyup()
 
@@ -126,8 +126,8 @@ int main(int argc, char *argv[])
 {
   /* the main node from parsing the given file */
   Node *nodest = NULL;
-  /* the main file's scope */
-  NmScope_New("main");
+  /* the main file's namespace */
+  NmNamespace_New("main");
   /* file input */
   char input[255];
   /* used for getopt */
@@ -295,7 +295,7 @@ static int nmInteractive(void)
 
 void Nm_InitModule(NmModuleFuncs *funcs)
 {
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
 
   /* append all the C functions to the cfuncs */
   for (NmModuleFuncs *f = funcs; f->name != NULL; f++){
@@ -309,8 +309,8 @@ void Nm_InitModule(NmModuleFuncs *funcs)
     func->types = f->types;
     list->func = func;
     /* append to the list */
-    list->next = scope->cfuncs;
-    scope->cfuncs = list;
+    list->next = namespace->cfuncs;
+    namespace->cfuncs = list;
   }
 }
 
@@ -318,9 +318,9 @@ bool Nm_UseModule(char *name, char *path)
 {
   bool ret;
 
-  NmScope_New(name);
+  NmNamespace_New(name);
   ret = Nm_IncludeModule(name, path);
-  NmScope_Restore();
+  NmNamespace_Restore();
 
   return ret;
 }

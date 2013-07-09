@@ -114,14 +114,14 @@ static Node *primary_expr(LexerState *lex)
     char *opts;
     CFunc *cfunc;
     Func *func;
-    Scope *scope = NmScope_GetCurr();
+    Namespace *namespace = NmNamespace_GetCurr();
     Node **params = NULL;
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
     bool isafunc = false;
     /* it could be a function's name, so let's check it out */
     /* search the C functions */
-    for (CFuncsList *cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+    for (CFuncsList *cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
       if (!strcmp(cfuncs->func->name, name)){
         cfunc = cfuncs->func;
         argc = cfunc->argc;
@@ -132,7 +132,7 @@ static Node *primary_expr(LexerState *lex)
       }
     }
     /* search the user defined functions */
-    for (FuncsList *funcs = scope->funcs; funcs != NULL; funcs = funcs->next){
+    for (FuncsList *funcs = namespace->funcs; funcs != NULL; funcs = funcs->next){
       if (!strcmp(funcs->func->name, name)){
         func = funcs->func;
         argc = func->argc;
@@ -897,7 +897,7 @@ static Node *stmt(LexerState *lex)
     /*NmLexer_Skip(lex);*/
     /*body = stmt(lex);*/
     /*ret = body;*/
-    /*NmScope_NewLabel(name, body);*/
+    /*NmNamespace_NewLabel(name, body);*/
   /*}*/
   /*
    * XXX GOTO NAME ';'
@@ -908,8 +908,8 @@ static Node *stmt(LexerState *lex)
     name = namesym.value.s;
     NmDebug_Parser("%s", name);
     ret = NmAST_GenNop(namesym.pos);
-    ret->next = NmScope_GetLabel(name);
-    /* NmScope_GetLabel returns NULL if didn't find the label */
+    ret->next = NmNamespace_GetLabel(name);
+    /* NmNamespace_GetLabel returns NULL if didn't find the label */
     if (!ret->next){
       NmError_Parser(ret, "label '%s' was not found", name);
       Nm_Exit();

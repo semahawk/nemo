@@ -31,7 +31,7 @@
 #include "nemo.h"
 
 /*
- * Creates a new variable of name <name> and value <value> in the current scope.
+ * Creates a new variable of name <name> and value <value> in the current namespace.
  *
  * Note: One have to set flag manually for it (using NmVar_SETFLAG)
  *
@@ -39,16 +39,16 @@
  */
 Variable *NmVar_New(char *name, NmObject *value)
 {
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
   VariablesList *vars_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *var = NmMem_Malloc(sizeof(Variable));
 
-  /* add the newly created variable to the global scope */
+  /* add the newly created variable to the global namespace */
   var->name = NmMem_Strdup(name);
   var->value = value;
   vars_list->var = var;
-  vars_list->next = scope->globals;
-  scope->globals = vars_list;
+  vars_list->next = namespace->globals;
+  namespace->globals = vars_list;
 
   return var;
 }

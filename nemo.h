@@ -29,7 +29,7 @@
 #include "ast.h"
 #include "debug.h"
 #include "funcs.h"
-#include "scope.h"
+#include "namespace.h"
 #include "error.h"
 #include "mem.h"
 #include "parser.h"

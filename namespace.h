@@ -1,6 +1,6 @@
 /*
  *
- * scope.h
+ * namespace.h
  *
  * Created at:  Sat 18 May 2013 11:05:24 CEST 11:05:24
  *
@@ -58,38 +58,38 @@ struct LabelsList {
   struct LabelsList *next;
 };
 
-struct Scope {
-  /* name of scope, eg. main, Math */
+struct Namespace {
+  /* name of namespace, eg. main, Math */
   char *name;
   /* list of global variables */
   VariablesList *globals;
   /* list of the functions */
   CFuncsList *cfuncs;
   FuncsList *funcs;
-  /* list of labels in the scope */
+  /* list of labels in the namespace */
   struct LabelsList *labels;
-  /* a pointer to the parent scope */
-  struct Scope *parent;
+  /* a pointer to the parent namespace */
+  struct Namespace *parent;
 };
 
-/* Doubly linked list of Scope-s */
-struct ScopesList {
-  struct Scope *scope;
-  struct ScopesList *next;
-  struct ScopesList *prev;
+/* Doubly linked list of Namespace-s */
+struct NamespacesList {
+  struct Namespace *namespace;
+  struct NamespacesList *next;
+  struct NamespacesList *prev;
 };
 
 typedef struct Label Label;
 typedef struct LabelsList LabelsList;
-typedef struct Scope Scope;
-typedef struct ScopesList ScopesList;
+typedef struct Namespace Namespace;
+typedef struct NamespacesList NamespacesList;
 
-Scope *NmScope_GetCurr(void);
-void NmScope_New(char *name);
-void NmScope_Restore(void);
-void NmScope_Tidyup(void);
-void NmScope_NewLabel(char *name, Node *node);
-Node *NmScope_GetLabel(char *name);
+Namespace *NmNamespace_GetCurr(void);
+void NmNamespace_New(char *name);
+void NmNamespace_Restore(void);
+void NmNamespace_Tidyup(void);
+void NmNamespace_NewLabel(char *name, Node *node);
+Node *NmNamespace_GetLabel(char *name);
 
 #endif /* INTERP_H */
 

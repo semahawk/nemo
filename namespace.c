@@ -1,6 +1,6 @@
 /*
  *
- * scope.c
+ * namespace.c
  *
  * Created at:  Sat 18 May 2013 11:31:05 CEST 11:31:05
  *
@@ -30,83 +30,83 @@
 
 #include "nemo.h"
 
-static ScopesList *head = NULL;
-static ScopesList *tail = NULL;
-static ScopesList *curr = NULL;
+static NamespacesList *head = NULL;
+static NamespacesList *tail = NULL;
+static NamespacesList *curr = NULL;
 
 /* forward */
-static void NmScope_Destroy(Scope *);
+static void NmNamespace_Destroy(Namespace *);
 
-void NmScope_New(char *name)
+void NmNamespace_New(char *name)
 {
-  Scope *scope = NmMem_Malloc(sizeof(Scope));
-  ScopesList *scope_list = NmMem_Malloc(sizeof(ScopesList));
+  Namespace *namespace = NmMem_Malloc(sizeof(Namespace));
+  NamespacesList *namespace_list = NmMem_Malloc(sizeof(NamespacesList));
   VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *null = NmMem_Malloc(sizeof(Variable));
 
-  scope->name = NmMem_Strdup(name);
-  scope->cfuncs = NULL;
-  scope->funcs = NULL;
-  scope->globals = NULL;
-  scope->labels = NULL;
+  namespace->name = NmMem_Strdup(name);
+  namespace->cfuncs = NULL;
+  namespace->funcs = NULL;
+  namespace->globals = NULL;
+  namespace->labels = NULL;
   if (curr)
-    scope->parent = curr->scope;
+    namespace->parent = curr->namespace;
   else
-    scope->parent = NULL;
+    namespace->parent = NULL;
 
-  /* add the "null" variable to the global scope */
+  /* add the "null" variable to the global namespace */
   null->name = NmMem_Strdup("null");
   null->value = NmNull;
   NmVar_SETFLAG(null, NMVAR_FLAG_CONST);
   null_list->var = null;
-  null_list->next = scope->globals;
-  scope->globals = null_list;
+  null_list->next = namespace->globals;
+  namespace->globals = null_list;
 
-  /* append the scope to the scopes list */
-  scope_list->scope = scope;
+  /* append the namespace to the namespaces list */
+  namespace_list->namespace = namespace;
   /* the list is empty */
   if (!head && !tail){
-    scope_list->next = head;
-    scope_list->prev = tail;
-    head = scope_list;
-    tail = scope_list;
+    namespace_list->next = head;
+    namespace_list->prev = tail;
+    head = namespace_list;
+    tail = namespace_list;
   }
   /* the list is NOT empty */
   else {
-    scope_list->next = head->next;
-    head->next = scope_list;
-    scope_list->prev = head;
-    head = scope_list;
+    namespace_list->next = head->next;
+    head->next = namespace_list;
+    namespace_list->prev = head;
+    head = namespace_list;
   }
   /* set the current point to the new one */
-  curr = scope_list;
+  curr = namespace_list;
 }
 
-Scope *NmScope_GetCurr(void)
+Namespace *NmNamespace_GetCurr(void)
 {
   if (!curr){
-    NmError_Error("ran out of scopes!");
+    NmError_Error("ran out of namespaces!");
     exit(EXIT_FAILURE);
   }
 
-  return curr->scope;
+  return curr->namespace;
 }
 
-void NmScope_Restore(void)
+void NmNamespace_Restore(void)
 {
   curr = tail;
 }
 
 /*
- * @name - NmScope_Destroy
- * @desc - destroy the current Scope and all of it's globals and functions
+ * @name - NmNamespace_Destroy
+ * @desc - destroy the current Namespace and all of it's globals and functions
  */
-static void NmScope_Destroy(Scope *scope)
+static void NmNamespace_Destroy(Namespace *namespace)
 {
   VariablesList *vars;
   VariablesList *vars_next;
   /* destroy all the global variables */
-  for (vars = scope->globals; vars != NULL; vars = vars_next){
+  for (vars = namespace->globals; vars != NULL; vars = vars_next){
     vars_next = vars->next;
     NmMem_Free(vars->var->name);
     NmMem_Free(vars->var);
@@ -116,7 +116,7 @@ static void NmScope_Destroy(Scope *scope)
   CFuncsList *cfuncs;
   CFuncsList *cfuncs_next;
   /* destroy all the C functions */
-  for (cfuncs = scope->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
+  for (cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
     cfuncs_next = cfuncs->next;
     NmMem_Free(cfuncs->func->name);
     NmMem_Free(cfuncs->func);
@@ -126,40 +126,40 @@ static void NmScope_Destroy(Scope *scope)
   LabelsList *labels;
   LabelsList *labels_next;
   /* destroy all the labels */
-  for (labels = scope->labels; labels != NULL; labels = labels_next){
+  for (labels = namespace->labels; labels != NULL; labels = labels_next){
     labels_next = labels->next;
     NmMem_Free(labels->label->name);
     NmMem_Free(labels->label);
     NmMem_Free(labels);
   }
 
-  /* destroy all the elements in the scopes list */
-  NmMem_Free(scope->name);
-  NmMem_Free(scope);
+  /* destroy all the elements in the namespaces list */
+  NmMem_Free(namespace->name);
+  NmMem_Free(namespace);
 }
 
-void NmScope_Tidyup(void)
+void NmNamespace_Tidyup(void)
 {
-  ScopesList *scopes;
-  ScopesList *next;
+  NamespacesList *namespaces;
+  NamespacesList *next;
 
-  for (scopes = tail; scopes != NULL; scopes = next){
-    next = scopes->next;
-    NmScope_Destroy(scopes->scope);
-    NmMem_Free(scopes);
+  for (namespaces = tail; namespaces != NULL; namespaces = next){
+    next = namespaces->next;
+    NmNamespace_Destroy(namespaces->namespace);
+    NmMem_Free(namespaces);
   }
 }
 
 /*
  * Creates a new label, of given <name> and <node>
- * and appends it to the current scope.
+ * and appends it to the current namespace.
  */
-void NmScope_NewLabel(char *name, Node *node)
+void NmNamespace_NewLabel(char *name, Node *node)
 {
   /* create it */
   LabelsList *new_list = NmMem_Malloc(sizeof(LabelsList));
   Label *new_label = NmMem_Malloc(sizeof(Label));
-  Scope *scope = curr->scope;
+  Namespace *namespace = curr->namespace;
 
   /* initialize it */
   new_label->name = NmMem_Strdup(name);
@@ -167,17 +167,17 @@ void NmScope_NewLabel(char *name, Node *node)
   new_list->label = new_label;
 
   /* append it */
-  new_list->next = scope->labels;
-  scope->labels = new_list;
+  new_list->next = namespace->labels;
+  namespace->labels = new_list;
 }
 
 /*
  * Returns the node associated with a label of a given <name>
  * or NULL if the label was not found.
  */
-Node *NmScope_GetLabel(char *name)
+Node *NmNamespace_GetLabel(char *name)
 {
-  for (LabelsList *p = curr->scope->labels; p != NULL; p = p->next)
+  for (LabelsList *p = curr->namespace->labels; p != NULL; p = p->next)
     if (!strcmp(name, p->label->name))
       return p->label->node;
 

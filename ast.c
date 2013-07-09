@@ -393,7 +393,7 @@ Node *NmAST_GenName(Pos pos, char *name)
   NmDebug_AST(n, "create name node (name: %s)", name);
 
   /* search for the variable */
-  for (VariablesList *vars = NmScope_GetCurr()->globals; vars != NULL; vars = vars->next){
+  for (VariablesList *vars = NmNamespace_GetCurr()->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, name)){
       found = true;
       break;
@@ -415,12 +415,12 @@ Node *NmAST_GenName(Pos pos, char *name)
 NmObject *NmAST_ExecName(Node *n)
 {
   Node_Name *nc = (Node_Name *)n;
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
 
   NmDebug_AST(n, "execute name node");
 
   /* search for the variable */
-  for (VariablesList *vars = scope->globals; vars != NULL; vars = vars->next){
+  for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, nc->name)){
       return vars->var->value;
     }
@@ -471,7 +471,7 @@ Node *NmAST_GenBinop(Pos pos, Node *left, BinaryOp op, Node *right)
 NmObject *NmAST_ExecBinop(Node *n)
 {
   Node_Binop *nc = (Node_Binop *)n;
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
 
   Node *left  = nc->left;
   Node *right = nc->right;
@@ -497,7 +497,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     }
     name = ((Node_Name *)nc->left)->name;
     /* iterate through the variables */
-    for (p = scope->globals; p != NULL; p = p->next){
+    for (p = namespace->globals; p != NULL; p = p->next){
       if (!strcmp(p->var->name, name)){
         found = true;
         var = p->var;
@@ -1004,13 +1004,13 @@ Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
 
   NmDebug_AST(n, "create variable declaration node (name: %s)", name);
 
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *new_var = NmMem_Malloc(sizeof(Variable));
   VariablesList *p;
 
   /* before doing anything, check if that variable was already declared */
-  for (p = scope->globals; p != NULL; p = p->next){
+  for (p = namespace->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, name)){
       NmError_Parser((Node *)n, "global variable '%s' already declared", name);
       Nm_Exit();
@@ -1028,8 +1028,8 @@ Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
   new_var->flags = n->flags;
   /* append to the globals list */
   new_list->var = new_var;
-  new_list->next = scope->globals;
-  scope->globals = new_list;
+  new_list->next = namespace->globals;
+  namespace->globals = new_list;
 
   return (Node *)n;
 }
@@ -1098,16 +1098,16 @@ NmObject *NmAST_ExecCall(Node *n)
 {
   Node_Call *nc = (Node_Call *)n;
   NmObject *ret = NULL;
-  Scope *scope;
+  Namespace *namespace;
   char *name = nc->name;
 
   NmDebug_AST(n, "execute function call node");
 
   /* iterate through all (well, not all, from the current one, through it's
-   * parents, to the main) the scopes */
-  for (scope = NmScope_GetCurr(); scope != NULL; scope = scope->parent){
+   * parents, to the main) the namespaces */
+  for (namespace = NmNamespace_GetCurr(); namespace != NULL; namespace = namespace->parent){
     /* first check for the C functions */
-    for (CFuncsList *list = scope->cfuncs; list != NULL; list = list->next){
+    for (CFuncsList *list = namespace->cfuncs; list != NULL; list = list->next){
       if (!strcmp(list->func->name, name)){
         size_t nmemb = 0;
         size_t i = 0;
@@ -1166,7 +1166,7 @@ NmObject *NmAST_ExecCall(Node *n)
       }
     }
     /* and then for the Nemo functions */
-    for (FuncsList *list = scope->funcs; list != NULL; list = list->next){
+    for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
       if (!strcmp(list->func->name, name)){
         ret = NmAST_Exec(list->func->body);
         /* if a function returns NULL it means something went wrong */
@@ -1181,7 +1181,7 @@ NmObject *NmAST_ExecCall(Node *n)
     }
   }
 
-  NmError_Parser(n, "function '%s' not found", name, scope->name);
+  NmError_Parser(n, "function '%s' not found", name);
   Nm_Exit();
   return NULL;
 }
@@ -1305,7 +1305,7 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
                        unsigned argc, unsigned optc,
                        char **argv, char *opts)
 {
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
   Func *f = NmMem_Malloc(sizeof(Func));
   Node_Funcdef *n = NmMem_Calloc(1, sizeof(Node_Funcdef));
@@ -1333,8 +1333,8 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   f->opts = opts;
   l->func = f;
   /* append the function */
-  l->next = scope->funcs;
-  scope->funcs = l;
+  l->next = namespace->funcs;
+  namespace->funcs = l;
 
   return (Node *)n;
 }

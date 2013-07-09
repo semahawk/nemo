@@ -86,12 +86,12 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
 
 void NmError_Parser(Node *n, const char *msg, ...)
 {
-  Scope *scope = NmScope_GetCurr();
+  Namespace *namespace = NmNamespace_GetCurr();
 
   va_list vl;
   va_start(vl, msg);
 
-  fprintf(stderr, "In file %s: ", scope->name);
+  fprintf(stderr, "In file %s: ", namespace->name);
 
   vfprintf(stderr, msg, vl);
   fprintf(stderr, " at line %u in column %u", n->pos.line, n->pos.column);
