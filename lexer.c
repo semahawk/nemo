@@ -149,7 +149,10 @@ tryagain:
   if (isalpha(*p) || *p == '_'){
     tmp = NmMem_Strdup(p);
     /* fetch the name */
-    while (isalpha(*p) || isdigit(*p) || *p == '_' || (*p == ':' && (*(p + 1) == ':') || *(p - 1) == ':')){
+    while (isalpha(*p) ||
+           isdigit(*p) ||
+           *p == '_'   ||
+          (*p == '.' && (*(p + 1) != '.') && (*(p - 1) != '.'))){
       p++; i++;
     }
     p--;

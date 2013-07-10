@@ -120,20 +120,20 @@ static Node *primary_expr(LexerState *lex)
     name = namesym.value.s;
     bool isafunc = false;
     /* XXX fetch the actual name, eg. when the name here is
-     *     "Foo::Bar::baz", only the name "baz" would be retrieved */
-    /* position of the last colon in the name */
-    char *lastcolon = name;
-    /* that's the part before the colons, including the previous colons, like in
-     * the "Foo::Bar::baz" it would point to "Foo::Bar" */
+     *     "Foo.Bar.baz", only the name "baz" would be retrieved */
+    /* position of the last dot in the name */
+    char *lastdot = name;
+    /* 'where' is the part before the dots, including the previous dots, like in
+     * the "Foo.Bar.baz" it would point to "Foo.Bar" */
     char *where = name;
     for (char *p = name; *p != '\0'; p++)
-      if (*p == ':') lastcolon = p + 1;
+      if (*p == '.') lastdot = p + 1;
 
-    if (lastcolon != name){
-      name = lastcolon;
-      *(lastcolon - 2) = '\0';
+    if (lastdot != name){
+      name = lastdot;
+      *(lastdot - 1) = '\0';
     } else {
-      where = "main";
+      where = NmNamespace_GetCurr()->name;
     }
     /* get the correct namespace */
     if (!(namespace = NmNamespace_GetByName(where))){
@@ -227,9 +227,9 @@ static Node *primary_expr(LexerState *lex)
         Nm_Exit();
         return NULL;
       }
-      new = NmAST_GenCall(lex->current.pos, name, params, call_opts);
+      new = NmAST_GenCall(lex->current.pos, name, params, call_opts, namespace);
     } else {
-      new = NmAST_GenName(lex->current.pos, name);
+      new = NmAST_GenName(lex->current.pos, name, namespace);
     }
   }
   /*

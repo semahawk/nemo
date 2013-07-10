@@ -381,7 +381,7 @@ void NmAST_FreeArray(Node *n)
  * @name - NmAST_GenName
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(Pos pos, char *name)
+Node *NmAST_GenName(Pos pos, char *name, struct Namespace *namespace)
 {
   Node_Name *n = NmMem_Calloc(1, sizeof(Node_Name));
   bool found = false;
@@ -393,7 +393,7 @@ Node *NmAST_GenName(Pos pos, char *name)
   NmDebug_AST(n, "create name node (name: %s)", name);
 
   /* search for the variable */
-  for (VariablesList *vars = NmNamespace_GetCurr()->globals; vars != NULL; vars = vars->next){
+  for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, name)){
       found = true;
       break;
@@ -401,7 +401,7 @@ Node *NmAST_GenName(Pos pos, char *name)
   }
 
   if (!found){
-    NmError_Parser((Node *)n, "variable '%s' was not found", name);
+    NmError_Parser((Node *)n, "variable '%s::%s' was not found", namespace->name, name);
     Nm_Exit();
   }
 
@@ -1075,7 +1075,7 @@ void NmAST_FreeDecl(Node *n)
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
-Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts)
+Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts, struct Namespace *namespace)
 {
   Node_Call *n = NmMem_Calloc(1, sizeof(Node_Call));
 
@@ -1083,6 +1083,7 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts)
   n->name = NmMem_Strdup(name);
   n->params = params;
   n->opts = NmMem_Strdup(opts);
+  n->namespace = namespace;
   INIT_POS();
 
   NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
@@ -1098,85 +1099,85 @@ NmObject *NmAST_ExecCall(Node *n)
 {
   Node_Call *nc = (Node_Call *)n;
   NmObject *ret = NULL;
-  Namespace *namespace;
+  Namespace *namespace = nc->namespace;
   char *name = nc->name;
 
   NmDebug_AST(n, "execute function call node");
 
-  /* iterate through all (well, not all, from the current one, through it's
-   * parents, to the main) the namespaces */
-  for (namespace = NmNamespace_GetCurr(); namespace != NULL; namespace = namespace->parent){
-    /* first check for the C functions */
-    for (CFuncsList *list = namespace->cfuncs; list != NULL; list = list->next){
-      if (!strcmp(list->func->name, name)){
-        size_t nmemb = 0;
-        size_t i = 0;
-        /* count how many elements there are */
-        if (nc->params)
-          for (Node **p = nc->params; *p != NULL; p++)
-            nmemb++;
-        /* parameters are stored as an array */
-        NmObject *array = NmArray_New(nmemb);
-        /* set the arrays elements */
-        if (nc->params){
-          /* but first, type checking
-           * if the function takes -1 then every argument should of type
-           * <list->func->types[0]>, if the number of arguments is >= 0 then
-           * every argument should be of the matching element in
-           * <list->func->types> */
-          for (Node **p = nc->params; *p != NULL; p++, i++){
-            NmObjectType type;
-            if (list->func->argc < 0){
-              type = list->func->types[0];
-            } else {
-              type = list->func->types[i];
-            }
-            /* actually check the type of the current argument */
-            NmObject *ob = NmAST_Exec(*p);
-            if (!(ob->type & type)){
-              NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(ob->fn.type_repr()), NmString_VAL(NmObject_TypeToS(type)));
-              Nm_Exit();
-              return NULL;
-            }
-            NmArray_SETELEM(array, i, ob);
+  /*
+   * TODO: move function existance checking to the GenCall
+   */
+
+  /* first check for the C functions */
+  for (CFuncsList *list = namespace->cfuncs; list != NULL; list = list->next){
+    if (!strcmp(list->func->name, name)){
+      size_t nmemb = 0;
+      size_t i = 0;
+      /* count how many elements there are */
+      if (nc->params)
+        for (Node **p = nc->params; *p != NULL; p++)
+          nmemb++;
+      /* parameters are stored as an array */
+      NmObject *array = NmArray_New(nmemb);
+      /* set the arrays elements */
+      if (nc->params){
+        /* but first, type checking
+         * if the function takes -1 then every argument should of type
+         * <list->func->types[0]>, if the number of arguments is >= 0 then
+         * every argument should be of the matching element in
+         * <list->func->types> */
+        for (Node **p = nc->params; *p != NULL; p++, i++){
+          NmObjectType type;
+          if (list->func->argc < 0){
+            type = list->func->types[0];
+          } else {
+            type = list->func->types[i];
           }
-        }
-        /* now, let's check what options were passed */
-        bool opts[strlen(nc->opts)];
-        /* false-out the options */
-        memset(opts, 0, sizeof(opts));
-        /* actually set the options */
-        unsigned j = 0;
-        for (char *p = nc->opts; *p != '\0'; p++, j++)
-          /* NOTE: we are not checking if the option is not supported, or if
-           *       there are too many options or w/e because the parser already
-           *       did it*/
-          if (strchr(list->func->opts, *p))
-            opts[j] = true;
-        /* execute the function */
-        ret = list->func->body(array, (bool *)&opts);
-        /* if a function returns NULL it means something went wrong */
-        if (ret == NULL){
-          NmError_Parser(n, NmError_GetCurr());
-          Nm_Exit();
-          return NULL;
-        } else {
-          return ret;
+          /* actually check the type of the current argument */
+          NmObject *ob = NmAST_Exec(*p);
+          if (!(ob->type & type)){
+            NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(ob->fn.type_repr()), NmString_VAL(NmObject_TypeToS(type)));
+            Nm_Exit();
+            return NULL;
+          }
+          NmArray_SETELEM(array, i, ob);
         }
       }
+      /* now, let's check what options were passed */
+      bool opts[strlen(nc->opts)];
+      /* false-out the options */
+      memset(opts, 0, sizeof(opts));
+      /* actually set the options */
+      unsigned j = 0;
+      for (char *p = nc->opts; *p != '\0'; p++, j++)
+        /* NOTE: we are not checking if the option is not supported, or if
+         *       there are too many options or w/e because the parser already
+         *       did it*/
+        if (strchr(list->func->opts, *p))
+          opts[j] = true;
+      /* execute the function */
+      ret = list->func->body(array, (bool *)&opts);
+      /* if a function returns NULL it means something went wrong */
+      if (ret == NULL){
+        NmError_Parser(n, NmError_GetCurr());
+        Nm_Exit();
+        return NULL;
+      } else {
+        return ret;
+      }
     }
-    /* and then for the Nemo functions */
-    for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
-      if (!strcmp(list->func->name, name)){
-        ret = NmAST_Exec(list->func->body);
-        /* if a function returns NULL it means something went wrong */
-        if (ret == NULL){
-          NmError_Parser(n, "executing function '%s' went wrong", name);
-          Nm_Exit();
-          return NULL;
-        } else {
-          return ret;
-        }
+  }
+  /* and then for the Nemo functions */
+  for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
+    if (!strcmp(list->func->name, name)){
+      ret = NmAST_Exec(list->func->body);
+      /* if a function returns NULL it means something went wrong */
+      if (ret == NULL){
+        NmError_Parser(n, "executing function '%s' went wrong", name);
+        Nm_Exit();
+        return NULL;
+      } else {
+        return ret;
       }
     }
   }
@@ -1336,6 +1337,8 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   l->next = namespace->funcs;
   namespace->funcs = l;
 
+  printf("created function %s::%s\n", namespace->name, name);
+
   return (Node *)n;
 }
 
@@ -1392,6 +1395,18 @@ Node *NmAST_GenInclude(Pos pos, char *fname, char *custom_path, bool use)
 
   NmDebug_AST(n, "create include node (fname: %s, custom_path: %p, use: %d)", fname, custom_path, use);
 
+  if (use){
+    if (!Nm_UseModule(fname, custom_path)){
+      NmError_Parser((Node *)n, NmError_GetCurr());
+      Nm_Exit();
+    }
+  } else {
+    if (!Nm_IncludeModule(fname, custom_path)){
+      NmError_Parser((Node *)n, NmError_GetCurr());
+      Nm_Exit();
+    }
+  }
+
   return (Node *)n;
 }
 
@@ -1406,18 +1421,6 @@ NmObject *NmAST_ExecInclude(Node *n)
   assert(n->type == NT_INCLUDE);
 
   Node_Include *nc = (Node_Include *)n;
-
-  if (nc->use){
-    if (!Nm_UseModule(nc->fname, nc->custom_path)){
-      NmError_Parser(n, NmError_GetCurr());
-      return NmInt_New(0);
-    }
-  } else {
-    if (!Nm_IncludeModule(nc->fname, nc->custom_path)){
-      NmError_Parser(n, NmError_GetCurr());
-      return NmInt_New(0);
-    }
-  }
 
   return NmInt_New(1);
 }

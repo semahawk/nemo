@@ -3,7 +3,7 @@
 #
 
 CC      = @CC@
-CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99
+CFLAGS := $(CFLAGS) -g -W -Wall -Wextra -std=c99 -O2
 SHELL   = @SHELL@
 
 prefix = @prefix@

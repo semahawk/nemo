@@ -49,10 +49,6 @@ void NmNamespace_New(char *name)
   namespace->funcs = NULL;
   namespace->globals = NULL;
   namespace->labels = NULL;
-  if (curr)
-    namespace->parent = curr->namespace;
-  else
-    namespace->parent = NULL;
 
   /* add the "null" variable to the global namespace */
   null->name = NmMem_Strdup("null");
@@ -84,9 +80,14 @@ void NmNamespace_New(char *name)
 
 Namespace *NmNamespace_GetCurr(void)
 {
+  printf("curr is %ld, %p, %lu\n", (intptr_t)curr, (void*)curr, (unsigned long)curr);
   if (!curr){
     NmError_Error("ran out of namespaces!");
-    exit(EXIT_FAILURE);
+    char *p = NULL;
+    /* GDB backtrace preserve */
+    *p = *p;
+    exit(64);
+    return NULL;
   }
 
   return curr->namespace;
@@ -94,9 +95,11 @@ Namespace *NmNamespace_GetCurr(void)
 
 Namespace *NmNamespace_GetByName(char *name)
 {
-  for (NamespacesList *p = tail; p != NULL; p = p->next)
-    if (!strcmp(p->namespace->name, name))
+  for (NamespacesList *p = head; p != NULL; p = p->next){
+    if (!strcmp(p->namespace->name, name)){
       return p->namespace;
+    }
+  }
 
   NmError_SetString("namespace '%s' not found");
   return NULL;
@@ -104,7 +107,9 @@ Namespace *NmNamespace_GetByName(char *name)
 
 void NmNamespace_Restore(void)
 {
+  printf("restore before: curr is %p, tail is %p\n", (void*)curr, (void*)tail);
   curr = tail;
+  printf("restore  after: curr is %p, tail is %p\n", (void*)curr, (void*)tail);
 }
 
 /*

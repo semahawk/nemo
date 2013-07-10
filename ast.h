@@ -130,6 +130,7 @@ typedef struct {
 typedef struct {
   NMNODE_HEAD;
   char *name;
+  struct Namespace *namespace;
 } Node_Name;
 
 typedef struct {
@@ -163,6 +164,7 @@ typedef struct {
   char *name;
   struct Node **params;
   char *opts;
+  struct Namespace *namespace;
 } Node_Call;
 
 typedef struct {
@@ -221,17 +223,20 @@ typedef enum   UnaryOp   UnaryOp;
 typedef enum   NodeType  NodeType;
 typedef struct Statement Statement;
 
+/* defined in namespace.h */
+struct Namespace;
+
 Node *NmAST_GenInt(Pos, int);
 Node *NmAST_GenFloat(Pos, float);
 Node *NmAST_GenString(Pos, char *);
 Node *NmAST_GenArray(Pos, Node **);
-Node *NmAST_GenName(Pos, char *);
+Node *NmAST_GenName(Pos, char *, struct Namespace *);
 Node *NmAST_GenBinop(Pos, Node *, BinaryOp, Node *);
 Node *NmAST_GenUnop(Pos, Node *, UnaryOp);
 Node *NmAST_GenIf(Pos, Node *, Node *, Node *, bool);
 Node *NmAST_GenWhile(Pos, Node *, Node *, Node *, bool);
 Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
-Node *NmAST_GenCall(Pos, char *, Node **, char *);
+Node *NmAST_GenCall(Pos, char *, Node **, char *, struct Namespace *);
 Node *NmAST_GenStmt(Pos, Node *);
 Node *NmAST_GenFuncDef(Pos, char *, Node *, unsigned, unsigned, char **, char *);
 Node *NmAST_GenInclude(Pos, char *, char *, bool);
