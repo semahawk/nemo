@@ -239,7 +239,7 @@ Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
 Node *NmAST_GenCall(Pos, char *, Node **, char *, struct Namespace *);
 Node *NmAST_GenStmt(Pos, Node *);
 Node *NmAST_GenFuncDef(Pos, char *, Node *, unsigned, unsigned, char **, char *);
-Node *NmAST_GenInclude(Pos, char *, char *, bool);
+Node *NmAST_GenInclude(Pos, char *, bool);
 Node *NmAST_GenNop(Pos);
 
 NmObject *NmAST_ExecInt(Node *);

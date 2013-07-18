@@ -401,7 +401,7 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *namespace)
   }
 
   if (!found){
-    NmError_Parser((Node *)n, "variable '%s::%s' was not found", namespace->name, name);
+    NmError_Parser((Node *)n, "variable '%s.%s' was not found", namespace->name, name);
     Nm_Exit();
   }
 
@@ -1337,7 +1337,7 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   l->next = namespace->funcs;
   namespace->funcs = l;
 
-  printf("created function %s::%s\n", namespace->name, name);
+  printf("created function %s.%s\n", namespace->name, name);
 
   return (Node *)n;
 }
@@ -1383,25 +1383,24 @@ void NmAST_FreeFuncDef(Node *n)
  * @name - NmAST_GenInclude
  * @desc - creates a node that creates does the including thing
  */
-Node *NmAST_GenInclude(Pos pos, char *fname, char *custom_path, bool use)
+Node *NmAST_GenInclude(Pos pos, char *fname, bool use)
 {
   Node_Include *n = NmMem_Calloc(1, sizeof(Node_Include));
 
   n->type = NT_INCLUDE;
   n->fname = NmMem_Strdup(fname);
-  n->custom_path = NmMem_Strdup(custom_path);
   n->use = use;
   INIT_POS();
 
-  NmDebug_AST(n, "create include node (fname: %s, custom_path: %p, use: %d)", fname, custom_path, use);
+  NmDebug_AST(n, "create include node (fname: %s, use: %d)", fname, use);
 
   if (use){
-    if (!Nm_UseModule(fname, custom_path)){
+    if (!Nm_UseModule(fname)){
       NmError_Parser((Node *)n, NmError_GetCurr());
       Nm_Exit();
     }
   } else {
-    if (!Nm_IncludeModule(fname, custom_path)){
+    if (!Nm_IncludeModule(fname)){
       NmError_Parser((Node *)n, NmError_GetCurr());
       Nm_Exit();
     }

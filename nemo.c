@@ -161,12 +161,12 @@ int main(int argc, char *argv[])
     switch (c){
       case 'u':
       {
-        Nm_UseModule(optarg, NULL);
+        Nm_UseModule(optarg);
         break;
       }
       case 'i':
       {
-        Nm_IncludeModule(optarg, NULL);
+        Nm_IncludeModule(optarg);
         break;
       }
       case 'e':
@@ -314,12 +314,12 @@ void Nm_InitModule(NmModuleFuncs *funcs)
   }
 }
 
-bool Nm_UseModule(char *name, char *path)
+bool Nm_UseModule(char *name)
 {
   bool ret;
 
   NmNamespace_New(name);
-  ret = Nm_IncludeModule(name, path);
+  ret = Nm_IncludeModule(name);
   NmNamespace_Restore();
 
   return ret;
@@ -328,15 +328,14 @@ bool Nm_UseModule(char *name, char *path)
 /*
  * Search paths: (the higher the firster (hehe))
  *
- *   - <path>
  *   - ./
- *   - /usr/lib/nemo
+ *   - ${LIBDIR}/nemo
  *
  * Return false if the library couldn't be found
  *        true  if the library loaded fine
  *
  */
-bool Nm_IncludeModule(char *name, char *path)
+bool Nm_IncludeModule(char *name)
 {
   /*
    * NOTE: both macros goto included which is at the very end of the function
@@ -390,12 +389,6 @@ bool Nm_IncludeModule(char *name, char *path)
   char lib_path_so[64];
   /* library path with name.nm appended */
   char lib_path_nm[64];
-  /* custom path */
-  char custom_path[64];
-  /* custom path with name.so appended */
-  char custom_path_so[64];
-  /* custom path with name.nm appended */
-  char custom_path_nm[64];
   /* relative path */
   char relative_path[64];
   /* relative path with name.so appended */
@@ -409,25 +402,10 @@ bool Nm_IncludeModule(char *name, char *path)
   sprintf(lib_path,    LIBDIR "/nemo/");
   sprintf(lib_path_so, LIBDIR "/nemo/%s.so",    name);
   sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",    name);
-  if (path){
-    sprintf(custom_path,        "%s/",      path);
-    sprintf(custom_path_so,     "%s/%s.so", path, name);
-    sprintf(custom_path_nm,     "%s/%s.nm", path, name);
-  }
   sprintf(relative_path,      "%s/",      cwd);
   sprintf(relative_path_so,   "%s/%s.so", cwd,  name);
   sprintf(relative_path_nm,   "%s/%s.nm", cwd,  name);
   sprintf(init_func,          "%s_init",        name);
-
-  if (path){
-    /* there is a .so library in the custom path */
-    if ((fp = fopen(custom_path_so, "rb")) != NULL){
-      INCLUDE_SO(custom_path_so);
-    /* there is a Nemo file in the custom path */
-    } else if ((fp = fopen(custom_path_nm, "r")) != NULL){
-      INCLUDE_NM(custom_path_nm);
-    }
-  }
 
   /* there is a .so library in the current directory */
   if ((fp = fopen(relative_path_so, "rb")) != NULL){
@@ -446,10 +424,7 @@ bool Nm_IncludeModule(char *name, char *path)
   }
 
   free(cwd); /* getcwd does malloc */
-  if (path)
-    NmError_SetString("couldn't find module '%s' in any of the following: %s, %s, %s", name, custom_path, relative_path, lib_path);
-  else
-    NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
+  NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
 
   return false;
 

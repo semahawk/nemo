@@ -863,7 +863,6 @@ static Node *stmt(LexerState *lex)
   Node *elsee = NULL;
   Node *value = NULL;
   char *name  = NULL;
-  char *path  = NULL;
   Pos savedpos = lex->current.pos;
 
   /*
@@ -958,17 +957,7 @@ static Node *stmt(LexerState *lex)
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
     NmDebug_Parser("%s ", name);
-    /*
-     * XXX USE NAME PATH ';'
-     * XXX INCLUDE NAME PATH ';'
-     */
-    if (NmLexer_Peek(lex, SYM_STRING)){
-      path = lex->current.value.s;
-      NmLexer_Skip(lex);
-    } else {
-      path = NULL;
-    }
-    ret = NmAST_GenInclude(savepos, name, path, use);
+    ret = NmAST_GenInclude(savepos, name, use);
     endStmt(lex);
   }
   /*
