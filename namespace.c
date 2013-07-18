@@ -80,13 +80,8 @@ void NmNamespace_New(char *name)
 
 Namespace *NmNamespace_GetCurr(void)
 {
-  printf("curr is %ld, %p, %lu\n", (intptr_t)curr, (void*)curr, (unsigned long)curr);
   if (!curr){
     NmError_Error("ran out of namespaces!");
-    char *p = NULL;
-    /* GDB backtrace preserve */
-    *p = *p;
-    exit(64);
     return NULL;
   }
 

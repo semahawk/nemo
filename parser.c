@@ -62,7 +62,7 @@
 static Node *expr(LexerState *lex);
 static Node *assign_expr(LexerState *lex);
 static Node *block(LexerState *lex);
-static Node **params_list(LexerState *lex, int num);
+static Node **params_list(LexerState *lex, int num, bool inparens);
 
 /* pointer to the previous statement */
 static Node *prev_stmt = NULL;
@@ -215,10 +215,10 @@ static Node *primary_expr(LexerState *lex)
         /* FIXME: if there are parenthesis there mustn't be more parameters
          *        passed than requested */
         NmLexer_Skip(lex);
-        params = params_list(lex, argc);
+        params = params_list(lex, argc, true);
         NmLexer_Force(lex, SYM_RPAREN);
       } else {
-        params = params_list(lex, argc);
+        params = params_list(lex, argc, false);
       }
       NmDebug_Parser(")");
       /* if 'params' returns NULL it means something bad happend */
@@ -246,7 +246,7 @@ static Node *primary_expr(LexerState *lex)
    */
   else if (NmLexer_Accept(lex, SYM_LBRACKET)){
     NmDebug_Parser("[");
-    arr_inside = params_list(lex, -1);
+    arr_inside = params_list(lex, -1, true);
     new = NmAST_GenArray(lex->current.pos, arr_inside);
     NmLexer_Force(lex, SYM_RBRACKET);
     NmDebug_Parser("]");
@@ -278,7 +278,7 @@ static Node *primary_expr(LexerState *lex)
  *
  * If <num> is negative, it will take as many as possible.
  */
-static Node **params_list(LexerState *lex, int num)
+static Node **params_list(LexerState *lex, int num, bool inparens)
 {
   unsigned nmemb = 5;
   unsigned counter = 0;
@@ -317,11 +317,23 @@ static Node **params_list(LexerState *lex, int num)
 
   params[counter++] = first_expr;
 
-  if (num == 1){
-    return params;
+  /* if we are inside a parens then we fetch all of the arguments
+   * if we are not, then we can as well finish just now */
+  if (!inparens){
+    if (num == 1){
+      return params;
+    }
   }
 
-  while (NmLexer_Accept(lex, SYM_COMMA) && counter <= (unsigned)num){
+  /*
+   * here ---------------------------------------------+
+   *                                                   |
+   *   if we are inside a parens then we fetch as many |
+   *   args as we can, but I don't want to modify the  |
+   *   'num' variable, as it is going to be used later |
+   *   on if too many args were supplied               v
+   */
+  while (NmLexer_Accept(lex, SYM_COMMA) && (counter <= (inparens ? 1 << 15 : (unsigned)num))){
     NmDebug_Parser(", ");
     Node *next_expr = assign_expr(lex);
     /*
@@ -333,6 +345,15 @@ static Node **params_list(LexerState *lex, int num)
       params = NmMem_Realloc(params, nmemb * sizeof(Node));
     }
     params[counter++] = next_expr;
+  }
+
+  /* we should get here only if 'inparens' is true */
+  if (counter > (unsigned)num){
+    NmError_SetString("(%u when %d expected)", counter, (unsigned)num);
+    NmAST_Free(first_expr);
+    /* TODO: we should free also the args' nodes, I guess */
+    NmMem_Free(params);
+    return NULL;
   }
 
   return params;
