@@ -31,6 +31,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+/*
+ * The whole debugging thing only works if --enable-debug was supplied
+ */
+#if DEBUG
+
 #include "lexer.h"
 
 #define NmDebug_FREE(p)       NmDebug_Memory(p, "free")
@@ -61,6 +66,7 @@ void NmDebug_LexerChar(LexerState *, SymbolType, char);
 void NmDebug_Parser(const char *, ...);
 
 void NmDebug_AST(void *, const char *, ...);
+#endif /* #if DEBUG */
 
 #endif /* DEBUG_H */
 

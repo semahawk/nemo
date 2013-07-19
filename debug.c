@@ -47,6 +47,10 @@
 #include "nemo.h"
 
 /*
+ * The whole debugging thing only works if --with-debug was supplied
+ */
+#if DEBUG
+/*
  * Every bit here sets on/off the debugging flags
  * Which bit means what is described in debug.h
  */
@@ -135,3 +139,4 @@ void NmDebug_Parser(char const *msg, ...)
   }
 }
 
+#endif /* #if DEBUG */

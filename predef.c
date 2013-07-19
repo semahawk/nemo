@@ -231,7 +231,7 @@ static NmObject *predef_eval(NmObject *args, bool *opts)
 {
   NmObject *ob = NmArray_GETELEM(args, 0);
 
-  return NmAST_Exec(NmParser_ParseString(NmString_VAL(ob)));
+  return NmAST_ExecBlock(NmParser_ParseString(NmString_VAL(ob)));
 }
 
 static NmModuleFuncs module_funcs[] = {

@@ -13,6 +13,15 @@ AC_DEFINE_UNQUOTED([VERSION], "${version}", [Version of Nemo])
 libdir=/usr/lib
 # define the libdir
 AC_DEFINE_UNQUOTED([LIBDIR], "${libdir}", [Path where to install the libraries])
+# --enable-debug
+debug=0
+AC_ARG_ENABLE([debug],
+    AS_HELP_STRING([--enable-debug], [Enable debugging]))
+
+AS_IF([test "x$enable_debug" = "xyes"], [
+  debug=1
+])
+AC_DEFINE_UNQUOTED([DEBUG], ${debug}, [Debugging enabled])
 # Create the Makefile
 AC_OUTPUT(Makefile)
 # Create the lib/Makefile

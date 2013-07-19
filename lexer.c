@@ -665,7 +665,7 @@ const char *symToS(SymbolType type)
 
 /*
  * Rhapsody, Steve Vai, Helloween, Ensiferum
- * Testament
+ * Testament, Theocracy
  *
  * The Office
  *

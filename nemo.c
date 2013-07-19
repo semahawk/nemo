@@ -146,14 +146,20 @@ int main(int argc, char *argv[])
       { "use",     required_argument, 0, 'u' },
       { "include", required_argument, 0, 'i' },
       { "eval",    required_argument, 0, 'e' },
+#if DEBUG
       { "debug",   required_argument, 0, 'd' },
+#endif
       { "version", no_argument,       0, 'v' },
       { 0, 0, 0, 0 }
     };
 
     int option_index = 0;
 
+#if DEBUG
     c = getopt_long(argc, argv, "u:i:e:d:v", long_options, &option_index);
+#else
+    c = getopt_long(argc, argv, "u:i:e:v", long_options, &option_index);
+#endif
 
     if (c == -1)
       break;
@@ -175,11 +181,12 @@ int main(int argc, char *argv[])
         /* parse the string */
         Node *node = NmParser_ParseString(optarg);
         /* execute the nodes */
-        NmAST_Exec(node);
+        NmAST_ExecBlock(node);
         /* tidy up after executing */
         NmAST_FreeBlock(node);
         break;
       }
+#if DEBUG
       case 'd':
       {
         switch (*optarg){
@@ -202,6 +209,7 @@ int main(int argc, char *argv[])
         }
         break;
       }
+#endif
       case 'v': printf("Nemo v" VERSION ", " __DATE__ " " __TIME__"\n");
                 return EXIT_SUCCESS;
       case '?': return EXIT_FAILURE;
@@ -241,7 +249,7 @@ int main(int argc, char *argv[])
   /* parse the file */
   nodest = NmParser_ParseFile(input);
   /* execute the nodes */
-  NmAST_Exec(nodest);
+  NmAST_ExecBlock(nodest);
   /* tidy up after executing */
   NmAST_FreeBlock(nodest);
 
@@ -282,7 +290,7 @@ static int nmInteractive(void)
       return 0;
     }
 
-    ob = NmAST_Exec(NmParser_ParseString(input));
+    ob = NmAST_ExecBlock(NmParser_ParseString(input));
 
     printf("=> ");
     NmObject_PRINT(stdout, ob);
@@ -372,7 +380,7 @@ bool Nm_IncludeModule(char *name)
 /* DRY, include a Nemo file */
 #define INCLUDE_NM(PATH) do { \
   Node *nodest = NmParser_ParseFile(PATH); \
-  NmAST_Exec(nodest); \
+  NmAST_ExecBlock(nodest); \
   NmAST_Free(nodest); \
   fclose(fp); \
   goto included; \

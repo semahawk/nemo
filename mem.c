@@ -52,7 +52,9 @@ void *NmMem_Malloc(size_t size)
     exit(EXIT_FAILURE);
   }
 
+#if DEBUG
   NmDebug_MALLOC(p, size);
+#endif
 
   return p;
 }
@@ -66,7 +68,9 @@ void *NmMem_Calloc(size_t nmemb, size_t size)
     exit(EXIT_FAILURE);
   }
 
+#if DEBUG
   NmDebug_CALLOC(p, nmemb, size);
+#endif
 
   return p;
 }
@@ -80,14 +84,18 @@ void *NmMem_Realloc(void *ptr, size_t nmemb)
     exit(EXIT_FAILURE);
   }
 
+#if DEBUG
   NmDebug_REALLOC(p, nmemb);
+#endif
 
   return p;
 }
 
 void NmMem_Free(void *p)
 {
+#if DEBUG
   NmDebug_FREE(p);
+#endif
 
   free(p);
 }

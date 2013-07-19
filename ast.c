@@ -120,7 +120,7 @@ NmObject *NmAST_ExecNodes(Node *nodest)
  * @name - NmAST_Exec
  * @desc - executes given node and returns the { NmObject * } it resulted in
  */
-NmObject *NmAST_Exec(Node *n)
+static inline NmObject *NmAST_Exec(Node *n)
 {
   assert(n);
 
@@ -149,7 +149,9 @@ Node *NmAST_GenNop(Pos pos)
   n->type = NT_NOP;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create NOP node");
+#endif
 
   return n;
 }
@@ -175,7 +177,9 @@ void NmAST_FreeNop(Node *n)
   assert(n);
   assert(n->type == NT_NOP);
 
+#if DEBUG
   NmDebug_AST(n, "free NOP node");
+#endif
 
   NmMem_Free(n);
 }
@@ -192,7 +196,9 @@ Node *NmAST_GenInt(Pos pos, int i)
   n->i = i;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create int node (value: %d)", i);
+#endif
 
   return (Node *)n;
 }
@@ -203,7 +209,9 @@ Node *NmAST_GenInt(Pos pos, int i)
  */
 NmObject *NmAST_ExecInt(Node *n)
 {
+#if DEBUG
   NmDebug_AST(n, "execute integer node");
+#endif
 
   return NmInt_New(((Node_Int *)n)->i);
 }
@@ -217,7 +225,9 @@ void NmAST_FreeInt(Node *n)
   assert(n);
   assert(n->type == NT_INTEGER);
 
+#if DEBUG
   NmDebug_AST(n, "free int node");
+#endif
 
   NmMem_Free(n);
 }
@@ -234,7 +244,9 @@ Node *NmAST_GenFloat(Pos pos, float f)
   n->f = f;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create float node (value: %f)", f);
+#endif
 
   return (Node *)n;
 }
@@ -245,7 +257,9 @@ Node *NmAST_GenFloat(Pos pos, float f)
  */
 NmObject *NmAST_ExecFloat(Node *n)
 {
+#if DEBUG
   NmDebug_AST(n, "execute float node");
+#endif
 
   return NmFloat_New(((Node_Float *)n)->f);
 }
@@ -259,7 +273,9 @@ void NmAST_FreeFloat(Node *n)
   assert(n);
   assert(n->type == NT_FLOAT);
 
+#if DEBUG
   NmDebug_AST(n, "free float node");
+#endif
 
   NmMem_Free(n);
 }
@@ -276,7 +292,9 @@ Node *NmAST_GenString(Pos pos, char *s)
   n->s = NmMem_Strdup(s);
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create string node (value: \"%s\")", s);
+#endif
 
   return (Node *)n;
 }
@@ -289,7 +307,9 @@ NmObject *NmAST_ExecString(Node *n)
 {
   NmObject *ret = NmString_New(((Node_String *)n)->s);
 
+#if DEBUG
   NmDebug_AST(n, "execute string node");
+#endif
 
   if (!ret){
     NmError_Parser(n, NmError_GetCurr());
@@ -309,7 +329,9 @@ void NmAST_FreeString(Node *n)
   assert(n);
   assert(n->type == NT_STRING);
 
+#if DEBUG
   NmDebug_AST(n, "free string node");
+#endif
 
   NmMem_Free(((Node_String *)n)->s);
   NmMem_Free(n);
@@ -334,7 +356,9 @@ Node *NmAST_GenArray(Pos pos, Node **a)
   n->a = a;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create array node (nmemb: %u, values: %p)", nmemb, (void *)a);
+#endif
 
   return (Node *)n;
 }
@@ -349,7 +373,9 @@ NmObject *NmAST_ExecArray(Node *n)
   NmObject *ob = NmArray_New(n_arr->nmemb);
   size_t i = 0;
 
+#if DEBUG
   NmDebug_AST(n, "execute array node");
+#endif
 
   if (n_arr->a)
     for (Node **p = n_arr->a; *p != NULL; p++, i++)
@@ -367,7 +393,9 @@ void NmAST_FreeArray(Node *n)
   assert(n);
   assert(n->type == NT_ARRAY);
 
+#if DEBUG
   NmDebug_AST(n, "free array node");
+#endif
 
   if (((Node_Array *)n)->a)
     for (Node **p = ((Node_Array *)n)->a; *p != NULL; p++)
@@ -390,7 +418,9 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *namespace)
   n->name = NmMem_Strdup(name);
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create name node (name: %s)", name);
+#endif
 
   /* search for the variable */
   for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
@@ -417,7 +447,9 @@ NmObject *NmAST_ExecName(Node *n)
   Node_Name *nc = (Node_Name *)n;
   Namespace *namespace = NmNamespace_GetCurr();
 
+#if DEBUG
   NmDebug_AST(n, "execute name node");
+#endif
 
   /* search for the variable */
   for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
@@ -440,7 +472,9 @@ void NmAST_FreeName(Node *n)
   assert(n);
   assert(n->type == NT_NAME);
 
+#if DEBUG
   NmDebug_AST(n, "free name node");
+#endif
   NmMem_Free(((Node_Name *)n)->name);
   NmMem_Free(n);
 }
@@ -459,7 +493,9 @@ Node *NmAST_GenBinop(Pos pos, Node *left, BinaryOp op, Node *right)
   n->right = right;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create binary operation node (op: %s, left: %p, right: %p)", binopToS(op), (void*)left, (void*)right);
+#endif
 
   return (Node *)n;
 }
@@ -478,7 +514,9 @@ NmObject *NmAST_ExecBinop(Node *n)
 
   NmObject *ret = NmNull;
 
+#if DEBUG
   NmDebug_AST(n, "execute binary operation node");
+#endif
 
   /* okay, that's easy things here */
   /*
@@ -687,7 +725,9 @@ void NmAST_FreeBinop(Node *n)
   NmAST_Free(((Node_Binop *)n)->left);
   NmAST_Free(((Node_Binop *)n)->right);
 
+#if DEBUG
   NmDebug_AST(n, "free binary operation node");
+#endif
   NmMem_Free(n);
 }
 
@@ -704,7 +744,9 @@ Node *NmAST_GenUnop(Pos pos, Node *target, UnaryOp op)
   n->target = target;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)target);
+#endif
 
   return (Node *)n;
 }
@@ -720,7 +762,9 @@ NmObject *NmAST_ExecUnop(Node *n)
 
   NmObject *target = NmAST_Exec(nc->target);
 
+#if DEBUG
   NmDebug_AST(n, "execute unary operation node");
+#endif
 
 /* a handy macro to check if an object supports given unary operation
  * <func>, and if not, print an error, and exit
@@ -794,7 +838,9 @@ void NmAST_FreeUnop(Node *n)
 
   NmAST_Free(((Node_Unop *)n)->target);
 
+#if DEBUG
   NmDebug_AST(n, "free unary operation node");
+#endif
   NmMem_Free(n);
 }
 
@@ -814,10 +860,12 @@ Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
   n->unless = unless;
   INIT_POS();
 
+#if DEBUG
   if (unless)
     NmDebug_AST(n, "create unless node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
   else
     NmDebug_AST(n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+#endif
 
   return (Node *)n;
 }
@@ -834,10 +882,12 @@ NmObject *NmAST_ExecIf(Node *n)
   Node *elsee = nc->elsee;
   bool unless = nc->unless;
 
+#if DEBUG
   if (unless)
     NmDebug_AST(n, "execute unless node");
   else
     NmDebug_AST(n, "execute if node");
+#endif
 
   if (unless){
     if (!NmObject_Boolish(NmAST_Exec(guard))){
@@ -881,10 +931,12 @@ void NmAST_FreeIf(Node *n)
   if (nc->elsee)
     NmAST_Free(nc->elsee);
 
+#if DEBUG
   if (nc->unless)
     NmDebug_AST(n, "free unless node");
   else
     NmDebug_AST(n, "free if node");
+#endif
 
   NmMem_Free(n);
 }
@@ -907,10 +959,12 @@ Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, bool until)
   n->until = until;
   INIT_POS();
 
+#if DEBUG
   if (until)
     NmDebug_AST(n, "create until node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
   else
     NmDebug_AST(n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+#endif
 
   return (Node *)n;
 }
@@ -927,10 +981,12 @@ NmObject *NmAST_ExecWhile(Node *n)
   Node *elsee    = nc->elsee;
   bool until     = nc->until;
 
+#if DEBUG
   if (until)
     NmDebug_AST(n, "execute until node");
   else
     NmDebug_AST(n, "execute while node");
+#endif
 
   if (until){
     if (!NmObject_Boolish(NmAST_Exec(guard))){
@@ -977,10 +1033,12 @@ void NmAST_FreeWhile(Node *n)
   if (nc->elsee)
     NmAST_Free(nc->elsee);
 
+#if DEBUG
   if (nc->until)
     NmDebug_AST(n, "free until node");
   else
     NmDebug_AST(n, "free while node");
+#endif
   NmMem_Free(n);
 }
 
@@ -1002,7 +1060,9 @@ Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
   n->flags = flags;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create variable declaration node (name: %s)", name);
+#endif
 
   Namespace *namespace = NmNamespace_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
@@ -1043,7 +1103,9 @@ NmObject *NmAST_ExecDecl(Node *n)
   /* unused parameter */
   (void)n;
 
+#if DEBUG
   NmDebug_AST(n, "execute variable declaration node");
+#endif
 
   return NmInt_New(1);
 }
@@ -1065,7 +1127,9 @@ void NmAST_FreeDecl(Node *n)
   if (nc->value)
     NmAST_Free(nc->value);
 
+#if DEBUG
   NmDebug_AST(n, "free declaration node");
+#endif
   NmMem_Free(n);
 }
 
@@ -1086,7 +1150,9 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts, struct Names
   n->namespace = namespace;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
+#endif
 
   return (Node *)n;
 }
@@ -1102,7 +1168,9 @@ NmObject *NmAST_ExecCall(Node *n)
   Namespace *namespace = nc->namespace;
   char *name = nc->name;
 
+#if DEBUG
   NmDebug_AST(n, "execute function call node");
+#endif
 
   /*
    * TODO: move function existance checking to the GenCall
@@ -1206,12 +1274,16 @@ void NmAST_FreeCall(Node *n)
     for (i = 0; nc->params[i] != NULL; i++){
       NmAST_Free(nc->params[i]);
     }
+#if DEBUG
     NmDebug_AST(nc->params, "free params list");
+#endif
     NmMem_Free(nc->params);
   }
 
   NmMem_Free(nc->opts);
+#if DEBUG
   NmDebug_AST(n, "free call node");
+#endif
   NmMem_Free(n);
 }
 
@@ -1228,7 +1300,9 @@ Node *NmAST_GenStmt(Pos pos, Node *expr)
   n->expr = expr;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create statement node (expr: %p)", expr);
+#endif
 
   return (Node *)n;
 }
@@ -1243,7 +1317,9 @@ void NmAST_FreeStmt(Node *n)
   assert(n);
   assert(n->type == NT_STMT);
 
+#if DEBUG
   NmDebug_AST(n, "free statement node");
+#endif
 
   NmAST_Free(((Node_Stmt *)n)->expr);
   NmMem_Free(n);
@@ -1259,17 +1335,23 @@ NmObject *NmAST_ExecBlock(Node *n)
   assert(n);
   assert(n->type == NT_BLOCK);
 
+#if DEBUG
   NmDebug_AST(n, "execute block node");
+#endif
 
   for (s = nc->tail; s != NULL; s = next){
     next = s->next;
     if (s->stmt){
+#if DEBUG
       NmDebug_AST(s->stmt, "execute statement node");
+#endif
       ret = NmAST_Exec(s->stmt);
     }
   }
 
+#if DEBUG
   NmDebug_AST(n, "done executing block node");
+#endif
 
   return ret;
 }
@@ -1290,11 +1372,15 @@ void NmAST_FreeBlock(Node *n)
   for (s = nc->tail; s != NULL; s = next){
     next = s->next;
     NmAST_Free(s->stmt);
+#if DEBUG
     NmDebug_AST(n, "free statement node");
+#endif
     NmMem_Free(s);
   }
 
+#if DEBUG
   NmDebug_AST(n, "free block node");
+#endif
   NmMem_Free(n);
 }
 
@@ -1320,10 +1406,12 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   n->body = body;
   INIT_POS();
 
+#if DEBUG
   if (body)
     NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d, opts: '%s')", name, (void*)body, argc, optc, opts);
   else
     NmDebug_AST(n, "create function declaration node (name: %s, argc: %d, optc: %d)", name, argc, optc);
+#endif
 
 
   /* initialize */
@@ -1350,10 +1438,12 @@ NmObject *NmAST_ExecFuncDef(Node *n)
 {
   Node_Funcdef *nc = (Node_Funcdef *)n;
 
+#if DEBUG
   if (nc->body)
     NmDebug_AST(n, "execute function definition node");
   else
     NmDebug_AST(n, "execute function declaration node");
+#endif
 
   return NmInt_New(1);
 }
@@ -1372,9 +1462,13 @@ void NmAST_FreeFuncDef(Node *n)
   NmMem_Free(nc->name);
   if (nc->body){
     NmAST_Free(nc->body);
+#if DEBUG
     NmDebug_AST(n, "free function definition node");
+#endif
   } else {
+#if DEBUG
     NmDebug_AST(n, "free function declaration node");
+#endif
   }
   NmMem_Free(n);
 }
@@ -1392,7 +1486,9 @@ Node *NmAST_GenInclude(Pos pos, char *fname, bool use)
   n->use = use;
   INIT_POS();
 
+#if DEBUG
   NmDebug_AST(n, "create include node (fname: %s, use: %d)", fname, use);
+#endif
 
   if (use){
     if (!Nm_UseModule(fname)){

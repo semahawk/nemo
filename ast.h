@@ -258,7 +258,7 @@ NmObject *NmAST_ExecBlock(Node *);
 NmObject *NmAST_ExecFuncDef(Node *);
 NmObject *NmAST_ExecInclude(Node *);
 NmObject *NmAST_ExecNop(Node *);
-NmObject *NmAST_Exec(Node *);
+//NmObject *NmAST_Exec(Node *);
 
 void NmAST_FreeInt(Node *);
 void NmAST_FreeFloat(Node *);
