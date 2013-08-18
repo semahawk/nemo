@@ -46,7 +46,7 @@ struct LibHandlesList {
 
 /*
  * Singly linked list that holds a names of modules/libraries/files
- * (same thing) that were included/used.
+ * (same thing) that were "use"d.
  */
 struct Included {
   char *name;
@@ -61,7 +61,6 @@ void Nm_Exit();
 /* TODO: these function names may be confusing */
 void Nm_InitModule(NmModuleFuncs *);
 bool Nm_UseModule(char *name);
-bool Nm_IncludeModule(char *name);
 bool NmModule_WasIncluded(char *name);
 void predef_init(void);
 void dev_init(void);

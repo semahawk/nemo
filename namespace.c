@@ -102,9 +102,9 @@ Namespace *NmNamespace_GetByName(char *name)
 
 void NmNamespace_Restore(void)
 {
-  printf("restore before: curr is %p, tail is %p\n", (void*)curr, (void*)tail);
+  /*printf("restore before: curr is %p, tail is %p\n", (void*)curr, (void*)tail);*/
   curr = tail;
-  printf("restore  after: curr is %p, tail is %p\n", (void*)curr, (void*)tail);
+  /*printf("restore  after: curr is %p, tail is %p\n", (void*)curr, (void*)tail);*/
 }
 
 /*

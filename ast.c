@@ -72,7 +72,7 @@ static NmObject *(*execFuncs[])(Node *) =
   NmAST_ExecStmt,
   NmAST_ExecBlock,
   NmAST_ExecFuncDef,
-  NmAST_ExecInclude
+  NmAST_ExecUse
 };
 
 /*
@@ -96,7 +96,7 @@ static void (*freeFuncs[])(Node *) =
   NmAST_FreeStmt,
   NmAST_FreeBlock,
   NmAST_FreeFuncDef,
-  NmAST_FreeInclude
+  NmAST_FreeUse
 };
 
 /*
@@ -1474,58 +1474,48 @@ void NmAST_FreeFuncDef(Node *n)
 }
 
 /*
- * @name - NmAST_GenInclude
+ * @name - NmAST_GenUse
  * @desc - creates a node that creates does the including thing
  */
-Node *NmAST_GenInclude(Pos pos, char *fname, bool use)
+Node *NmAST_GenUse(Pos pos, char *fname)
 {
-  Node_Include *n = NmMem_Calloc(1, sizeof(Node_Include));
+  Node_Use *n = NmMem_Calloc(1, sizeof(Node_Use));
 
-  n->type = NT_INCLUDE;
+  n->type = NT_USE;
   n->fname = NmMem_Strdup(fname);
-  n->use = use;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create include node (fname: %s, use: %d)", fname, use);
+  NmDebug_AST(n, "create include node (fname: %s)", fname);
 #endif
 
-  if (use){
-    if (!Nm_UseModule(fname)){
-      NmError_Parser((Node *)n, NmError_GetCurr());
-      Nm_Exit();
-    }
-  } else {
-    if (!Nm_IncludeModule(fname)){
-      NmError_Parser((Node *)n, NmError_GetCurr());
-      Nm_Exit();
-    }
+  if (!Nm_UseModule(fname)){
+    NmError_Parser((Node *)n, NmError_GetCurr());
+    Nm_Exit();
   }
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecInclude
+ * @name - NmAST_ExecUse
  * @desc - actually does the including thing
  * @return 1 if everything went fine
  */
-NmObject *NmAST_ExecInclude(Node *n)
+NmObject *NmAST_ExecUse(Node *n)
 {
   assert(n);
-  assert(n->type == NT_INCLUDE);
-
-  Node_Include *nc = (Node_Include *)n;
+  assert(n->type == NT_USE);
 
   return NmInt_New(1);
 }
 
-void NmAST_FreeInclude(Node *n)
+void NmAST_FreeUse(Node *n)
 {
   assert(n);
-  assert(n->type == NT_INCLUDE);
+  assert(n->type == NT_USE);
 
-  Node_Include *nc = (Node_Include *)n;
+  Node_Use *nc = (Node_Use *)n;
 
   NmMem_Free(nc->fname);
   NmMem_Free(nc->custom_path);

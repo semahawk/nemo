@@ -1067,30 +1067,19 @@ NmDebug_Parser(":", name);*/
   }
   /*
    * XXX USE NAME ';'
-   * XXX INCLUDE NAME ';'
    */
-  else if (NmLexer_Peek(lex, SYM_USE) ||
-           NmLexer_Peek(lex, SYM_INCLUDE)){
+  else if (NmLexer_Accept(lex, SYM_USE)){
     bool use;
     Pos savepos = lex->current.pos;
-    if (NmLexer_Accept(lex, SYM_USE)){
-      use = true;
 #if DEBUG
       NmDebug_Parser("use ");
 #endif
-    } else {
-      use = false;
-#if DEBUG
-      NmDebug_Parser("include ");
-#endif
-      NmLexer_Skip(lex);
-    }
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
 #if DEBUG
     NmDebug_Parser("%s ", name);
 #endif
-    ret = NmAST_GenInclude(savepos, name, use);
+    ret = NmAST_GenUse(savepos, name);
     endStmt(lex);
   }
   /*

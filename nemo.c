@@ -170,11 +170,6 @@ int main(int argc, char *argv[])
         Nm_UseModule(optarg);
         break;
       }
-      case 'i':
-      {
-        Nm_IncludeModule(optarg);
-        break;
-      }
       case 'e':
       {
         met_e_flag = true;
@@ -322,17 +317,6 @@ void Nm_InitModule(NmModuleFuncs *funcs)
   }
 }
 
-bool Nm_UseModule(char *name)
-{
-  bool ret;
-
-  NmNamespace_New(name);
-  ret = Nm_IncludeModule(name);
-  NmNamespace_Restore();
-
-  return ret;
-}
-
 /*
  * Search paths: (the higher the firster (hehe))
  *
@@ -343,8 +327,9 @@ bool Nm_UseModule(char *name)
  *        true  if the library loaded fine
  *
  */
-bool Nm_IncludeModule(char *name)
+bool Nm_UseModule(char *name)
 {
+  NmNamespace_New(name);
   /*
    * NOTE: both macros goto included which is at the very end of the function
    */
@@ -440,6 +425,7 @@ included: {
     free(cwd); /* getcwd does malloc */
     /* add the modules name to the included list */
     included_new(name);
+    NmNamespace_Restore();
     return true;
   }
 }

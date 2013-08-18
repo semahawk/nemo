@@ -59,7 +59,6 @@ static struct Keyword {
   { "else",    SYM_ELSE    },
   { "fun",     SYM_FUN     },
   { "use",     SYM_USE     },
-  { "include", SYM_INCLUDE },
   { "goto",    SYM_GOTO    },
   { 0, 0 }
 };
@@ -621,7 +620,6 @@ const char *symToS(SymbolType type)
     case SYM_WHILE:      return "\"while\"";
     case SYM_ELSE:       return "\"else\"";
     case SYM_USE:        return "\"use\"";
-    case SYM_INCLUDE:    return "\"include\"";
     case SYM_FUN:        return "\"fun\"";
     case SYM_INTEGER:    return "integer";
     case SYM_FLOAT:      return "float";

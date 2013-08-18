@@ -43,7 +43,6 @@ enum SymbolType {
   SYM_ELSE,           /* "else"    */
   SYM_FUN,            /* "fun"     */
   SYM_USE,            /* "use"     */
-  SYM_INCLUDE,        /* "include" */
   SYM_GOTO,           /* "goto"    */
   SYM_INTEGER,        /*           */
   SYM_FLOAT,          /*           */

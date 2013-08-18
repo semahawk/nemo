@@ -52,8 +52,7 @@ enum NodeType {
   NT_STMT,
   NT_BLOCK,
   NT_FUNCDEF,
-  /* actually, both use and include */
-  NT_INCLUDE
+  NT_USE
 };
 
 enum BinaryOp {
@@ -201,8 +200,7 @@ typedef struct {
   NMNODE_HEAD;
   char *fname;
   char *custom_path;
-  bool use; /* true if it actually is an use, not an include */
-} Node_Include;
+} Node_Use;
 
 typedef struct {
   NMNODE_HEAD;
@@ -239,7 +237,7 @@ Node *NmAST_GenDecl(Pos, char *, Node *, uint8_t);
 Node *NmAST_GenCall(Pos, char *, Node **, char *, struct Namespace *);
 Node *NmAST_GenStmt(Pos, Node *);
 Node *NmAST_GenFuncDef(Pos, char *, Node *, unsigned, unsigned, char **, char *);
-Node *NmAST_GenInclude(Pos, char *, bool);
+Node *NmAST_GenUse(Pos, char *);
 Node *NmAST_GenNop(Pos);
 
 NmObject *NmAST_ExecInt(Node *);
@@ -256,7 +254,7 @@ NmObject *NmAST_ExecCall(Node *);
 NmObject *NmAST_ExecStmt(Node *);
 NmObject *NmAST_ExecBlock(Node *);
 NmObject *NmAST_ExecFuncDef(Node *);
-NmObject *NmAST_ExecInclude(Node *);
+NmObject *NmAST_ExecUse(Node *);
 NmObject *NmAST_ExecNop(Node *);
 //NmObject *NmAST_Exec(Node *);
 
@@ -275,7 +273,7 @@ void NmAST_FreeStmt(Node *);
 void NmAST_FreeBlock(Node *);
 void NmAST_FreeNop(Node *);
 void NmAST_FreeFuncDef(Node *);
-void NmAST_FreeInclude(Node *);
+void NmAST_FreeUse(Node *);
 void NmAST_Free(Node *);
 
 const char *binopToS(BinaryOp);
