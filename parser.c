@@ -942,7 +942,7 @@ static Node *expr(LexerState *lex)
 /*
  * stmt: ';'
  *     | '{' block '}'
- *     | MY NAME '=' expr ';'
+ *     | [MY|OUR] NAME '=' expr ';'
  *     | label
  *     | GOTO NAME ';'
  *     | function_prototype
@@ -989,11 +989,22 @@ static Node *stmt(LexerState *lex)
   /*
    * XXX MY
    */
-  else if (NmLexer_Accept(lex, SYM_MY)){
+  else if (NmLexer_Peek(lex, SYM_MY) ||
+           NmLexer_Peek(lex, SYM_OUR)){
     uint8_t flags = 0;
+    if (NmLexer_Accept(lex, SYM_MY)){
 #if DEBUG
-    NmDebug_Parser("my ");
+      NmDebug_Parser("my ");
 #endif
+    } else {
+#if DEBUG
+      NmDebug_Parser("our ");
+#endif
+      NmLexer_Skip(lex);
+    }
+    /*
+     * XXX MY CONST ...
+     */
     if (NmLexer_Accept(lex, SYM_CONST)){
       flags |= (1 << NMVAR_FLAG_CONST);
     }

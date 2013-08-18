@@ -51,6 +51,7 @@ static struct Keyword {
 } keywords[] =
 {
   { "my",      SYM_MY      },
+  { "our",     SYM_OUR     },
   { "const",   SYM_CONST   },
   { "if",      SYM_IF      },
   { "unless",  SYM_UNLESS  },
@@ -616,6 +617,7 @@ const char *symToS(SymbolType type)
 {
   switch (type){
     case SYM_MY:         return "\"my\"";
+    case SYM_OUR:        return "\"our\"";
     case SYM_IF:         return "\"if\"";
     case SYM_WHILE:      return "\"while\"";
     case SYM_ELSE:       return "\"else\"";

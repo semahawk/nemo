@@ -35,6 +35,7 @@
 
 enum SymbolType {
   SYM_MY,             /* "my"      */
+  SYM_OUR,            /* "our"     */
   SYM_CONST,          /* "const"   */
   SYM_IF,             /* "if"      */
   SYM_UNLESS,         /* "unless"  */
