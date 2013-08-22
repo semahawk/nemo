@@ -330,6 +330,12 @@ void Nm_InitModule(NmModuleFuncs *funcs)
 bool Nm_UseModule(char *name)
 {
   NmNamespace_New(name);
+  /* make a copy of the name, and convert all the '.'s into '/' */
+  char *name_converted = NmMem_Strdup(name);
+  for (char *p = name_converted; *p != '\0'; p++)
+    if (*p == '.')
+      *p = '/';
+
   /*
    * NOTE: both macros goto included which is at the very end of the function
    */
@@ -393,12 +399,12 @@ bool Nm_UseModule(char *name)
   cwd = getcwd(0, 0);
   /* init the paths */
   sprintf(lib_path,    LIBDIR "/nemo/");
-  sprintf(lib_path_so, LIBDIR "/nemo/%s.so",    name);
-  sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",    name);
+  sprintf(lib_path_so, LIBDIR "/nemo/%s.so",    name_converted);
+  sprintf(lib_path_nm, LIBDIR "/nemo/%s.nm",    name_converted);
   sprintf(relative_path,      "%s/",      cwd);
-  sprintf(relative_path_so,   "%s/%s.so", cwd,  name);
-  sprintf(relative_path_nm,   "%s/%s.nm", cwd,  name);
-  sprintf(init_func,          "%s_init",        name);
+  sprintf(relative_path_so,   "%s/%s.so", cwd,  name_converted);
+  sprintf(relative_path_nm,   "%s/%s.nm", cwd,  name_converted);
+  sprintf(init_func,          "%s_init",        name_converted);
 
   /* there is a .so library in the current directory */
   if ((fp = fopen(relative_path_so, "rb")) != NULL){
@@ -417,12 +423,14 @@ bool Nm_UseModule(char *name)
   }
 
   free(cwd); /* getcwd does malloc */
+  free(name_converted);
   NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
 
   return false;
 
 included: {
     free(cwd); /* getcwd does malloc */
+    free(name_converted);
     /* add the modules name to the included list */
     included_new(name);
     NmNamespace_Restore();
