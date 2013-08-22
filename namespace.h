@@ -91,6 +91,7 @@ void NmNamespace_Restore(void);
 void NmNamespace_Tidyup(void);
 void NmNamespace_NewLabel(char *name, Node *node);
 Node *NmNamespace_GetLabel(char *name);
+void NmNamespace_ListNamespaces(void);
 
 #endif /* INTERP_H */
 

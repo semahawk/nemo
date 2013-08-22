@@ -151,10 +151,9 @@ static Node *primary_expr(LexerState *lex)
     } else {
       where = NmNamespace_GetCurr()->name;
     }
-    /* get the correct namespace */
+    /* get the appropriate namespace */
     if (!(namespace = NmNamespace_GetByName(where))){
       NmError_Lex(lex, NmError_GetCurr());
-      Nm_Exit();
       return NULL;
     }
     /* it could be a function's name, so let's check it out */
@@ -987,7 +986,7 @@ static Node *stmt(LexerState *lex)
     ret = NmAST_GenNop(lex->current.pos);
   }
   /*
-   * XXX MY
+   * XXX [MY|OUR]
    */
   else if (NmLexer_Peek(lex, SYM_MY) ||
            NmLexer_Peek(lex, SYM_OUR)){
@@ -996,6 +995,7 @@ static Node *stmt(LexerState *lex)
 #if DEBUG
       NmDebug_Parser("my ");
 #endif
+      flags |= NMVAR_FLAG_PRIVATE;
     } else {
 #if DEBUG
       NmDebug_Parser("our ");
@@ -1003,10 +1003,10 @@ static Node *stmt(LexerState *lex)
       NmLexer_Skip(lex);
     }
     /*
-     * XXX MY CONST ...
+     * XXX [MY|OUR] CONST ...
      */
     if (NmLexer_Accept(lex, SYM_CONST)){
-      flags |= (1 << NMVAR_FLAG_CONST);
+      flags |= NMVAR_FLAG_CONST;
     }
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     /* NmLexer_Force skips the symbol so we have to get to the previous one */
@@ -1015,7 +1015,7 @@ static Node *stmt(LexerState *lex)
     NmDebug_Parser("%s", name);
 #endif
     /*
-     * XXX MY NAME = expr
+     * XXX [MY|OUR] NAME = expr
      */
     if (NmLexer_Accept(lex, SYM_EQ)){
 #if DEBUG
@@ -1028,6 +1028,8 @@ static Node *stmt(LexerState *lex)
        *
        */
       if (!value){
+        /* it actually is not an error, so we don't return NULL here or anything
+         * Nemo just lacks of "warning"s */
         NmError_Lex(lex, "nothing was initialized");
       }
     }
@@ -1038,6 +1040,8 @@ static Node *stmt(LexerState *lex)
    * XXX NAME ':' stmt
    *
    *     basically just a label
+   *     (current state of the lexer makes that piece of grammar impossible to
+   *     achieve)
    */
   /*else if (lex->current.type == SYM_NAME &&*/
            /*NmLexer_Peek(lex, SYM_COLON)){*/

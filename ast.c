@@ -409,13 +409,15 @@ void NmAST_FreeArray(Node *n)
  * @name - NmAST_GenName
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(Pos pos, char *name, struct Namespace *namespace)
+Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
 {
   Node_Name *n = NmMem_Calloc(1, sizeof(Node_Name));
   bool found = false;
+  Namespace *curr_namespace = NmNamespace_GetCurr();
 
   n->type = NT_NAME;
   n->name = NmMem_Strdup(name);
+  n->namespace = node_namespace;
   INIT_POS();
 
 #if DEBUG
@@ -423,15 +425,32 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *namespace)
 #endif
 
   /* search for the variable */
-  for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
+  for (VariablesList *vars = node_namespace->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, name)){
-      found = true;
-      break;
+      /* if the variable is declared as "my" then current's namespace name must
+       * be the same as the namespace that we request the variable from, so that
+       * the "private" variables are accessible from inside of the module in
+       * which they were created */
+      if (vars->var->flags & NMVAR_FLAG_PRIVATE){
+        if (!strcmp(node_namespace->name, curr_namespace->name)){
+          /* we found the variable, but it's private, but requested from the
+           * file in which was declared, so we're cool */
+          found = true;
+          break;
+        } else {
+          NmError_Parser((Node *)n, "can't access variable '%s.%s' which was declared as private", node_namespace->name, name);
+          Nm_Exit();
+        }
+      } else {
+        /* we found the variable, and it's public and accessible */
+        found = true;
+        break;
+      }
     }
   }
 
   if (!found){
-    NmError_Parser((Node *)n, "variable '%s.%s' was not found", namespace->name, name);
+    NmError_Parser((Node *)n, "variable '%s.%s' was not found", node_namespace->name, name);
     Nm_Exit();
   }
 
@@ -445,21 +464,17 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *namespace)
 NmObject *NmAST_ExecName(Node *n)
 {
   Node_Name *nc = (Node_Name *)n;
-  Namespace *namespace = NmNamespace_GetCurr();
 
 #if DEBUG
-  NmDebug_AST(n, "execute name node");
+  NmDebug_AST(n, "execute name node (name: %s)", nc->name);
 #endif
 
   /* search for the variable */
-  for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
-    if (!strcmp(vars->var->name, nc->name)){
+  for (VariablesList *vars = nc->namespace->globals; vars != NULL; vars = vars->next)
+    if (!strcmp(vars->var->name, nc->name))
       return vars->var->value;
-    }
-  }
 
-  NmError_Parser(n, "variable '%s' was not found");
-  Nm_Exit();
+  NmError_Parser(n, "variable '%s.%s' was not found", nc->namespace->name, nc->name);
   return NULL;
 }
 
@@ -1053,6 +1068,7 @@ void NmAST_FreeWhile(Node *n)
 Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
 {
   Node_Decl *n = NmMem_Calloc(1, sizeof(Node_Decl));
+  Namespace *namespace = NmNamespace_GetCurr();
 
   n->type = NT_DECL;
   n->name = NmMem_Strdup(name);
@@ -1061,10 +1077,9 @@ Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create variable declaration node (name: %s)", name);
+  NmDebug_AST(n, "create variable declaration node (name: %s, namespace: %s)", name, namespace->name);
 #endif
 
-  Namespace *namespace = NmNamespace_GetCurr();
   VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
   Variable *new_var = NmMem_Malloc(sizeof(Variable));
   VariablesList *p;
@@ -1151,7 +1166,7 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts, struct Names
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
+  NmDebug_AST(n, "create call node (name: %s, params: %p, opts: 0x%02x)", name, params, opts);
 #endif
 
   return (Node *)n;
@@ -1425,8 +1440,6 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
   l->next = namespace->funcs;
   namespace->funcs = l;
 
-  printf("created function %s.%s\n", namespace->name, name);
-
   return (Node *)n;
 }
 
@@ -1486,7 +1499,7 @@ Node *NmAST_GenUse(Pos pos, char *fname)
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create include node (fname: %s)", fname);
+  NmDebug_AST(n, "create use node (fname: %s)", fname);
 #endif
 
   if (!Nm_UseModule(fname)){

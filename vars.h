@@ -37,12 +37,13 @@
 
 /* In both the macros <var> is of type { Variable * } */
 /* a handy macro to set the given <flag> in the given <var> */
-#define NmVar_SETFLAG(var,flag) (var->flags |= 1 << (flag))
+#define NmVar_SETFLAG(var, flag) (var->flags |= (flag))
 /* a handy macro to get the given <flag> from the given <var> */
-#define NmVar_GETFLAG(var,flag) (var->flags & (1 << (flag)))
+#define NmVar_GETFLAG(var, flag) (var->flags & (flag))
 
 /* these numbers define at which bit the flag is stored */
-#define NMVAR_FLAG_CONST 0
+#define NMVAR_FLAG_CONST   (1 << 0)
+#define NMVAR_FLAG_PRIVATE (1 << 1)
 
 /*
  * Type for variables in Nemo

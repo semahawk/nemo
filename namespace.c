@@ -41,8 +41,6 @@ void NmNamespace_New(char *name)
 {
   Namespace *namespace = NmMem_Malloc(sizeof(Namespace));
   NamespacesList *namespace_list = NmMem_Malloc(sizeof(NamespacesList));
-  VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));
-  Variable *null = NmMem_Malloc(sizeof(Variable));
 
   namespace->name = NmMem_Strdup(name);
   namespace->cfuncs = NULL;
@@ -50,13 +48,15 @@ void NmNamespace_New(char *name)
   namespace->globals = NULL;
   namespace->labels = NULL;
 
-  /* add the "null" variable to the global namespace */
-  null->name = NmMem_Strdup("null");
-  null->value = NmNull;
-  NmVar_SETFLAG(null, NMVAR_FLAG_CONST);
-  null_list->var = null;
-  null_list->next = namespace->globals;
-  namespace->globals = null_list;
+  /* add the "null" variable to the namespace global list of variables */
+  /*VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));*/
+  /*Variable *null = NmMem_Malloc(sizeof(Variable));*/
+  /*null->name = NmMem_Strdup("null");*/
+  /*null->value = NmNull;*/
+  /*NmVar_SETFLAG(null, NMVAR_FLAG_CONST);*/
+  /*null_list->var = null;*/
+  /*null_list->next = namespace->globals;*/
+  /*namespace->globals = null_list;*/
 
   /* append the namespace to the namespaces list */
   namespace_list->namespace = namespace;
@@ -76,6 +76,9 @@ void NmNamespace_New(char *name)
   }
   /* set the current point to the new one */
   curr = namespace_list;
+  /* create the "__name" variable, which holds the current namespace's name */
+  NmVar_New("__name", NmString_New(name));
+  NmVar_New("null", NmNull);
 }
 
 Namespace *NmNamespace_GetCurr(void)
@@ -90,11 +93,9 @@ Namespace *NmNamespace_GetCurr(void)
 
 Namespace *NmNamespace_GetByName(char *name)
 {
-  for (NamespacesList *p = head; p != NULL; p = p->next){
-    if (!strcmp(p->namespace->name, name)){
+  for (NamespacesList *p = tail; p != NULL; p = p->next)
+    if (!strcmp(p->namespace->name, name))
       return p->namespace;
-    }
-  }
 
   NmError_SetString("namespace '%s' not found");
   return NULL;
@@ -102,9 +103,7 @@ Namespace *NmNamespace_GetByName(char *name)
 
 void NmNamespace_Restore(void)
 {
-  /*printf("restore before: curr is %p, tail is %p\n", (void*)curr, (void*)tail);*/
   curr = tail;
-  /*printf("restore  after: curr is %p, tail is %p\n", (void*)curr, (void*)tail);*/
 }
 
 /*
@@ -193,4 +192,24 @@ Node *NmNamespace_GetLabel(char *name)
 
   return NULL;
 }
+
+#if DEBUG
+/*
+ * Debug/develop purposes only.
+ * Lists the namespaces that were declared.
+ */
+void NmNamespace_ListNamespaces(void)
+{
+  printf("## NAMESPACES:\n");
+  for (NamespacesList *p = head; p != NULL; p = p->prev){
+    printf("   %p: %s\n", (void *)p->namespace, p->namespace->name);
+  }
+  printf("##\n");
+}
+#else
+void NmNamespace_ListNamespaces(void)
+{
+  /* NOP */;
+}
+#endif
 
