@@ -233,8 +233,6 @@ static Node *primary_expr(LexerState *lex)
 #endif
       lex->right_after_funname = false;
       if (NmLexer_Peek(lex, SYM_LPAREN)){
-        /* FIXME: if there are parenthesis there mustn't be more parameters
-         *        passed than requested */
         NmLexer_Skip(lex);
         params = params_list(lex, argc, true);
         NmLexer_Force(lex, SYM_RPAREN);
@@ -439,7 +437,6 @@ static Node *postfix_expr(LexerState *lex)
        * further in 'primary_expr' */
       /* FIXME: store the target's position */
       NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current.pos.line, lex->current.pos.column);
-      Nm_Exit();
       return NULL;
     }
 #if DEBUG
@@ -456,7 +453,6 @@ static Node *postfix_expr(LexerState *lex)
        * further in 'primary_expr' */
       /* FIXME: store the target's position */
       NmError_Error("can't do the postfix increment on a literal in line %u at column %u", lex->current.pos.line, lex->current.pos.column);
-      Nm_Exit();
       return NULL;
     }
 #if DEBUG
@@ -1084,7 +1080,6 @@ NmDebug_Parser(":", name);*/
    * XXX USE NAME ';'
    */
   else if (NmLexer_Accept(lex, SYM_USE)){
-    bool use;
     Pos savepos = lex->current.pos;
 #if DEBUG
       NmDebug_Parser("use ");
@@ -1131,9 +1126,15 @@ NmDebug_Parser(":", name);*/
 #if DEBUG
         NmDebug_Parser("-%c ", optsym.value.c);
 #endif
-        optv = NmMem_Realloc(optv, (optc + 1) * sizeof(char));
-        optv[optc] = optsym.value.c;
-        optc++;
+        if (strchr(optv, optsym.value.c)){
+          NmError_Lex(lex, "warning: option '%c' already defined", optsym.value.c);
+          Nm_Exit();
+          return NULL;
+        } else {
+          optv = NmMem_Realloc(optv, (optc + 1) * sizeof(char));
+          optv[optc] = optsym.value.c;
+          optc++;
+        }
       }
     }
     optv[optc] = '\0';

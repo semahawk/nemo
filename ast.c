@@ -452,6 +452,7 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
   if (!found){
     NmError_Parser((Node *)n, "variable '%s.%s' was not found", node_namespace->name, name);
     Nm_Exit();
+    return NULL;
   }
 
   return (Node *)n;
@@ -1166,7 +1167,7 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts, struct Names
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create call node (name: %s, params: %p, opts: 0x%02x)", name, params, opts);
+  NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
 #endif
 
   return (Node *)n;
