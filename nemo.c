@@ -126,8 +126,6 @@ int main(int argc, char *argv[])
 {
   /* the main node from parsing the given file */
   Node *nodest = NULL;
-  /* the main file's namespace */
-  NmNamespace_New("main");
   /* file input */
   char input[255];
   /* used for getopt */
@@ -136,15 +134,18 @@ int main(int argc, char *argv[])
    * mode is not run when an argument was not supplied */
   bool met_e_flag = false;
 
+  /* the kind of global namespace where all the predefined functions etc. reside */
+  NmNamespace_New("core");
   /* fetch the predefined functions */
   predef_init();
   /* and the dev ones */
   dev_init();
+  /* the main file's namespace */
+  NmNamespace_New("main");
 
   while (1){
     static struct option long_options[] = {
       { "use",     required_argument, 0, 'u' },
-      { "include", required_argument, 0, 'i' },
       { "eval",    required_argument, 0, 'e' },
 #if DEBUG
       { "debug",   required_argument, 0, 'd' },
