@@ -463,7 +463,8 @@ bool NmModule_WasIncluded(char *name)
  *              0 if not found
  *         1 << 0 if found a variable
  *         1 << 1 if found a C function
- *         1 << 2 if found a Nemo function
+ *         1 << 2 if found a defined Nemo function
+ *         1 << 3 if found a declared Nemo function
  *
  * Param: <namespace> - in which namespace to look in
  *                      if NULL the current namespace would be used
@@ -493,7 +494,10 @@ int name_lookup(char *name, Namespace *namespace)
     /* search the user defined functions */
     for (FuncsList *funcs = namespace->funcs; funcs != NULL; funcs = funcs->next){
       if (!strcmp(funcs->func->name, name)){
-        ret |= 1 << 2;
+        if (funcs->func->body)
+          ret |= 1 << 2;
+        else
+          ret |= 1 << 3;
       }
     }
   }

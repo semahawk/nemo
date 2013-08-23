@@ -157,7 +157,8 @@ static Node *primary_expr(LexerState *lex)
       return NULL;
     }
     /* let's see, if the name is actually a something */
-    if (!name_lookup(name, namespace)){
+    int lookup = name_lookup(name, namespace);
+    if (!lookup){
       NmError_Lex(lex, "name '%s.%s' not found", namespace->name, name);
       Nm_Exit();
       return NULL;
@@ -1124,16 +1125,6 @@ NmDebug_Parser(":", name);*/
 #endif
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
-    /* let's check if the function hasn't already been declared/defined */
-    /* 6 is 2 | 4, which are the two things name_lookup returns when found a
-     * function (either C or Nemo function) */
-    int a = name_lookup(name, NULL);
-    /*printf("a: %d, %x\n", a, a);*/
-    if (6 & name_lookup(name, NULL)){
-      NmError_Lex(lex, "cannot redefine function '%s'", name);
-      Nm_Exit();
-      return NULL;
-    }
 #if DEBUG
     NmDebug_Parser("%s ", namesym.value.s);
 #endif
@@ -1182,6 +1173,26 @@ NmDebug_Parser(":", name);*/
       NmDebug_Parser("}\n");
 #endif
     }
+
+    /* let's check if the function hasn't already been declared/defined */
+    /* 6 is 2 | 4, which are the two things name_lookup returns when found a
+     * function (either C or Nemo function) */
+    int lookup = name_lookup(name, NULL);
+    if (6 & lookup){
+      NmError_Lex(lex, "cannot redefine function '%s'", name);
+      Nm_Exit();
+      return NULL;
+    /* 8th bit set means there is a Nemo function, but not defined, only declared */
+    } else if (8 & lookup) {
+      /* if there is no a body then it's a declaration */
+      if (!body){
+        NmError_Lex(lex, "cannot redeclare function '%s'", name);
+        Nm_Exit();
+        return NULL;
+      }
+      /* no else needed, we are defining a function that has already been declared which is cool */
+    }
+
     ret = NmAST_GenFuncDef(pos, name, body, argc, optc, argv, optv);
   }
   /*
