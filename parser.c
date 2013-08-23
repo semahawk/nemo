@@ -125,9 +125,9 @@ static Node *primary_expr(LexerState *lex)
    * XXX NAME
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
-    int argc;
-    unsigned optc;
-    char *opts;
+    int argc = 0;
+    unsigned optc = 0;
+    char *opts = NULL;
     CFunc *cfunc;
     Func *func;
     Namespace *namespace;
@@ -1124,6 +1124,16 @@ NmDebug_Parser(":", name);*/
 #endif
     Symbol namesym = NmLexer_Force(lex, SYM_NAME);
     name = namesym.value.s;
+    /* let's check if the function hasn't already been declared/defined */
+    /* 6 is 2 | 4, which are the two things name_lookup returns when found a
+     * function (either C or Nemo function) */
+    int a = name_lookup(name, NULL);
+    /*printf("a: %d, %x\n", a, a);*/
+    if (6 & name_lookup(name, NULL)){
+      NmError_Lex(lex, "cannot redefine function '%s'", name);
+      Nm_Exit();
+      return NULL;
+    }
 #if DEBUG
     NmDebug_Parser("%s ", namesym.value.s);
 #endif

@@ -1272,12 +1272,10 @@ NmObject *NmAST_ExecCall(Node *n)
         }
       }
     }
-
-    NmError_Parser(n, "function '%s' not found", name);
-    Nm_Exit();
-    return NULL;
   }
 
+  NmError_Parser(n, "function '%s' not found", name);
+  Nm_Exit();
   return NULL;
 }
 
