@@ -424,7 +424,8 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
   NmDebug_AST(n, "create name node (name: %s)", name);
 #endif
 
-  /* search for the variable */
+  /* search for the variable (although it should be the parser's job to ensure
+   * that the variable actually exists) */
   for (VariablesList *vars = node_namespace->globals; vars != NULL; vars = vars->next){
     if (!strcmp(vars->var->name, name)){
       /* if the variable is declared as "my" then current's namespace name must
@@ -449,11 +450,11 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
     }
   }
 
-  if (!found){
-    NmError_Parser((Node *)n, "variable '%s.%s' was not found", node_namespace->name, name);
-    Nm_Exit();
-    return NULL;
-  }
+  /*if (!found){*/
+    /*NmError_Parser((Node *)n, "variable '%s.%s' was not found", node_namespace->name, name);*/
+    /*Nm_Exit();*/
+    /*return NULL;*/
+  /*}*/
 
   return (Node *)n;
 }
@@ -1181,7 +1182,6 @@ NmObject *NmAST_ExecCall(Node *n)
 {
   Node_Call *nc = (Node_Call *)n;
   NmObject *ret = NULL;
-  Namespace *namespace = nc->namespace;
   char *name = nc->name;
 
 #if DEBUG
@@ -1192,82 +1192,92 @@ NmObject *NmAST_ExecCall(Node *n)
    * TODO: move function existance checking to the GenCall
    */
 
-  /* first check for the C functions */
-  for (CFuncsList *list = namespace->cfuncs; list != NULL; list = list->next){
-    if (!strcmp(list->func->name, name)){
-      size_t nmemb = 0;
-      size_t i = 0;
-      /* count how many elements there are */
-      if (nc->params)
-        for (Node **p = nc->params; *p != NULL; p++)
-          nmemb++;
-      /* parameters are stored as an array */
-      NmObject *array = NmArray_New(nmemb);
-      /* set the arrays elements */
-      if (nc->params){
-        /* but first, type checking
-         * if the function takes -1 then every argument should of type
-         * <list->func->types[0]>, if the number of arguments is >= 0 then
-         * every argument should be of the matching element in
-         * <list->func->types> */
-        for (Node **p = nc->params; *p != NULL; p++, i++){
-          NmObjectType type;
-          if (list->func->argc < 0){
-            type = list->func->types[0];
-          } else {
-            type = list->func->types[i];
+  Namespace *namespaces[3], *namespace;
+  namespaces[0] = NmNamespace_GetByName("core");
+  namespaces[1] = nc->namespace;
+  namespaces[2] = NULL;
+
+  for (int i = 0; namespaces[i] != NULL; i++){
+    namespace = namespaces[i];
+    /* first check for the C functions */
+    for (CFuncsList *list = namespace->cfuncs; list != NULL; list = list->next){
+      if (!strcmp(list->func->name, name)){
+        size_t nmemb = 0;
+        size_t i = 0;
+        /* count how many elements there are */
+        if (nc->params)
+          for (Node **p = nc->params; *p != NULL; p++)
+            nmemb++;
+        /* parameters are stored as an array */
+        NmObject *array = NmArray_New(nmemb);
+        /* set the arrays elements */
+        if (nc->params){
+          /* but first, type checking
+           * if the function takes -1 then every argument should of type
+           * <list->func->types[0]>, if the number of arguments is >= 0 then
+           * every argument should be of the matching element in
+           * <list->func->types> */
+          for (Node **p = nc->params; *p != NULL; p++, i++){
+            NmObjectType type;
+            if (list->func->argc < 0){
+              type = list->func->types[0];
+            } else {
+              type = list->func->types[i];
+            }
+            /* actually check the type of the current argument */
+            NmObject *ob = NmAST_Exec(*p);
+            if (!(ob->type & type)){
+              NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(ob->fn.type_repr()), NmString_VAL(NmObject_TypeToS(type)));
+              Nm_Exit();
+              return NULL;
+            }
+            NmArray_SETELEM(array, i, ob);
           }
-          /* actually check the type of the current argument */
-          NmObject *ob = NmAST_Exec(*p);
-          if (!(ob->type & type)){
-            NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(ob->fn.type_repr()), NmString_VAL(NmObject_TypeToS(type)));
-            Nm_Exit();
-            return NULL;
-          }
-          NmArray_SETELEM(array, i, ob);
+        }
+        /* now, let's check what options were passed */
+        bool opts[strlen(nc->opts)];
+        /* false-out the options */
+        memset(opts, 0, sizeof(opts));
+        /* actually set the options */
+        unsigned j = 0;
+        for (char *p = nc->opts; *p != '\0'; p++, j++)
+          /* NOTE: we are not checking if the option is not supported, or if
+           *       there are too many options or w/e because the parser already
+           *       did it */
+          if (strchr(list->func->opts, *p))
+            opts[j] = true;
+        /* execute the function */
+        ret = list->func->body(array, (bool *)&opts);
+        /* if a function returns NULL it means something went wrong */
+        if (ret == NULL){
+          NmError_Parser(n, NmError_GetCurr());
+          Nm_Exit();
+          return NULL;
+        } else {
+          return ret;
         }
       }
-      /* now, let's check what options were passed */
-      bool opts[strlen(nc->opts)];
-      /* false-out the options */
-      memset(opts, 0, sizeof(opts));
-      /* actually set the options */
-      unsigned j = 0;
-      for (char *p = nc->opts; *p != '\0'; p++, j++)
-        /* NOTE: we are not checking if the option is not supported, or if
-         *       there are too many options or w/e because the parser already
-         *       did it*/
-        if (strchr(list->func->opts, *p))
-          opts[j] = true;
-      /* execute the function */
-      ret = list->func->body(array, (bool *)&opts);
-      /* if a function returns NULL it means something went wrong */
-      if (ret == NULL){
-        NmError_Parser(n, NmError_GetCurr());
-        Nm_Exit();
-        return NULL;
-      } else {
-        return ret;
+    }
+    /* and then for the Nemo functions */
+    for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
+      if (!strcmp(list->func->name, name)){
+        ret = NmAST_Exec(list->func->body);
+        /* if a function returns NULL it means something went wrong */
+        if (ret == NULL){
+          NmError_Parser(n, "executing function '%s' went wrong", name);
+          Nm_Exit();
+          return NULL;
+        } else {
+          return ret;
+        }
       }
     }
-  }
-  /* and then for the Nemo functions */
-  for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
-    if (!strcmp(list->func->name, name)){
-      ret = NmAST_Exec(list->func->body);
-      /* if a function returns NULL it means something went wrong */
-      if (ret == NULL){
-        NmError_Parser(n, "executing function '%s' went wrong", name);
-        Nm_Exit();
-        return NULL;
-      } else {
-        return ret;
-      }
-    }
+
+    NmError_Parser(n, "function '%s' not found", name);
+    Nm_Exit();
+    return NULL;
   }
 
-  NmError_Parser(n, "function '%s' not found", name);
-  Nm_Exit();
   return NULL;
 }
 
@@ -1424,9 +1434,9 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
 
 #if DEBUG
   if (body)
-    NmDebug_AST(n, "create function definition node (name: %s, body: %p, argc: %d, optc: %d, opts: '%s')", name, (void*)body, argc, optc, opts);
+    NmDebug_AST(n, "create function definition node (name: %s.%s, body: %p, argc: %d, optc: %d, opts: '%s')", namespace->name, name, (void*)body, argc, optc, opts);
   else
-    NmDebug_AST(n, "create function declaration node (name: %s, argc: %d, optc: %d)", name, argc, optc);
+    NmDebug_AST(n, "create function declaration node (name: %s.%s, argc: %d, optc: %d, namespace: '%s')", namespace->name, name, argc, optc);
 #endif
 
 

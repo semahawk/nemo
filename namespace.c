@@ -48,16 +48,6 @@ void NmNamespace_New(char *name)
   namespace->globals = NULL;
   namespace->labels = NULL;
 
-  /* add the "null" variable to the namespace global list of variables */
-  /*VariablesList *null_list = NmMem_Malloc(sizeof(VariablesList));*/
-  /*Variable *null = NmMem_Malloc(sizeof(Variable));*/
-  /*null->name = NmMem_Strdup("null");*/
-  /*null->value = NmNull;*/
-  /*NmVar_SETFLAG(null, NMVAR_FLAG_CONST);*/
-  /*null_list->var = null;*/
-  /*null_list->next = namespace->globals;*/
-  /*namespace->globals = null_list;*/
-
   /* append the namespace to the namespaces list */
   namespace_list->namespace = namespace;
   /* the list is empty */
@@ -74,11 +64,10 @@ void NmNamespace_New(char *name)
     namespace_list->prev = head;
     head = namespace_list;
   }
-  /* set the current point to the new one */
+  /* update the "curr" so it points to the new one */
   curr = namespace_list;
   /* create the "__name" variable, which holds the current namespace's name */
   NmVar_New("__name", NmString_New(name));
-  NmVar_New("null", NmNull);
 }
 
 Namespace *NmNamespace_GetCurr(void)
@@ -103,7 +92,7 @@ Namespace *NmNamespace_GetByName(char *name)
 
 void NmNamespace_Restore(void)
 {
-  curr = tail;
+  curr = curr->prev;
 }
 
 /*

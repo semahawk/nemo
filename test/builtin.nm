@@ -1,3 +1,4 @@
+# Test some of the builtin functions
 assert(len([]), 0);
 assert(len([1]), 1);
 assert(len([1, 2]), 2);
@@ -11,4 +12,12 @@ assert(len("jon"), 3);
 assert(len("jone"), 4);
 assert(len("jones"), 5);
 assert(eval("4;"), 4);
+assert(eval("4"), 4);
 assert(eval("2 + 2;"), 4);
+
+# Test the parenthesislessness
+assert 2, 2;
+assert len "hello", 5;
+
+# Builtin functions are in the "core" namespace
+core.assert core.len "hello", core.len [1, 2, 3, 4, 5];

@@ -58,6 +58,8 @@ typedef struct Included Included;
 
 void Nm_Exit();
 
+int name_lookup(char *, Namespace *);
+
 /* TODO: these function names may be confusing */
 void Nm_InitModule(NmModuleFuncs *);
 bool Nm_UseModule(char *name);

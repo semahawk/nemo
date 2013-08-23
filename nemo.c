@@ -136,6 +136,8 @@ int main(int argc, char *argv[])
 
   /* the kind of global namespace where all the predefined functions etc. reside */
   NmNamespace_New("core");
+  /* create the "null" variable */
+  NmVar_New("null", NmNull);
   /* fetch the predefined functions */
   predef_init();
   /* and the dev ones */
@@ -454,6 +456,50 @@ bool NmModule_WasIncluded(char *name)
 }
 
 /*
+ * Searches for the given <name> if it exists as a variable or a function.
+ *
+ * Return: 0 if not found
+ *         1 if found a variable
+ *         2 if found a C function
+ *         3 if found a Nemo function
+ *
+ * Param: <namespace> - in which namespace to look in
+ *                      if NULL the current namespace would be used
+ */
+int name_lookup(char *name, Namespace *namespace)
+{
+  Namespace *namespaces[3];
+  namespaces[0] = NmNamespace_GetByName("core");
+  namespaces[1] = namespace != NULL ? namespace : NmNamespace_GetCurr();
+  namespaces[2] = NULL;
+
+  for (int i = 0; namespaces[i] != NULL; i++){
+    namespace = namespaces[i];
+    /* search for a global variable in the given namespace */
+    for (VariablesList *vars = namespace->globals; vars != NULL; vars = vars->next){
+      if (!strcmp(vars->var->name, name)){
+        return 1;
+      }
+    }
+    /* search for the C functions */
+    for (CFuncsList *cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+      if (!strcmp(cfuncs->func->name, name)){
+        return 2;
+      }
+    }
+    /* search the user defined functions */
+    for (FuncsList *funcs = namespace->funcs; funcs != NULL; funcs = funcs->next){
+      if (!strcmp(funcs->func->name, name)){
+        return 3;
+      }
+    }
+  }
+
+  /* not found */
+  return 0;
+}
+
+/*
  * Nemo's wrapper around the exit() function.
  */
 void Nm_Exit()
@@ -471,6 +517,7 @@ void Nm_Exit()
  * Helloween, Testament
  * Within Temptation, Nightwish, Avantasia
  * Stratovarius, Steve Vai, At Vance, Rhapsody of Fire
+ * Fear Factory
  *
  * Family Guy, The Office, Monty Python
  *

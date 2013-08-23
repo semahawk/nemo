@@ -156,27 +156,41 @@ static Node *primary_expr(LexerState *lex)
       NmError_Lex(lex, NmError_GetCurr());
       return NULL;
     }
-    /* it could be a function's name, so let's check it out */
-    /* search the C functions */
-    for (CFuncsList *cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
-      if (!strcmp(cfuncs->func->name, name)){
-        cfunc = cfuncs->func;
-        argc = cfunc->argc;
-        optc = strlen(cfunc->opts);
-        opts = cfunc->opts;
-        isafunc = true;
-        break;
-      }
+    /* let's see, if the name is actually a something */
+    if (!name_lookup(name, namespace)){
+      NmError_Lex(lex, "name '%s.%s' not found", namespace->name, name);
+      Nm_Exit();
+      return NULL;
     }
-    /* search the user defined functions */
-    for (FuncsList *funcs = namespace->funcs; funcs != NULL; funcs = funcs->next){
-      if (!strcmp(funcs->func->name, name)){
-        func = funcs->func;
-        argc = func->argc;
-        optc = strlen(func->opts);
-        opts = func->opts;
-        isafunc = true;
-        break;
+    /* it could be a function's name, so let's check it out */
+    Namespace *namespaces[3];
+    namespaces[0] = NmNamespace_GetByName("core");
+    namespaces[1] = namespace;
+    namespaces[2] = NULL;
+
+    for (int i = 0; namespaces[i] != NULL; i++){
+      namespace = namespaces[i];
+      /* search the C functions */
+      for (CFuncsList *cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs->next){
+        if (!strcmp(cfuncs->func->name, name)){
+          cfunc = cfuncs->func;
+          argc = cfunc->argc;
+          optc = strlen(cfunc->opts);
+          opts = cfunc->opts;
+          isafunc = true;
+          break;
+        }
+      }
+      /* search the user defined functions */
+      for (FuncsList *funcs = namespace->funcs; funcs != NULL; funcs = funcs->next){
+        if (!strcmp(funcs->func->name, name)){
+          func = funcs->func;
+          argc = func->argc;
+          optc = strlen(func->opts);
+          opts = func->opts;
+          isafunc = true;
+          break;
+        }
       }
     }
 
@@ -187,7 +201,7 @@ static Node *primary_expr(LexerState *lex)
     if (isafunc){
       /* options are stored in a char array, for instance this:
        *
-       *   function -e -g -p 6;
+       *   function -egp 6;
        *
        * would have options translated to
        *
@@ -196,6 +210,7 @@ static Node *primary_expr(LexerState *lex)
        */
       /* C99 ROCKS */
       char call_opts[optc + 1];
+      memset(call_opts, 0, sizeof(call_opts));
       /* this guard makes things like:
        *
        *   five-4
