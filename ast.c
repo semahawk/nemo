@@ -1231,19 +1231,22 @@ NmObject *NmAST_ExecCall(Node *n)
           }
         }
         /* now, let's check what options were passed */
-        bool opts[strlen(nc->opts)];
-        /* false-out the options */
-        memset(opts, 0, sizeof(opts));
-        /* actually set the options */
-        unsigned j = 0;
-        for (char *p = nc->opts; *p != '\0'; p++, j++)
-          /* NOTE: we are not checking if the option is not supported, or if
-           *       there are too many options or w/e because the parser already
-           *       did it */
-          if (strchr(list->func->opts, *p))
-            opts[j] = true;
+        bool *opts = NULL;
+        if (strlen(list->func->opts) > 0){
+          opts = NmMem_Malloc(sizeof(bool) * strlen(list->func->opts));
+          /* false-out the options */
+          memset(opts, 0, sizeof(opts));
+          /* actually set the options */
+          unsigned j = 0;
+          for (char *p = nc->opts; *p != '\0'; p++, j++)
+            /* NOTE: we are not checking if the option is not supported, or if
+             *       there are too many options or w/e because the parser already
+             *       did it */
+            if (strchr(list->func->opts, *p))
+              opts[j] = true;
+        }
         /* execute the function */
-        ret = list->func->body(array, (bool *)&opts);
+        ret = list->func->body(array, opts);
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, NmError_GetCurr());

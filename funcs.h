@@ -94,7 +94,7 @@ struct Func {
   NmObjectType *argv;
   /* options for the function
    * it's a string so to get the number of the options
-   * just do strlen(optv) */
+   * just do strlen(opts) */
   char *opts;
 };
 
