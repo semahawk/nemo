@@ -50,17 +50,18 @@ static struct Keyword {
   SymbolType sym;
 } keywords[] =
 {
-  { "my",      SYM_MY      },
-  { "our",     SYM_OUR     },
-  { "const",   SYM_CONST   },
-  { "if",      SYM_IF      },
-  { "unless",  SYM_UNLESS  },
-  { "while",   SYM_WHILE   },
-  { "until",   SYM_UNTIL   },
-  { "else",    SYM_ELSE    },
-  { "fun",     SYM_FUN     },
-  { "use",     SYM_USE     },
-  { "goto",    SYM_GOTO    },
+  { "my",        SYM_MY        },
+  { "our",       SYM_OUR       },
+  { "const",     SYM_CONST     },
+  { "if",        SYM_IF        },
+  { "unless",    SYM_UNLESS    },
+  { "while",     SYM_WHILE     },
+  { "until",     SYM_UNTIL     },
+  { "else",      SYM_ELSE      },
+  { "fun",       SYM_FUN       },
+  { "use",       SYM_USE       },
+  { "goto",      SYM_GOTO      },
+  { "namespace", SYM_NAMESPACE },
   { 0, 0 }
 };
 typedef struct Keyword Keyword;

@@ -100,6 +100,7 @@ NmObject *NmString_New(char *s)
   ob->fn.print = NmString_Print;
   ob->fn.binary.add = NmString_Add;
   ob->fn.binary.index = NmString_Index;
+  ob->fn.binary.cmp = NmString_Cmp;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -121,9 +122,9 @@ NmObject *NmString_NewFromChar(char c)
   ob->s[1] = '\0';
   ob->fn.dstr = NmString_Destroy;
   ob->fn.print = NmString_Print;
-  /*ob->fn.binary.add = NmString_Add;*/
-  ob->fn.binary.add = NULL;
+  ob->fn.binary.add = NmString_Add;
   ob->fn.binary.index = NmString_Index;
+  ob->fn.binary.cmp = NmString_Cmp;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -143,6 +144,18 @@ NmObject *NmString_Add(NmObject *left, NmObject *right)
   memcpy(new + leftlen, NmString_VAL(right), rightlen);
 
   return NmString_New(new);
+}
+
+CmpRes NmString_Cmp(NmObject *left, NmObject *right)
+{
+  int res = strcmp(NmString_VAL(left), NmString_VAL(right));
+
+  if (res > 0)
+    return CMP_GT;
+  else if (res < 0)
+    return CMP_LT;
+  else
+    return CMP_EQ;
 }
 
 NmObject *NmString_TypeRepr(void)

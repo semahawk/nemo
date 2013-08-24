@@ -30,9 +30,14 @@
 
 #include "nemo.h"
 
+/* pointer to the first namespace on the list */
 static NamespacesList *head = NULL;
+/* pointer to the last namespace on the list */
 static NamespacesList *tail = NULL;
+/* pointer to the current namespace that is being used */
 static NamespacesList *curr = NULL;
+/* pointer to the the namespace that was being used before "curr" */
+static NamespacesList *prev = NULL;
 
 /* forward */
 static void NmNamespace_Destroy(Namespace *);
@@ -64,6 +69,8 @@ void NmNamespace_New(char *name)
     namespace_list->prev = head;
     head = namespace_list;
   }
+  /* update the "prev" */
+  prev = curr;
   /* update the "curr" so it points to the new one */
   curr = namespace_list;
   /* create the "__name" variable, which holds the current namespace's name */
@@ -90,14 +97,35 @@ Namespace *NmNamespace_GetByName(char *name)
   return NULL;
 }
 
+/*
+ * Sets "curr" to the namespace of a given <name>.
+ *
+ * When the wanted namespace was not found, it simply gets created
+ * (NmNamespace_New is kind enough to set "curr" itself).
+ */
+void NmNamespace_SwitchTo(char *name)
+{
+  for (NamespacesList *p = tail; p != NULL; p = p->next){
+    if (!strcmp(p->namespace->name, name)){
+      prev = curr;
+      curr = p;
+      return;
+    }
+  }
+
+  NmNamespace_New(name);
+}
+
 void NmNamespace_Restore(void)
 {
-  curr = curr->prev;
+  NamespacesList *save = curr;
+  curr = prev;
+  prev = save;
 }
 
 /*
  * @name - NmNamespace_Destroy
- * @desc - destroy the current Namespace and all of it's globals and functions
+ * @desc - destroy the given <namespace> and all of it's globals and functions
  */
 static void NmNamespace_Destroy(Namespace *namespace)
 {

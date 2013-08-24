@@ -192,6 +192,7 @@ NmObject *NmString_TypeRepr(void);
 void NmString_Print(FILE *, NmObject *);
 NmObject *NmString_Add(NmObject *, NmObject *);
 NmObject *NmString_Index(NmObject *, NmObject *);
+CmpRes    NmString_Cmp(NmObject *, NmObject *);
 void NmString_Destroy(NmObject *);
 void NmString_Tidyup(void);
 /* a handy macro to simply cast and return the string value */

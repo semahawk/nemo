@@ -34,52 +34,53 @@
 #include "nemo.h"
 
 enum SymbolType {
-  SYM_MY,             /* "my"      */
-  SYM_OUR,            /* "our"     */
-  SYM_CONST,          /* "const"   */
-  SYM_IF,             /* "if"      */
-  SYM_UNLESS,         /* "unless"  */
-  SYM_WHILE,          /* "while"   */
-  SYM_UNTIL,          /* "until"   */
-  SYM_ELSE,           /* "else"    */
-  SYM_FUN,            /* "fun"     */
-  SYM_USE,            /* "use"     */
-  SYM_GOTO,           /* "goto"    */
-  SYM_INTEGER,        /*           */
-  SYM_FLOAT,          /*           */
-  SYM_STRING,         /*           */
-  SYM_OPT,            /* -[a-zA-Z] */
-  SYM_NAME,           /*           */
-  SYM_EQ,             /* "="       */
-  SYM_SEMICOLON,      /* ";"       */
-  SYM_COMMA,          /* ","       */
-  SYM_MINUS,          /* "-"       */
-  SYM_MINUSMINUS,     /* "--"      */
-  SYM_PLUS,           /* "+"       */
-  SYM_PLUSPLUS,       /* "++"      */
-  SYM_TIMES,          /* "*"       */
-  SYM_PERCENT,        /* "%"       */
-  SYM_SLASH,          /* "/"       */
-  SYM_LPAREN,         /* "("       */
-  SYM_RPAREN,         /* ")"       */
-  SYM_LMUSTASHE,      /* "{"       */
-  SYM_RMUSTASHE,      /* "}"       */
-  SYM_LBRACKET,       /* "["       */
-  SYM_RBRACKET,       /* "]"       */
-  SYM_LCHEVRON,       /* "<"       */
-  SYM_RCHEVRON,       /* ">"       */
-  SYM_LCHEVRONEQ,     /* "<="      */
-  SYM_RCHEVRONEQ,     /* ">="      */
-  SYM_EQEQ,           /* "=="      */
-  SYM_BANGEQ,         /* "!="      */
-  SYM_BANG,           /* "!"       */
-  SYM_COLON,          /* ":"       */
-  SYM_QUESTION,       /* "?"       */
-  SYM_PLUSEQ,         /* "+="      */
-  SYM_MINUSEQ,        /* "-="      */
-  SYM_TIMESEQ,        /* "*="      */
-  SYM_SLASHEQ,        /* "/="      */
-  SYM_MODULOEQ,       /* "%="      */
+  SYM_MY,             /* "my"        */
+  SYM_OUR,            /* "our"       */
+  SYM_CONST,          /* "const"     */
+  SYM_IF,             /* "if"        */
+  SYM_UNLESS,         /* "unless"    */
+  SYM_WHILE,          /* "while"     */
+  SYM_UNTIL,          /* "until"     */
+  SYM_ELSE,           /* "else"      */
+  SYM_FUN,            /* "fun"       */
+  SYM_USE,            /* "use"       */
+  SYM_GOTO,           /* "goto"      */
+  SYM_NAMESPACE,      /* "namespace" */
+  SYM_INTEGER,        /*             */
+  SYM_FLOAT,          /*             */
+  SYM_STRING,         /*             */
+  SYM_OPT,            /* -[a-zA-Z]   */
+  SYM_NAME,           /*             */
+  SYM_EQ,             /* "="         */
+  SYM_SEMICOLON,      /* ";"         */
+  SYM_COMMA,          /* ","         */
+  SYM_MINUS,          /* "-"         */
+  SYM_MINUSMINUS,     /* "--"        */
+  SYM_PLUS,           /* "+"         */
+  SYM_PLUSPLUS,       /* "++"        */
+  SYM_TIMES,          /* "*"         */
+  SYM_PERCENT,        /* "%"         */
+  SYM_SLASH,          /* "/"         */
+  SYM_LPAREN,         /* "("         */
+  SYM_RPAREN,         /* ")"         */
+  SYM_LMUSTASHE,      /* "{"         */
+  SYM_RMUSTASHE,      /* "}"         */
+  SYM_LBRACKET,       /* "["         */
+  SYM_RBRACKET,       /* "]"         */
+  SYM_LCHEVRON,       /* "<"         */
+  SYM_RCHEVRON,       /* ">"         */
+  SYM_LCHEVRONEQ,     /* "<="        */
+  SYM_RCHEVRONEQ,     /* ">="        */
+  SYM_EQEQ,           /* "=="        */
+  SYM_BANGEQ,         /* "!="        */
+  SYM_BANG,           /* "!"         */
+  SYM_COLON,          /* ":"         */
+  SYM_QUESTION,       /* "?"         */
+  SYM_PLUSEQ,         /* "+="        */
+  SYM_MINUSEQ,        /* "-="        */
+  SYM_TIMESEQ,        /* "*="        */
+  SYM_SLASHEQ,        /* "/="        */
+  SYM_MODULOEQ,       /* "%="        */
   SYM_EOS             /* end of script */
 };
 

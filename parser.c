@@ -46,7 +46,8 @@
 /* <n> is of type { Node * } */
 #define isLiteral(n) (n->type == NT_INTEGER || \
                       n->type == NT_FLOAT   || \
-                      n->type == NT_STRING)
+                      n->type == NT_STRING  || \
+                      n->type == NT_ARRAY)
 
 /* <lex> is of type { LexerState * } */
 #if DEBUG
@@ -87,6 +88,7 @@ static Node *prev_stmt = NULL;
  */
 static Node *primary_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *new = NULL;
   Node **arr_inside = NULL;
   char *name = NULL;
@@ -95,36 +97,43 @@ static Node *primary_expr(LexerState *lex)
    * XXX INTEGER
    */
   if (NmLexer_Peek(lex, SYM_INTEGER)){
+    /* {{{ */
     new = NmAST_GenInt(lex->current.pos, lex->current.value.i);
 #if DEBUG
     NmDebug_Parser("%d ", ((Node_Int *)new)->i);
 #endif
     NmLexer_Skip(lex);
+    /* }}} */
   }
   /*
    * XXX FLOAT
    */
   else if (NmLexer_Peek(lex, SYM_FLOAT)){
+    /* {{{ */
     new = NmAST_GenFloat(lex->current.pos, lex->current.value.f);
 #if DEBUG
     NmDebug_Parser("%f ", ((Node_Float *)new)->f);
 #endif
     NmLexer_Skip(lex);
+    /* }}} */
   }
   /*
    * XXX STRING
    */
   else if (NmLexer_Peek(lex, SYM_STRING)){
+    /* {{{ */
     new = NmAST_GenString(lex->current.pos, lex->current.value.s);
 #if DEBUG
     NmDebug_Parser("\"%s\" ", ((Node_String *)new)->s);
 #endif
     NmLexer_Skip(lex);
+    /* }}} */
   }
   /*
    * XXX NAME
    */
   else if (NmLexer_Peek(lex, SYM_NAME)){
+    /* {{{ */
     int argc = 0;
     unsigned optc = 0;
     char *opts = NULL;
@@ -268,11 +277,13 @@ static Node *primary_expr(LexerState *lex)
     } else {
       new = NmAST_GenName(lex->current.pos, name, namespace);
     }
+    /* }}} */
   }
   /*
    * XXX '(' expr ')'
    */
   else if (NmLexer_Accept(lex, SYM_LPAREN)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("(");
 #endif
@@ -281,11 +292,13 @@ static Node *primary_expr(LexerState *lex)
 #if DEBUG
     NmDebug_Parser(")");
 #endif
+    /* }}} */
   }
   /*
    * XXX '[' params_list ']'
    */
   else if (NmLexer_Accept(lex, SYM_LBRACKET)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("[");
 #endif
@@ -295,13 +308,16 @@ static Node *primary_expr(LexerState *lex)
 #if DEBUG
     NmDebug_Parser("]");
 #endif
+    /* }}} */
   }
   /*
    * XXX EOS
    */
   else if (NmLexer_Accept(lex, SYM_EOS)){
+    /* {{{ */
     lex->eos = true;
     return NULL;
+    /* }}} */
   }
   /*
    * XXX nothing described above, returning NULL
@@ -311,6 +327,7 @@ static Node *primary_expr(LexerState *lex)
   }
 
   return new;
+  /* }}} */
 }
 
 /*
@@ -325,6 +342,7 @@ static Node *primary_expr(LexerState *lex)
  */
 static Node **params_list(LexerState *lex, int num, bool inparens)
 {
+  /* {{{ */
   unsigned nmemb = 5;
   unsigned counter = 0;
   Node **params = NmMem_Calloc(nmemb, sizeof(Node));
@@ -406,6 +424,7 @@ static Node **params_list(LexerState *lex, int num, bool inparens)
   }
 
   return params;
+  /* }}} */
 }
 
 /*
@@ -419,6 +438,7 @@ static Node **params_list(LexerState *lex, int num, bool inparens)
  */
 static Node *postfix_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *target = NULL;
   Node *ret = target = primary_expr(lex);
   Node *index;
@@ -430,6 +450,7 @@ static Node *postfix_expr(LexerState *lex)
    * XXX NAME '[' expr ']'
    */
   if (NmLexer_Accept(lex, SYM_LBRACKET)){
+    /* {{{ */
     /* TODO: store the position of the left bracket
      *       right now it's the position of the very first thing after the left
      *       bracket */
@@ -443,11 +464,13 @@ static Node *postfix_expr(LexerState *lex)
     NmDebug_Parser("]");
 #endif
     ret = NmAST_GenBinop(pos, target, BINARY_INDEX, index);
+    /* }}} */
   }
   /*
    * XXX NAME '++'
    */
   else if (NmLexer_Accept(lex, SYM_PLUSPLUS)){
+    /* {{{ */
     if (isLiteral(target)){
       /* using NmError_Error not NmError_Lex because lexer's state has gone
        * further in 'primary_expr' */
@@ -459,11 +482,13 @@ static Node *postfix_expr(LexerState *lex)
     NmDebug_Parser(":postfix++");
 #endif
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_POSTINC);
+    /* }}} */
   }
   /*
    * XXX NAME '--'
    */
   else if (NmLexer_Accept(lex, SYM_MINUSMINUS)){
+    /* {{{ */
     if (isLiteral(target)){
       /* using NmError_Error not NmError_Lex because lexer's state has gone
        * further in 'primary_expr' */
@@ -475,9 +500,11 @@ static Node *postfix_expr(LexerState *lex)
     NmDebug_Parser(":postfix--");
 #endif
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_POSTDEC);
+    /* }}} */
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -494,10 +521,12 @@ static Node *postfix_expr(LexerState *lex)
  */
 static Node *prefix_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *ret = NULL;
   Node *target = NULL;
 
   if (NmLexer_Accept(lex, SYM_BANG)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("unary! ");
 #endif
@@ -514,8 +543,10 @@ static Node *prefix_expr(LexerState *lex)
       return NULL;
     }
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_NEGATE);
+    /* }}} */
   }
   else if (NmLexer_Accept(lex, SYM_PLUS)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("unary+ ");
 #endif
@@ -532,8 +563,10 @@ static Node *prefix_expr(LexerState *lex)
       return NULL;
     }
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_PLUS);
+    /* }}} */
   }
   else if (NmLexer_Accept(lex, SYM_MINUS)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("unary- ");
 #endif
@@ -550,8 +583,10 @@ static Node *prefix_expr(LexerState *lex)
       return NULL;
     }
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_MINUS);
+    /* }}} */
   }
   else if (NmLexer_Accept(lex, SYM_PLUSPLUS)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("prefix++:");
 #endif
@@ -568,8 +603,10 @@ static Node *prefix_expr(LexerState *lex)
       return NULL;
     }
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_PREINC);
+    /* }}} */
   }
   else if (NmLexer_Accept(lex, SYM_MINUSMINUS)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("prefix--:");
 #endif
@@ -586,12 +623,14 @@ static Node *prefix_expr(LexerState *lex)
       return NULL;
     }
     ret = NmAST_GenUnop(lex->current.pos, target, UNARY_PREDEC);
+    /* }}} */
   }
   else {
     ret = postfix_expr(lex);
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -605,6 +644,7 @@ static Node *prefix_expr(LexerState *lex)
  */
 static Node *mult_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *ret;
   Node *left;
   Node *right;
@@ -659,6 +699,7 @@ static Node *mult_expr(LexerState *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -671,6 +712,7 @@ static Node *mult_expr(LexerState *lex)
  */
 static Node *add_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *ret;
   Node *left;
   Node *right;
@@ -709,6 +751,7 @@ static Node *add_expr(LexerState *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -725,6 +768,7 @@ static Node *add_expr(LexerState *lex)
  */
 static Node *cond_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *ret;
   Node *left;
   Node *right;
@@ -797,6 +841,7 @@ static Node *cond_expr(LexerState *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -813,6 +858,7 @@ static Node *cond_expr(LexerState *lex)
  */
 static Node *assign_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *ret;
   Node *left;
   Node *right;
@@ -890,6 +936,7 @@ static Node *assign_expr(LexerState *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -901,6 +948,7 @@ static Node *assign_expr(LexerState *lex)
  */
 static Node *comma_expr(LexerState *lex)
 {
+  /* {{{ */
   Node *ret;
   Node *left;
   Node *right;
@@ -939,6 +987,7 @@ static Node *comma_expr(LexerState *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -982,6 +1031,7 @@ static Node *expr(LexerState *lex)
  */
 static Node *stmt(LexerState *lex)
 {
+  /* {{{ */
   Node *ret   = NULL;
   Node *guard = NULL;
   Node *body  = NULL;
@@ -994,17 +1044,20 @@ static Node *stmt(LexerState *lex)
    * XXX ';'
    */
   if (NmLexer_Accept(lex, SYM_SEMICOLON)){
+    /* {{{ */
     /* that's NOP */
 #if DEBUG
     NmDebug_Parser("NOP;\n");
 #endif
     ret = NmAST_GenNop(lex->current.pos);
+    /* }}} */
   }
   /*
    * XXX [MY|OUR]
    */
   else if (NmLexer_Peek(lex, SYM_MY) ||
            NmLexer_Peek(lex, SYM_OUR)){
+    /* {{{ */
     uint8_t flags = 0;
     if (NmLexer_Accept(lex, SYM_MY)){
 #if DEBUG
@@ -1050,6 +1103,7 @@ static Node *stmt(LexerState *lex)
     }
     ret = NmAST_GenDecl(lex->current.pos, name, value, flags);
     endStmt(lex);
+    /* }}} */
   }
   /*
    * XXX NAME ':' stmt
@@ -1060,6 +1114,7 @@ static Node *stmt(LexerState *lex)
    */
   /*else if (lex->current.type == SYM_NAME &&*/
            /*NmLexer_Peek(lex, SYM_COLON)){*/
+    /* {{{ */
     /*name = lex->current.value.s;*/
     /*#if DEBUG
 NmDebug_Parser("%s", name);*/
@@ -1072,11 +1127,13 @@ NmDebug_Parser(":", name);*/
     /*body = stmt(lex);*/
     /*ret = body;*/
     /*NmNamespace_NewLabel(name, body);*/
+    /* }}} */
   /*}*/
   /*
    * XXX GOTO NAME ';'
    */
   else if (NmLexer_Accept(lex, SYM_GOTO)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("goto ");
 #endif
@@ -1094,11 +1151,13 @@ NmDebug_Parser(":", name);*/
       ret = NULL;
     }
     endStmt(lex);
+    /* }}} */
   }
   /*
    * XXX USE NAME ';'
    */
   else if (NmLexer_Accept(lex, SYM_USE)){
+    /* {{{ */
     Pos savepos = lex->current.pos;
 #if DEBUG
       NmDebug_Parser("use ");
@@ -1110,12 +1169,31 @@ NmDebug_Parser(":", name);*/
 #endif
     ret = NmAST_GenUse(savepos, name);
     endStmt(lex);
+    /* }}} */
+  }
+  /*
+   * XXX NAMESPACE NAME stmt
+   */
+  else if (NmLexer_Accept(lex, SYM_NAMESPACE)){
+    /* {{{ */
+#if DEBUG
+    NmDebug_Parser("namespace ");
+#endif
+    Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+    NmNamespace_SwitchTo(namesym.value.s);
+#if DEBUG
+    NmDebug_Parser("%s ", namesym.value.s);
+#endif
+    ret = stmt(lex);
+    NmNamespace_Restore();
+    /* }}} */
   }
   /*
    * XXX FUN NAME [OPT|NAME]* ';'
    * XXX FUN NAME [OPT|NAME]* block
    */
   else if (NmLexer_Accept(lex, SYM_FUN)){
+    /* {{{ */
     /* indicates whether a incorrect character was used in the args list */
     bool unknown_arg_char = false;
     lex->right_after_fun = true;
@@ -1244,11 +1322,13 @@ NmDebug_Parser(":", name);*/
     }
 
     ret = NmAST_GenFuncDef(pos, name, body, argc, optc, argv, optv);
+    /* }}} */
   }
   /*
    * XXX IF stmt stmt
    */
   else if (NmLexer_Accept(lex, SYM_IF)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("if ");
 #endif
@@ -1264,11 +1344,13 @@ NmDebug_Parser(":", name);*/
       elsee = stmt(lex);
     }
     ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, false);
+    /* }}} */
   }
   /*
    * XXX UNLESS stmt stmt
    */
   else if (NmLexer_Accept(lex, SYM_UNLESS)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("unless ");
 #endif
@@ -1284,11 +1366,13 @@ NmDebug_Parser(":", name);*/
       elsee = stmt(lex);
     }
     ret = NmAST_GenIf(lex->current.pos, guard, body, elsee, true);
+    /* }}} */
   }
   /*
    * XXX WHILE stmt stmt
    */
   else if (NmLexer_Accept(lex, SYM_WHILE)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("while ");
 #endif
@@ -1304,11 +1388,13 @@ NmDebug_Parser(":", name);*/
       elsee = stmt(lex);
     }
     ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, false);
+    /* }}} */
   }
   /*
    * XXX UNTIL stmt stmt
    */
   else if (NmLexer_Accept(lex, SYM_UNTIL)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("until ");
 #endif
@@ -1324,11 +1410,13 @@ NmDebug_Parser(":", name);*/
       elsee = stmt(lex);
     }
     ret = NmAST_GenWhile(lex->current.pos, guard, body, elsee, true);
+    /* }}} */
   }
   /*
    * XXX '{' block '}'
    */
   else if (NmLexer_Accept(lex, SYM_LMUSTASHE)){
+    /* {{{ */
 #if DEBUG
     NmDebug_Parser("{\n");
 #endif
@@ -1337,52 +1425,67 @@ NmDebug_Parser(":", name);*/
 #if DEBUG
     NmDebug_Parser("}\n");
 #endif
-  } else {
+    /* }}} */
+  }
+  /*
+   * XXX expr
+   */
+  else {
+    /* {{{ */
     body = ret = expr(lex);
     /*
      * XXX expr IF stmt
      */
     if (NmLexer_Accept(lex, SYM_IF)){
+      /* {{{ */
 #if DEBUG
       NmDebug_Parser("if ");
 #endif
       guard = stmt(lex);
       ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, false);
+      /* }}} */
     }
     /*
      * XXX expr UNLESS stmt
      */
     else if (NmLexer_Accept(lex, SYM_UNLESS)){
+      /* {{{ */
 #if DEBUG
       NmDebug_Parser("unless ");
 #endif
       guard = stmt(lex);
       ret = NmAST_GenIf(lex->current.pos, ret, guard, NULL, true);
+      /* }}} */
     }
     /*
      * XXX expr WHILE stmt
      */
     else if (NmLexer_Accept(lex, SYM_WHILE)){
+      /* {{{ */
 #if DEBUG
       NmDebug_Parser("while ");
 #endif
       guard = stmt(lex);
       ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, false);
+      /* }}} */
     }
     /*
      * XXX expr UNTIL stmt
      */
     else if (NmLexer_Accept(lex, SYM_UNTIL)){
+      /* {{{ */
 #if DEBUG
       NmDebug_Parser("until ");
 #endif
       guard = stmt(lex);
       ret = NmAST_GenWhile(lex->current.pos, ret, guard, NULL, true);
+      /* }}} */
     }
     /*
      * XXX expr ';'
      */
     else if (!lex->eos) endStmt(lex);
+    /* }}} */
   }
 
   /* this logic probably could've been done better */
@@ -1406,6 +1509,7 @@ NmDebug_Parser(":", name);*/
   prev_stmt = ret;
 
   return ret;
+  /* }}} */
 }
 
 /*
@@ -1414,6 +1518,7 @@ NmDebug_Parser(":", name);*/
  */
 static Node *block(LexerState *lex)
 {
+  /* {{{ */
   Node_Block *new_block = NmMem_Malloc(sizeof(Node_Block));
 
   new_block->type = NT_BLOCK;
@@ -1454,6 +1559,7 @@ static Node *block(LexerState *lex)
       prev_stmt->next = (Node *)new_block;
 
   return (Node *)new_block;
+  /* }}} */
 }
 
 /* <lex> is of type { LexerState } */
@@ -1477,6 +1583,7 @@ static Node *block(LexerState *lex)
  */
 Node *NmParser_ParseFile(char *fname)
 {
+  /* {{{ */
   Node *nodest = NULL;
   LexerState lex;
   FILE *fp;
@@ -1513,6 +1620,7 @@ Node *NmParser_ParseFile(char *fname)
   fclose(fp);
 
   return nodest;
+  /* }}} */
 }
 
 /*
@@ -1524,6 +1632,7 @@ Node *NmParser_ParseFile(char *fname)
  */
 Node *NmParser_ParseString(char *string)
 {
+  /* {{{ */
   Node *nodest = NULL;
   LexerState lex;
   lex.is_file = false;
@@ -1535,5 +1644,6 @@ Node *NmParser_ParseString(char *string)
   NmLexer_Tidyup(&lex);
 
   return nodest;
+  /* }}} */
 }
 
