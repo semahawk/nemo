@@ -1181,16 +1181,12 @@ Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts, struct Names
 NmObject *NmAST_ExecCall(Node *n)
 {
   Node_Call *nc = (Node_Call *)n;
-  NmObject *ret = NULL;
+  NmObject *ret = NmNull;
   char *name = nc->name;
 
 #if DEBUG
   NmDebug_AST(n, "execute function call node");
 #endif
-
-  /*
-   * TODO: move function existance checking to the GenCall
-   */
 
   Namespace *namespaces[3], *namespace;
   namespaces[0] = NmNamespace_GetByName("core");
@@ -1261,7 +1257,13 @@ NmObject *NmAST_ExecCall(Node *n)
     /* and then for the Nemo functions */
     for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
       if (!strcmp(list->func->name, name)){
-        ret = NmAST_Exec(list->func->body);
+        if (!list->func->body){
+          NmError_Parser(n, "cannot call function '%s.%s' which was only declared but not defined", namespace->name, name);
+          Nm_Exit();
+          return NULL;
+        } else {
+          ret = NmAST_Exec(list->func->body);
+        }
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, "executing function '%s' went wrong", name);
