@@ -973,9 +973,12 @@ static Node *expr(LexerState *lex)
  * label: NAME ':' stmt
  *      ;
  *
- * function_prototype: FUN NAME [OPT|NAME]* ';'
- *                   | FUN NAME [OPT|NAME]* block
+ * function_prototype: FUN NAME args ';'
+ *                   | FUN NAME args block
  *                   ;
+ *
+ * args: '(' [ifas]* ')'
+ *     ;
  */
 static Node *stmt(LexerState *lex)
 {
@@ -1113,12 +1116,14 @@ NmDebug_Parser(":", name);*/
    * XXX FUN NAME [OPT|NAME]* block
    */
   else if (NmLexer_Accept(lex, SYM_FUN)){
+    /* indicates whether a incorrect character was used in the args list */
+    bool unknown_arg_char = false;
     lex->right_after_fun = true;
     unsigned argc = 0;
     unsigned optc = 0;
-    char **argv = NmMem_Malloc(sizeof(char *) * 1);
+    NmObjectType *argv = NmMem_Malloc(sizeof(NmObjectType) * 1);
     char *optv = NmMem_Malloc(sizeof(char) * 1 + 1); /* I know sizeof(char) is 1 */
-    /* FIXME: store the "fun" position */
+    /* FIXME: store the "fun" position (right now it's a position of the function's name) */
     Pos pos = lex->current.pos;
 #if DEBUG
     NmDebug_Parser("fun ");
@@ -1128,32 +1133,77 @@ NmDebug_Parser(":", name);*/
 #if DEBUG
     NmDebug_Parser("%s ", namesym.value.s);
 #endif
-    while (NmLexer_Peek(lex, SYM_NAME) || NmLexer_Peek(lex, SYM_OPT)){
-      if (NmLexer_Peek(lex, SYM_NAME)){
-        Symbol namesym = NmLexer_Force(lex, SYM_NAME);
+    /* fetch the options */
+    while (NmLexer_Peek(lex, SYM_OPT)){
+      Symbol optsym = NmLexer_Force(lex, SYM_OPT);
 #if DEBUG
-        NmDebug_Parser("%s ", namesym.value.s);
+      NmDebug_Parser("-%c ", optsym.value.c);
 #endif
-        argv = NmMem_Realloc(argv, (argc + 1) * sizeof(char *) + 1);
-        argv[argc] = NmMem_Strdup(namesym.value.s);
-        argc++;
-      } else if (NmLexer_Peek(lex, SYM_OPT)){
-        Symbol optsym = NmLexer_Force(lex, SYM_OPT);
-#if DEBUG
-        NmDebug_Parser("-%c ", optsym.value.c);
-#endif
-        if (strchr(optv, optsym.value.c)){
-          NmError_Lex(lex, "warning: option '%c' already defined", optsym.value.c);
-          Nm_Exit();
-          return NULL;
-        } else {
-          optv = NmMem_Realloc(optv, (optc + 1) * sizeof(char));
-          optv[optc] = optsym.value.c;
-          optc++;
-        }
+      if (strchr(optv, optsym.value.c)){
+        NmError_Lex(lex, "warning: option '%c' already defined", optsym.value.c);
+        Nm_Exit();
+        return NULL;
+      } else {
+        optv = NmMem_Realloc(optv, (optc + 1) * sizeof(char));
+        optv[optc] = optsym.value.c;
+        optc++;
       }
     }
     optv[optc] = '\0';
+
+    /* fetch the arguments */
+    NmLexer_Force(lex, SYM_LPAREN);
+#if DEBUG
+    NmDebug_Parser("(");
+#endif
+    if (NmLexer_Accept(lex, SYM_NAME)){
+      char *args = lex->current.value.s;
+      /* let's see if correct characters were given
+       * as of version 0.19.0 (24 Aug, 2013) the only correct letters are:
+       *
+       *   i - for an int
+       *   f - for a float
+       *   a - for an array
+       *   s - for a string
+       */
+      for (char *p = args; *p != '\0' && argc < 32; p++){
+        switch (*p){
+          case 'i':
+            argv = NmMem_Realloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv[argc++] = OT_INTEGER;
+            break;
+          case 'f':
+            argv = NmMem_Realloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv[argc++] = OT_FLOAT;
+            break;
+          case 'a':
+            argv = NmMem_Realloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv[argc++] = OT_ARRAY;
+            break;
+          case 's':
+            argv = NmMem_Realloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv[argc++] = OT_STRING;
+            break;
+          default:
+            NmError_Lex(lex, "unknown argument character '%c'", *p);
+            unknown_arg_char = true;
+            break;
+        }
+      }
+#if DEBUG
+      NmDebug_Parser("%s", args);
+#endif
+    }
+
+    if (unknown_arg_char){
+      Nm_Exit();
+      return NULL;
+    }
+
+    NmLexer_Force(lex, SYM_RPAREN);
+#if DEBUG
+    NmDebug_Parser(")");
+#endif
 
     if (NmLexer_Accept(lex, SYM_SEMICOLON)){
       lex->right_after_fun = false;

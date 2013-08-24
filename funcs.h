@@ -91,7 +91,7 @@ struct Func {
   /* number of args */
   unsigned argc;
   /* arguments vector */
-  char **argv;
+  NmObjectType *argv;
   /* options for the function
    * it's a string so to get the number of the options
    * just do strlen(optv) */

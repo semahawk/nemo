@@ -1261,9 +1261,24 @@ NmObject *NmAST_ExecCall(Node *n)
           NmError_Parser(n, "cannot call function '%s.%s' which was only declared but not defined", namespace->name, name);
           Nm_Exit();
           return NULL;
-        } else {
-          ret = NmAST_Exec(list->func->body);
         }
+        /* let's see if the types match */
+        /* it should happen at compile time, though */
+        bool wrong_types = false;
+        for (unsigned i = 0; i < list->func->argc; i++){
+          NmObject *param = NmAST_Exec(nc->params[i]);
+          if (list->func->argv[i] != param->type){
+            NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(NmObject_TypeToS(param->type)), NmString_VAL(NmObject_TypeToS(list->func->argv[i])));
+            wrong_types = true;
+          }
+        }
+
+        if (wrong_types){
+          Nm_Exit();
+          return NULL;
+        }
+        /* execute the functions body */
+        ret = NmAST_Exec(list->func->body);
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, "executing function '%s' went wrong", name);
@@ -1416,7 +1431,7 @@ void NmAST_FreeBlock(Node *n)
  */
 Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
                        unsigned argc, unsigned optc,
-                       char **argv, char *opts)
+                       NmObjectType *argv, char *opts)
 {
   Namespace *namespace = NmNamespace_GetCurr();
   FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
