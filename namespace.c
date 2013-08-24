@@ -121,6 +121,16 @@ static void NmNamespace_Destroy(Namespace *namespace)
     NmMem_Free(cfuncs);
   }
 
+  FuncsList *funcs;
+  FuncsList *funcs_next;
+  /* destroy all the C functions */
+  for (funcs = namespace->funcs; funcs != NULL; funcs = funcs_next){
+    funcs_next = funcs->next;
+    NmMem_Free(funcs->func->name);
+    NmMem_Free(funcs->func);
+    NmMem_Free(funcs);
+  }
+
   LabelsList *labels;
   LabelsList *labels_next;
   /* destroy all the labels */

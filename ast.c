@@ -1509,6 +1509,8 @@ void NmAST_FreeFuncDef(Node *n)
     NmDebug_AST(n, "free function declaration node");
 #endif
   }
+  NmMem_Free(nc->argv);
+  NmMem_Free(nc->opts);
   NmMem_Free(n);
 }
 
