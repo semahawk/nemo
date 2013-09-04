@@ -75,6 +75,9 @@ NmObject *NmObject_Dup(NmObject *ob)
     case OT_NULL:
       *(NmNullObject *)new = *(NmNullObject *)ob;
       break;
+    case OT_FILE:
+      *(NmFileObject *)new = *(NmFileObject *)ob;
+      break;
     case OT_ANY:
       /* suspress the warnings */
       break;
@@ -123,6 +126,10 @@ NmObject *NmObject_TypeToS(NmObjectType type)
           ret = NmString_Add(ret, NmString_New("array"));
           j++;
           break;
+        case OT_FILE:
+          ret = NmString_Add(ret, NmString_New("file handle"));
+          j++;
+          break;
       }
     }
   }
@@ -164,6 +171,8 @@ bool NmObject_Boolish(NmObject *ob)
         return false;
       else
         return true;
+    case OT_FILE:
+      return true;
     default:
       return false;
   }

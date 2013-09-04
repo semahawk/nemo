@@ -47,12 +47,14 @@ enum Type {
   OT_FLOAT     = 1 << 2,
   OT_STRING    = 1 << 3,
   OT_ARRAY     = 1 << 4,
+  OT_FILE      = 1 << 5,
   /* used only when creating a module in C */
   OT_ANY       = OT_NULL
                | OT_INTEGER
                | OT_FLOAT
                | OT_STRING
                | OT_ARRAY
+               | OT_FILE
 };
 
 typedef enum Type NmObjectType;
@@ -62,6 +64,7 @@ typedef struct IntObject NmIntObject;
 typedef struct FloatObject NmFloatObject;
 typedef struct StringObject NmStringObject;
 typedef struct ArrayObject NmArrayObject;
+typedef struct FileObject NmFileObject;
 typedef struct ObFreeList ObFreeList;
 
 /* result of the *_Cmp function */
@@ -136,6 +139,12 @@ struct ArrayObject {
   NmObject **a;
 };
 
+struct FileObject {
+  NMOBJECT_HEAD
+  char *name;
+  FILE *fp;
+};
+
 struct ObFreeList {
   NmObject *ob;
   ObFreeList *next;
@@ -197,6 +206,9 @@ void NmString_Destroy(NmObject *);
 void NmString_Tidyup(void);
 /* a handy macro to simply cast and return the string value */
 #define NmString_VAL(ob) (((NmStringObject *)ob)->s)
+
+NmObject *NmFile_TypeRepr(void);
+void NmFile_Print(FILE *, NmObject *);
 
 NmObject *NmArray_New(size_t);
 NmObject *NmArray_NewFromNode(struct Node *);

@@ -234,11 +234,55 @@ static NmObject *predef_eval(NmObject *args, bool *opts)
   return NmAST_ExecBlock(NmParser_ParseString(NmString_VAL(ob)));
 }
 
+static NmObject *predef_open(NmObject *args, bool *opts)
+{
+  char *name = NmString_VAL(NmArray_GETELEM(args, 0));
+  char mode[4] = "r";
+  NmFileObject *new = NmMem_Calloc(1, sizeof(NmFileObject));
+  FILE *fp;
+
+  if (opts[0])
+    ;
+  else if (opts[1])
+    strcpy(mode, "w");
+  else if (opts[2])
+    strcpy(mode, "a");
+
+  printf("opening file '%s' in mode '%s'\n", name, mode);
+
+  fp = fopen(name, mode);
+
+  if (!fp){
+    NmError_SetString(strerror(errno));
+    return NmNull;
+  }
+
+  new->type = OT_FILE;
+  new->fp = fp;
+  new->name = NmMem_Strdup(name);
+  new->fn.type_repr = NmFile_TypeRepr;
+  new->fn.print = NmFile_Print;
+
+  return (NmObject *)new;
+}
+
+static NmObject *predef_close(NmObject *args, bool *opts)
+{
+  NmObject *arg = NmArray_GETELEM(args, 0);
+
+  NmMem_Free(((NmFileObject *)arg)->name);
+  fclose(((NmFileObject *)arg)->fp);
+
+  return NmInt_New(1);
+}
+
 static NmModuleFuncs module_funcs[] = {
   { "assert", predef_assert,  2, { OT_ANY, OT_ANY }, "" },
+  { "close",  predef_close,   1, { OT_FILE }, "" },
   { "eval",   predef_eval,    1, { OT_STRING }, "" },
   { "id",     predef_id,      1, { OT_ANY }, "" },
   { "len",    predef_len,     1, { OT_STRING | OT_ARRAY }, "" },
+  { "open",   predef_open,    1, { OT_STRING }, "rwa" },
   { "print",  predef_print,  -1, { OT_ANY }, "n" },
   { "printf", predef_printf, -1, { OT_ANY }, "" },
   { NULL, NULL, 0, { 0 }, NULL }

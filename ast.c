@@ -1247,6 +1247,7 @@ NmObject *NmAST_ExecCall(Node *n)
         }
         /* execute the function */
         ret = list->func->body(array, opts);
+        free(opts);
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           NmError_Parser(n, NmError_GetCurr());

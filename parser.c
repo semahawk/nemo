@@ -1262,6 +1262,10 @@ NmDebug_Parser(":", name);*/
             argv = NmMem_Realloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
             argv[argc++] = OT_STRING;
             break;
+          case 'h':
+            argv = NmMem_Realloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv[argc++] = OT_FILE;
+            break;
           default:
             NmError_Lex(lex, "unknown argument character '%c'", *p);
             unknown_arg_char = true;
