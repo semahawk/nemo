@@ -470,6 +470,31 @@ Prism.languages.clike = {
 	'punctuation': /[{}[\];(),.:]/g
 };
 
+/* ********************************************
+     Nemo syntax
+******************************************** */
+Prism.languages.nemo = Prism.languages.extend('clike', {
+  'comment': {
+    pattern: /(^|[^\\])(\/\*[\w\W]*?\*\/|(^|[^:])#.*?(\r?\n|$))/g,
+    lookbehind: true
+  },
+  'keyword': /\b(my|our|fun|if|else|while|until|unless|namespace|use)\b/g,
+  'operator': /[-+]{1,2}|!=?|&lt;{1,2}=?|&gt;{1,2}=?|\-&gt;|={1,2}|\^|~|%|(&amp;){1,2}|\|?\||\?|\*|\//g,
+  'predef': /\b(assert|len|open|close|eval|print|printf|id)\b/g,
+  'function': {
+    pattern: /[a-z0-9_]+\(/ig,
+    inside: {
+      punctuation: /\(/
+    }
+  },
+  'string': {
+    pattern: /("|')(\\?.)*?\1/g,
+    inside: {
+      keyword: /\\[ntare]/g
+    }
+  }
+});
+
 /* **********************************************
      Begin prism-c.js
 ********************************************** */
@@ -569,3 +594,28 @@ Array.prototype.slice.call(document.querySelectorAll('pre[data-src]')).forEach(f
 });
 
 })();
+
+Prism.hooks.add('after-highlight', function (env) {
+	// works only for <code> wrapped inside <pre data-line-numbers> (not inline)
+	var pre = env.element.parentNode;
+	if (!pre || !/pre/i.test(pre.nodeName) || pre.className.indexOf('line-numbers') === -1) {
+		return;
+	}
+
+	var linesNum = (1 + env.code.split('\n').length);
+	var lineNumbersWrapper;
+
+	lines = new Array(linesNum);
+	lines = lines.join('<span></span>');
+
+	lineNumbersWrapper = document.createElement('span');
+	lineNumbersWrapper.className = 'line-numbers-rows';
+	lineNumbersWrapper.innerHTML = lines;
+
+	if (pre.hasAttribute('data-start')) {
+		pre.style.counterReset = 'linenumber ' + (parseInt(pre.getAttribute('data-start'), 10) - 1);
+	}
+
+	env.element.appendChild(lineNumbersWrapper);
+
+});
