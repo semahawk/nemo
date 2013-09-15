@@ -38,7 +38,7 @@ static void load_const(nvm_t *virtual_machine, nvm_value value);
 static nvm_value pop(nvm_t *virtual_machine);
 static void prerun(nvm_t *virtual_machine);
 static void dispatch(nvm_t *vm);
-static char *NmMem_Strdup(nvm_t *virtual_machine, const char *p);
+static char *nm_strdup(nvm_t *virtual_machine, const char *p);
 /* }}} */
 
 #if VERBOSE
@@ -169,7 +169,7 @@ static void prerun(nvm_t *vm)
       nvm_func *new_func = vm->mallocer(sizeof(nvm_func));
       nvm_funcs_stack *new_elem = vm->mallocer(sizeof(nvm_funcs_stack));
       /* set its things */
-      new_func->name = NmMem_Strdup(vm, name);
+      new_func->name = nm_strdup(vm, name);
       new_func->offset = i;
       new_elem->func = new_func;
       /* append that function to the functions stack */
@@ -530,7 +530,7 @@ static void dispatch(nvm_t *vm)
       }
       /* initialize */
       new_stack->var = new_var;
-      new_stack->var->name = NmMem_Strdup(vm, string);
+      new_stack->var->name = nm_strdup(vm, string);
       new_stack->var->value = pop(vm);
       /* append the variable to the variables list */
       new_stack->next = vm->blocks->head->vars;
@@ -742,7 +742,7 @@ static void dispatch(nvm_t *vm)
       }
 
       /* set the frames name */
-      new_frame->fn_name = NmMem_Strdup(vm, string);
+      new_frame->fn_name = nm_strdup(vm, string);
       new_frame->vars = NULL;
       /* set the variables stack to the newly created one */
       vm->blocks->head->vars = new_frame->vars;
@@ -890,9 +890,9 @@ static void dispatch(nvm_t *vm)
   /* }}} dispatch end */
 }
 
-static char *NmMem_Strdup(nvm_t *vm, const char *p)
+static char *nm_strdup(nvm_t *vm, const char *p)
 {
-  /* {{{ NmMem_Strdup body */
+  /* {{{ nm_strdup body */
   char *np = malloc(strlen(p) + 1);
   if (!np){
     fprintf(stderr, "nvm: malloc failed to allocate %lu bytes at line %d\n", strlen(p) + 1, __LINE__ - 2);

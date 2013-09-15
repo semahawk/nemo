@@ -39,25 +39,25 @@
 
 #include "nemo.h"
 
-void NmObject_Destroy(NmObject *ob)
+void nm_obj_destroy(NmObject *ob)
 {
   ob->fn.dstr(ob);
 }
 
-void NmObject_Tidyup(void)
+void nm_obj_cleanup(void)
 {
-  NmInt_Tidyup();
-  NmFloat_Tidyup();
-  NmString_Tidyup();
-  NmArray_Tidyup();
+  nm_int_cleanup();
+  nm_float_cleanup();
+  nm_str_cleanup();
+  nm_arr_cleanup();
 }
 
 /*
  * Duplicates given object and returns the copy.
  */
-NmObject *NmObject_Dup(NmObject *ob)
+NmObject *nm_obj_dup(NmObject *ob)
 {
-  NmObject *new = NmMem_Malloc(sizeof(*ob));
+  NmObject *new = nmalloc(sizeof(*ob));
 
   switch (ob->type){
     case OT_INTEGER:
@@ -89,9 +89,9 @@ NmObject *NmObject_Dup(NmObject *ob)
 /*
  * Translates given <type> to a string.
  */
-NmObject *NmObject_TypeToS(NmObjectType type)
+NmObject *nm_obj_typetos(NmObjectType type)
 {
-  NmObject *ret = NmString_New("");
+  NmObject *ret = nm_new_str("");
   bool first = true;
 
   unsigned num = 7;
@@ -103,31 +103,31 @@ NmObject *NmObject_TypeToS(NmObjectType type)
   for (unsigned i = 0; i < 7; i++){
     if (type & (1 << i)){
       if (!first)
-        ret = NmString_Add(ret, NmString_New(" or "));
+        ret = nm_str_add(ret, nm_new_str(" or "));
       first = false;
       switch (type & (1 << i)){
         case OT_NULL:
-          ret = NmString_Add(ret, NmString_New("null"));
+          ret = nm_str_add(ret, nm_new_str("null"));
           j++;
           break;
         case OT_INTEGER:
-          ret = NmString_Add(ret, NmString_New("integer"));
+          ret = nm_str_add(ret, nm_new_str("integer"));
           j++;
           break;
         case OT_FLOAT:
-          ret = NmString_Add(ret, NmString_New("float"));
+          ret = nm_str_add(ret, nm_new_str("float"));
           j++;
           break;
         case OT_STRING:
-          ret = NmString_Add(ret, NmString_New("string"));
+          ret = nm_str_add(ret, nm_new_str("string"));
           j++;
           break;
         case OT_ARRAY:
-          ret = NmString_Add(ret, NmString_New("array"));
+          ret = nm_str_add(ret, nm_new_str("array"));
           j++;
           break;
         case OT_FILE:
-          ret = NmString_Add(ret, NmString_New("file handle"));
+          ret = nm_str_add(ret, nm_new_str("file handle"));
           j++;
           break;
       }
@@ -142,7 +142,7 @@ NmObject *NmObject_TypeToS(NmObjectType type)
  *
  * In Nemo there is no "bool" type as is.
  */
-bool NmObject_Boolish(NmObject *ob)
+bool nm_obj_boolish(NmObject *ob)
 {
   /*
    * null, 0, 0.0, empty string ("") and an empty array ([]) are false
@@ -152,22 +152,22 @@ bool NmObject_Boolish(NmObject *ob)
     case OT_NULL:
       return false;
     case OT_INTEGER:
-      if (NmInt_VAL(ob) == 0)
+      if (nm_int_value(ob) == 0)
         return false;
       else
         return true;
     case OT_FLOAT:
-      if (NmFloat_VAL(ob) == 0.0f)
+      if (nm_float_value(ob) == 0.0f)
         return false;
       else
         return true;
     case OT_STRING:
-      if (!strcmp(NmString_VAL(ob), ""))
+      if (!strcmp(nm_str_value(ob), ""))
         return false;
       else
         return true;
     case OT_ARRAY:
-      if (NmArray_NMEMB(ob) == 0)
+      if (nm_arr_nmemb(ob) == 0)
         return false;
       else
         return true;

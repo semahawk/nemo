@@ -37,9 +37,9 @@
 
 /* In both the macros <var> is of type { Variable * } */
 /* a handy macro to set the given <flag> in the given <var> */
-#define NmVar_SETFLAG(var, flag) (var->flags |= (flag))
+#define nm_var_set_flag(var, flag) (var->flags |= (flag))
 /* a handy macro to get the given <flag> from the given <var> */
-#define NmVar_GETFLAG(var, flag) (var->flags & (flag))
+#define nm_var_get_flag(var, flag) (var->flags & (flag))
 
 /* these numbers define at which bit the flag is stored */
 #define NMVAR_FLAG_CONST   (1 << 0)
@@ -68,7 +68,7 @@ struct VariablesList {
 typedef struct VariablesList VariablesList;
 typedef struct Variable      Variable;
 
-Variable *NmVar_New(char *name, NmObject *value);
+Variable *nm_new_var(char *name, NmObject *value);
 
 #endif /* VARS_H */
 

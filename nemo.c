@@ -72,7 +72,7 @@ static Included *included = NULL;
 static LibHandlesList *handles = NULL;
 /* a small tiny handy macro to add a handle to the list */
 #define ADD_HANDLE(handle) do { \
-  LibHandlesList *new_list = NmMem_Malloc(sizeof(LibHandlesList)); \
+  LibHandlesList *new_list = nmalloc(sizeof(LibHandlesList)); \
   new_list->handle = handle; \
   new_list->next = handles; \
   handles = new_list; \
@@ -85,14 +85,14 @@ static LibHandlesList *handles = NULL;
   for (list = handles; list != NULL; list = next){ \
     next = list->next; \
     dlclose(list->handle); \
-    NmMem_Free(list); \
+    nfree(list); \
   } \
 } while (0);
 
 /* here are alllll the things that should be done at the exit */
-#define Nm_TIDYUP()  \
-  NmObject_Tidyup(); \
-  NmNamespace_Tidyup();  \
+#define CLEANUP()  \
+  nm_obj_cleanup(); \
+  nm_namespace_cleanup();  \
   CLOSE_HANDLES();   \
   included_tidyup()
 
@@ -101,8 +101,8 @@ static LibHandlesList *handles = NULL;
  */
 static inline void included_new(char *name)
 {
-  Included *new = NmMem_Malloc(sizeof(Included));
-  new->name = NmMem_Strdup(name);
+  Included *new = nmalloc(sizeof(Included));
+  new->name = nm_strdup(name);
   new->next = included;
   included  = new;
 }
@@ -117,8 +117,8 @@ static inline void included_tidyup(void)
 
   for (curr = included; curr != NULL; curr = next){
     next = curr->next;
-    NmMem_Free(curr->name);
-    NmMem_Free(curr);
+    nfree(curr->name);
+    nfree(curr);
   }
 }
 
@@ -135,15 +135,13 @@ int main(int argc, char *argv[])
   bool met_e_flag = false;
 
   /* the kind of global namespace where all the predefined functions etc. reside */
-  NmNamespace_New("core");
+  nm_new_namespace("core");
   /* create the "null" variable */
-  NmVar_New("null", NmNull);
+  nm_new_var("null", null);
   /* fetch the predefined functions */
   predef_init();
-  /* and the dev ones */
-  dev_init();
   /* the main file's namespace */
-  NmNamespace_New("main");
+  nm_new_namespace("main");
 
   while (1){
     static struct option long_options[] = {
@@ -170,18 +168,18 @@ int main(int argc, char *argv[])
     switch (c){
       case 'u':
       {
-        Nm_UseModule(optarg);
+        nm_use_module(optarg);
         break;
       }
       case 'e':
       {
         met_e_flag = true;
         /* parse the string */
-        Node *node = NmParser_ParseString(optarg);
+        Node *node = nm_parse_string(optarg);
         /* execute the nodes */
-        NmAST_ExecBlock(node);
+        nm_ast_exec_block(node);
         /* tidy up after executing */
-        NmAST_FreeBlock(node);
+        nm_ast_free_block(node);
         break;
       }
 #if DEBUG
@@ -194,15 +192,15 @@ int main(int argc, char *argv[])
                     printf("  p   parser messages\n");
                     printf("  l   lexer messages\n\n");
                     return EXIT_SUCCESS;
-          case 'a': NmDebug_SetFlag(DEBUG_FLAG_AST);
+          case 'a': nm_debug_set_flag(DEBUG_FLAG_AST);
                     break;
-          case 'l': NmDebug_SetFlag(DEBUG_FLAG_LEXER);
+          case 'l': nm_debug_set_flag(DEBUG_FLAG_LEXER);
                     break;
-          case 'm': NmDebug_SetFlag(DEBUG_FLAG_MEMORY);
+          case 'm': nm_debug_set_flag(DEBUG_FLAG_MEMORY);
                     break;
-          case 'p': NmDebug_SetFlag(DEBUG_FLAG_PARSER);
+          case 'p': nm_debug_set_flag(DEBUG_FLAG_PARSER);
                     break;
-          default:  NmError_Error("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
+          default:  nm_error("unknown option for debug '%c', run with '-dh' to see the possible options", *optarg);
                     return EXIT_FAILURE;
         }
         break;
@@ -235,24 +233,24 @@ int main(int argc, char *argv[])
     ARGV_count++;
 
   /* create the ARGC variable and the ARGV array if any args are present */
-  Variable *ARGC = NmVar_New("ARGC", NmInt_New(ARGV_count));
-  NmVar_SETFLAG(ARGC, NMVAR_FLAG_CONST);
+  Variable *ARGC = nm_new_var("ARGC", nm_new_int(ARGV_count));
+  nm_var_set_flag(ARGC, NMVAR_FLAG_CONST);
   /* set it's members */
-  Variable *ARGV = NmVar_New("ARGV", NmArray_New(ARGV_count));
+  Variable *ARGV = nm_new_var("ARGV", nm_new_arr(ARGV_count));
   for (int i = 0; i < ARGV_count; i++){
-    NmArray_SETELEM(ARGV->value, i, NmString_New(argv[i + optind]));
+    nm_arr_set_elem(ARGV->value, i, nm_new_str(argv[i + optind]));
   }
-  NmVar_SETFLAG(ARGV, NMVAR_FLAG_CONST);
+  nm_var_set_flag(ARGV, NMVAR_FLAG_CONST);
 
   /* parse the file */
-  nodest = NmParser_ParseFile(input);
+  nodest = nm_parse_file(input);
   /* execute the nodes */
-  NmAST_ExecBlock(nodest);
+  nm_ast_exec_block(nodest);
   /* tidy up after executing */
-  NmAST_FreeBlock(nodest);
+  nm_ast_free_block(nodest);
 
   /* tidy up */
-  Nm_TIDYUP();
+  CLEANUP();
 
   return EXIT_SUCCESS;
 }
@@ -288,10 +286,10 @@ static int nmInteractive(void)
       return 0;
     }
 
-    ob = NmAST_ExecBlock(NmParser_ParseString(input));
+    ob = nm_ast_exec_block(nm_parse_string(input));
 
     printf("=> ");
-    NmObject_PRINT(stdout, ob);
+    nm_obj_print(stdout, ob);
     printf("\n");
   }
 
@@ -299,16 +297,16 @@ static int nmInteractive(void)
   return 0;
 }
 
-void Nm_InitModule(NmModuleFuncs *funcs)
+void nm_init_module(NmModuleFuncs *funcs)
 {
-  Namespace *namespace = NmNamespace_GetCurr();
+  Namespace *namespace = nm_curr_namespace();
 
   /* append all the C functions to the cfuncs */
   for (NmModuleFuncs *f = funcs; f->name != NULL; f++){
-    CFuncsList *list = NmMem_Malloc(sizeof(CFuncsList));
-    CFunc *func = NmMem_Malloc(sizeof(CFunc));
+    CFuncsList *list = nmalloc(sizeof(CFuncsList));
+    CFunc *func = nmalloc(sizeof(CFunc));
 
-    func->name = NmMem_Strdup(f->name);
+    func->name = nm_strdup(f->name);
     func->body = f->ptr;
     func->argc = f->argc;
     func->opts = f->opts;
@@ -330,11 +328,11 @@ void Nm_InitModule(NmModuleFuncs *funcs)
  *        true  if the library loaded fine
  *
  */
-bool Nm_UseModule(char *name)
+bool nm_use_module(char *name)
 {
-  NmNamespace_New(name);
+  nm_new_namespace(name);
   /* make a copy of the name, and convert all the '.'s into '/' */
-  char *name_converted = NmMem_Strdup(name);
+  char *name_converted = nm_strdup(name);
   for (char *p = name_converted; *p != '\0'; p++)
     if (*p == '.')
       *p = '/';
@@ -352,7 +350,7 @@ bool Nm_UseModule(char *name)
 \
   handle = dlopen(PATH, RTLD_LAZY); \
   if (!handle){ \
-    NmError_SetString("%s", dlerror()); \
+    nm_set_error("%s", dlerror()); \
     return false; \
   } \
 \
@@ -361,7 +359,7 @@ bool Nm_UseModule(char *name)
   lib_init = dlsym(handle, init_func); \
 \
   if ((error = dlerror()) != NULL){ \
-    NmError_SetString("%s", error); \
+    nm_set_error("%s", error); \
     return false; \
   } \
 \
@@ -373,9 +371,9 @@ bool Nm_UseModule(char *name)
 
 /* DRY, include a Nemo file */
 #define INCLUDE_NM(PATH) do { \
-  Node *nodest = NmParser_ParseFile(PATH); \
-  NmAST_ExecBlock(nodest); \
-  NmAST_Free(nodest); \
+  Node *nodest = nm_parse_file(PATH); \
+  nm_ast_exec_block(nodest); \
+  nm_ast_free(nodest); \
   fclose(fp); \
   goto included; \
 } while (0);
@@ -427,7 +425,7 @@ bool Nm_UseModule(char *name)
 
   free(cwd); /* getcwd does malloc */
   free(name_converted);
-  NmError_SetString("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
+  nm_set_error("couldn't find module '%s' neither in %s or %s", name, relative_path, lib_path);
 
   return false;
 
@@ -436,7 +434,7 @@ included: {
     free(name_converted);
     /* add the modules name to the included list */
     included_new(name);
-    NmNamespace_Restore();
+    nm_restore_namespace();
     return true;
   }
 }
@@ -473,8 +471,8 @@ int name_lookup(char *name, Namespace *namespace)
 {
   int ret = 0;
   Namespace *namespaces[3];
-  namespaces[0] = NmNamespace_GetByName("core");
-  namespaces[1] = namespace != NULL ? namespace : NmNamespace_GetCurr();
+  namespaces[0] = nm_get_namespace_by_name("core");
+  namespaces[1] = namespace != NULL ? namespace : nm_curr_namespace();
   namespaces[2] = NULL;
 
   for (int i = 0; namespaces[i] != NULL; i++){
@@ -508,10 +506,10 @@ int name_lookup(char *name, Namespace *namespace)
 /*
  * Nemo's wrapper around the exit() function.
  */
-void Nm_Exit()
+void nexit()
 {
   if (!running_interactive){
-    Nm_TIDYUP();
+    CLEANUP();
     exit(EXIT_FAILURE);
   } else {
     ;

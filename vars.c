@@ -33,18 +33,18 @@
 /*
  * Creates a new variable of name <name> and value <value> in the current namespace.
  *
- * Note: One have to set flag manually for it (using NmVar_SETFLAG)
+ * Note: One have to set flag manually for it (using nm_var_set_flag)
  *
  * Returns the variable that was created
  */
-Variable *NmVar_New(char *name, NmObject *value)
+Variable *nm_new_var(char *name, NmObject *value)
 {
-  Namespace *namespace = NmNamespace_GetCurr();
-  VariablesList *vars_list = NmMem_Malloc(sizeof(VariablesList));
-  Variable *var = NmMem_Malloc(sizeof(Variable));
+  Namespace *namespace = nm_curr_namespace();
+  VariablesList *vars_list = nmalloc(sizeof(VariablesList));
+  Variable *var = nmalloc(sizeof(Variable));
 
   /* add the newly created variable to the global namespace */
-  var->name = NmMem_Strdup(name);
+  var->name = nm_strdup(name);
   var->value = value;
   vars_list->var = var;
   vars_list->next = namespace->globals;

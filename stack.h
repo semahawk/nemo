@@ -82,7 +82,7 @@
       } else { \
         _name##_stack.nmemb = floor(_name##_stack.nmemb * STACK_GROW_RATIO); \
       } \
-      _name##_stack.it = NmMem_Realloc(_name##_stack.it, sizeof(_type) * _name##_stack.nmemb); \
+      _name##_stack.it = nrealloc(_name##_stack.it, sizeof(_type) * _name##_stack.nmemb); \
     } \
 \
     _name##_stack.it[_name##_stack.ptr++] = value; \
@@ -90,8 +90,8 @@
 \
   static inline _type _name##_stack_pop(void){ \
     if (_name##_stack.ptr <= 0){ \
-      NmError_Error("popping from the '" #_name "' stack, but it's empty!"); \
-      NmError_Error("returning zero"); \
+      nm_error("popping from the '" #_name "' stack, but it's empty!"); \
+      nm_error("returning zero"); \
       return (_type)0; \
     } \
 \

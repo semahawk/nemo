@@ -129,7 +129,7 @@ typedef struct CFunc CFunc;
 typedef struct FuncsList FuncsList;
 typedef struct Func Func;
 
-void Nm_InsertFuncs(NmModuleFuncs *);
+void nm_insert_funcs(NmModuleFuncs *);
 
 #endif /* FUNCS_H */
 

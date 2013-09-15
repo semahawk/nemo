@@ -33,15 +33,15 @@
  *       executing/compiling
  */
 
-/* current error message to be printed, changeable via NmError_SetString */
+/* current error message to be printed, changeable via nm_set_error */
 static char err[255] = "something went wrong";
 
-char *NmError_GetCurr(void)
+char *nm_curr_error(void)
 {
   return err;
 }
 
-void NmError_SetString(const char *msg, ...)
+void nm_set_error(const char *msg, ...)
 {
   va_list vl;
   va_start(vl, msg);
@@ -49,7 +49,7 @@ void NmError_SetString(const char *msg, ...)
   va_end(vl);
 }
 
-void NmError_Fatal(const char *msg, ...){
+void nm_fatal(const char *msg, ...){
   va_list vl;
   va_start(vl, msg);
   fprintf(stderr, "nemo: fatal: ");
@@ -58,7 +58,7 @@ void NmError_Fatal(const char *msg, ...){
   va_end(vl);
 }
 
-void NmError_Error(const char *msg, ...){
+void nm_error(const char *msg, ...){
   va_list vl;
   va_start(vl, msg);
   fprintf(stderr, "nemo: error: ");
@@ -67,7 +67,7 @@ void NmError_Error(const char *msg, ...){
   va_end(vl);
 }
 
-void NmError_Lex(LexerState *lex, const char *msg, ...)
+void nm_lex_error(LexerState *lex, const char *msg, ...)
 {
   va_list vl;
   va_start(vl, msg);
@@ -84,9 +84,9 @@ void NmError_Lex(LexerState *lex, const char *msg, ...)
   va_end(vl);
 }
 
-void NmError_Parser(Node *n, const char *msg, ...)
+void nm_parser_error(Node *n, const char *msg, ...)
 {
-  Namespace *namespace = NmNamespace_GetCurr();
+  Namespace *namespace = nm_curr_namespace();
 
   va_list vl;
   va_start(vl, msg);

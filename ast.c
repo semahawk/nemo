@@ -57,22 +57,22 @@
 static NmObject *(*execFuncs[])(Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
-  NmAST_ExecNop,
-  NmAST_ExecInt,
-  NmAST_ExecFloat,
-  NmAST_ExecString,
-  NmAST_ExecArray,
-  NmAST_ExecName,
-  NmAST_ExecBinop,
-  NmAST_ExecUnop,
-  NmAST_ExecIf,
-  NmAST_ExecWhile,
-  NmAST_ExecDecl,
-  NmAST_ExecCall,
-  NmAST_ExecStmt,
-  NmAST_ExecBlock,
-  NmAST_ExecFuncDef,
-  NmAST_ExecUse
+  nm_ast_exec_nop,
+  nm_ast_exec_int,
+  nm_ast_exec_float,
+  nm_ast_exec_str,
+  nm_ast_exec_arr,
+  nm_ast_exec_name,
+  nm_ast_exec_binop,
+  nm_ast_exec_unop,
+  nm_ast_exec_if,
+  nm_ast_exec_while,
+  nm_ast_exec_decl,
+  nm_ast_exec_call,
+  nm_ast_exec_stmt,
+  nm_ast_exec_block,
+  nm_ast_exec_funcdef,
+  nm_ast_exec_use
 };
 
 /*
@@ -81,31 +81,31 @@ static NmObject *(*execFuncs[])(Node *) =
 static void (*freeFuncs[])(Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
-  NmAST_FreeNop,
-  NmAST_FreeInt,
-  NmAST_FreeFloat,
-  NmAST_FreeString,
-  NmAST_FreeArray,
-  NmAST_FreeName,
-  NmAST_FreeBinop,
-  NmAST_FreeUnop,
-  NmAST_FreeIf,
-  NmAST_FreeWhile,
-  NmAST_FreeDecl,
-  NmAST_FreeCall,
-  NmAST_FreeStmt,
-  NmAST_FreeBlock,
-  NmAST_FreeFuncDef,
-  NmAST_FreeUse
+  nm_ast_free_nop,
+  nm_ast_free_int,
+  nm_ast_free_float,
+  nm_ast_free_str,
+  nm_ast_free_arr,
+  nm_ast_free_name,
+  nm_ast_free_binop,
+  nm_ast_free_unop,
+  nm_ast_free_if,
+  nm_ast_free_while,
+  nm_ast_free_decl,
+  nm_ast_free_call,
+  nm_ast_free_stmt,
+  nm_ast_free_block,
+  nm_ast_free_funcdef,
+  nm_ast_free_use
 };
 
 /*
- * @name - NmAST_ExecNodes
+ * @name - nm_ast_exec_nodes
  * @desc - executes all the statements depending on each node's "next" field
  * @return - the last executed statement's value
  * @param - nodest - the first statement to be executed
  */
-NmObject *NmAST_ExecNodes(Node *nodest)
+NmObject *nm_ast_exec_nodes(Node *nodest)
 {
   /* TODO
    *
@@ -113,25 +113,25 @@ NmObject *NmAST_ExecNodes(Node *nodest)
    */
   (void)nodest;
 
-  return NmNull;
+  return null;
 }
 
 /*
- * @name - NmAST_Exec
+ * @name - nm_ast_exec
  * @desc - executes given node and returns the { NmObject * } it resulted in
  */
-static inline NmObject *NmAST_Exec(Node *n)
+static inline NmObject *nm_ast_exec(Node *n)
 {
   assert(n);
 
-  return execFuncs[n->type] ? execFuncs[n->type](n) : NmNull;
+  return execFuncs[n->type] ? execFuncs[n->type](n) : null;
 }
 
 /*
- * @name - NmAST_Free
+ * @name - nm_ast_free
  * @desc - runs an appropriate function, that will free given <n>
  */
-void NmAST_Free(Node *n)
+void nm_ast_free(Node *n)
 {
   assert(n);
 
@@ -139,211 +139,211 @@ void NmAST_Free(Node *n)
 }
 
 /*
- * @name - NmAST_GenNop
+ * @name - nm_ast_gen_nop
  * @desc - create a n that does NOTHING
  */
-Node *NmAST_GenNop(Pos pos)
+Node *nm_ast_gen_nop(Pos pos)
 {
-  Node *n = NmMem_Calloc(1, sizeof(Node));
+  Node *n = ncalloc(1, sizeof(Node));
 
   n->type = NT_NOP;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create NOP node");
+  nm_debug_ast(n, "create NOP node");
 #endif
 
   return n;
 }
 
 /*
- * @name - NmAST_ExecNop
+ * @name - nm_ast_exec_nop
  * @desc - execute a NOP (eg, return null)
  */
-NmObject *NmAST_ExecNop(Node *n)
+NmObject *nm_ast_exec_nop(Node *n)
 {
   /* unused parameter */
   (void)n;
 
-  return NmNull;
+  return null;
 }
 
 /*
- * @name - NmAST_FreeNop
+ * @name - nm_ast_free_nop
  * @desc - frees the NOP n
  */
-void NmAST_FreeNop(Node *n)
+void nm_ast_free_nop(Node *n)
 {
   assert(n);
   assert(n->type == NT_NOP);
 
 #if DEBUG
-  NmDebug_AST(n, "free NOP node");
+  nm_debug_ast(n, "free NOP node");
 #endif
 
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenInt
+ * @name - nm_ast_gen_int
  * @desc - create a n holding a single literal integer
  */
-Node *NmAST_GenInt(Pos pos, int i)
+Node *nm_ast_gen_int(Pos pos, int i)
 {
-  Node_Int *n = NmMem_Calloc(1, sizeof(Node_Int));
+  Node_Int *n = ncalloc(1, sizeof(Node_Int));
 
   n->type = NT_INTEGER;
   n->i = i;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create int node (value: %d)", i);
+  nm_debug_ast(n, "create int node (value: %d)", i);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecInt
+ * @name - nm_ast_exec_int
  * @desc - return the value of the int
  */
-NmObject *NmAST_ExecInt(Node *n)
+NmObject *nm_ast_exec_int(Node *n)
 {
 #if DEBUG
-  NmDebug_AST(n, "execute integer node");
+  nm_debug_ast(n, "execute integer node");
 #endif
 
-  return NmInt_New(((Node_Int *)n)->i);
+  return nm_new_int(((Node_Int *)n)->i);
 }
 
 /*
- * @name - NmAST_FreeInt
+ * @name - nm_ast_free_int
  * @desc - responsible for freeing literal integer ns
  */
-void NmAST_FreeInt(Node *n)
+void nm_ast_free_int(Node *n)
 {
   assert(n);
   assert(n->type == NT_INTEGER);
 
 #if DEBUG
-  NmDebug_AST(n, "free int node");
+  nm_debug_ast(n, "free int node");
 #endif
 
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenFloat
+ * @name - nm_ast_gen_float
  * @desc - create a n holding a single literal float
  */
-Node *NmAST_GenFloat(Pos pos, float f)
+Node *nm_ast_gen_float(Pos pos, float f)
 {
-  Node_Float *n = NmMem_Calloc(1, sizeof(Node_Float));
+  Node_Float *n = ncalloc(1, sizeof(Node_Float));
 
   n->type = NT_FLOAT;
   n->f = f;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create float node (value: %f)", f);
+  nm_debug_ast(n, "create float node (value: %f)", f);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecFloat
+ * @name - nm_ast_exec_float
  * @desc - return the value of the float
  */
-NmObject *NmAST_ExecFloat(Node *n)
+NmObject *nm_ast_exec_float(Node *n)
 {
 #if DEBUG
-  NmDebug_AST(n, "execute float node");
+  nm_debug_ast(n, "execute float node");
 #endif
 
-  return NmFloat_New(((Node_Float *)n)->f);
+  return nm_new_float(((Node_Float *)n)->f);
 }
 
 /*
- * @name - NmAST_FreeFloat
+ * @name - nm_ast_free_float
  * @desc - responsible for freeing literal float ns
  */
-void NmAST_FreeFloat(Node *n)
+void nm_ast_free_float(Node *n)
 {
   assert(n);
   assert(n->type == NT_FLOAT);
 
 #if DEBUG
-  NmDebug_AST(n, "free float node");
+  nm_debug_ast(n, "free float node");
 #endif
 
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenString
+ * @name - nm_ast_gen_str
  * @desc - create a node holding a single literal string
  */
-Node *NmAST_GenString(Pos pos, char *s)
+Node *nm_ast_gen_str(Pos pos, char *s)
 {
-  Node_String *n = NmMem_Calloc(1, sizeof(Node_String));
+  Node_String *n = ncalloc(1, sizeof(Node_String));
 
   n->type = NT_STRING;
-  n->s = NmMem_Strdup(s);
+  n->s = nm_strdup(s);
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create string node (value: \"%s\")", s);
+  nm_debug_ast(n, "create string node (value: \"%s\")", s);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecString
+ * @name - nm_ast_exec_str
  * @desc - return the value of the string
  */
-NmObject *NmAST_ExecString(Node *n)
+NmObject *nm_ast_exec_str(Node *n)
 {
-  NmObject *ret = NmString_New(((Node_String *)n)->s);
+  NmObject *ret = nm_new_str(((Node_String *)n)->s);
 
 #if DEBUG
-  NmDebug_AST(n, "execute string node");
+  nm_debug_ast(n, "execute string node");
 #endif
 
   if (!ret){
-    NmError_Parser(n, NmError_GetCurr());
-    Nm_Exit();
+    nm_parser_error(n, nm_curr_error());
+    nexit();
     return NULL;
   }
 
-  return NmString_New(((Node_String *)n)->s);
+  return nm_new_str(((Node_String *)n)->s);
 }
 
 /*
- * @name - NmAST_FreeString
+ * @name - nm_ast_free_str
  * @desc - responsible for freeing literal string node
  */
-void NmAST_FreeString(Node *n)
+void nm_ast_free_str(Node *n)
 {
   assert(n);
   assert(n->type == NT_STRING);
 
 #if DEBUG
-  NmDebug_AST(n, "free string node");
+  nm_debug_ast(n, "free string node");
 #endif
 
-  NmMem_Free(((Node_String *)n)->s);
-  NmMem_Free(n);
+  nfree(((Node_String *)n)->s);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenArray
+ * @name - nm_ast_gen_arr
  * @desc - create a node holding a literal array
  */
-Node *NmAST_GenArray(Pos pos, Node **a)
+Node *nm_ast_gen_arr(Pos pos, Node **a)
 {
-  Node_Array *n = NmMem_Calloc(1, sizeof(Node_Array));
+  Node_Array *n = ncalloc(1, sizeof(Node_Array));
   size_t nmemb = 0;
 
   /* count how many elements there are */
@@ -357,71 +357,71 @@ Node *NmAST_GenArray(Pos pos, Node **a)
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create array node (nmemb: %u, values: %p)", nmemb, (void *)a);
+  nm_debug_ast(n, "create array node (nmemb: %u, values: %p)", nmemb, (void *)a);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecArray
+ * @name - nm_ast_exec_arr
  * @desc - return the value of the string
  */
-NmObject *NmAST_ExecArray(Node *n)
+NmObject *nm_ast_exec_arr(Node *n)
 {
   Node_Array *n_arr = (Node_Array *)n;
-  NmObject *ob = NmArray_New(n_arr->nmemb);
+  NmObject *ob = nm_new_arr(n_arr->nmemb);
   size_t i = 0;
 
 #if DEBUG
-  NmDebug_AST(n, "execute array node");
+  nm_debug_ast(n, "execute array node");
 #endif
 
   if (n_arr->a)
     for (Node **p = n_arr->a; *p != NULL; p++, i++)
-      NmArray_SETELEM(ob, i, NmAST_Exec(*p));
+      nm_arr_set_elem(ob, i, nm_ast_exec(*p));
 
   return ob;
 }
 
 /*
- * @name - NmAST_FreeArray
+ * @name - nm_ast_free_arr
  * @desc - responsible for freeing literal string node
  */
-void NmAST_FreeArray(Node *n)
+void nm_ast_free_arr(Node *n)
 {
   assert(n);
   assert(n->type == NT_ARRAY);
 
 #if DEBUG
-  NmDebug_AST(n, "free array node");
+  nm_debug_ast(n, "free array node");
 #endif
 
   if (((Node_Array *)n)->a)
     for (Node **p = ((Node_Array *)n)->a; *p != NULL; p++)
-      NmAST_Free(*p);
+      nm_ast_free(*p);
 
-  NmMem_Free(((Node_Array *)n)->a);
-  NmMem_Free(n);
+  nfree(((Node_Array *)n)->a);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenName
+ * @name - nm_ast_gen_name
  * @desc - creates a (eg. variable) name n
  */
-Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
+Node *nm_ast_gen_name(Pos pos, char *name, struct Namespace *node_namespace)
 {
-  Node_Name *n = NmMem_Calloc(1, sizeof(Node_Name));
+  Node_Name *n = ncalloc(1, sizeof(Node_Name));
   bool found = false;
-  Namespace *curr_namespace = NmNamespace_GetCurr();
+  Namespace *curr_namespace = nm_curr_namespace();
 
   n->type = NT_NAME;
-  n->name = NmMem_Strdup(name);
+  n->name = nm_strdup(name);
   n->namespace = node_namespace;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create name node (name: %s)", name);
+  nm_debug_ast(n, "create name node (name: %s)", name);
 #endif
 
   /* search for the variable (although it should be the parser's job to ensure
@@ -439,8 +439,8 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
           found = true;
           break;
         } else {
-          NmError_Parser((Node *)n, "can't access variable '%s.%s' which was declared as private", node_namespace->name, name);
-          Nm_Exit();
+          nm_parser_error((Node *)n, "can't access variable '%s.%s' which was declared as private", node_namespace->name, name);
+          nexit();
         }
       } else {
         /* we found the variable, and it's public and accessible */
@@ -451,8 +451,8 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
   }
 
   /*if (!found){*/
-    /*NmError_Parser((Node *)n, "variable '%s.%s' was not found", node_namespace->name, name);*/
-    /*Nm_Exit();*/
+    /*nm_parser_error((Node *)n, "variable '%s.%s' was not found", node_namespace->name, name);*/
+    /*nexit();*/
     /*return NULL;*/
   /*}*/
 
@@ -460,15 +460,15 @@ Node *NmAST_GenName(Pos pos, char *name, struct Namespace *node_namespace)
 }
 
 /*
- * @name - NmAST_ExecName
+ * @name - nm_ast_exec_name
  * @desc - return the value the name is carring
  */
-NmObject *NmAST_ExecName(Node *n)
+NmObject *nm_ast_exec_name(Node *n)
 {
   Node_Name *nc = (Node_Name *)n;
 
 #if DEBUG
-  NmDebug_AST(n, "execute name node (name: %s)", nc->name);
+  nm_debug_ast(n, "execute name node (name: %s)", nc->name);
 #endif
 
   /* search for the variable */
@@ -476,33 +476,33 @@ NmObject *NmAST_ExecName(Node *n)
     if (!strcmp(vars->var->name, nc->name))
       return vars->var->value;
 
-  NmError_Parser(n, "variable '%s.%s' was not found", nc->namespace->name, nc->name);
+  nm_parser_error(n, "variable '%s.%s' was not found", nc->namespace->name, nc->name);
   return NULL;
 }
 
 /*
- * @name - NmAST_FreeName
+ * @name - nm_ast_free_name
  * @desc - responsible for freeing (eg. variable) name ns
  */
-void NmAST_FreeName(Node *n)
+void nm_ast_free_name(Node *n)
 {
   assert(n);
   assert(n->type == NT_NAME);
 
 #if DEBUG
-  NmDebug_AST(n, "free name node");
+  nm_debug_ast(n, "free name node");
 #endif
-  NmMem_Free(((Node_Name *)n)->name);
-  NmMem_Free(n);
+  nfree(((Node_Name *)n)->name);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenBinop
+ * @name - nm_ast_gen_binop
  * @desc - creates a binary operation n
  */
-Node *NmAST_GenBinop(Pos pos, Node *left, BinaryOp op, Node *right)
+Node *nm_ast_gen_binop(Pos pos, Node *left, BinaryOp op, Node *right)
 {
-  Node_Binop *n = NmMem_Calloc(1, sizeof(Node_Binop));
+  Node_Binop *n = ncalloc(1, sizeof(Node_Binop));
 
   n->type = NT_BINOP;
   n->op = op;
@@ -511,28 +511,28 @@ Node *NmAST_GenBinop(Pos pos, Node *left, BinaryOp op, Node *right)
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create binary operation node (op: %s, left: %p, right: %p)", binopToS(op), (void*)left, (void*)right);
+  nm_debug_ast(n, "create binary operation node (op: %s, left: %p, right: %p)", binopToS(op), (void*)left, (void*)right);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecBinop
+ * @name - nm_ast_exec_binop
  * @desc - return the result of the binary operation
  */
-NmObject *NmAST_ExecBinop(Node *n)
+NmObject *nm_ast_exec_binop(Node *n)
 {
   Node_Binop *nc = (Node_Binop *)n;
-  Namespace *namespace = NmNamespace_GetCurr();
+  Namespace *namespace = nm_curr_namespace();
 
   Node *left  = nc->left;
   Node *right = nc->right;
 
-  NmObject *ret = NmNull;
+  NmObject *ret = null;
 
 #if DEBUG
-  NmDebug_AST(n, "execute binary operation node");
+  nm_debug_ast(n, "execute binary operation node");
 #endif
 
   /* okay, that's easy things here */
@@ -540,15 +540,15 @@ NmObject *NmAST_ExecBinop(Node *n)
    * XXX BINARY_ASSIGN
    */
   if (nc->op == BINARY_ASSIGN){
-    Variable *var;
+    Variable *var = NULL;
     VariablesList *p;
     char *name;
     bool found = false;
     /* left-hand side of the assignment must be a name
      * (at least for now (30 Apr 2013)) */
     if (nc->left->type != NT_NAME){
-      NmError_Parser(n, "expected an lvalue in assignment");
-      Nm_Exit();
+      nm_parser_error(n, "expected an lvalue in assignment");
+      nexit();
     }
     name = ((Node_Name *)nc->left)->name;
     /* iterate through the variables */
@@ -561,17 +561,17 @@ NmObject *NmAST_ExecBinop(Node *n)
     }
     /* error if the variable was not found */
     if (!found){
-      NmError_Parser(n, "variable '%s' was not found", name);
-      Nm_Exit();
+      nm_parser_error(n, "variable '%s' was not found", name);
+      nexit();
     }
     /* check for the flags, eg. the NM_VAR_FLAG_CONST flag causes the variable
      * to be not-assignable*/
-    if (NmVar_GETFLAG(var, NMVAR_FLAG_CONST)){
-      NmError_Parser(n, "cannot change the value of a constant variable '%s'", name);
-      Nm_Exit();
+    if (nm_var_get_flag(var, NMVAR_FLAG_CONST)){
+      nm_parser_error(n, "cannot change the value of a constant variable '%s'", name);
+      nexit();
     }
     /* actually assign the value */
-    ret = NmAST_Exec(nc->right);
+    ret = nm_ast_exec(nc->right);
     var->value = ret;
 
     return ret;
@@ -580,15 +580,15 @@ NmObject *NmAST_ExecBinop(Node *n)
    * XXX BINARY_INDEX
    */
   else if (nc->op == BINARY_INDEX){
-    NmObject *ob_left = NmAST_Exec(left);
-    NmObject *ob_right = NmAST_Exec(right);
+    NmObject *ob_left = nm_ast_exec(left);
+    NmObject *ob_right = nm_ast_exec(right);
     if (!ob_left->fn.binary.index){
-      NmError_Parser(n, "invalid binary operator '[]' for type '%s'", NmString_VAL(ob_left->fn.type_repr()));
-      Nm_Exit();
+      nm_parser_error(n, "invalid binary operator '[]' for type '%s'", nm_str_value(ob_left->fn.type_repr()));
+      nexit();
     }
     if (ob_right->type != OT_INTEGER){
-      NmError_Parser(n, "expected type 'int' for the indexing value");
-      Nm_Exit();
+      nm_parser_error(n, "expected type 'int' for the indexing value");
+      nexit();
     }
 
     return ob_left->fn.binary.index(ob_left, ob_right);
@@ -598,9 +598,9 @@ NmObject *NmAST_ExecBinop(Node *n)
    */
   else if (nc->op == BINARY_COMMA){
     /* discarding the left's value */
-    NmAST_Exec(left);
+    nm_ast_exec(left);
     /* returning the right's value */
-    return NmAST_Exec(right);
+    return nm_ast_exec(right);
   }
 
 /* a handy macro to check if an object supports given binary operation
@@ -612,8 +612,8 @@ NmObject *NmAST_ExecBinop(Node *n)
  * Note: both left and right operands should be of the same type */
 #define ensure_ob_has_func(FUNC) \
   if (!ob_left->fn.binary.FUNC){ \
-    NmError_Parser(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(nc->op), NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr())); \
-    Nm_Exit(); \
+    nm_parser_error(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(nc->op), nm_str_value(ob_left->fn.type_repr()), nm_str_value(ob_right->fn.type_repr())); \
+    nexit(); \
   }
 
 /* <TYPE> is of type { BinaryOp }
@@ -626,8 +626,8 @@ NmObject *NmAST_ExecBinop(Node *n)
     ret = ob_left->fn.binary.FUNC(ob_left, ob_right); \
     /* if a binop function returns NULL it means something bad happend */ \
     if (!ret){ \
-      NmError_Parser(n, NmError_GetCurr()); \
-      Nm_Exit(); \
+      nm_parser_error(n, nm_curr_error()); \
+      nexit(); \
     } \
     break; \
   }
@@ -637,7 +637,7 @@ NmObject *NmAST_ExecBinop(Node *n)
     ensure_ob_has_func(cmp); \
 \
     ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMPRES ? \
-          NmInt_New(1) : NmInt_New(0); \
+          nm_new_int(1) : nm_new_int(0); \
     break; \
   }
 
@@ -658,7 +658,7 @@ NmObject *NmAST_ExecBinop(Node *n)
 \
       ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
             ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
-            NmInt_New(1) : NmInt_New(0); \
+            nm_new_int(1) : nm_new_int(0); \
       break; \
     } \
     case BINARY_GE: { \
@@ -666,7 +666,7 @@ NmObject *NmAST_ExecBinop(Node *n)
 \
       ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
             ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT ? \
-            NmInt_New(1) : NmInt_New(0); \
+            nm_new_int(1) : nm_new_int(0); \
       break; \
     } \
     case BINARY_NE: { \
@@ -674,16 +674,16 @@ NmObject *NmAST_ExecBinop(Node *n)
 \
       ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT || \
             ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
-            NmInt_New(1) : NmInt_New(0); \
+            nm_new_int(1) : nm_new_int(0); \
       break; \
     } \
     default: \
-      NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(nc->op)); \
-    Nm_Exit(); \
+      nm_parser_error(n, "invalid types '%s' and '%s' for binary operation %s", nm_str_value(ob_left->fn.type_repr()), nm_str_value(ob_right->fn.type_repr()), binopToS(nc->op)); \
+    nexit(); \
   }
 
-  NmObject *ob_left = NmAST_Exec(left);
-  NmObject *ob_right = NmAST_Exec(right);
+  NmObject *ob_left = nm_ast_exec(left);
+  NmObject *ob_right = nm_ast_exec(right);
 
   /* it's all easy when the two types are the same, just look if the type has
    * some function that does the operation, and simply run it and simply return
@@ -699,10 +699,10 @@ NmObject *NmAST_ExecBinop(Node *n)
     if (ob_left->type == OT_INTEGER && ob_right->type == OT_FLOAT){
       /* check if the float is something like 2.0 or 1234.0, and if it is use it
        * as in int */
-      if ((int)(NmFloat_VAL(ob_right)) == NmFloat_VAL(ob_right)){
-        ob_right = NmInt_New((int)(NmFloat_VAL(ob_right)));
+      if ((int)(nm_float_value(ob_right)) == nm_float_value(ob_right)){
+        ob_right = nm_new_int((int)(nm_float_value(ob_right)));
       } else {
-        ob_left = NmFloat_NewFromInt(NmInt_VAL(ob_left));
+        ob_left = nm_new_float_from_int(nm_int_value(ob_left));
       }
       binary_ops();
     }
@@ -710,17 +710,17 @@ NmObject *NmAST_ExecBinop(Node *n)
     else if (ob_left->type == OT_FLOAT && ob_right->type == OT_INTEGER){
       /* check if the float is something like 2.0 or 1234.0, and if it is use it
        * as in int */
-      if ((int)(NmFloat_VAL(ob_left)) == NmFloat_VAL(ob_left)){
-        ob_left = NmInt_New((int)(NmFloat_VAL(ob_left)));
+      if ((int)(nm_float_value(ob_left)) == nm_float_value(ob_left)){
+        ob_left = nm_new_int((int)(nm_float_value(ob_left)));
       } else {
-        ob_right = NmFloat_NewFromInt(NmInt_VAL(ob_right));
+        ob_right = nm_new_float_from_int(nm_int_value(ob_right));
       }
       binary_ops();
     }
     /* if anything else, the operation is simply not permitted */
     else {
-      NmError_Parser(n, "invalid types '%s' and '%s' for binary operation %s", NmString_VAL(ob_left->fn.type_repr()), NmString_VAL(ob_right->fn.type_repr()), binopToS(nc->op));
-      Nm_Exit();
+      nm_parser_error(n, "invalid types '%s' and '%s' for binary operation %s", nm_str_value(ob_left->fn.type_repr()), nm_str_value(ob_right->fn.type_repr()), binopToS(nc->op));
+      nexit();
     }
   }
 
@@ -731,30 +731,30 @@ NmObject *NmAST_ExecBinop(Node *n)
 }
 
 /*
- * @name - NmAST_FreeBinop
+ * @name - nm_ast_free_binop
  * @desc - responsible for freeing binary operation ns
  */
-void NmAST_FreeBinop(Node *n)
+void nm_ast_free_binop(Node *n)
 {
   assert(n);
   assert(n->type == NT_BINOP);
 
-  NmAST_Free(((Node_Binop *)n)->left);
-  NmAST_Free(((Node_Binop *)n)->right);
+  nm_ast_free(((Node_Binop *)n)->left);
+  nm_ast_free(((Node_Binop *)n)->right);
 
 #if DEBUG
-  NmDebug_AST(n, "free binary operation node");
+  nm_debug_ast(n, "free binary operation node");
 #endif
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenUnop
+ * @name - nm_ast_gen_unop
  * @desc - creates a n for unary operation
  */
-Node *NmAST_GenUnop(Pos pos, Node *target, UnaryOp op)
+Node *nm_ast_gen_unop(Pos pos, Node *target, UnaryOp op)
 {
-  Node_Unop *n = NmMem_Calloc(1, sizeof(Node_Unop));
+  Node_Unop *n = ncalloc(1, sizeof(Node_Unop));
 
   n->type = NT_UNOP;
   n->op = op;
@@ -762,25 +762,25 @@ Node *NmAST_GenUnop(Pos pos, Node *target, UnaryOp op)
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)target);
+  nm_debug_ast(n, "create unary operation node (op: %s, expr: %p)", unopToS(op), (void*)target);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecUnop
+ * @name - nm_ast_exec_unop
  * @desc - return the result of the unary operation
  */
-NmObject *NmAST_ExecUnop(Node *n)
+NmObject *nm_ast_exec_unop(Node *n)
 {
   Node_Unop *nc = (Node_Unop *)n;
-  NmObject *ret;
+  NmObject *ret = null;
 
-  NmObject *target = NmAST_Exec(nc->target);
+  NmObject *target = nm_ast_exec(nc->target);
 
 #if DEBUG
-  NmDebug_AST(n, "execute unary operation node");
+  nm_debug_ast(n, "execute unary operation node");
 #endif
 
 /* a handy macro to check if an object supports given unary operation
@@ -791,8 +791,8 @@ NmObject *NmAST_ExecUnop(Node *n)
  */
 #define ensure_ob_has_func(FUNC) \
   if (!target->fn.unary.FUNC){ \
-    NmError_Parser(n, "invalid type '%s' for unary operator %s", NmString_VAL(target->fn.type_repr()), unopToS(nc->op)); \
-    Nm_Exit(); \
+    nm_parser_error(n, "invalid type '%s' for unary operator %s", nm_str_value(target->fn.type_repr()), unopToS(nc->op)); \
+    nexit(); \
   }
 
 /* <TYPE> is of type { UnaryOp }
@@ -821,21 +821,21 @@ NmObject *NmAST_ExecUnop(Node *n)
     }
     case UNARY_POSTINC: {
       ensure_ob_has_func(increment);
-      NmObject *save = NmObject_Dup(target);
+      NmObject *save = nm_obj_dup(target);
       target->fn.unary.increment(target);
       ret = save;
       break;
     }
     case UNARY_POSTDEC: {
       ensure_ob_has_func(decrement);
-      NmObject *save = NmObject_Dup(target);
+      NmObject *save = nm_obj_dup(target);
       target->fn.unary.decrement(target);
       ret = save;
       break;
     }
     default:
-      NmError_Parser(n, "invalid unary operator %s for type '%s'", unopToS(nc->op), NmString_VAL(target->fn.type_repr()));
-      Nm_Exit();
+      nm_parser_error(n, "invalid unary operator %s for type '%s'", unopToS(nc->op), nm_str_value(target->fn.type_repr()));
+      nexit();
   }
 
 #undef op
@@ -845,30 +845,30 @@ NmObject *NmAST_ExecUnop(Node *n)
 }
 
 /*
- * @name - NmAST_FreeUnop
+ * @name - nm_ast_free_unop
  * @desc - responsible for freeing unary operation ns
  */
-void NmAST_FreeUnop(Node *n)
+void nm_ast_free_unop(Node *n)
 {
   assert(n);
   assert(n->type == NT_UNOP);
 
-  NmAST_Free(((Node_Unop *)n)->target);
+  nm_ast_free(((Node_Unop *)n)->target);
 
 #if DEBUG
-  NmDebug_AST(n, "free unary operation node");
+  nm_debug_ast(n, "free unary operation node");
 #endif
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenIf
+ * @name - nm_ast_gen_if
  * @desc - creates a n for the if statement
  *         <guard>, <body> and <elsee> can be NULL, it means a NOP then
  */
-Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
+Node *nm_ast_gen_if(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
 {
-  Node_If *n = NmMem_Calloc(1, sizeof(Node_If));
+  Node_If *n = ncalloc(1, sizeof(Node_If));
 
   n->type = NT_IF;
   n->guard = guard;
@@ -879,19 +879,19 @@ Node *NmAST_GenIf(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
 
 #if DEBUG
   if (unless)
-    NmDebug_AST(n, "create unless node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+    nm_debug_ast(n, "create unless node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
   else
-    NmDebug_AST(n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+    nm_debug_ast(n, "create if node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecIf
+ * @name - nm_ast_exec_if
  * @desc - do the if loop, return actually anything
  */
-NmObject *NmAST_ExecIf(Node *n)
+NmObject *nm_ast_exec_if(Node *n)
 {
   Node_If *nc = (Node_If *)n;
   Node *guard = nc->guard;
@@ -901,37 +901,37 @@ NmObject *NmAST_ExecIf(Node *n)
 
 #if DEBUG
   if (unless)
-    NmDebug_AST(n, "execute unless node");
+    nm_debug_ast(n, "execute unless node");
   else
-    NmDebug_AST(n, "execute if node");
+    nm_debug_ast(n, "execute if node");
 #endif
 
   if (unless){
-    if (!NmObject_Boolish(NmAST_Exec(guard))){
-      NmAST_Exec(body);
+    if (!nm_obj_boolish(nm_ast_exec(guard))){
+      nm_ast_exec(body);
     } else {
       if (elsee)
-        NmAST_Exec(elsee);
+        nm_ast_exec(elsee);
     }
   } else {
-    if (NmObject_Boolish(NmAST_Exec(guard))){
-      NmAST_Exec(body);
+    if (nm_obj_boolish(nm_ast_exec(guard))){
+      nm_ast_exec(body);
     } else {
       if (elsee)
-        NmAST_Exec(elsee);
+        nm_ast_exec(elsee);
     }
   }
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 /*
- * @name - NmAST_FreeIf
+ * @name - nm_ast_free_if
  * @desc - responsible for freeing if ns, and optionally, if present, it's
  *         guarding statement and it's body, and the else statement connected
  *         with it
  */
-void NmAST_FreeIf(Node *n)
+void nm_ast_free_if(Node *n)
 {
   assert(n);
   assert(n->type == NT_IF);
@@ -940,34 +940,34 @@ void NmAST_FreeIf(Node *n)
 
   /* guard in if is optional */
   if (nc->guard)
-    NmAST_Free(nc->guard);
+    nm_ast_free(nc->guard);
   /* so is it's body */
   if (nc->body)
-    NmAST_Free(nc->body);
+    nm_ast_free(nc->body);
   /* aaaaaand the else */
   if (nc->elsee)
-    NmAST_Free(nc->elsee);
+    nm_ast_free(nc->elsee);
 
 #if DEBUG
   if (nc->unless)
-    NmDebug_AST(n, "free unless node");
+    nm_debug_ast(n, "free unless node");
   else
-    NmDebug_AST(n, "free if node");
+    nm_debug_ast(n, "free if node");
 #endif
 
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenWhile
+ * @name - nm_ast_gen_while
  * @desc - creates a while n
  *         <guard>, <body> and <elsee> are optional, can be NULL,
  *         it means then that they are NOPs
  *         <elsee> here gets evaluated when the while loop didn't run even once
  */
-Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, bool until)
+Node *nm_ast_gen_while(Pos pos, Node *guard, Node *body, Node *elsee, bool until)
 {
-  Node_While *n = NmMem_Calloc(1, sizeof(Node_While));
+  Node_While *n = ncalloc(1, sizeof(Node_While));
 
   n->type = NT_WHILE;
   n->guard = guard;
@@ -978,19 +978,19 @@ Node *NmAST_GenWhile(Pos pos, Node *guard, Node *body, Node *elsee, bool until)
 
 #if DEBUG
   if (until)
-    NmDebug_AST(n, "create until node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+    nm_debug_ast(n, "create until node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
   else
-    NmDebug_AST(n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
+    nm_debug_ast(n, "create while node (guard: %p, body: %p, else: %p)", (void*)guard, (void*)body, (void*)elsee);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecWhile
+ * @name - nm_ast_exec_while
  * @desc - execute the loop and return, actually anything, it's a statement
  */
-NmObject *NmAST_ExecWhile(Node *n)
+NmObject *nm_ast_exec_while(Node *n)
 {
   Node_While *nc = (Node_While *)n;
   Node *guard    = nc->guard;
@@ -1000,40 +1000,40 @@ NmObject *NmAST_ExecWhile(Node *n)
 
 #if DEBUG
   if (until)
-    NmDebug_AST(n, "execute until node");
+    nm_debug_ast(n, "execute until node");
   else
-    NmDebug_AST(n, "execute while node");
+    nm_debug_ast(n, "execute while node");
 #endif
 
   if (until){
-    if (!NmObject_Boolish(NmAST_Exec(guard))){
-      while (!NmObject_Boolish(NmAST_Exec(guard))){
-        NmAST_Exec(body);
+    if (!nm_obj_boolish(nm_ast_exec(guard))){
+      while (!nm_obj_boolish(nm_ast_exec(guard))){
+        nm_ast_exec(body);
       }
     } else {
       if (elsee)
-        NmAST_Exec(elsee);
+        nm_ast_exec(elsee);
     }
   } else {
-    if (NmObject_Boolish(NmAST_Exec(guard))){
-      while (NmObject_Boolish(NmAST_Exec(guard))){
-        NmAST_Exec(body);
+    if (nm_obj_boolish(nm_ast_exec(guard))){
+      while (nm_obj_boolish(nm_ast_exec(guard))){
+        nm_ast_exec(body);
       }
     } else {
       if (elsee)
-        NmAST_Exec(elsee);
+        nm_ast_exec(elsee);
     }
   }
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 /*
- * @name - NmAST_FreeWhile
+ * @name - nm_ast_free_while
  * @desc - responsible for freeing while n, and optionally
  *         guarding statement and it's body, as they are optional
  */
-void NmAST_FreeWhile(Node *n)
+void nm_ast_free_while(Node *n)
 {
   assert(n);
   assert(n->type == NT_WHILE);
@@ -1042,65 +1042,65 @@ void NmAST_FreeWhile(Node *n)
 
   /* guard in while is optional */
   if (nc->guard)
-    NmAST_Free(nc->guard);
+    nm_ast_free(nc->guard);
   /* so is it's body */
   if (nc->body)
-    NmAST_Free(nc->body);
+    nm_ast_free(nc->body);
   /* aaaaaand the else */
   if (nc->elsee)
-    NmAST_Free(nc->elsee);
+    nm_ast_free(nc->elsee);
 
 #if DEBUG
   if (nc->until)
-    NmDebug_AST(n, "free until node");
+    nm_debug_ast(n, "free until node");
   else
-    NmDebug_AST(n, "free while node");
+    nm_debug_ast(n, "free while node");
 #endif
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenDecl
+ * @name - nm_ast_gen_decl
  * @desc - creates a n for declaring a variable of given <name>
  *         parameter <value> is optional, may be NULL, then it means
  *         something like:
  *
  *           my variable;
  */
-Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
+Node *nm_ast_gen_decl(Pos pos, char *name, Node *value, uint8_t flags)
 {
-  Node_Decl *n = NmMem_Calloc(1, sizeof(Node_Decl));
-  Namespace *namespace = NmNamespace_GetCurr();
+  Node_Decl *n = ncalloc(1, sizeof(Node_Decl));
+  Namespace *namespace = nm_curr_namespace();
 
   n->type = NT_DECL;
-  n->name = NmMem_Strdup(name);
+  n->name = nm_strdup(name);
   n->value = value;
   n->flags = flags;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create variable declaration node (name: %s, namespace: %s)", name, namespace->name);
+  nm_debug_ast(n, "create variable declaration node (name: %s, namespace: %s)", name, namespace->name);
 #endif
 
-  VariablesList *new_list = NmMem_Malloc(sizeof(VariablesList));
-  Variable *new_var = NmMem_Malloc(sizeof(Variable));
+  VariablesList *new_list = nmalloc(sizeof(VariablesList));
+  Variable *new_var = nmalloc(sizeof(Variable));
   VariablesList *p;
 
   /* before doing anything, check if that variable was already declared */
   for (p = namespace->globals; p != NULL; p = p->next){
     if (!strcmp(p->var->name, name)){
-      NmError_Parser((Node *)n, "global variable '%s' already declared", name);
-      Nm_Exit();
+      nm_parser_error((Node *)n, "global variable '%s' already declared", name);
+      nexit();
     }
   }
 
-  new_var->name = NmMem_Strdup(name);
+  new_var->name = nm_strdup(name);
   if (n->value){
-    NmObject *value = NmAST_Exec(n->value);
+    NmObject *value = nm_ast_exec(n->value);
     new_var->value = value;
   } else {
     /* declared variables get to be a integer with the value of 0 */
-    new_var->value = NmInt_New(0);
+    new_var->value = nm_new_int(0);
   }
   new_var->flags = n->flags;
   /* append to the globals list */
@@ -1112,84 +1112,84 @@ Node *NmAST_GenDecl(Pos pos, char *name, Node *value, uint8_t flags)
 }
 
 /*
- * @name - NmAST_ExecDecl
+ * @name - nm_ast_exec_decl
  * @desc - declare/define the variable and return 1
  */
-NmObject *NmAST_ExecDecl(Node *n)
+NmObject *nm_ast_exec_decl(Node *n)
 {
   /* unused parameter */
   (void)n;
 
 #if DEBUG
-  NmDebug_AST(n, "execute variable declaration node");
+  nm_debug_ast(n, "execute variable declaration node");
 #endif
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 /*
- * @name - NmAST_FreeDecl
+ * @name - nm_ast_free_decl
  * @desc - responsible for freeing declaration n
  *         and optionally a init value it was holding
  */
-void NmAST_FreeDecl(Node *n)
+void nm_ast_free_decl(Node *n)
 {
   assert(n);
   assert(n->type == NT_DECL);
 
   Node_Decl *nc = (Node_Decl *)n;
 
-  NmMem_Free(nc->name);
+  nfree(nc->name);
   /* initialized value is optional */
   if (nc->value)
-    NmAST_Free(nc->value);
+    nm_ast_free(nc->value);
 
 #if DEBUG
-  NmDebug_AST(n, "free declaration node");
+  nm_debug_ast(n, "free declaration node");
 #endif
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenCall
+ * @name - nm_ast_gen_call
  * @desc - creates a n for calling a function of a given <name>
  *         parameter <params> is optional, may be NULL, then it means
  *         that no parameters have been passed
  */
-Node *NmAST_GenCall(Pos pos, char *name, Node **params, char *opts, struct Namespace *namespace)
+Node *nm_ast_gen_call(Pos pos, char *name, Node **params, char *opts, struct Namespace *namespace)
 {
-  Node_Call *n = NmMem_Calloc(1, sizeof(Node_Call));
+  Node_Call *n = ncalloc(1, sizeof(Node_Call));
 
   n->type = NT_CALL;
-  n->name = NmMem_Strdup(name);
+  n->name = nm_strdup(name);
   n->params = params;
-  n->opts = NmMem_Strdup(opts);
+  n->opts = nm_strdup(opts);
   n->namespace = namespace;
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
+  nm_debug_ast(n, "create call node (name: %s, params: %p, opts: '%s')", name, params, opts);
 #endif
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecCall
+ * @name - nm_ast_exec_call
  * @desc - call the given function
  */
-NmObject *NmAST_ExecCall(Node *n)
+NmObject *nm_ast_exec_call(Node *n)
 {
   Node_Call *nc = (Node_Call *)n;
-  NmObject *ret = NmNull;
+  NmObject *ret = null;
   char *name = nc->name;
 
 #if DEBUG
-  NmDebug_AST(n, "execute function call node");
+  nm_debug_ast(n, "execute function call node");
 #endif
 
   Namespace *namespaces[3], *namespace;
-  namespaces[0] = NmNamespace_GetByName("core");
+  namespaces[0] = nm_get_namespace_by_name("core");
   namespaces[1] = nc->namespace;
   namespaces[2] = NULL;
 
@@ -1205,7 +1205,7 @@ NmObject *NmAST_ExecCall(Node *n)
           for (Node **p = nc->params; *p != NULL; p++)
             nmemb++;
         /* parameters are stored as an array */
-        NmObject *array = NmArray_New(nmemb);
+        NmObject *array = nm_new_arr(nmemb);
         /* set the arrays elements */
         if (nc->params){
           /* but first, type checking
@@ -1221,19 +1221,19 @@ NmObject *NmAST_ExecCall(Node *n)
               type = list->func->types[i];
             }
             /* actually check the type of the current argument */
-            NmObject *ob = NmAST_Exec(*p);
+            NmObject *ob = nm_ast_exec(*p);
             if (!(ob->type & type)){
-              NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(ob->fn.type_repr()), NmString_VAL(NmObject_TypeToS(type)));
-              Nm_Exit();
+              nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(ob->fn.type_repr()), nm_str_value(nm_obj_typetos(type)));
+              nexit();
               return NULL;
             }
-            NmArray_SETELEM(array, i, ob);
+            nm_arr_set_elem(array, i, ob);
           }
         }
         /* now, let's check what options were passed */
         bool *opts = NULL;
         if (strlen(list->func->opts) > 0){
-          opts = NmMem_Malloc(sizeof(bool) * strlen(list->func->opts));
+          opts = nmalloc(sizeof(bool) * strlen(list->func->opts));
           /* false-out the options */
           memset(opts, 0, sizeof(opts));
           /* actually set the options */
@@ -1250,8 +1250,8 @@ NmObject *NmAST_ExecCall(Node *n)
         free(opts);
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
-          NmError_Parser(n, NmError_GetCurr());
-          Nm_Exit();
+          nm_parser_error(n, nm_curr_error());
+          nexit();
           return NULL;
         } else {
           return ret;
@@ -1262,31 +1262,31 @@ NmObject *NmAST_ExecCall(Node *n)
     for (FuncsList *list = namespace->funcs; list != NULL; list = list->next){
       if (!strcmp(list->func->name, name)){
         if (!list->func->body){
-          NmError_Parser(n, "cannot call function '%s.%s' which was only declared but not defined", namespace->name, name);
-          Nm_Exit();
+          nm_parser_error(n, "cannot call function '%s.%s' which was only declared but not defined", namespace->name, name);
+          nexit();
           return NULL;
         }
         /* let's see if the types match */
         /* it should happen at compile time, though */
         bool wrong_types = false;
         for (unsigned i = 0; i < list->func->argc; i++){
-          NmObject *param = NmAST_Exec(nc->params[i]);
+          NmObject *param = nm_ast_exec(nc->params[i]);
           if (list->func->argv[i] != param->type){
-            NmError_Parser(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, NmString_VAL(NmObject_TypeToS(param->type)), NmString_VAL(NmObject_TypeToS(list->func->argv[i])));
+            nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(nm_obj_typetos(param->type)), nm_str_value(nm_obj_typetos(list->func->argv[i])));
             wrong_types = true;
           }
         }
 
         if (wrong_types){
-          Nm_Exit();
+          nexit();
           return NULL;
         }
         /* execute the functions body */
-        ret = NmAST_Exec(list->func->body);
+        ret = nm_ast_exec(list->func->body);
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
-          NmError_Parser(n, "executing function '%s' went wrong", name);
-          Nm_Exit();
+          nm_parser_error(n, "executing function '%s' went wrong", name);
+          nexit();
           return NULL;
         } else {
           return ret;
@@ -1295,16 +1295,16 @@ NmObject *NmAST_ExecCall(Node *n)
     }
   }
 
-  NmError_Parser(n, "function '%s' not found", name);
-  Nm_Exit();
+  nm_parser_error(n, "function '%s' not found", name);
+  nexit();
   return NULL;
 }
 
 /*
- * @name - NmAST_FreeCall
+ * @name - nm_ast_free_call
  * @desc - responsible for freeing call node and optionally any params it had
  */
-void NmAST_FreeCall(Node *n)
+void nm_ast_free_call(Node *n)
 {
   unsigned i;
 
@@ -1313,32 +1313,32 @@ void NmAST_FreeCall(Node *n)
 
   Node_Call *nc = (Node_Call *)n;
 
-  NmMem_Free(nc->name);
+  nfree(nc->name);
   /* parameters are optional */
   if (nc->params){
     for (i = 0; nc->params[i] != NULL; i++){
-      NmAST_Free(nc->params[i]);
+      nm_ast_free(nc->params[i]);
     }
 #if DEBUG
-    NmDebug_AST(nc->params, "free params list");
+    nm_debug_ast(nc->params, "free params list");
 #endif
-    NmMem_Free(nc->params);
+    nfree(nc->params);
   }
 
-  NmMem_Free(nc->opts);
+  nfree(nc->opts);
 #if DEBUG
-  NmDebug_AST(n, "free call node");
+  nm_debug_ast(n, "free call node");
 #endif
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenStmt
+ * @name - nm_ast_gen_stmt
  * @desc - create a statement node, but with only one expression
  */
-Node *NmAST_GenStmt(Pos pos, Node *expr)
+Node *nm_ast_gen_stmt(Pos pos, Node *expr)
 {
-  Node_Stmt *n = NmMem_Calloc(1, sizeof(Node_Stmt));
+  Node_Stmt *n = ncalloc(1, sizeof(Node_Stmt));
 
   n->next = expr->next;
   n->type = NT_STMT;
@@ -1346,34 +1346,34 @@ Node *NmAST_GenStmt(Pos pos, Node *expr)
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create statement node (expr: %p)", expr);
+  nm_debug_ast(n, "create statement node (expr: %p)", expr);
 #endif
 
   return (Node *)n;
 }
 
-NmObject *NmAST_ExecStmt(Node *n)
+NmObject *nm_ast_exec_stmt(Node *n)
 {
-  return NmAST_Exec(((Node_Stmt *)n)->expr);
+  return nm_ast_exec(((Node_Stmt *)n)->expr);
 }
 
-void NmAST_FreeStmt(Node *n)
+void nm_ast_free_stmt(Node *n)
 {
   assert(n);
   assert(n->type == NT_STMT);
 
 #if DEBUG
-  NmDebug_AST(n, "free statement node");
+  nm_debug_ast(n, "free statement node");
 #endif
 
-  NmAST_Free(((Node_Stmt *)n)->expr);
-  NmMem_Free(n);
+  nm_ast_free(((Node_Stmt *)n)->expr);
+  nfree(n);
 }
 
-NmObject *NmAST_ExecBlock(Node *n)
+NmObject *nm_ast_exec_block(Node *n)
 {
   Node_Block *nc = (Node_Block *)n;
-  NmObject *ret = NmNull;
+  NmObject *ret = null;
   Statement *s;
   Statement *next;
 
@@ -1381,21 +1381,21 @@ NmObject *NmAST_ExecBlock(Node *n)
   assert(n->type == NT_BLOCK);
 
 #if DEBUG
-  NmDebug_AST(n, "execute block node");
+  nm_debug_ast(n, "execute block node");
 #endif
 
   for (s = nc->tail; s != NULL; s = next){
     next = s->next;
     if (s->stmt){
 #if DEBUG
-      NmDebug_AST(s->stmt, "execute statement node");
+      nm_debug_ast(s->stmt, "execute statement node");
 #endif
-      ret = NmAST_Exec(s->stmt);
+      ret = nm_ast_exec(s->stmt);
     }
   }
 
 #if DEBUG
-  NmDebug_AST(n, "done executing block node");
+  nm_debug_ast(n, "done executing block node");
 #endif
 
   return ret;
@@ -1405,7 +1405,7 @@ NmObject *NmAST_ExecBlock(Node *n)
  * @name - freeBlock
  * @desc - frees given block and every statement it holds
  */
-void NmAST_FreeBlock(Node *n)
+void nm_ast_free_block(Node *n)
 {
   Statement *s;
   Statement *next;
@@ -1416,34 +1416,34 @@ void NmAST_FreeBlock(Node *n)
 
   for (s = nc->tail; s != NULL; s = next){
     next = s->next;
-    NmAST_Free(s->stmt);
+    nm_ast_free(s->stmt);
 #if DEBUG
-    NmDebug_AST(n, "free statement node");
+    nm_debug_ast(n, "free statement node");
 #endif
-    NmMem_Free(s);
+    nfree(s);
   }
 
 #if DEBUG
-  NmDebug_AST(n, "free block node");
+  nm_debug_ast(n, "free block node");
 #endif
-  NmMem_Free(n);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenFuncDef
+ * @name - nm_ast_gen_funcdef
  * @desc - creates a node for defining a function of a given <name>
  */
-Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
+Node *nm_ast_gen_funcdef(Pos pos, char *name, Node *body,
                        unsigned argc, unsigned optc,
                        NmObjectType *argv, char *opts)
 {
-  Namespace *namespace = NmNamespace_GetCurr();
-  FuncsList *l = NmMem_Malloc(sizeof(FuncsList));
-  Func *f = NmMem_Malloc(sizeof(Func));
-  Node_Funcdef *n = NmMem_Calloc(1, sizeof(Node_Funcdef));
+  Namespace *namespace = nm_curr_namespace();
+  FuncsList *l = nmalloc(sizeof(FuncsList));
+  Func *f = nmalloc(sizeof(Func));
+  Node_Funcdef *n = ncalloc(1, sizeof(Node_Funcdef));
 
   n->type = NT_FUNCDEF;
-  n->name = NmMem_Strdup(name);
+  n->name = nm_strdup(name);
   n->argc = argc;
   n->optc = optc;
   n->argv = argv;
@@ -1453,14 +1453,14 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
 
 #if DEBUG
   if (body)
-    NmDebug_AST(n, "create function definition node (name: %s.%s, body: %p, argc: %d, optc: %d, opts: '%s')", namespace->name, name, (void*)body, argc, optc, opts);
+    nm_debug_ast(n, "create function definition node (name: %s.%s, body: %p, argc: %d, optc: %d, opts: '%s')", namespace->name, name, (void*)body, argc, optc, opts);
   else
-    NmDebug_AST(n, "create function declaration node (name: %s.%s, argc: %d, optc: %d, namespace: '%s')", namespace->name, name, argc, optc);
+    nm_debug_ast(n, "create function declaration node (name: %s.%s, argc: %d, optc: %d, namespace: '%s')", namespace->name, name, argc, optc);
 #endif
 
 
   /* initialize */
-  f->name = NmMem_Strdup(name);
+  f->name = nm_strdup(name);
   f->body = body;
   f->argc = argc;
   f->argv = argv;
@@ -1474,96 +1474,96 @@ Node *NmAST_GenFuncDef(Pos pos, char *name, Node *body,
 }
 
 /*
- * @name - NmAST_ExecFuncDef
+ * @name - nm_ast_exec_funcdef
  * @desc - declare/define given function
  */
-NmObject *NmAST_ExecFuncDef(Node *n)
+NmObject *nm_ast_exec_funcdef(Node *n)
 {
   Node_Funcdef *nc = (Node_Funcdef *)n;
 
 #if DEBUG
   if (nc->body)
-    NmDebug_AST(n, "execute function definition node");
+    nm_debug_ast(n, "execute function definition node");
   else
-    NmDebug_AST(n, "execute function declaration node");
+    nm_debug_ast(n, "execute function declaration node");
 #endif
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 /*
- * @name - NmAST_FreeFuncDef
+ * @name - nm_ast_free_funcdef
  * @desc - responsible for freeing call n and optionally any params it had
  */
-void NmAST_FreeFuncDef(Node *n)
+void nm_ast_free_funcdef(Node *n)
 {
   assert(n);
   assert(n->type == NT_FUNCDEF);
 
   Node_Funcdef *nc = (Node_Funcdef *)n;
 
-  NmMem_Free(nc->name);
+  nfree(nc->name);
   if (nc->body){
-    NmAST_Free(nc->body);
+    nm_ast_free(nc->body);
 #if DEBUG
-    NmDebug_AST(n, "free function definition node");
+    nm_debug_ast(n, "free function definition node");
 #endif
   } else {
 #if DEBUG
-    NmDebug_AST(n, "free function declaration node");
+    nm_debug_ast(n, "free function declaration node");
 #endif
   }
-  NmMem_Free(nc->argv);
-  NmMem_Free(nc->opts);
-  NmMem_Free(n);
+  nfree(nc->argv);
+  nfree(nc->opts);
+  nfree(n);
 }
 
 /*
- * @name - NmAST_GenUse
+ * @name - nm_ast_gen_use
  * @desc - creates a node that creates does the including thing
  */
-Node *NmAST_GenUse(Pos pos, char *fname)
+Node *nm_ast_gen_use(Pos pos, char *fname)
 {
-  Node_Use *n = NmMem_Calloc(1, sizeof(Node_Use));
+  Node_Use *n = ncalloc(1, sizeof(Node_Use));
 
   n->type = NT_USE;
-  n->fname = NmMem_Strdup(fname);
+  n->fname = nm_strdup(fname);
   INIT_POS();
 
 #if DEBUG
-  NmDebug_AST(n, "create use node (fname: %s)", fname);
+  nm_debug_ast(n, "create use node (fname: %s)", fname);
 #endif
 
-  if (!Nm_UseModule(fname)){
-    NmError_Parser((Node *)n, NmError_GetCurr());
-    Nm_Exit();
+  if (!nm_use_module(fname)){
+    nm_parser_error((Node *)n, nm_curr_error());
+    nexit();
   }
 
   return (Node *)n;
 }
 
 /*
- * @name - NmAST_ExecUse
+ * @name - nm_ast_exec_use
  * @desc - actually does the including thing
  * @return 1 if everything went fine
  */
-NmObject *NmAST_ExecUse(Node *n)
+NmObject *nm_ast_exec_use(Node *n)
 {
   assert(n);
   assert(n->type == NT_USE);
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
-void NmAST_FreeUse(Node *n)
+void nm_ast_free_use(Node *n)
 {
   assert(n);
   assert(n->type == NT_USE);
 
   Node_Use *nc = (Node_Use *)n;
 
-  NmMem_Free(nc->fname);
-  NmMem_Free(nc->custom_path);
+  nfree(nc->fname);
+  nfree(nc->custom_path);
 }
 
 const char *binopToS(BinaryOp op)

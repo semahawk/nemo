@@ -36,24 +36,24 @@
  */
 static ObFreeList *free_list = NULL;
 
-NmObject *NmFloat_New(double f)
+NmObject *nm_new_float(double f)
 {
-  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmFloatObject *ob = NmMem_Calloc(1, sizeof(NmFloatObject));
+  ObFreeList *list = nmalloc(sizeof(ObFreeList));
+  NmFloatObject *ob = ncalloc(1, sizeof(NmFloatObject));
 
   ob->type = OT_FLOAT;
   ob->f = f;
-  ob->fn.dstr = NmFloat_Destroy;
-  ob->fn.type_repr = NmFloat_TypeRepr;
-  ob->fn.print = NmFloat_Print;
-  ob->fn.binary.add = NmFloat_Add;
-  ob->fn.binary.sub = NmFloat_Sub;
-  ob->fn.binary.mul = NmFloat_Mul;
-  ob->fn.binary.div = NmFloat_Div;
+  ob->fn.dstr = nm_float_destroy;
+  ob->fn.type_repr = nm_float_repr;
+  ob->fn.print = nm_float_print;
+  ob->fn.binary.add = nm_float_add;
+  ob->fn.binary.sub = nm_float_sub;
+  ob->fn.binary.mul = nm_float_mul;
+  ob->fn.binary.div = nm_float_div;
   ob->fn.binary.index = NULL;
-  ob->fn.binary.cmp = NmFloat_Cmp;
-  ob->fn.unary.increment = NmFloat_Increment;
-  ob->fn.unary.decrement = NmFloat_Decrement;
+  ob->fn.binary.cmp = nm_float_cmp;
+  ob->fn.unary.increment = nm_float_incr;
+  ob->fn.unary.decrement = nm_float_decr;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -63,99 +63,99 @@ NmObject *NmFloat_New(double f)
   return (NmObject *)ob;
 }
 
-NmObject *NmFloat_NewFromInt(int i)
+NmObject *nm_new_float_from_int(int i)
 {
-  return NmFloat_New((double)i);
+  return nm_new_float((double)i);
 }
 
-NmObject *NmFloat_Add(NmObject *left, NmObject *right)
+NmObject *nm_float_add(NmObject *left, NmObject *right)
 {
   /* check if the result could be represented as an int */
-  if ((int)(NmFloat_VAL(left) + NmFloat_VAL(right)) == (NmFloat_VAL(left) + NmFloat_VAL(right))){
-    return NmInt_New((int)(NmFloat_VAL(left) + NmFloat_VAL(right)));
+  if ((int)(nm_float_value(left) + nm_float_value(right)) == (nm_float_value(left) + nm_float_value(right))){
+    return nm_new_int((int)(nm_float_value(left) + nm_float_value(right)));
   } else {
-    return NmFloat_New(NmFloat_VAL(left) + NmFloat_VAL(right));
+    return nm_new_float(nm_float_value(left) + nm_float_value(right));
   }
 }
 
-NmObject *NmFloat_Sub(NmObject *left, NmObject *right)
+NmObject *nm_float_sub(NmObject *left, NmObject *right)
 {
   /* check if the result could be represented as an int */
-  if ((int)(NmFloat_VAL(left) - NmFloat_VAL(right)) == (NmFloat_VAL(left) - NmFloat_VAL(right))){
-    return NmInt_New((int)(NmFloat_VAL(left) - NmFloat_VAL(right)));
+  if ((int)(nm_float_value(left) - nm_float_value(right)) == (nm_float_value(left) - nm_float_value(right))){
+    return nm_new_int((int)(nm_float_value(left) - nm_float_value(right)));
   } else {
-    return NmFloat_New(NmFloat_VAL(left) - NmFloat_VAL(right));
+    return nm_new_float(nm_float_value(left) - nm_float_value(right));
   }
 }
 
-NmObject *NmFloat_Mul(NmObject *left, NmObject *right)
+NmObject *nm_float_mul(NmObject *left, NmObject *right)
 {
   /* check if the result could be represented as an int */
-  if ((int)(NmFloat_VAL(left) * NmFloat_VAL(right)) == (NmFloat_VAL(left) * NmFloat_VAL(right))){
-    return NmInt_New((int)(NmFloat_VAL(left) * NmFloat_VAL(right)));
+  if ((int)(nm_float_value(left) * nm_float_value(right)) == (nm_float_value(left) * nm_float_value(right))){
+    return nm_new_int((int)(nm_float_value(left) * nm_float_value(right)));
   } else {
-    return NmFloat_New(NmFloat_VAL(left) * NmFloat_VAL(right));
+    return nm_new_float(nm_float_value(left) * nm_float_value(right));
   }
 }
 
-NmObject *NmFloat_Div(NmObject *left, NmObject *right)
+NmObject *nm_float_div(NmObject *left, NmObject *right)
 {
   /* check if the result could be represented as an int */
-  if ((int)(NmFloat_VAL(left) / NmFloat_VAL(right)) == (NmFloat_VAL(left) / NmFloat_VAL(right))){
-    return NmInt_New((int)(NmFloat_VAL(left) / NmFloat_VAL(right)));
+  if ((int)(nm_float_value(left) / nm_float_value(right)) == (nm_float_value(left) / nm_float_value(right))){
+    return nm_new_int((int)(nm_float_value(left) / nm_float_value(right)));
   } else {
-    return NmFloat_New(NmFloat_VAL(left) / NmFloat_VAL(right));
+    return nm_new_float(nm_float_value(left) / nm_float_value(right));
   }
 }
 
-CmpRes NmFloat_Cmp(NmObject *left, NmObject *right)
+CmpRes nm_float_cmp(NmObject *left, NmObject *right)
 {
-  return NmFloat_VAL(left) >  NmFloat_VAL(right) ? CMP_GT :
-         NmFloat_VAL(left) <  NmFloat_VAL(right) ? CMP_LT :
-                                                   CMP_EQ ;
+  return nm_float_value(left) >  nm_float_value(right) ? CMP_GT :
+         nm_float_value(left) <  nm_float_value(right) ? CMP_LT :
+                                                         CMP_EQ ;
 }
 
-NmObject *NmFloat_Increment(NmObject *target)
+NmObject *nm_float_incr(NmObject *target)
 {
-  NmFloat_VAL(target) = NmFloat_VAL(target) + 1;
+  nm_float_value(target) = nm_float_value(target) + 1;
 
   return target;
 }
 
-NmObject *NmFloat_Decrement(NmObject *target)
+NmObject *nm_float_decr(NmObject *target)
 {
-  NmFloat_VAL(target) = NmFloat_VAL(target) - 1;
+  nm_float_value(target) = nm_float_value(target) - 1;
 
   return target;
 }
 
-NmObject *NmFloat_TypeRepr(void)
+NmObject *nm_float_repr(void)
 {
-  return NmString_New("float");
+  return nm_new_str("float");
 }
 
-void NmFloat_Print(FILE *fp, NmObject *ob)
-{
-  assert(ob->type == OT_FLOAT);
-
-  fprintf(fp, "%g", NmFloat_VAL(ob));
-}
-
-void NmFloat_Destroy(NmObject *ob)
+void nm_float_print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_FLOAT);
 
-  NmMem_Free(ob);
+  fprintf(fp, "%g", nm_float_value(ob));
 }
 
-void NmFloat_Tidyup(void){
+void nm_float_destroy(NmObject *ob)
+{
+  assert(ob->type == OT_FLOAT);
+
+  nfree(ob);
+}
+
+void nm_float_cleanup(void){
   ObFreeList *list;
   ObFreeList *next;
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    NmObject_Destroy((NmObject *)list->ob);
-    NmMem_Free(list);
+    nm_obj_destroy((NmObject *)list->ob);
+    nfree(list);
   }
 }
 

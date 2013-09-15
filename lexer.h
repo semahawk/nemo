@@ -136,12 +136,12 @@ typedef enum SymbolType SymbolType;
 typedef struct Symbol Symbol;
 typedef struct LexerState LexerState;
 
-void NmLexer_Tidyup(LexerState *);
-Symbol NmLexer_Fetch(LexerState *);
-bool NmLexer_Peek(LexerState *, SymbolType);
-bool NmLexer_Accept(LexerState *, SymbolType);
-Symbol NmLexer_Force(LexerState *, SymbolType);
-void NmLexer_Skip(LexerState *);
+void nm_lex_tidyup(LexerState *);
+Symbol nm_lex_fetch(LexerState *);
+bool nm_lex_peek(LexerState *, SymbolType);
+bool nm_lex_accept(LexerState *, SymbolType);
+Symbol nm_lex_force(LexerState *, SymbolType);
+void nm_lex_skip(LexerState *);
 
 const char *symToS(SymbolType type);
 

@@ -64,12 +64,12 @@ typedef struct Error      Error;
 typedef struct ErrorState ErrorState;
 #endif
 
-char *NmError_GetCurr(void);
-void NmError_SetString(const char *msg, ...);
-void NmError_Fatal(const char *msg, ...);
-void NmError_Error(const char *msg, ...);
-void NmError_Lex(LexerState *, const char *msg, ...);
-void NmError_Parser(Node *, const char *msg, ...);
+char *nm_curr_error(void);
+void nm_set_error(const char *msg, ...);
+void nm_fatal(const char *msg, ...);
+void nm_error(const char *msg, ...);
+void nm_lex_error(LexerState *, const char *msg, ...);
+void nm_parser_error(Node *, const char *msg, ...);
 
 #endif /* ERROR_H */
 

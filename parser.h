@@ -33,8 +33,8 @@
 
 #include "nemo.h"
 
-Node *NmParser_ParseFile(char *);
-Node *NmParser_ParseString(char *);
+Node *nm_parse_file(char *);
+Node *nm_parse_string(char *);
 
 #endif /* PARSER_H */
 

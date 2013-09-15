@@ -37,30 +37,30 @@
 static ObFreeList *free_list = NULL;
 
 /*
- * @name - NmObject_NewFromInt
+ * @name - nm_new_int
  * @desc - create an object that would contain an int
  */
-NmObject *NmInt_New(int i)
+NmObject *nm_new_int(int i)
 {
-  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmIntObject *ob = NmMem_Calloc(1, sizeof(NmIntObject));
+  ObFreeList *list = nmalloc(sizeof(ObFreeList));
+  NmIntObject *ob = ncalloc(1, sizeof(NmIntObject));
 
   ob->type = OT_INTEGER;
   ob->i = i;
-  ob->fn.dstr = NmInt_Destroy;
-  ob->fn.type_repr = NmInt_TypeRepr;
-  ob->fn.print = NmInt_Print;
-  ob->fn.binary.add = NmInt_Add;
-  ob->fn.binary.sub = NmInt_Sub;
-  ob->fn.binary.mul = NmInt_Mul;
-  ob->fn.binary.div = NmInt_Div;
-  ob->fn.binary.mod = NmInt_Mod;
-  ob->fn.binary.cmp = NmInt_Cmp;
-  ob->fn.unary.plus = NmInt_Plus;
-  ob->fn.unary.minus = NmInt_Minus;
-  ob->fn.unary.negate = NmInt_Negate;
-  ob->fn.unary.increment = NmInt_Increment;
-  ob->fn.unary.decrement = NmInt_Decrement;
+  ob->fn.dstr = nm_int_destroy;
+  ob->fn.type_repr = nm_int_repr;
+  ob->fn.print = nm_int_print;
+  ob->fn.binary.add = nm_int_add;
+  ob->fn.binary.sub = nm_int_sub;
+  ob->fn.binary.mul = nm_int_mul;
+  ob->fn.binary.div = nm_int_div;
+  ob->fn.binary.mod = nm_int_mod;
+  ob->fn.binary.cmp = nm_int_cmp;
+  ob->fn.unary.plus = nm_int_plus;
+  ob->fn.unary.minus = nm_int_minus;
+  ob->fn.unary.negate = nm_int_negate;
+  ob->fn.unary.increment = nm_int_incr;
+  ob->fn.unary.decrement = nm_int_decr;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -70,107 +70,107 @@ NmObject *NmInt_New(int i)
   return (NmObject *)ob;
 }
 
-NmObject *NmInt_NewFromVoidPtr(void *p)
+NmObject *nm_new_int_from_void_ptr(void *p)
 {
-  return NmInt_New((intptr_t)p);
+  return nm_new_int((intptr_t)p);
 }
 
-NmObject *NmInt_Add(NmObject *left, NmObject *right)
+NmObject *nm_int_add(NmObject *left, NmObject *right)
 {
-  return NmInt_New(NmInt_VAL(left) + NmInt_VAL(right));
+  return nm_new_int(nm_int_value(left) + nm_int_value(right));
 }
 
-NmObject *NmInt_Sub(NmObject *left, NmObject *right)
+NmObject *nm_int_sub(NmObject *left, NmObject *right)
 {
-  return NmInt_New(NmInt_VAL(left) - NmInt_VAL(right));
+  return nm_new_int(nm_int_value(left) - nm_int_value(right));
 }
 
-NmObject *NmInt_Mul(NmObject *left, NmObject *right)
+NmObject *nm_int_mul(NmObject *left, NmObject *right)
 {
-  return NmInt_New(NmInt_VAL(left) * NmInt_VAL(right));
+  return nm_new_int(nm_int_value(left) * nm_int_value(right));
 }
 
-NmObject *NmInt_Div(NmObject *left, NmObject *right)
+NmObject *nm_int_div(NmObject *left, NmObject *right)
 {
-  if (NmInt_VAL(right) == 0){
-    NmError_SetString("zero division!");
+  if (nm_int_value(right) == 0){
+    nm_set_error("zero division!");
     return NULL;
   }
 
-  return NmFloat_New((float)NmInt_VAL(left) / (float)NmInt_VAL(right));
+  return nm_new_float((float)nm_int_value(left) / (float)nm_int_value(right));
 }
 
-NmObject *NmInt_Mod(NmObject *left, NmObject *right)
+NmObject *nm_int_mod(NmObject *left, NmObject *right)
 {
-  return NmInt_New(NmInt_VAL(left) % NmInt_VAL(right));
+  return nm_new_int(nm_int_value(left) % nm_int_value(right));
 }
 
-CmpRes NmInt_Cmp(NmObject *left, NmObject *right)
+CmpRes nm_int_cmp(NmObject *left, NmObject *right)
 {
-  return NmInt_VAL(left) >  NmInt_VAL(right) ? CMP_GT :
-         NmInt_VAL(left) <  NmInt_VAL(right) ? CMP_LT :
+  return nm_int_value(left) >  nm_int_value(right) ? CMP_GT :
+         nm_int_value(left) <  nm_int_value(right) ? CMP_LT :
                                                CMP_EQ ;
 }
 
-NmObject *NmInt_Plus(NmObject *target)
+NmObject *nm_int_plus(NmObject *target)
 {
   return target;
 }
 
-NmObject *NmInt_Minus(NmObject *target)
+NmObject *nm_int_minus(NmObject *target)
 {
-  return NmInt_New(NmInt_VAL(target) * (-1));
+  return nm_new_int(nm_int_value(target) * (-1));
 }
 
-NmObject *NmInt_Negate(NmObject *target)
+NmObject *nm_int_negate(NmObject *target)
 {
-  if (NmObject_Boolish(target) == false)
-    return NmInt_New(true);
+  if (nm_obj_boolish(target) == false)
+    return nm_new_int(true);
   else
-    return NmInt_New(false);
+    return nm_new_int(false);
 }
 
-NmObject *NmInt_Increment(NmObject *target)
+NmObject *nm_int_incr(NmObject *target)
 {
-  NmInt_VAL(target) = NmInt_VAL(target) + 1;
+  nm_int_value(target) = nm_int_value(target) + 1;
 
   return target;
 }
 
-NmObject *NmInt_Decrement(NmObject *target)
+NmObject *nm_int_decr(NmObject *target)
 {
-  NmInt_VAL(target) = NmInt_VAL(target) - 1;
+  nm_int_value(target) = nm_int_value(target) - 1;
 
   return target;
 }
 
-NmObject *NmInt_TypeRepr(void)
+NmObject *nm_int_repr(void)
 {
-  return NmString_New("int");
+  return nm_new_str("int");
 }
 
-void NmInt_Print(FILE *fp, NmObject *ob)
-{
-  assert(ob->type == OT_INTEGER);
-
-  fprintf(fp, "%d", NmInt_VAL(ob));
-}
-
-void NmInt_Destroy(NmObject *ob)
+void nm_int_print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_INTEGER);
 
-  NmMem_Free(ob);
+  fprintf(fp, "%d", nm_int_value(ob));
 }
 
-void NmInt_Tidyup(void){
+void nm_int_destroy(NmObject *ob)
+{
+  assert(ob->type == OT_INTEGER);
+
+  nfree(ob);
+}
+
+void nm_int_cleanup(void){
   ObFreeList *list;
   ObFreeList *next;
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    NmObject_Destroy((NmObject *)list->ob);
-    NmMem_Free(list);
+    nm_obj_destroy((NmObject *)list->ob);
+    nfree(list);
   }
 }
 

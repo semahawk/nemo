@@ -40,14 +40,14 @@ static NamespacesList *curr = NULL;
 static NamespacesList *prev = NULL;
 
 /* forward */
-static void NmNamespace_Destroy(Namespace *);
+static void nm_namespace_destroy(Namespace *);
 
-void NmNamespace_New(char *name)
+void nm_new_namespace(char *name)
 {
-  Namespace *namespace = NmMem_Malloc(sizeof(Namespace));
-  NamespacesList *namespace_list = NmMem_Malloc(sizeof(NamespacesList));
+  Namespace *namespace = nmalloc(sizeof(Namespace));
+  NamespacesList *namespace_list = nmalloc(sizeof(NamespacesList));
 
-  namespace->name = NmMem_Strdup(name);
+  namespace->name = nm_strdup(name);
   namespace->cfuncs = NULL;
   namespace->funcs = NULL;
   namespace->globals = NULL;
@@ -74,26 +74,26 @@ void NmNamespace_New(char *name)
   /* update the "curr" so it points to the new one */
   curr = namespace_list;
   /* create the "__name" variable, which holds the current namespace's name */
-  NmVar_New("__name", NmString_New(name));
+  nm_new_var("__name", nm_new_str(name));
 }
 
-Namespace *NmNamespace_GetCurr(void)
+Namespace *nm_curr_namespace(void)
 {
   if (!curr){
-    NmError_Error("ran out of namespaces!");
+    nm_error("ran out of namespaces!");
     return NULL;
   }
 
   return curr->namespace;
 }
 
-Namespace *NmNamespace_GetByName(char *name)
+Namespace *nm_get_namespace_by_name(char *name)
 {
   for (NamespacesList *p = tail; p != NULL; p = p->next)
     if (!strcmp(p->namespace->name, name))
       return p->namespace;
 
-  NmError_SetString("namespace '%s' not found");
+  nm_set_error("namespace '%s' not found");
   return NULL;
 }
 
@@ -101,9 +101,9 @@ Namespace *NmNamespace_GetByName(char *name)
  * Sets "curr" to the namespace of a given <name>.
  *
  * When the wanted namespace was not found, it simply gets created
- * (NmNamespace_New is kind enough to set "curr" itself).
+ * (nm_new_namespace is kind enough to set "curr" itself).
  */
-void NmNamespace_SwitchTo(char *name)
+void nm_switch_namespace(char *name)
 {
   for (NamespacesList *p = tail; p != NULL; p = p->next){
     if (!strcmp(p->namespace->name, name)){
@@ -113,10 +113,10 @@ void NmNamespace_SwitchTo(char *name)
     }
   }
 
-  NmNamespace_New(name);
+  nm_new_namespace(name);
 }
 
-void NmNamespace_Restore(void)
+void nm_restore_namespace(void)
 {
   NamespacesList *save = curr;
   curr = prev;
@@ -124,19 +124,19 @@ void NmNamespace_Restore(void)
 }
 
 /*
- * @name - NmNamespace_Destroy
+ * @name - nm_namespace_destroy
  * @desc - destroy the given <namespace> and all of it's globals and functions
  */
-static void NmNamespace_Destroy(Namespace *namespace)
+static void nm_namespace_destroy(Namespace *namespace)
 {
   VariablesList *vars;
   VariablesList *vars_next;
   /* destroy all the global variables */
   for (vars = namespace->globals; vars != NULL; vars = vars_next){
     vars_next = vars->next;
-    NmMem_Free(vars->var->name);
-    NmMem_Free(vars->var);
-    NmMem_Free(vars);
+    nfree(vars->var->name);
+    nfree(vars->var);
+    nfree(vars);
   }
 
   CFuncsList *cfuncs;
@@ -144,9 +144,9 @@ static void NmNamespace_Destroy(Namespace *namespace)
   /* destroy all the C functions */
   for (cfuncs = namespace->cfuncs; cfuncs != NULL; cfuncs = cfuncs_next){
     cfuncs_next = cfuncs->next;
-    NmMem_Free(cfuncs->func->name);
-    NmMem_Free(cfuncs->func);
-    NmMem_Free(cfuncs);
+    nfree(cfuncs->func->name);
+    nfree(cfuncs->func);
+    nfree(cfuncs);
   }
 
   FuncsList *funcs;
@@ -154,9 +154,9 @@ static void NmNamespace_Destroy(Namespace *namespace)
   /* destroy all the C functions */
   for (funcs = namespace->funcs; funcs != NULL; funcs = funcs_next){
     funcs_next = funcs->next;
-    NmMem_Free(funcs->func->name);
-    NmMem_Free(funcs->func);
-    NmMem_Free(funcs);
+    nfree(funcs->func->name);
+    nfree(funcs->func);
+    nfree(funcs);
   }
 
   LabelsList *labels;
@@ -164,25 +164,25 @@ static void NmNamespace_Destroy(Namespace *namespace)
   /* destroy all the labels */
   for (labels = namespace->labels; labels != NULL; labels = labels_next){
     labels_next = labels->next;
-    NmMem_Free(labels->label->name);
-    NmMem_Free(labels->label);
-    NmMem_Free(labels);
+    nfree(labels->label->name);
+    nfree(labels->label);
+    nfree(labels);
   }
 
   /* destroy all the elements in the namespaces list */
-  NmMem_Free(namespace->name);
-  NmMem_Free(namespace);
+  nfree(namespace->name);
+  nfree(namespace);
 }
 
-void NmNamespace_Tidyup(void)
+void nm_namespace_cleanup(void)
 {
   NamespacesList *namespaces;
   NamespacesList *next;
 
   for (namespaces = tail; namespaces != NULL; namespaces = next){
     next = namespaces->next;
-    NmNamespace_Destroy(namespaces->namespace);
-    NmMem_Free(namespaces);
+    nm_namespace_destroy(namespaces->namespace);
+    nfree(namespaces);
   }
 }
 
@@ -190,15 +190,15 @@ void NmNamespace_Tidyup(void)
  * Creates a new label, of given <name> and <node>
  * and appends it to the current namespace.
  */
-void NmNamespace_NewLabel(char *name, Node *node)
+void nm_new_label(char *name, Node *node)
 {
   /* create it */
-  LabelsList *new_list = NmMem_Malloc(sizeof(LabelsList));
-  Label *new_label = NmMem_Malloc(sizeof(Label));
+  LabelsList *new_list = nmalloc(sizeof(LabelsList));
+  Label *new_label = nmalloc(sizeof(Label));
   Namespace *namespace = curr->namespace;
 
   /* initialize it */
-  new_label->name = NmMem_Strdup(name);
+  new_label->name = nm_strdup(name);
   new_label->node = node;
   new_list->label = new_label;
 
@@ -211,7 +211,7 @@ void NmNamespace_NewLabel(char *name, Node *node)
  * Returns the node associated with a label of a given <name>
  * or NULL if the label was not found.
  */
-Node *NmNamespace_GetLabel(char *name)
+Node *nm_get_label(char *name)
 {
   for (LabelsList *p = curr->namespace->labels; p != NULL; p = p->next)
     if (!strcmp(name, p->label->name))
@@ -225,7 +225,7 @@ Node *NmNamespace_GetLabel(char *name)
  * Debug/develop purposes only.
  * Lists the namespaces that were declared.
  */
-void NmNamespace_ListNamespaces(void)
+void nm_list_namespaces(void)
 {
   printf("## NAMESPACES:\n");
   for (NamespacesList *p = head; p != NULL; p = p->prev){
@@ -234,7 +234,7 @@ void NmNamespace_ListNamespaces(void)
   printf("##\n");
 }
 #else
-void NmNamespace_ListNamespaces(void)
+void nm_list_namespaces(void)
 {
   /* NOP */;
 }

@@ -59,18 +59,18 @@ static uint8_t debug_flags = 0;
 /*
  * Set the given <flag> to 1
  */
-void NmDebug_SetFlag(unsigned flag)
+void nm_debug_set_flag(unsigned flag)
 {
   debug_flags |= 1 << flag;
 }
 
 /* Simple macro to get the given <flag> */
 /* <flag> is of type { unsigned } */
-#define NmDebug_GETFLAG(flag) (debug_flags & (1 << (flag)))
+#define getflag(flag) (debug_flags & (1 << (flag)))
 
-void NmDebug_AST(void *ptr, const char *msg, ...)
+void nm_debug_ast(void *ptr, const char *msg, ...)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_AST)){
+  if (getflag(DEBUG_FLAG_AST)){
     va_list vl;
     va_start(vl, msg);
     fprintf(stderr, "%p: ", ptr);
@@ -80,9 +80,9 @@ void NmDebug_AST(void *ptr, const char *msg, ...)
   }
 }
 
-void NmDebug_Memory(void *pointer, const char *msg, ...)
+void nm_debug_mem(void *pointer, const char *msg, ...)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_MEMORY)){
+  if (getflag(DEBUG_FLAG_MEMORY)){
     static unsigned count = 1;
     va_list vl;
     va_start(vl, msg);
@@ -94,44 +94,44 @@ void NmDebug_Memory(void *pointer, const char *msg, ...)
   }
 }
 
-void NmDebug_Lexer(LexerState *lex, SymbolType type)
+void nm_debug_lex(LexerState *lex, SymbolType type)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
+  if (getflag(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s\n", lex->line, lex->column, symToS(type));
   }
 }
 
-void NmDebug_LexerInt(LexerState *lex, SymbolType type, int i)
+void nm_debug_lex_int(LexerState *lex, SymbolType type, int i)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
+  if (getflag(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%i)\n", lex->line, lex->column, symToS(type), i);
   }
 }
 
-void NmDebug_LexerFloat(LexerState *lex, SymbolType type, double f)
+void nm_debug_lex_float(LexerState *lex, SymbolType type, double f)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
+  if (getflag(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%f)\n", lex->line, lex->column, symToS(type), f);
   }
 }
 
-void NmDebug_LexerStr(LexerState *lex, SymbolType type, char *s)
+void nm_debug_lex_str(LexerState *lex, SymbolType type, char *s)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
+  if (getflag(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%s)\n", lex->line, lex->column, symToS(type), s);
   }
 }
 
-void NmDebug_LexerChar(LexerState *lex, SymbolType type, char c)
+void nm_debug_lex_char(LexerState *lex, SymbolType type, char c)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_LEXER)){
+  if (getflag(DEBUG_FLAG_LEXER)){
     fprintf(stderr, "lex: %05uL, %03uC: found %s (%c)\n", lex->line, lex->column, symToS(type), c);
   }
 }
 
-void NmDebug_Parser(char const *msg, ...)
+void nm_debug_parser(char const *msg, ...)
 {
-  if (NmDebug_GETFLAG(DEBUG_FLAG_PARSER)){
+  if (getflag(DEBUG_FLAG_PARSER)){
     va_list vl;
     va_start(vl, msg);
     vfprintf(stderr, msg, vl);

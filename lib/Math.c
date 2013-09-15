@@ -33,12 +33,18 @@
 
 static NmObject *Math_sin(NmObject *args, bool *opts)
 {
-  return NmFloat_New(sin(NmFloat_VAL(NmArray_GETELEM(args, 0))));
+  /* unused parameter */
+  (void)opts;
+
+  return nm_new_float(sin(nm_float_value(nm_arr_get_elem(args, 0))));
 }
 
 static NmObject *Math_sqrt(NmObject *args, bool *opts)
 {
-  return NmFloat_New(sqrt(NmInt_VAL(NmArray_GETELEM(args, 0))));
+  /* unused parameter */
+  (void)opts;
+
+  return nm_new_float(sqrt(nm_int_value(nm_arr_get_elem(args, 0))));
 }
 
 static NmModuleFuncs Math_funcs[] =
@@ -50,6 +56,6 @@ static NmModuleFuncs Math_funcs[] =
 
 void Math_init(void)
 {
-  Nm_InitModule(Math_funcs);
+  nm_init_module(Math_funcs);
 }
 

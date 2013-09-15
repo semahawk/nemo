@@ -36,13 +36,13 @@
  */
 static ObFreeList *free_list = NULL;
 
-NmObject *NmString_New(char *s)
+NmObject *nm_new_str(char *s)
 {
-  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmStringObject *ob = NmMem_Calloc(1, sizeof(NmStringObject));
+  ObFreeList *list = nmalloc(sizeof(ObFreeList));
+  NmStringObject *ob = ncalloc(1, sizeof(NmStringObject));
 
   ob->type = OT_STRING;
-  ob->s = NmMem_Malloc(strlen(s) + 1);
+  ob->s = nmalloc(strlen(s) + 1);
   /* set the strings contents, char by char */
   unsigned i = 0;
   for (char *p = s; *p != '\0'; p++, i++){
@@ -86,7 +86,7 @@ NmObject *NmString_New(char *s)
           p++;
           break;
         default:
-          NmError_SetString("unknown escape sequence '%c'", *(p + 1));
+          nm_set_error("unknown escape sequence '%c'", *(p + 1));
           return NULL;
       }
     } else {
@@ -95,12 +95,12 @@ NmObject *NmString_New(char *s)
   }
   ob->s[i] = '\0';
   /* set it's functions */
-  ob->fn.dstr = NmString_Destroy;
-  ob->fn.type_repr = NmString_TypeRepr;
-  ob->fn.print = NmString_Print;
-  ob->fn.binary.add = NmString_Add;
-  ob->fn.binary.index = NmString_Index;
-  ob->fn.binary.cmp = NmString_Cmp;
+  ob->fn.dstr = nm_str_destroy;
+  ob->fn.type_repr = nm_str_repr;
+  ob->fn.print = nm_str_print;
+  ob->fn.binary.add = nm_str_add;
+  ob->fn.binary.index = nm_str_index;
+  ob->fn.binary.cmp = nm_str_cmp;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -110,21 +110,21 @@ NmObject *NmString_New(char *s)
   return (NmObject *)ob;
 }
 
-NmObject *NmString_NewFromChar(char c)
+NmObject *nm_new_str_from_char(char c)
 {
-  ObFreeList *list = NmMem_Malloc(sizeof(ObFreeList));
-  NmStringObject *ob = NmMem_Calloc(1, sizeof(NmStringObject));
+  ObFreeList *list = nmalloc(sizeof(ObFreeList));
+  NmStringObject *ob = ncalloc(1, sizeof(NmStringObject));
 
   ob->type = OT_STRING;
   /* create this tiny string */
-  ob->s = NmMem_Malloc(2);
+  ob->s = nmalloc(2);
   ob->s[0] = c;
   ob->s[1] = '\0';
-  ob->fn.dstr = NmString_Destroy;
-  ob->fn.print = NmString_Print;
-  ob->fn.binary.add = NmString_Add;
-  ob->fn.binary.index = NmString_Index;
-  ob->fn.binary.cmp = NmString_Cmp;
+  ob->fn.dstr = nm_str_destroy;
+  ob->fn.print = nm_str_print;
+  ob->fn.binary.add = nm_str_add;
+  ob->fn.binary.index = nm_str_index;
+  ob->fn.binary.cmp = nm_str_cmp;
 
   /* append to the free_list */
   list->ob = (NmObject *)ob;
@@ -134,21 +134,21 @@ NmObject *NmString_NewFromChar(char c)
   return (NmObject *)ob;
 }
 
-NmObject *NmString_Add(NmObject *left, NmObject *right)
+NmObject *nm_str_add(NmObject *left, NmObject *right)
 {
-  size_t leftlen = strlen(NmString_VAL(left));
-  size_t rightlen = strlen(NmString_VAL(right));
-  char *new = NmMem_Malloc(leftlen + rightlen);
+  size_t leftlen = strlen(nm_str_value(left));
+  size_t rightlen = strlen(nm_str_value(right));
+  char *new = nmalloc(leftlen + rightlen);
 
-  memcpy(new, NmString_VAL(left), leftlen);
-  memcpy(new + leftlen, NmString_VAL(right), rightlen);
+  memcpy(new, nm_str_value(left), leftlen);
+  memcpy(new + leftlen, nm_str_value(right), rightlen);
 
-  return NmString_New(new);
+  return nm_new_str(new);
 }
 
-CmpRes NmString_Cmp(NmObject *left, NmObject *right)
+CmpRes nm_str_cmp(NmObject *left, NmObject *right)
 {
-  int res = strcmp(NmString_VAL(left), NmString_VAL(right));
+  int res = strcmp(nm_str_value(left), nm_str_value(right));
 
   if (res > 0)
     return CMP_GT;
@@ -158,39 +158,39 @@ CmpRes NmString_Cmp(NmObject *left, NmObject *right)
     return CMP_EQ;
 }
 
-NmObject *NmString_TypeRepr(void)
+NmObject *nm_str_repr(void)
 {
-  return NmString_New("string");
+  return nm_new_str("string");
 }
 
-void NmString_Print(FILE *fp, NmObject *ob)
-{
-  assert(ob->type == OT_STRING);
-
-  fprintf(fp, "%s", NmString_VAL(ob));
-}
-
-NmObject *NmString_Index(NmObject *string, NmObject *index)
-{
-  return NmString_NewFromChar(NmString_VAL(string)[NmInt_VAL(index)]);
-}
-
-void NmString_Destroy(NmObject *ob)
+void nm_str_print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_STRING);
 
-  NmMem_Free(NmString_VAL(ob));
-  NmMem_Free(ob);
+  fprintf(fp, "%s", nm_str_value(ob));
 }
 
-void NmString_Tidyup(void){
+NmObject *nm_str_index(NmObject *string, NmObject *index)
+{
+  return nm_new_str_from_char(nm_str_value(string)[nm_int_value(index)]);
+}
+
+void nm_str_destroy(NmObject *ob)
+{
+  assert(ob->type == OT_STRING);
+
+  nfree(nm_str_value(ob));
+  nfree(ob);
+}
+
+void nm_str_cleanup(void){
   ObFreeList *list;
   ObFreeList *next;
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    NmObject_Destroy((NmObject *)list->ob);
-    NmMem_Free(list);
+    nm_obj_destroy((NmObject *)list->ob);
+    nfree(list);
   }
 }
 

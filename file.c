@@ -1,8 +1,8 @@
 /*
  *
- * dev.c
+ * file.c
  *
- * Created at:  Sat 06 Jul 2013 10:21:12 CEST 10:21:12
+ * Created at:  Sun 15 Sep 2013 20:34:54 CEST 20:34:54
  *
  * Author:  Szymon Urbaś <szymon.urbas@aol.com>
  *
@@ -28,49 +28,17 @@
  *
  */
 
-/*
- * Library only for developing/testing purposes.
- */
-
 #include "nemo.h"
 
-static NmObject *dev_retarr(NmObject *args, bool *opts)
+NmObject *nm_file_repr(void)
 {
-  NmObject *ret = NmArray_New(3);
-
-  NmArray_SETELEM(ret, 0, NmInt_New(NmInt_VAL(NmArray_GETELEM(args, 0))));
-  NmArray_SETELEM(ret, 1, NmInt_New(7));
-  NmArray_SETELEM(ret, 2, NmInt_New(1));
-
-  return ret;
+  return nm_new_str("file");
 }
 
-static NmObject *dev_retstr(NmObject *args, bool *opts)
+void nm_file_print(FILE *fp, NmObject *ob)
 {
-  /* unused parameter */
-  (void)args;
+  assert(ob->type == OT_FILE);
 
-  return NmString_New("Hello");
-}
-
-static NmObject *dev_optfun(NmObject *args, bool *opts)
-{
-  /* unused parameter */
-  (void)args;
-
-  return NmString_New("optfun called.");
-}
-
-static NmModuleFuncs module_funcs[] =
-{
-  { "retarr", dev_retarr, 1, { OT_INTEGER }, "" },
-  { "retstr", dev_retstr, 0, { OT_NULL }, "" },
-  { "optfun", dev_optfun, 0, { OT_NULL }, "t" },
-  { NULL, NULL, 0, { 0 }, NULL }
-};
-
-void dev_init(void)
-{
-  Nm_InitModule(module_funcs);
+  fprintf(fp, "<file handle %p>", (void *)ob);
 }
 

@@ -35,7 +35,7 @@
 
 #include "nemo.h"
 
-#define NmObject_PRINT(fp,ob) ob->fn.print(fp, ob)
+#define nm_obj_print(fp,ob) ob->fn.print(fp, ob)
 
 /*
  * Yup, a lot of Python inspiration; I'm too dumb to figure it nicely on my own
@@ -92,7 +92,7 @@ struct Fn {
     BinaryFunc div;   /* division */
     BinaryFunc mod;   /* modulo */
     BinaryFunc index; /* array/string indexing */
-    /* the NmAST_ExecBinop function is taking care to turn
+    /* the nm_ast_exec_binop function is taking care to turn
      * this { CmpRes } into { NmObject * } */
     CmpRes (*cmp)(NmObject *, NmObject *); /* compare */
   } binary;
@@ -150,85 +150,86 @@ struct ObFreeList {
   ObFreeList *next;
 };
 
-NmObject *NmNull_TypeRepr(void);
-void NmNull_Print(FILE *, NmObject *);
+NmObject *nm_null_repr(void);
+void nm_null_print(FILE *, NmObject *);
 
-NmObject *NmObject_New(const char *);
-void NmObject_Destroy(NmObject *);
-void NmObject_Tidyup(void);
-bool NmObject_Boolish(NmObject *);
-NmObject *NmObject_Dup(NmObject *);
-NmObject *NmObject_TypeToS(NmObjectType);
+NmObject *nm_new_obj(const char *);
+void nm_obj_destroy(NmObject *);
+void nm_obj_cleanup(void);
+bool nm_obj_boolish(NmObject *);
+NmObject *nm_obj_dup(NmObject *);
+NmObject *nm_obj_typetos(NmObjectType);
 
-NmObject *NmInt_New(int);
-NmObject *NmInt_Add(NmObject *, NmObject *);
-NmObject *NmInt_Sub(NmObject *, NmObject *);
-NmObject *NmInt_Mul(NmObject *, NmObject *);
-NmObject *NmInt_Div(NmObject *, NmObject *);
-NmObject *NmInt_Mod(NmObject *, NmObject *);
-CmpRes    NmInt_Cmp(NmObject *, NmObject *);
-NmObject *NmInt_Plus(NmObject *);
-NmObject *NmInt_Minus(NmObject *);
-NmObject *NmInt_Negate(NmObject *);
-NmObject *NmInt_Increment(NmObject *);
-NmObject *NmInt_Decrement(NmObject *);
-NmObject *NmInt_TypeRepr(void);
-void NmInt_Print(FILE *, NmObject *);
-void NmInt_Destroy(NmObject *);
-void NmInt_Tidyup(void);
-NmObject *NmInt_NewFromVoidPtr(void *);
+NmObject *nm_new_int(int);
+NmObject *nm_int_add(NmObject *, NmObject *);
+NmObject *nm_int_sub(NmObject *, NmObject *);
+NmObject *nm_int_mul(NmObject *, NmObject *);
+NmObject *nm_int_div(NmObject *, NmObject *);
+NmObject *nm_int_mod(NmObject *, NmObject *);
+CmpRes    nm_int_cmp(NmObject *, NmObject *);
+NmObject *nm_int_plus(NmObject *);
+NmObject *nm_int_minus(NmObject *);
+NmObject *nm_int_negate(NmObject *);
+NmObject *nm_int_incr(NmObject *);
+NmObject *nm_int_decr(NmObject *);
+NmObject *nm_int_repr(void);
+void nm_int_print(FILE *, NmObject *);
+void nm_int_destroy(NmObject *);
+void nm_int_cleanup(void);
+NmObject *nm_new_int_from_void_ptr(void *);
 /* a handy macro to simply cast and return the integer value */
-#define NmInt_VAL(ob) (((NmIntObject *)ob)->i)
+#define nm_int_value(ob) (((NmIntObject *)ob)->i)
 
-NmObject *NmFloat_New(double);
-NmObject *NmFloat_NewFromInt(int);
-NmObject *NmFloat_Add(NmObject *, NmObject *);
-NmObject *NmFloat_Sub(NmObject *, NmObject *);
-NmObject *NmFloat_Mul(NmObject *, NmObject *);
-NmObject *NmFloat_Div(NmObject *, NmObject *);
-CmpRes    NmFloat_Cmp(NmObject *, NmObject *);
-NmObject *NmFloat_Increment(NmObject *);
-NmObject *NmFloat_Decrement(NmObject *);
-NmObject *NmFloat_TypeRepr(void);
-void NmFloat_Print(FILE *, NmObject *);
-void NmFloat_Destroy(NmObject *);
-void NmFloat_Tidyup(void);
+NmObject *nm_new_float(double);
+NmObject *nm_new_float_from_int(int);
+NmObject *nm_float_add(NmObject *, NmObject *);
+NmObject *nm_float_sub(NmObject *, NmObject *);
+NmObject *nm_float_mul(NmObject *, NmObject *);
+NmObject *nm_float_div(NmObject *, NmObject *);
+CmpRes    nm_float_cmp(NmObject *, NmObject *);
+NmObject *nm_float_incr(NmObject *);
+NmObject *nm_float_decr(NmObject *);
+NmObject *nm_float_repr(void);
+void nm_float_print(FILE *, NmObject *);
+void nm_float_destroy(NmObject *);
+void nm_float_cleanup(void);
 /* a handy macro to simply cast and return the float value */
-#define NmFloat_VAL(ob) (((NmFloatObject *)ob)->f)
+#define nm_float_value(ob) (((NmFloatObject *)ob)->f)
 
-NmObject *NmString_New(char *);
-NmObject *NmString_TypeRepr(void);
-void NmString_Print(FILE *, NmObject *);
-NmObject *NmString_Add(NmObject *, NmObject *);
-NmObject *NmString_Index(NmObject *, NmObject *);
-CmpRes    NmString_Cmp(NmObject *, NmObject *);
-void NmString_Destroy(NmObject *);
-void NmString_Tidyup(void);
+NmObject *nm_new_str(char *);
+NmObject *nm_new_str_from_char(char);
+NmObject *nm_str_repr(void);
+void nm_str_print(FILE *, NmObject *);
+NmObject *nm_str_add(NmObject *, NmObject *);
+NmObject *nm_str_index(NmObject *, NmObject *);
+CmpRes    nm_str_cmp(NmObject *, NmObject *);
+void nm_str_destroy(NmObject *);
+void nm_str_cleanup(void);
 /* a handy macro to simply cast and return the string value */
-#define NmString_VAL(ob) (((NmStringObject *)ob)->s)
+#define nm_str_value(ob) (((NmStringObject *)ob)->s)
 
-NmObject *NmFile_TypeRepr(void);
-void NmFile_Print(FILE *, NmObject *);
+NmObject *nm_file_repr(void);
+void nm_file_print(FILE *, NmObject *);
 
-NmObject *NmArray_New(size_t);
-NmObject *NmArray_NewFromNode(struct Node *);
-NmObject *NmArray_TypeRepr(void);
-void NmArray_Print(FILE *, NmObject *);
-NmObject *NmArray_Add(NmObject *, NmObject *);
-NmObject *NmArray_Index(NmObject *, NmObject *);
-void NmArray_Destroy(NmObject *);
-void NmArray_Tidyup(void);
+NmObject *nm_new_arr(size_t);
+NmObject *nm_new_arr_from_node(struct Node *);
+NmObject *nm_arr_repr(void);
+void nm_arr_print(FILE *, NmObject *);
+NmObject *nm_arr_add(NmObject *, NmObject *);
+NmObject *nm_arr_index(NmObject *, NmObject *);
+void nm_arr_destroy(NmObject *);
+void nm_arr_cleanup(void);
 /* a handy macro to simply cast and return the array */
-#define NmArray_VAL(ob) (((NmArrayObject *)ob)->a)
-#define NmArray_NMEMB(ob) (((NmArrayObject *)ob)->nmemb)
+#define nm_arr_value(ob) (((NmArrayObject *)ob)->a)
+#define nm_arr_nmemb(ob) (((NmArrayObject *)ob)->nmemb)
 /* some handy macros for array elements getting/setting */
-#define NmArray_SETELEM(arr,i,v) (NmArray_VAL(arr)[i] = v)
-#define NmArray_GETELEM(arr,i)   (NmArray_VAL(arr)[i])
+#define nm_arr_set_elem(arr,i,v) (nm_arr_value(arr)[i] = v)
+#define nm_arr_get_elem(arr,i)   (nm_arr_value(arr)[i])
 
 /*
  * Extern declaration of the "null" which is definied in null.c
  */
-extern NmObject *NmNull;
+extern NmObject *null;
 
 #endif /* OBJECT_H */
 

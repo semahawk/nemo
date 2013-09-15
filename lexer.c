@@ -66,15 +66,15 @@ static struct Keyword {
 };
 typedef struct Keyword Keyword;
 
-void NmLexer_Tidyup(LexerState *lex)
+void nm_lex_tidyup(LexerState *lex)
 {
   struct lexgc *curr;
   struct lexgc *next;
 
   for (curr = lex->gc_head; curr != NULL; curr = next){
     next = curr->next;
-    NmMem_Free(curr->p);
-    NmMem_Free(curr);
+    nfree(curr->p);
+    nfree(curr);
   }
 }
 
@@ -106,12 +106,12 @@ static inline void newFloat(LexerState *lex, Symbol *new, double f)
 
 static inline void newStr(LexerState *lex, Symbol *new, SymbolType type, char *s)
 {
-  struct lexgc *newgc = NmMem_Malloc(sizeof(struct lexgc));
+  struct lexgc *newgc = nmalloc(sizeof(struct lexgc));
   /* initialize */
   new->type = type;
   new->pos.line = lex->line;
   new->pos.column = lex->column;
-  new->value.s = NmMem_Strdup(s);
+  new->value.s = nm_strdup(s);
   /* append that string to the GC list */
   newgc->p = new->value.s;
   newgc->next = lex->gc_head;
@@ -127,7 +127,7 @@ static inline void newChar(LexerState *lex, Symbol *new, SymbolType type, char c
   new->value.c = c;
 }
 
-Symbol NmLexer_Fetch(LexerState *lex)
+Symbol nm_lex_fetch(LexerState *lex)
 {
   char *tmp;
   int i = 0;
@@ -148,7 +148,7 @@ tryagain:
    * XXX name / keyword
    */
   if (isalpha(*p) || *p == '_'){
-    tmp = NmMem_Strdup(p);
+    tmp = nm_strdup(p);
     /* fetch the name */
     while (isalpha(*p) ||
            isdigit(*p) ||
@@ -171,7 +171,7 @@ tryagain:
     if (!found){
       newStr(lex, &sym, SYM_NAME, tmp);
     }
-    NmMem_Free(tmp);
+    nfree(tmp);
     /* "i" is the length of the name */
     lex->column += i;
   }
@@ -179,7 +179,7 @@ tryagain:
    * XXX 2
    */
   else if (isdigit(*p)){
-    tmp = NmMem_Strdup(p);
+    tmp = nm_strdup(p);
     p++; i++;
     /* fetch the number */
     while (isdigit(*p)){
@@ -209,7 +209,7 @@ tryagain:
     } else {
       newInt(lex, &sym, atoi(tmp));
     }
-    NmMem_Free(tmp);
+    nfree(tmp);
     p--;
     lex->column += i;
   }
@@ -283,7 +283,7 @@ tryagain:
      */
     else if (lex->right_after_funname){
       p++; /* skip over the '-' */
-      tmp = NmMem_Strdup(p);
+      tmp = nm_strdup(p);
       while (isalpha(*p) || isdigit(*p)){
         p++; i++;
       }
@@ -291,7 +291,7 @@ tryagain:
       *(tmp + i) = '\0';
       newStr(lex, &sym, SYM_OPT, tmp);
       /* skip over the '-' and the first character after that */
-      NmMem_Free(tmp);
+      nfree(tmp);
     }
     else {
       /*
@@ -487,7 +487,7 @@ tryagain:
    */
   else if (*p == '"'){
     p++; i++;
-    tmp = NmMem_Strdup(p);
+    tmp = nm_strdup(p);
     lex->column++;
     while (*p != '"'){
       if (*p == '\n'){
@@ -502,7 +502,7 @@ tryagain:
     /* skip over the '"' */
     p++;
     newStr(lex, &sym, SYM_STRING, tmp);
-    NmMem_Free(tmp);
+    nfree(tmp);
   }
   else if (*p == '\n'){
     p++;
@@ -541,16 +541,16 @@ static inline void advance(LexerState *lex)
 }
 
 /*
- * @name    NmLexer_Force
+ * @name    nm_lex_force
  * @desc    if the next symbol is not of given <type>, throw an error
  *          grammar is baad
  */
-Symbol NmLexer_Force(LexerState *lex, SymbolType type)
+Symbol nm_lex_force(LexerState *lex, SymbolType type)
 {
-  Symbol sym = NmLexer_Fetch(lex);
+  Symbol sym = nm_lex_fetch(lex);
 
   if (sym.type != type){
-    NmError_Lex(lex, "expected %s instead of %s", symToS(type), symToS(sym.type));
+    nm_lex_error(lex, "expected %s instead of %s", symToS(type), symToS(sym.type));
     exit(EXIT_FAILURE);
   } else {
     advance(lex);
@@ -560,13 +560,13 @@ Symbol NmLexer_Force(LexerState *lex, SymbolType type)
 }
 
 /*
- * @name    NmLexer_Accept
+ * @name    nm_lex_accept
  * @desc    if the next symbol is of given <type> return true, and skip over it
  *          else return false
  */
-bool NmLexer_Accept(LexerState *lex, SymbolType type)
+bool nm_lex_accept(LexerState *lex, SymbolType type)
 {
-  Symbol sym = NmLexer_Fetch(lex);
+  Symbol sym = nm_lex_fetch(lex);
 
   if (sym.type == type){
     advance(lex);
@@ -580,12 +580,12 @@ bool NmLexer_Accept(LexerState *lex, SymbolType type)
 }
 
 /*
- * @name    NmLexer_Peek
+ * @name    nm_lex_peek
  * @desc    check if the next symbol on the list is of a given <type>
  */
-bool NmLexer_Peek(LexerState *lex, SymbolType type)
+bool nm_lex_peek(LexerState *lex, SymbolType type)
 {
-  Symbol sym = NmLexer_Fetch(lex);
+  Symbol sym = nm_lex_fetch(lex);
 
   fallback(lex);
 
@@ -598,16 +598,16 @@ bool NmLexer_Peek(LexerState *lex, SymbolType type)
 }
 
 /*
- * @name    NmLexer_Skip
+ * @name    nm_lex_skip
  * @desc    simply skip over the current symbol
  */
-void NmLexer_Skip(LexerState *lex)
+void nm_lex_skip(LexerState *lex)
 {
-  Symbol sym = NmLexer_Fetch(lex);
+  Symbol sym = nm_lex_fetch(lex);
 
   if (sym.type == SYM_EOS){
-    NmError_Lex(lex, "unexpected <EOS> (skip)");
-    Nm_Exit();
+    nm_lex_error(lex, "unexpected <EOS> (skip)");
+    nexit();
     lex->current.type = SYM_EOS;
   }
 

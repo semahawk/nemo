@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#ifdef HAVE_STDbool_H
+#ifdef HAVE_STDBOOL_H
 #  include <stdbool.h>
 #else
 #  define bool short
@@ -56,16 +56,15 @@ struct Included {
 typedef struct LibHandlesList LibHandlesList;
 typedef struct Included Included;
 
-void Nm_Exit();
+void nexit();
 
 int name_lookup(char *, Namespace *);
 
-/* TODO: these function names may be confusing */
-void Nm_InitModule(NmModuleFuncs *);
-bool Nm_UseModule(char *name);
-bool NmModule_WasIncluded(char *name);
+void nm_init_module(NmModuleFuncs *);
+bool nm_use_module(char *name);
+bool was_module_included(char *name);
+
 void predef_init(void);
-void dev_init(void);
 
 #endif /* NEMO_H */
 

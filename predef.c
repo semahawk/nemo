@@ -48,29 +48,35 @@
 
 static NmObject *predef_len(NmObject *args, bool *opts)
 {
-  NmObject *ob = NmArray_GETELEM(args, 0);
+  /* unused parameter */
+  (void)opts;
+
+  NmObject *ob = nm_arr_get_elem(args, 0);
 
   if (ob->type == OT_ARRAY)
-    return NmInt_New(NmArray_NMEMB(ob));
+    return nm_new_int(nm_arr_nmemb(ob));
   /* it can't be anything else than string down here */
   else
-    return NmInt_New(strlen(NmString_VAL(ob)));
+    return nm_new_int(strlen(nm_str_value(ob)));
 }
 
 static NmObject *predef_assert(NmObject *args, bool *opts)
 {
-  NmObject *first  = NmArray_GETELEM(args, 0);
-  NmObject *second = NmArray_GETELEM(args, 1);
+  /* unused parameter */
+  (void)opts;
+
+  NmObject *first  = nm_arr_get_elem(args, 0);
+  NmObject *second = nm_arr_get_elem(args, 1);
 
   /* both are of the same type */
   if (first->type == second->type){
     if (!first->fn.binary.cmp){
-      NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+      nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
       return NULL;
     }
 
     if (first->fn.binary.cmp(first, second) != CMP_EQ){
-      NmError_SetString("assertion failed");
+      nm_set_error("assertion failed");
       return NULL;
     }
   }
@@ -78,41 +84,44 @@ static NmObject *predef_assert(NmObject *args, bool *opts)
   else {
     /* XXX int and float */
     if (first->type == OT_INTEGER && second->type == OT_FLOAT){
-      first = NmFloat_NewFromInt(NmInt_VAL(first));
+      first = nm_new_float_from_int(nm_int_value(first));
       if (!first->fn.binary.cmp){
-        NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+        nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
         return NULL;
       }
     }
     /* XXX float and int */
     else if (first->type == OT_FLOAT && second->type == OT_INTEGER){
-      second = NmFloat_NewFromInt(NmInt_VAL(second));
+      second = nm_new_float_from_int(nm_int_value(second));
       if (!first->fn.binary.cmp){
-        NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+        nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
         return NULL;
       }
     }
     /* if anything else, the operation is simply not permitted */
     else {
-      NmError_SetString("can't compare types '%s' and '%s' in 'assert'", NmString_VAL(first->fn.type_repr()), NmString_VAL(second->fn.type_repr()));
+      nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
       return NULL;
     }
   }
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 static NmObject *predef_printf(NmObject *args, bool *opts)
 {
+  /* unused parameter */
+  (void)opts;
+
   /* skip over the formatting string */
   size_t i = 1;
   /* number of arguments without the formatting string */
   size_t count = 0;
   char *p;
 
-  NmObject *format = NmArray_GETELEM(args, 0);
+  NmObject *format = nm_arr_get_elem(args, 0);
 
-  for (p = NmString_VAL(format); *p != '\0'; p++){
+  for (p = nm_str_value(format); *p != '\0'; p++){
     if (*p == '%'){
       switch (*(p + 1)){
         case 'i': /* fall */
@@ -122,46 +131,46 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
         case '%':
           count++;
           break;
-        default: NmError_SetString("unknown format '%c' in 'printf'", *(p + 1));
+        default: nm_set_error("unknown format '%c' in 'printf'", *(p + 1));
                  return NULL;
       }
     }
   }
 
   /* search if all the formats are valid */
-  for (p = NmString_VAL(format); *p != '\0'; p++){
+  for (p = nm_str_value(format); *p != '\0'; p++){
     if (*p == '%'){
-      if (count + 1 > NmArray_NMEMB(args)){
-        NmError_SetString("not enough formatting arguments for 'printf' (%d when %d expected)", NmArray_NMEMB(args) - 1, count);
+      if (count + 1 > nm_arr_nmemb(args)){
+        nm_set_error("not enough formatting arguments for 'printf' (%d when %d expected)", nm_arr_nmemb(args) - 1, count);
         return NULL;
       }
       /* fetch the next argument */
-      NmObject *ob = NmArray_GETELEM(args, i);
+      NmObject *ob = nm_arr_get_elem(args, i);
       switch (*(p + 1)){
         case 'i':
           if (ob->type != OT_INTEGER){
-            NmError_SetString("wrong type '%s' for format 'i'", NmString_VAL(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 'i'", nm_str_value(ob->fn.type_repr()));
             return NULL;
           }
           i++; p++;
           break;
         case 'f':
           if (ob->type != OT_FLOAT){
-            NmError_SetString("wrong type '%s' for format 'f'", NmString_VAL(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 'f'", nm_str_value(ob->fn.type_repr()));
             return NULL;
           }
           i++; p++;
           break;
         case 's':
           if (ob->type != OT_STRING){
-            NmError_SetString("wrong type '%s' for format 's'", NmString_VAL(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 's'", nm_str_value(ob->fn.type_repr()));
             return NULL;
           }
           i++; p++;
           break;
         case 'a':
           if (ob->type != OT_ARRAY){
-            NmError_SetString("wrong type '%s' for format 'a'", NmString_VAL(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 'a'", nm_str_value(ob->fn.type_repr()));
             return NULL;
           }
           i++; p++;
@@ -176,24 +185,24 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
   }
 
   /* check if the number of arguments is correct */
-  if (NmArray_NMEMB(args) > i){
-    NmError_SetString("too much formatting arguments for 'printf' (%d when %d expected)", NmArray_NMEMB(args) - 1, count);
+  if (nm_arr_nmemb(args) > i){
+    nm_set_error("too much formatting arguments for 'printf' (%d when %d expected)", nm_arr_nmemb(args) - 1, count);
     return NULL;
   }
 
   /* skip over the formatting string */
   i = 1;
 
-  for (p = NmString_VAL(format); *p != '\0'; p++){
+  for (p = nm_str_value(format); *p != '\0'; p++){
     if (*p == '%'){
       /* fetch the next argument */
-      NmObject *ob = NmArray_GETELEM(args, i);
+      NmObject *ob = nm_arr_get_elem(args, i);
       switch (*(p + 1)){
         case 'i': /* fall */
         case 'f': /* through */
         case 's':
         case 'a':
-          NmObject_PRINT(stdout, ob);
+          nm_obj_print(stdout, ob);
           p++;
           break;
         case '%': putchar('%');
@@ -207,38 +216,44 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
     }
   }
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 static NmObject *predef_print(NmObject *args, bool *opts)
 {
-  for (size_t i = 0; i < NmArray_NMEMB(args); i++){
-    NmObject_PRINT(stdout, NmArray_GETELEM(args, i));
+  for (size_t i = 0; i < nm_arr_nmemb(args); i++){
+    nm_obj_print(stdout, nm_arr_get_elem(args, i));
   }
 
   if (opts[0])
     fputc('\n', stdout);
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 static NmObject *predef_id(NmObject *args, bool *opts)
 {
-  return NmInt_NewFromVoidPtr((void *)NmArray_GETELEM(args, 0));
+  /* unused parameter */
+  (void)opts;
+
+  return nm_new_int_from_void_ptr((void *)nm_arr_get_elem(args, 0));
 }
 
 static NmObject *predef_eval(NmObject *args, bool *opts)
 {
-  NmObject *ob = NmArray_GETELEM(args, 0);
+  /* unused parameter */
+  (void)opts;
 
-  return NmAST_ExecBlock(NmParser_ParseString(NmString_VAL(ob)));
+  NmObject *ob = nm_arr_get_elem(args, 0);
+
+  return nm_ast_exec_block(nm_parse_string(nm_str_value(ob)));
 }
 
 static NmObject *predef_open(NmObject *args, bool *opts)
 {
-  char *name = NmString_VAL(NmArray_GETELEM(args, 0));
+  char *name = nm_str_value(nm_arr_get_elem(args, 0));
   char mode[4] = "r";
-  NmFileObject *new = NmMem_Calloc(1, sizeof(NmFileObject));
+  NmFileObject *new = ncalloc(1, sizeof(NmFileObject));
   FILE *fp;
 
   if (opts[0])
@@ -248,32 +263,33 @@ static NmObject *predef_open(NmObject *args, bool *opts)
   else if (opts[2])
     strcpy(mode, "a");
 
-  printf("opening file '%s' in mode '%s'\n", name, mode);
-
   fp = fopen(name, mode);
 
   if (!fp){
-    NmError_SetString(strerror(errno));
-    return NmNull;
+    nm_set_error(strerror(errno));
+    return null;
   }
 
   new->type = OT_FILE;
   new->fp = fp;
-  new->name = NmMem_Strdup(name);
-  new->fn.type_repr = NmFile_TypeRepr;
-  new->fn.print = NmFile_Print;
+  new->name = nm_strdup(name);
+  new->fn.type_repr = nm_file_repr;
+  new->fn.print = nm_file_print;
 
   return (NmObject *)new;
 }
 
 static NmObject *predef_close(NmObject *args, bool *opts)
 {
-  NmObject *arg = NmArray_GETELEM(args, 0);
+  /* unused parameter */
+  (void)opts;
 
-  NmMem_Free(((NmFileObject *)arg)->name);
+  NmObject *arg = nm_arr_get_elem(args, 0);
+
+  nfree(((NmFileObject *)arg)->name);
   fclose(((NmFileObject *)arg)->fp);
 
-  return NmInt_New(1);
+  return nm_new_int(1);
 }
 
 static NmModuleFuncs module_funcs[] = {
@@ -290,6 +306,6 @@ static NmModuleFuncs module_funcs[] = {
 
 void predef_init(void)
 {
-  Nm_InitModule(module_funcs);
+  nm_init_module(module_funcs);
 }
 

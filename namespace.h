@@ -28,8 +28,8 @@
  *
  */
 
-#ifndef INTERP_H
-#define INTERP_H
+#ifndef NAMESPACE_H
+#define NAMESPACE_H
 
 #include "nemo.h"
 #include "vars.h"
@@ -84,15 +84,15 @@ typedef struct LabelsList LabelsList;
 typedef struct Namespace Namespace;
 typedef struct NamespacesList NamespacesList;
 
-Namespace *NmNamespace_GetCurr(void);
-Namespace *NmNamespace_GetByName(char *);
-void NmNamespace_SwitchTo(char *);
-void NmNamespace_New(char *name);
-void NmNamespace_Restore(void);
-void NmNamespace_Tidyup(void);
-void NmNamespace_NewLabel(char *name, Node *node);
-Node *NmNamespace_GetLabel(char *name);
-void NmNamespace_ListNamespaces(void);
+Namespace *nm_curr_namespace(void);
+Namespace *nm_get_namespace_by_name(char *);
+void nm_switch_namespace(char *);
+void nm_new_namespace(char *name);
+void nm_restore_namespace(void);
+void nm_namespace_cleanup(void);
+void nm_new_label(char *name, Node *node);
+Node *nm_get_label(char *name);
+void nm_list_namespaces(void);
 
-#endif /* INTERP_H */
+#endif /* NAMESPACE_H */
 

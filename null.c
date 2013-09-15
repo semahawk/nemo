@@ -28,17 +28,23 @@
  *
  */
 
+/*
+ * "[Instrumental]"
+ *
+ *  Racer X - Technical Difficulties
+ */
+
 #include "nemo.h"
 
 /*
  * Creating the "null" object
  */
-NmObject *NmNull = &(NmObject){
+NmObject *null = &(NmObject){
   .type = OT_NULL,
   .fn = {
     .dstr = NULL,
-    .type_repr = NmNull_TypeRepr,
-    .print = NmNull_Print,
+    .type_repr = nm_null_repr,
+    .print = nm_null_print,
     .binary = {
       .add = NULL,
       .index = NULL,
@@ -52,16 +58,16 @@ NmObject *NmNull = &(NmObject){
   }
 };
 
-NmObject *NmNull_TypeRepr(void)
+NmObject *nm_null_repr(void)
 {
-  return NmString_New("null");
+  return nm_new_str("null");
 }
 
 /*
- * @name - NmNull_Print
+ * @name - nm_null_print
  * @desc - print the "null"
  */
-void NmNull_Print(FILE *fp, NmObject *ob)
+void nm_null_print(FILE *fp, NmObject *ob)
 {
   assert(ob->type == OT_NULL);
 
