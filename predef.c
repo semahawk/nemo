@@ -46,12 +46,12 @@
 
 #include "nemo.h"
 
-static NmObject *predef_len(NmObject *args, bool *opts)
+static Nob *predef_len(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
 
-  NmObject *ob = nm_arr_get_elem(args, 0);
+  Nob *ob = nm_arr_get_elem(args, 0);
 
   if (ob->type == OT_ARRAY)
     return nm_new_int(nm_arr_nmemb(ob));
@@ -60,13 +60,13 @@ static NmObject *predef_len(NmObject *args, bool *opts)
     return nm_new_int(strlen(nm_str_value(ob)));
 }
 
-static NmObject *predef_assert(NmObject *args, bool *opts)
+static Nob *predef_assert(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
 
-  NmObject *first  = nm_arr_get_elem(args, 0);
-  NmObject *second = nm_arr_get_elem(args, 1);
+  Nob *first  = nm_arr_get_elem(args, 0);
+  Nob *second = nm_arr_get_elem(args, 1);
 
   /* both are of the same type */
   if (first->type == second->type){
@@ -108,7 +108,7 @@ static NmObject *predef_assert(NmObject *args, bool *opts)
   return nm_new_int(1);
 }
 
-static NmObject *predef_printf(NmObject *args, bool *opts)
+static Nob *predef_printf(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
@@ -119,7 +119,7 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
   size_t count = 0;
   char *p;
 
-  NmObject *format = nm_arr_get_elem(args, 0);
+  Nob *format = nm_arr_get_elem(args, 0);
 
   for (p = nm_str_value(format); *p != '\0'; p++){
     if (*p == '%'){
@@ -145,7 +145,7 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
         return NULL;
       }
       /* fetch the next argument */
-      NmObject *ob = nm_arr_get_elem(args, i);
+      Nob *ob = nm_arr_get_elem(args, i);
       switch (*(p + 1)){
         case 'i':
           if (ob->type != OT_INTEGER){
@@ -196,7 +196,7 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
   for (p = nm_str_value(format); *p != '\0'; p++){
     if (*p == '%'){
       /* fetch the next argument */
-      NmObject *ob = nm_arr_get_elem(args, i);
+      Nob *ob = nm_arr_get_elem(args, i);
       switch (*(p + 1)){
         case 'i': /* fall */
         case 'f': /* through */
@@ -219,7 +219,7 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
   return nm_new_int(1);
 }
 
-static NmObject *predef_print(NmObject *args, bool *opts)
+static Nob *predef_print(Nob *args, bool *opts)
 {
   for (size_t i = 0; i < nm_arr_nmemb(args); i++){
     nm_obj_print(stdout, nm_arr_get_elem(args, i));
@@ -231,7 +231,7 @@ static NmObject *predef_print(NmObject *args, bool *opts)
   return nm_new_int(1);
 }
 
-static NmObject *predef_id(NmObject *args, bool *opts)
+static Nob *predef_id(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
@@ -239,21 +239,21 @@ static NmObject *predef_id(NmObject *args, bool *opts)
   return nm_new_int_from_void_ptr((void *)nm_arr_get_elem(args, 0));
 }
 
-static NmObject *predef_eval(NmObject *args, bool *opts)
+static Nob *predef_eval(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
 
-  NmObject *ob = nm_arr_get_elem(args, 0);
+  Nob *ob = nm_arr_get_elem(args, 0);
 
   return nm_ast_exec_block(nm_parse_string(nm_str_value(ob)));
 }
 
-static NmObject *predef_open(NmObject *args, bool *opts)
+static Nob *predef_open(Nob *args, bool *opts)
 {
   char *name = nm_str_value(nm_arr_get_elem(args, 0));
   char mode[4] = "r";
-  NmFileObject *new = ncalloc(1, sizeof(NmFileObject));
+  Nfhob *new = ncalloc(1, sizeof(Nfhob));
   FILE *fp;
 
   if (opts[0])
@@ -275,17 +275,17 @@ static NmObject *predef_open(NmObject *args, bool *opts)
   new->name = nm_strdup(name);
   new->fn.print = nm_file_print;
 
-  return (NmObject *)new;
+  return (Nob *)new;
 }
 
-static NmObject *predef_close(NmObject *args, bool *opts)
+static Nob *predef_close(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
 
-  NmObject *arg = nm_arr_get_elem(args, 0);
+  Nob *arg = nm_arr_get_elem(args, 0);
 
-  fclose(((NmFileObject *)arg)->fp);
+  fclose(((Nfhob *)arg)->fp);
 
   return nm_new_int(1);
 }

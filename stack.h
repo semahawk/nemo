@@ -50,7 +50,7 @@
  *   This would create a new stack, which values would be of the given type.
  *   For instance:
  *
- *     stack_new(arg, NmObject *);
+ *     stack_new(arg, Nob *);
  *
  *   Note: this stack and it's belongings are declared as "static" (functions
  *         are also "inline")!

@@ -37,7 +37,7 @@
  *
  * Returns the variable that was created
  */
-Variable *nm_new_var(char *name, NmObject *value)
+Variable *nm_new_var(char *name, Nob *value)
 {
   Namespace *namespace = nm_curr_namespace();
   VariablesList *vars_list = nmalloc(sizeof(VariablesList));

@@ -31,7 +31,7 @@
 #include <math.h>
 #include <nemo.h>
 
-static NmObject *Math_sin(NmObject *args, bool *opts)
+static Nob *Math_sin(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;
@@ -39,7 +39,7 @@ static NmObject *Math_sin(NmObject *args, bool *opts)
   return nm_new_float(sin(nm_float_value(nm_arr_get_elem(args, 0))));
 }
 
-static NmObject *Math_sqrt(NmObject *args, bool *opts)
+static Nob *Math_sqrt(Nob *args, bool *opts)
 {
   /* unused parameter */
   (void)opts;

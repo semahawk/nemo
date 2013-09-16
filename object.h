@@ -57,14 +57,15 @@ enum Type {
                | OT_FILE
 };
 
-typedef enum Type NmObjectType;
-typedef struct Object NmObject;
-typedef struct NullObject NmNullObject;
-typedef struct IntObject NmIntObject;
-typedef struct FloatObject NmFloatObject;
-typedef struct StringObject NmStringObject;
-typedef struct ArrayObject NmArrayObject;
-typedef struct FileObject NmFileObject;
+typedef enum Type NobType;
+typedef struct ob Nob;
+typedef struct null_ob Nnob;
+typedef struct int_ob Niob;
+typedef struct float_ob Nfob;
+typedef struct str_ob Nsob;
+typedef struct arr_ob Naob;
+typedef struct file_ob Nfhob;
+/* we won't need this when we have a garbage collector */
 typedef struct ObFreeList ObFreeList;
 
 /* result of the *_Cmp function */
@@ -74,14 +75,14 @@ typedef enum {
   CMP_LT
 } CmpRes;
 
-typedef NmObject *(*BinaryFunc)(NmObject *, NmObject *);
-typedef NmObject *(*UnaryFunc)(NmObject *);
+typedef Nob *(*BinaryFunc)(Nob *, Nob *);
+typedef Nob *(*UnaryFunc)(Nob *);
 
 /* forward */
 struct Node;
 
 struct Fn {
-  void (*print)(FILE *, NmObject *);
+  void (*print)(FILE *, Nob *);
   /* binary operations functions */
   struct {
     BinaryFunc add;   /* addition */
@@ -91,8 +92,8 @@ struct Fn {
     BinaryFunc mod;   /* modulo */
     BinaryFunc index; /* array/string indexing */
     /* the nm_ast_exec_binop function is taking care to turn
-     * this { CmpRes } into { NmObject * } */
-    CmpRes (*cmp)(NmObject *, NmObject *); /* compare */
+     * this { CmpRes } into { Nob * } */
+    CmpRes (*cmp)(Nob *, Nob *); /* compare */
   } binary;
   /* unary operations functions */
   struct {
@@ -108,119 +109,119 @@ struct Fn {
   enum Type type;     \
   struct Fn fn;
 
-struct Object {
+struct ob {
   NMOBJECT_HEAD
 };
 
-struct NullObject {
+struct null_ob {
   NMOBJECT_HEAD
 };
 
-struct IntObject {
+struct int_ob {
   NMOBJECT_HEAD
   int i;
 };
 
-struct FloatObject {
+struct float_ob {
   NMOBJECT_HEAD
   double f;
 };
 
-struct StringObject {
+struct str_ob {
   NMOBJECT_HEAD
   char *s;
 };
 
-struct ArrayObject {
+struct arr_ob {
   NMOBJECT_HEAD
   size_t nmemb;
-  NmObject **a;
+  Nob **a;
 };
 
-struct FileObject {
+struct file_ob {
   NMOBJECT_HEAD
   char *name;
   FILE *fp;
 };
 
 struct ObFreeList {
-  NmObject *ob;
+  Nob *ob;
   ObFreeList *next;
 };
 
-NmObject *nm_null_repr(void);
-void nm_null_print(FILE *, NmObject *);
+Nob *nm_null_repr(void);
+void nm_null_print(FILE *, Nob *);
 
-NmObject *nm_new_obj(const char *);
-void nm_obj_destroy(NmObject *);
+Nob *nm_new_obj(const char *);
+void nm_obj_destroy(Nob *);
 void nm_obj_cleanup(void);
-bool nm_obj_boolish(NmObject *);
-NmObject *nm_obj_dup(NmObject *);
-NmObject *nm_obj_typetos(NmObject *);
+bool nm_obj_boolish(Nob *);
+Nob *nm_obj_dup(Nob *);
+Nob *nm_obj_typetos(Nob *);
 
-NmObject *nm_new_int(int);
-NmObject *nm_int_add(NmObject *, NmObject *);
-NmObject *nm_int_sub(NmObject *, NmObject *);
-NmObject *nm_int_mul(NmObject *, NmObject *);
-NmObject *nm_int_div(NmObject *, NmObject *);
-NmObject *nm_int_mod(NmObject *, NmObject *);
-CmpRes    nm_int_cmp(NmObject *, NmObject *);
-NmObject *nm_int_plus(NmObject *);
-NmObject *nm_int_minus(NmObject *);
-NmObject *nm_int_negate(NmObject *);
-NmObject *nm_int_incr(NmObject *);
-NmObject *nm_int_decr(NmObject *);
-NmObject *nm_int_repr(void);
-void nm_int_print(FILE *, NmObject *);
-void nm_int_destroy(NmObject *);
+Nob *nm_new_int(int);
+Nob *nm_int_add(Nob *, Nob *);
+Nob *nm_int_sub(Nob *, Nob *);
+Nob *nm_int_mul(Nob *, Nob *);
+Nob *nm_int_div(Nob *, Nob *);
+Nob *nm_int_mod(Nob *, Nob *);
+CmpRes    nm_int_cmp(Nob *, Nob *);
+Nob *nm_int_plus(Nob *);
+Nob *nm_int_minus(Nob *);
+Nob *nm_int_negate(Nob *);
+Nob *nm_int_incr(Nob *);
+Nob *nm_int_decr(Nob *);
+Nob *nm_int_repr(void);
+void nm_int_print(FILE *, Nob *);
+void nm_int_destroy(Nob *);
 void nm_int_cleanup(void);
-NmObject *nm_new_int_from_void_ptr(void *);
+Nob *nm_new_int_from_void_ptr(void *);
 /* a handy macro to simply cast and return the integer value */
-#define nm_int_value(ob) (((NmIntObject *)ob)->i)
+#define nm_int_value(ob) (((Niob *)ob)->i)
 
-NmObject *nm_new_float(double);
-NmObject *nm_new_float_from_int(int);
-NmObject *nm_float_add(NmObject *, NmObject *);
-NmObject *nm_float_sub(NmObject *, NmObject *);
-NmObject *nm_float_mul(NmObject *, NmObject *);
-NmObject *nm_float_div(NmObject *, NmObject *);
-CmpRes    nm_float_cmp(NmObject *, NmObject *);
-NmObject *nm_float_incr(NmObject *);
-NmObject *nm_float_decr(NmObject *);
-NmObject *nm_float_repr(void);
-void nm_float_print(FILE *, NmObject *);
-void nm_float_destroy(NmObject *);
+Nob *nm_new_float(double);
+Nob *nm_new_float_from_int(int);
+Nob *nm_float_add(Nob *, Nob *);
+Nob *nm_float_sub(Nob *, Nob *);
+Nob *nm_float_mul(Nob *, Nob *);
+Nob *nm_float_div(Nob *, Nob *);
+CmpRes    nm_float_cmp(Nob *, Nob *);
+Nob *nm_float_incr(Nob *);
+Nob *nm_float_decr(Nob *);
+Nob *nm_float_repr(void);
+void nm_float_print(FILE *, Nob *);
+void nm_float_destroy(Nob *);
 void nm_float_cleanup(void);
 /* a handy macro to simply cast and return the float value */
-#define nm_float_value(ob) (((NmFloatObject *)ob)->f)
+#define nm_float_value(ob) (((Nfob *)ob)->f)
 
-NmObject *nm_new_str(char *);
-NmObject *nm_new_str_from_char(char);
-NmObject *nm_str_repr(void);
-void nm_str_print(FILE *, NmObject *);
-NmObject *nm_str_add(NmObject *, NmObject *);
-NmObject *nm_str_index(NmObject *, NmObject *);
-CmpRes    nm_str_cmp(NmObject *, NmObject *);
-void nm_str_destroy(NmObject *);
+Nob *nm_new_str(char *);
+Nob *nm_new_str_from_char(char);
+Nob *nm_str_repr(void);
+void nm_str_print(FILE *, Nob *);
+Nob *nm_str_add(Nob *, Nob *);
+Nob *nm_str_index(Nob *, Nob *);
+CmpRes    nm_str_cmp(Nob *, Nob *);
+void nm_str_destroy(Nob *);
 void nm_str_cleanup(void);
 /* a handy macro to simply cast and return the string value */
-#define nm_str_value(ob) (((NmStringObject *)ob)->s)
+#define nm_str_value(ob) (((Nsob *)ob)->s)
 
-NmObject *nm_file_repr(void);
-void nm_file_print(FILE *, NmObject *);
-void nm_file_destroy(NmObject *);
+Nob *nm_file_repr(void);
+void nm_file_print(FILE *, Nob *);
+void nm_file_destroy(Nob *);
 
-NmObject *nm_new_arr(size_t);
-NmObject *nm_new_arr_from_node(struct Node *);
-NmObject *nm_arr_repr(void);
-void nm_arr_print(FILE *, NmObject *);
-NmObject *nm_arr_add(NmObject *, NmObject *);
-NmObject *nm_arr_index(NmObject *, NmObject *);
-void nm_arr_destroy(NmObject *);
+Nob *nm_new_arr(size_t);
+Nob *nm_new_arr_from_node(struct Node *);
+Nob *nm_arr_repr(void);
+void nm_arr_print(FILE *, Nob *);
+Nob *nm_arr_add(Nob *, Nob *);
+Nob *nm_arr_index(Nob *, Nob *);
+void nm_arr_destroy(Nob *);
 void nm_arr_cleanup(void);
 /* a handy macro to simply cast and return the array */
-#define nm_arr_value(ob) (((NmArrayObject *)ob)->a)
-#define nm_arr_nmemb(ob) (((NmArrayObject *)ob)->nmemb)
+#define nm_arr_value(ob) (((Naob *)ob)->a)
+#define nm_arr_nmemb(ob) (((Naob *)ob)->nmemb)
 /* some handy macros for array elements getting/setting */
 #define nm_arr_set_elem(arr,i,v) (nm_arr_value(arr)[i] = v)
 #define nm_arr_get_elem(arr,i)   (nm_arr_value(arr)[i])
@@ -228,7 +229,7 @@ void nm_arr_cleanup(void);
 /*
  * Extern declaration of the "null" which is definied in null.c
  */
-extern NmObject *null;
+extern Nob *null;
 
 #endif /* OBJECT_H */
 

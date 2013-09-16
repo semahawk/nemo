@@ -39,7 +39,7 @@
 
 #include "nemo.h"
 
-void nm_obj_destroy(NmObject *ob)
+void nm_obj_destroy(Nob *ob)
 {
   assert(ob);
 
@@ -84,45 +84,45 @@ void nm_obj_cleanup(void)
 /*
  * Duplicates given object and returns the copy.
  */
-NmObject *nm_obj_dup(NmObject *ob)
+Nob *nm_obj_dup(Nob *ob)
 {
-  NmObject *new = nmalloc(sizeof(*ob));
+  Nob *new = nmalloc(sizeof(*ob));
 
   switch (ob->type){
     case OT_INTEGER:
-      *(NmIntObject *)new = *(NmIntObject *)ob;
+      *(Niob *)new = *(Niob *)ob;
       break;
     case OT_FLOAT:
-      *(NmFloatObject *)new = *(NmFloatObject *)ob;
+      *(Nfob *)new = *(Nfob *)ob;
       break;
     case OT_STRING:
-      *(NmStringObject *)new = *(NmStringObject *)ob;
+      *(Nsob *)new = *(Nsob *)ob;
       break;
     case OT_ARRAY:
-      *(NmArrayObject *)new = *(NmArrayObject *)ob;
+      *(Naob *)new = *(Naob *)ob;
       break;
     case OT_NULL:
-      *(NmNullObject *)new = *(NmNullObject *)ob;
+      *(Nnob *)new = *(Nnob *)ob;
       break;
     case OT_FILE:
-      *(NmFileObject *)new = *(NmFileObject *)ob;
+      *(Nfhob *)new = *(Nfhob *)ob;
       break;
     case OT_ANY:
       /* suspress the warnings */
       break;
   }
 
-  return (NmObject *)new;
+  return (Nob *)new;
 }
 
 /*
  * Translates given <type> to a string.
  */
-NmObject *nm_obj_typetos(NmObject *ob)
+Nob *nm_obj_typetos(Nob *ob)
 {
   assert(ob);
 
-  NmObject *ret = nm_new_str("");
+  Nob *ret = nm_new_str("");
   bool first = true;
 
   unsigned num = 7;
@@ -173,7 +173,7 @@ NmObject *nm_obj_typetos(NmObject *ob)
  *
  * In Nemo there is no "bool" type as is.
  */
-bool nm_obj_boolish(NmObject *ob)
+bool nm_obj_boolish(Nob *ob)
 {
   /*
    * null, 0, 0.0, empty string ("") and an empty array ([]) are false

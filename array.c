@@ -36,11 +36,11 @@
  */
 static ObFreeList *free_list = NULL;
 
-NmObject *nm_new_arr(size_t nmemb)
+Nob *nm_new_arr(size_t nmemb)
 {
   ObFreeList *list = nmalloc(sizeof(ObFreeList));
-  NmArrayObject *ob = ncalloc(1, sizeof(NmArrayObject));
-  NmObject **arr = nmalloc(nmemb * sizeof(NmObject));
+  Naob *ob = ncalloc(1, sizeof(Naob));
+  Nob **arr = nmalloc(nmemb * sizeof(Nob));
 
   ob->type = OT_ARRAY;
   ob->fn.print = nm_arr_print;
@@ -50,21 +50,21 @@ NmObject *nm_new_arr(size_t nmemb)
   ob->a = arr;
 
   /* append to the free_list */
-  list->ob = (NmObject *)ob;
+  list->ob = (Nob *)ob;
   list->next = free_list;
   free_list = list;
 
-  return (NmObject *)ob;
+  return (Nob *)ob;
 }
 
-NmObject *nm_arr_repr(void)
+Nob *nm_arr_repr(void)
 {
   return nm_new_str("array");
 }
 
-NmObject *nm_arr_add(NmObject *left, NmObject *right)
+Nob *nm_arr_add(Nob *left, Nob *right)
 {
-  NmObject *new = nm_new_arr(nm_arr_nmemb(left) + nm_arr_nmemb(right));
+  Nob *new = nm_new_arr(nm_arr_nmemb(left) + nm_arr_nmemb(right));
 
   unsigned i;
 
@@ -79,12 +79,12 @@ NmObject *nm_arr_add(NmObject *left, NmObject *right)
   return new;
 }
 
-void nm_arr_print(FILE *fp, NmObject *ob)
+void nm_arr_print(FILE *fp, Nob *ob)
 {
   assert(ob);
   assert(ob->type == OT_ARRAY);
 
-  NmArrayObject *arr = (NmArrayObject *)ob;
+  Naob *arr = (Naob *)ob;
 
   fprintf(fp, "[");
   for (size_t i = 0; i < arr->nmemb; i++){
@@ -96,12 +96,12 @@ void nm_arr_print(FILE *fp, NmObject *ob)
   fprintf(fp, "]");
 }
 
-NmObject *nm_arr_index(NmObject *array, NmObject *index)
+Nob *nm_arr_index(Nob *array, Nob *index)
 {
   return nm_arr_get_elem(array, nm_int_value(index));
 }
 
-void nm_arr_destroy(NmObject *ob)
+void nm_arr_destroy(Nob *ob)
 {
   nfree(nm_arr_value(ob));
   nfree(ob);
@@ -113,7 +113,7 @@ void nm_arr_cleanup(void){
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    nm_obj_destroy((NmObject *)list->ob);
+    nm_obj_destroy((Nob *)list->ob);
     nfree(list);
   }
 }

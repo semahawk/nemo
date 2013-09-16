@@ -36,10 +36,10 @@
  */
 static ObFreeList *free_list = NULL;
 
-NmObject *nm_new_float(double f)
+Nob *nm_new_float(double f)
 {
   ObFreeList *list = nmalloc(sizeof(ObFreeList));
-  NmFloatObject *ob = ncalloc(1, sizeof(NmFloatObject));
+  Nfob *ob = ncalloc(1, sizeof(Nfob));
 
   ob->type = OT_FLOAT;
   ob->f = f;
@@ -54,19 +54,19 @@ NmObject *nm_new_float(double f)
   ob->fn.unary.decrement = nm_float_decr;
 
   /* append to the free_list */
-  list->ob = (NmObject *)ob;
+  list->ob = (Nob *)ob;
   list->next = free_list;
   free_list = list;
 
-  return (NmObject *)ob;
+  return (Nob *)ob;
 }
 
-NmObject *nm_new_float_from_int(int i)
+Nob *nm_new_float_from_int(int i)
 {
   return nm_new_float((double)i);
 }
 
-NmObject *nm_float_add(NmObject *left, NmObject *right)
+Nob *nm_float_add(Nob *left, Nob *right)
 {
   /* check if the result could be represented as an int */
   if ((int)(nm_float_value(left) + nm_float_value(right)) == (nm_float_value(left) + nm_float_value(right))){
@@ -76,7 +76,7 @@ NmObject *nm_float_add(NmObject *left, NmObject *right)
   }
 }
 
-NmObject *nm_float_sub(NmObject *left, NmObject *right)
+Nob *nm_float_sub(Nob *left, Nob *right)
 {
   /* check if the result could be represented as an int */
   if ((int)(nm_float_value(left) - nm_float_value(right)) == (nm_float_value(left) - nm_float_value(right))){
@@ -86,7 +86,7 @@ NmObject *nm_float_sub(NmObject *left, NmObject *right)
   }
 }
 
-NmObject *nm_float_mul(NmObject *left, NmObject *right)
+Nob *nm_float_mul(Nob *left, Nob *right)
 {
   /* check if the result could be represented as an int */
   if ((int)(nm_float_value(left) * nm_float_value(right)) == (nm_float_value(left) * nm_float_value(right))){
@@ -96,7 +96,7 @@ NmObject *nm_float_mul(NmObject *left, NmObject *right)
   }
 }
 
-NmObject *nm_float_div(NmObject *left, NmObject *right)
+Nob *nm_float_div(Nob *left, Nob *right)
 {
   /* check if the result could be represented as an int */
   if ((int)(nm_float_value(left) / nm_float_value(right)) == (nm_float_value(left) / nm_float_value(right))){
@@ -106,40 +106,40 @@ NmObject *nm_float_div(NmObject *left, NmObject *right)
   }
 }
 
-CmpRes nm_float_cmp(NmObject *left, NmObject *right)
+CmpRes nm_float_cmp(Nob *left, Nob *right)
 {
   return nm_float_value(left) >  nm_float_value(right) ? CMP_GT :
          nm_float_value(left) <  nm_float_value(right) ? CMP_LT :
                                                          CMP_EQ ;
 }
 
-NmObject *nm_float_incr(NmObject *target)
+Nob *nm_float_incr(Nob *target)
 {
   nm_float_value(target) = nm_float_value(target) + 1;
 
   return target;
 }
 
-NmObject *nm_float_decr(NmObject *target)
+Nob *nm_float_decr(Nob *target)
 {
   nm_float_value(target) = nm_float_value(target) - 1;
 
   return target;
 }
 
-NmObject *nm_float_repr(void)
+Nob *nm_float_repr(void)
 {
   return nm_new_str("float");
 }
 
-void nm_float_print(FILE *fp, NmObject *ob)
+void nm_float_print(FILE *fp, Nob *ob)
 {
   assert(ob->type == OT_FLOAT);
 
   fprintf(fp, "%g", nm_float_value(ob));
 }
 
-void nm_float_destroy(NmObject *ob)
+void nm_float_destroy(Nob *ob)
 {
   assert(ob->type == OT_FLOAT);
 
@@ -152,7 +152,7 @@ void nm_float_cleanup(void){
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    nm_obj_destroy((NmObject *)list->ob);
+    nm_obj_destroy((Nob *)list->ob);
     nfree(list);
   }
 }

@@ -54,7 +54,7 @@ struct Variable {
   /* obviously */
   char *name;
   /* the variables value */
-  NmObject *value;
+  Nob *value;
 };
 
 /*
@@ -68,7 +68,7 @@ struct VariablesList {
 typedef struct VariablesList VariablesList;
 typedef struct Variable      Variable;
 
-Variable *nm_new_var(char *name, NmObject *value);
+Variable *nm_new_var(char *name, Nob *value);
 
 #endif /* VARS_H */
 

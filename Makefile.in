@@ -14,7 +14,7 @@ bindir = @bindir@
 
 # libnemos version
 LIBNEMO_VMAJOR = 0
-LIBNEMO_VMINOR = 2
+LIBNEMO_VMINOR = 3
 
 # every .c file
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))

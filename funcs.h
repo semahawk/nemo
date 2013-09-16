@@ -35,7 +35,7 @@
 
 /* type of the C functions */
 /*
- * The first parameter is NmArrayObject pointer which stores all the arguments.
+ * The first parameter is Naob pointer which stores all the arguments.
  *
  * The second parameter is an array of bools which indicate which options
  * are set and which are not.
@@ -65,7 +65,7 @@
  *     }
  *
  */
-typedef NmObject *(*NmCFunc)(NmObject *args, bool *opts);
+typedef Nob *(*NmCFunc)(Nob *args, bool *opts);
 
 struct CFunc {
   /* name of the function */
@@ -79,8 +79,8 @@ struct CFunc {
    * just do strlen(optv) */
   char *opts;
   /* the types of which the arguments can be */
-  /* it's an array of { NmObjectType } */
-  NmObjectType *types;
+  /* it's an array of { NobType } */
+  NobType *types;
 };
 
 struct Func {
@@ -91,7 +91,7 @@ struct Func {
   /* number of args */
   unsigned argc;
   /* arguments vector */
-  NmObjectType *argv;
+  NobType *argv;
   /* options for the function
    * it's a string so to get the number of the options
    * just do strlen(opts) */
@@ -118,8 +118,8 @@ typedef struct ModuleFuncs {
   /* number of arguments it can take */
   int argc;
   /* the types of which the arguments can be */
-  /* it's an array of { NmObjectType } */
-  NmObjectType types[32];
+  /* it's an array of { NobType } */
+  NobType types[32];
   /* the names of the options */
   char *opts;
 } NmModuleFuncs;

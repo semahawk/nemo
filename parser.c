@@ -1199,7 +1199,7 @@ nm_debug_parser(":", name);*/
     lex->right_after_fun = true;
     unsigned argc = 0;
     unsigned optc = 0;
-    NmObjectType *argv = nmalloc(sizeof(NmObjectType) * 1);
+    NobType *argv = nmalloc(sizeof(NobType) * 1);
     char *optv = nmalloc(sizeof(char) * 1 + 1); /* I know sizeof(char) is 1 */
     /* FIXME: store the "fun" position (right now it's a position of the function's name) */
     Pos pos = lex->current.pos;
@@ -1247,23 +1247,23 @@ nm_debug_parser(":", name);*/
       for (char *p = args; *p != '\0' && argc < 32; p++){
         switch (*p){
           case 'i':
-            argv = nrealloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv = nrealloc(argv, (argc + 1) * sizeof(NobType) + 1);
             argv[argc++] = OT_INTEGER;
             break;
           case 'f':
-            argv = nrealloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv = nrealloc(argv, (argc + 1) * sizeof(NobType) + 1);
             argv[argc++] = OT_FLOAT;
             break;
           case 'a':
-            argv = nrealloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv = nrealloc(argv, (argc + 1) * sizeof(NobType) + 1);
             argv[argc++] = OT_ARRAY;
             break;
           case 's':
-            argv = nrealloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv = nrealloc(argv, (argc + 1) * sizeof(NobType) + 1);
             argv[argc++] = OT_STRING;
             break;
           case 'h':
-            argv = nrealloc(argv, (argc + 1) * sizeof(NmObjectType) + 1);
+            argv = nrealloc(argv, (argc + 1) * sizeof(NobType) + 1);
             argv[argc++] = OT_FILE;
             break;
           default:

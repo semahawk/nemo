@@ -39,7 +39,7 @@
 /*
  * Creating the "null" object
  */
-NmObject *null = &(NmObject){
+Nob *null = &(Nob){
   .type = OT_NULL,
   .fn = {
     .print = nm_null_print,
@@ -56,7 +56,7 @@ NmObject *null = &(NmObject){
   }
 };
 
-NmObject *nm_null_repr(void)
+Nob *nm_null_repr(void)
 {
   return nm_new_str("null");
 }
@@ -65,7 +65,7 @@ NmObject *nm_null_repr(void)
  * @name - nm_null_print
  * @desc - print the "null"
  */
-void nm_null_print(FILE *fp, NmObject *ob)
+void nm_null_print(FILE *fp, Nob *ob)
 {
   assert(ob->type == OT_NULL);
 

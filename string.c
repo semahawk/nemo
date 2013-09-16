@@ -36,10 +36,10 @@
  */
 static ObFreeList *free_list = NULL;
 
-NmObject *nm_new_str(char *s)
+Nob *nm_new_str(char *s)
 {
   ObFreeList *list = nmalloc(sizeof(ObFreeList));
-  NmStringObject *ob = ncalloc(1, sizeof(NmStringObject));
+  Nsob *ob = ncalloc(1, sizeof(Nsob));
 
   ob->type = OT_STRING;
   ob->s = nmalloc(strlen(s) + 1);
@@ -101,17 +101,17 @@ NmObject *nm_new_str(char *s)
   ob->fn.binary.cmp = nm_str_cmp;
 
   /* append to the free_list */
-  list->ob = (NmObject *)ob;
+  list->ob = (Nob *)ob;
   list->next = free_list;
   free_list = list;
 
-  return (NmObject *)ob;
+  return (Nob *)ob;
 }
 
-NmObject *nm_new_str_from_char(char c)
+Nob *nm_new_str_from_char(char c)
 {
   ObFreeList *list = nmalloc(sizeof(ObFreeList));
-  NmStringObject *ob = ncalloc(1, sizeof(NmStringObject));
+  Nsob *ob = ncalloc(1, sizeof(Nsob));
 
   ob->type = OT_STRING;
   /* create this tiny string */
@@ -124,14 +124,14 @@ NmObject *nm_new_str_from_char(char c)
   ob->fn.binary.cmp = nm_str_cmp;
 
   /* append to the free_list */
-  list->ob = (NmObject *)ob;
+  list->ob = (Nob *)ob;
   list->next = free_list;
   free_list = list;
 
-  return (NmObject *)ob;
+  return (Nob *)ob;
 }
 
-NmObject *nm_str_add(NmObject *left, NmObject *right)
+Nob *nm_str_add(Nob *left, Nob *right)
 {
   size_t leftlen = strlen(nm_str_value(left));
   size_t rightlen = strlen(nm_str_value(right));
@@ -143,7 +143,7 @@ NmObject *nm_str_add(NmObject *left, NmObject *right)
   return nm_new_str(new);
 }
 
-CmpRes nm_str_cmp(NmObject *left, NmObject *right)
+CmpRes nm_str_cmp(Nob *left, Nob *right)
 {
   int res = strcmp(nm_str_value(left), nm_str_value(right));
 
@@ -155,24 +155,24 @@ CmpRes nm_str_cmp(NmObject *left, NmObject *right)
     return CMP_EQ;
 }
 
-NmObject *nm_str_repr(void)
+Nob *nm_str_repr(void)
 {
   return nm_new_str("string");
 }
 
-void nm_str_print(FILE *fp, NmObject *ob)
+void nm_str_print(FILE *fp, Nob *ob)
 {
   assert(ob->type == OT_STRING);
 
   fprintf(fp, "%s", nm_str_value(ob));
 }
 
-NmObject *nm_str_index(NmObject *string, NmObject *index)
+Nob *nm_str_index(Nob *string, Nob *index)
 {
   return nm_new_str_from_char(nm_str_value(string)[nm_int_value(index)]);
 }
 
-void nm_str_destroy(NmObject *ob)
+void nm_str_destroy(Nob *ob)
 {
   assert(ob->type == OT_STRING);
 
@@ -186,7 +186,7 @@ void nm_str_cleanup(void){
 
   for (list = free_list; list != NULL; list = next){
     next = list->next;
-    nm_obj_destroy((NmObject *)list->ob);
+    nm_obj_destroy((Nob *)list->ob);
     nfree(list);
   }
 }

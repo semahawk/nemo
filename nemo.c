@@ -262,7 +262,7 @@ static int nmInteractive(void)
   /* current line user has entered */
   unsigned line = 0;
   /* result of the executed input */
-  NmObject *ob;
+  Nob *ob;
   /* set the running_interactive flag */
   running_interactive = true;
 

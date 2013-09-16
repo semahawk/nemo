@@ -54,7 +54,7 @@
 /*
  * Array of pointer functions responsible for executing an adequate kind of node
  */
-static NmObject *(*execFuncs[])(Node *) =
+static Nob *(*execFuncs[])(Node *) =
 {
   /* XXX order must match the one in "enum NodeType" in ast.h */
   nm_ast_exec_nop,
@@ -105,7 +105,7 @@ static void (*freeFuncs[])(Node *) =
  * @return - the last executed statement's value
  * @param - nodest - the first statement to be executed
  */
-NmObject *nm_ast_exec_nodes(Node *nodest)
+Nob *nm_ast_exec_nodes(Node *nodest)
 {
   /* TODO
    *
@@ -118,9 +118,9 @@ NmObject *nm_ast_exec_nodes(Node *nodest)
 
 /*
  * @name - nm_ast_exec
- * @desc - executes given node and returns the { NmObject * } it resulted in
+ * @desc - executes given node and returns the { Nob * } it resulted in
  */
-static inline NmObject *nm_ast_exec(Node *n)
+static inline Nob *nm_ast_exec(Node *n)
 {
   assert(n);
 
@@ -160,7 +160,7 @@ Node *nm_ast_gen_nop(Pos pos)
  * @name - nm_ast_exec_nop
  * @desc - execute a NOP (eg, return null)
  */
-NmObject *nm_ast_exec_nop(Node *n)
+Nob *nm_ast_exec_nop(Node *n)
 {
   /* unused parameter */
   (void)n;
@@ -207,7 +207,7 @@ Node *nm_ast_gen_int(Pos pos, int i)
  * @name - nm_ast_exec_int
  * @desc - return the value of the int
  */
-NmObject *nm_ast_exec_int(Node *n)
+Nob *nm_ast_exec_int(Node *n)
 {
 #if DEBUG
   nm_debug_ast(n, "execute integer node");
@@ -255,7 +255,7 @@ Node *nm_ast_gen_float(Pos pos, float f)
  * @name - nm_ast_exec_float
  * @desc - return the value of the float
  */
-NmObject *nm_ast_exec_float(Node *n)
+Nob *nm_ast_exec_float(Node *n)
 {
 #if DEBUG
   nm_debug_ast(n, "execute float node");
@@ -303,9 +303,9 @@ Node *nm_ast_gen_str(Pos pos, char *s)
  * @name - nm_ast_exec_str
  * @desc - return the value of the string
  */
-NmObject *nm_ast_exec_str(Node *n)
+Nob *nm_ast_exec_str(Node *n)
 {
-  NmObject *ret = nm_new_str(((Node_String *)n)->s);
+  Nob *ret = nm_new_str(((Node_String *)n)->s);
 
 #if DEBUG
   nm_debug_ast(n, "execute string node");
@@ -367,10 +367,10 @@ Node *nm_ast_gen_arr(Pos pos, Node **a)
  * @name - nm_ast_exec_arr
  * @desc - return the value of the string
  */
-NmObject *nm_ast_exec_arr(Node *n)
+Nob *nm_ast_exec_arr(Node *n)
 {
   Node_Array *n_arr = (Node_Array *)n;
-  NmObject *ob = nm_new_arr(n_arr->nmemb);
+  Nob *ob = nm_new_arr(n_arr->nmemb);
   size_t i = 0;
 
 #if DEBUG
@@ -463,7 +463,7 @@ Node *nm_ast_gen_name(Pos pos, char *name, struct Namespace *node_namespace)
  * @name - nm_ast_exec_name
  * @desc - return the value the name is carring
  */
-NmObject *nm_ast_exec_name(Node *n)
+Nob *nm_ast_exec_name(Node *n)
 {
   Node_Name *nc = (Node_Name *)n;
 
@@ -521,7 +521,7 @@ Node *nm_ast_gen_binop(Pos pos, Node *left, BinaryOp op, Node *right)
  * @name - nm_ast_exec_binop
  * @desc - return the result of the binary operation
  */
-NmObject *nm_ast_exec_binop(Node *n)
+Nob *nm_ast_exec_binop(Node *n)
 {
   Node_Binop *nc = (Node_Binop *)n;
   Namespace *namespace = nm_curr_namespace();
@@ -529,7 +529,7 @@ NmObject *nm_ast_exec_binop(Node *n)
   Node *left  = nc->left;
   Node *right = nc->right;
 
-  NmObject *ret = null;
+  Nob *ret = null;
 
 #if DEBUG
   nm_debug_ast(n, "execute binary operation node");
@@ -580,8 +580,8 @@ NmObject *nm_ast_exec_binop(Node *n)
    * XXX BINARY_INDEX
    */
   else if (nc->op == BINARY_INDEX){
-    NmObject *ob_left = nm_ast_exec(left);
-    NmObject *ob_right = nm_ast_exec(right);
+    Nob *ob_left = nm_ast_exec(left);
+    Nob *ob_right = nm_ast_exec(right);
     if (!ob_left->fn.binary.index){
       nm_parser_error(n, "invalid binary operator '[]' for type '%s'", nm_str_value(nm_obj_typetos(ob_left)));
       nexit();
@@ -606,8 +606,8 @@ NmObject *nm_ast_exec_binop(Node *n)
 /* a handy macro to check if an object supports given binary operation
  * <func>, and if not, print an error, and exit
  *
- * <ob> is of type { NmObject * }
- * <func> is pretty much of type { void *(*)(NmObject *, NmObject *) }
+ * <ob> is of type { Nob * }
+ * <func> is pretty much of type { void *(*)(Nob *, Nob *) }
  *
  * Note: both left and right operands should be of the same type */
 #define ensure_ob_has_func(FUNC) \
@@ -682,8 +682,8 @@ NmObject *nm_ast_exec_binop(Node *n)
     nexit(); \
   }
 
-  NmObject *ob_left = nm_ast_exec(left);
-  NmObject *ob_right = nm_ast_exec(right);
+  Nob *ob_left = nm_ast_exec(left);
+  Nob *ob_right = nm_ast_exec(right);
 
   /* it's all easy when the two types are the same, just look if the type has
    * some function that does the operation, and simply run it and simply return
@@ -772,12 +772,12 @@ Node *nm_ast_gen_unop(Pos pos, Node *target, UnaryOp op)
  * @name - nm_ast_exec_unop
  * @desc - return the result of the unary operation
  */
-NmObject *nm_ast_exec_unop(Node *n)
+Nob *nm_ast_exec_unop(Node *n)
 {
   Node_Unop *nc = (Node_Unop *)n;
-  NmObject *ret = null;
+  Nob *ret = null;
 
-  NmObject *target = nm_ast_exec(nc->target);
+  Nob *target = nm_ast_exec(nc->target);
 
 #if DEBUG
   nm_debug_ast(n, "execute unary operation node");
@@ -786,7 +786,7 @@ NmObject *nm_ast_exec_unop(Node *n)
 /* a handy macro to check if an object supports given unary operation
  * <func>, and if not, print an error, and exit
  *
- * <ob> is of type { NmObject * }
+ * <ob> is of type { Nob * }
  * <func> is of type { UnaryFunc }
  */
 #define ensure_ob_has_func(FUNC) \
@@ -821,14 +821,14 @@ NmObject *nm_ast_exec_unop(Node *n)
     }
     case UNARY_POSTINC: {
       ensure_ob_has_func(increment);
-      NmObject *save = nm_obj_dup(target);
+      Nob *save = nm_obj_dup(target);
       target->fn.unary.increment(target);
       ret = save;
       break;
     }
     case UNARY_POSTDEC: {
       ensure_ob_has_func(decrement);
-      NmObject *save = nm_obj_dup(target);
+      Nob *save = nm_obj_dup(target);
       target->fn.unary.decrement(target);
       ret = save;
       break;
@@ -891,7 +891,7 @@ Node *nm_ast_gen_if(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
  * @name - nm_ast_exec_if
  * @desc - do the if loop, return actually anything
  */
-NmObject *nm_ast_exec_if(Node *n)
+Nob *nm_ast_exec_if(Node *n)
 {
   Node_If *nc = (Node_If *)n;
   Node *guard = nc->guard;
@@ -990,7 +990,7 @@ Node *nm_ast_gen_while(Pos pos, Node *guard, Node *body, Node *elsee, bool until
  * @name - nm_ast_exec_while
  * @desc - execute the loop and return, actually anything, it's a statement
  */
-NmObject *nm_ast_exec_while(Node *n)
+Nob *nm_ast_exec_while(Node *n)
 {
   Node_While *nc = (Node_While *)n;
   Node *guard    = nc->guard;
@@ -1096,7 +1096,7 @@ Node *nm_ast_gen_decl(Pos pos, char *name, Node *value, uint8_t flags)
 
   new_var->name = nm_strdup(name);
   if (n->value){
-    NmObject *value = nm_ast_exec(n->value);
+    Nob *value = nm_ast_exec(n->value);
     new_var->value = value;
   } else {
     /* declared variables get to be a integer with the value of 0 */
@@ -1115,7 +1115,7 @@ Node *nm_ast_gen_decl(Pos pos, char *name, Node *value, uint8_t flags)
  * @name - nm_ast_exec_decl
  * @desc - declare/define the variable and return 1
  */
-NmObject *nm_ast_exec_decl(Node *n)
+Nob *nm_ast_exec_decl(Node *n)
 {
   /* unused parameter */
   (void)n;
@@ -1178,10 +1178,10 @@ Node *nm_ast_gen_call(Pos pos, char *name, Node **params, char *opts, struct Nam
  * @name - nm_ast_exec_call
  * @desc - call the given function
  */
-NmObject *nm_ast_exec_call(Node *n)
+Nob *nm_ast_exec_call(Node *n)
 {
   Node_Call *nc = (Node_Call *)n;
-  NmObject *ret = null;
+  Nob *ret = null;
   char *name = nc->name;
 
 #if DEBUG
@@ -1205,7 +1205,7 @@ NmObject *nm_ast_exec_call(Node *n)
           for (Node **p = nc->params; *p != NULL; p++)
             nmemb++;
         /* parameters are stored as an array */
-        NmObject *array = nm_new_arr(nmemb);
+        Nob *array = nm_new_arr(nmemb);
         /* set the arrays elements */
         if (nc->params){
           /* but first, type checking
@@ -1214,16 +1214,16 @@ NmObject *nm_ast_exec_call(Node *n)
            * every argument should be of the matching element in
            * <list->func->types> */
           for (Node **p = nc->params; *p != NULL; p++, i++){
-            NmObjectType type;
+            NobType type;
             if (list->func->argc < 0){
               type = list->func->types[0];
             } else {
               type = list->func->types[i];
             }
             /* actually check the type of the current argument */
-            NmObject *ob = nm_ast_exec(*p);
+            Nob *ob = nm_ast_exec(*p);
             if (!(ob->type & type)){
-              NmObject *dummy = nmalloc(sizeof(NmObject));
+              Nob *dummy = nmalloc(sizeof(Nob));
               dummy->type = type;
               nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(nm_obj_typetos(ob)), nm_str_value(nm_obj_typetos(dummy)));
               nfree(dummy);
@@ -1273,10 +1273,10 @@ NmObject *nm_ast_exec_call(Node *n)
         /* it should happen at compile time, though */
         bool wrong_types = false;
         for (unsigned i = 0; i < list->func->argc; i++){
-          NmObject *param = nm_ast_exec(nc->params[i]);
+          Nob *param = nm_ast_exec(nc->params[i]);
           if (list->func->argv[i] != param->type){
-            NmObject *param_dummy = nmalloc(sizeof(NmObject));
-            NmObject *arg_dummy = nmalloc(sizeof(NmObject));
+            Nob *param_dummy = nmalloc(sizeof(Nob));
+            Nob *arg_dummy = nmalloc(sizeof(Nob));
             param_dummy->type = param->type;
             arg_dummy->type = list->func->argv[i];
             nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(nm_obj_typetos(param_dummy)), nm_str_value(nm_obj_typetos(arg_dummy)));
@@ -1361,7 +1361,7 @@ Node *nm_ast_gen_stmt(Pos pos, Node *expr)
   return (Node *)n;
 }
 
-NmObject *nm_ast_exec_stmt(Node *n)
+Nob *nm_ast_exec_stmt(Node *n)
 {
   return nm_ast_exec(((Node_Stmt *)n)->expr);
 }
@@ -1379,10 +1379,10 @@ void nm_ast_free_stmt(Node *n)
   nfree(n);
 }
 
-NmObject *nm_ast_exec_block(Node *n)
+Nob *nm_ast_exec_block(Node *n)
 {
   Node_Block *nc = (Node_Block *)n;
-  NmObject *ret = null;
+  Nob *ret = null;
   Statement *s;
   Statement *next;
 
@@ -1444,7 +1444,7 @@ void nm_ast_free_block(Node *n)
  */
 Node *nm_ast_gen_funcdef(Pos pos, char *name, Node *body,
                        unsigned argc, unsigned optc,
-                       NmObjectType *argv, char *opts)
+                       NobType *argv, char *opts)
 {
   Namespace *namespace = nm_curr_namespace();
   FuncsList *l = nmalloc(sizeof(FuncsList));
@@ -1486,7 +1486,7 @@ Node *nm_ast_gen_funcdef(Pos pos, char *name, Node *body,
  * @name - nm_ast_exec_funcdef
  * @desc - declare/define given function
  */
-NmObject *nm_ast_exec_funcdef(Node *n)
+Nob *nm_ast_exec_funcdef(Node *n)
 {
   Node_Funcdef *nc = (Node_Funcdef *)n;
 
@@ -1556,7 +1556,7 @@ Node *nm_ast_gen_use(Pos pos, char *fname)
  * @desc - actually does the including thing
  * @return 1 if everything went fine
  */
-NmObject *nm_ast_exec_use(Node *n)
+Nob *nm_ast_exec_use(Node *n)
 {
   assert(n);
   assert(n->type == NT_USE);
