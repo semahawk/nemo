@@ -77,32 +77,15 @@ typedef enum {
 
 typedef Nob *(*BinaryFunc)(Nob *, Nob *);
 typedef Nob *(*UnaryFunc)(Nob *);
+typedef CmpRes (*CmpFunc)(Nob *, Nob *);
 
-/* forward */
+/* forward, all defined in ast.h */
 struct Node;
+enum BinaryOp;
+enum UnaryOp;
 
 struct Fn {
   void (*print)(FILE *, Nob *);
-  /* binary operations functions */
-  struct {
-    BinaryFunc add;   /* addition */
-    BinaryFunc sub;   /* substraction */
-    BinaryFunc mul;   /* multiplication */
-    BinaryFunc div;   /* division */
-    BinaryFunc mod;   /* modulo */
-    BinaryFunc index; /* array/string indexing */
-    /* the nm_ast_exec_binop function is taking care to turn
-     * this { CmpRes } into { Nob * } */
-    CmpRes (*cmp)(Nob *, Nob *); /* compare */
-  } binary;
-  /* unary operations functions */
-  struct {
-    UnaryFunc plus;
-    UnaryFunc minus;
-    UnaryFunc negate;
-    UnaryFunc increment;
-    UnaryFunc decrement;
-  } unary;
 };
 
 #define NMOBJECT_HEAD \
@@ -158,6 +141,9 @@ void nm_obj_cleanup(void);
 bool nm_obj_boolish(Nob *);
 Nob *nm_obj_dup(Nob *);
 Nob *nm_obj_typetos(Nob *);
+BinaryFunc nm_obj_has_binary_func(Nob *, enum BinaryOp);
+UnaryFunc  nm_obj_has_unary_func(Nob *, enum UnaryOp);
+CmpFunc    nm_obj_has_cmp_func(Nob *, enum BinaryOp);
 
 Nob *nm_new_int(int);
 Nob *nm_int_add(Nob *, Nob *);

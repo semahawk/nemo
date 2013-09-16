@@ -70,12 +70,13 @@ static Nob *predef_assert(Nob *args, bool *opts)
 
   /* both are of the same type */
   if (first->type == second->type){
-    if (!first->fn.binary.cmp){
+    CmpFunc cmpfunc = nm_obj_has_cmp_func(first, BINARY_EQ);
+    if (!cmpfunc){
       nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
       return NULL;
     }
 
-    if (first->fn.binary.cmp(first, second) != CMP_EQ){
+    if (cmpfunc(first, second) != CMP_EQ){
       nm_set_error("assertion failed");
       return NULL;
     }
@@ -85,7 +86,8 @@ static Nob *predef_assert(Nob *args, bool *opts)
     /* XXX int and float */
     if (first->type == OT_INTEGER && second->type == OT_FLOAT){
       first = nm_new_float_from_int(nm_int_value(first));
-      if (!first->fn.binary.cmp){
+      CmpFunc cmpfunc = nm_obj_has_cmp_func(first, BINARY_EQ);
+      if (!cmpfunc){
         nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
         return NULL;
       }
@@ -93,7 +95,8 @@ static Nob *predef_assert(Nob *args, bool *opts)
     /* XXX float and int */
     else if (first->type == OT_FLOAT && second->type == OT_INTEGER){
       second = nm_new_float_from_int(nm_int_value(second));
-      if (!first->fn.binary.cmp){
+      CmpFunc cmpfunc = nm_obj_has_cmp_func(first, BINARY_EQ);
+      if (!cmpfunc){
         nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
         return NULL;
       }

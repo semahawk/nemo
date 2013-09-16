@@ -39,6 +39,158 @@
 
 #include "nemo.h"
 
+BinaryFunc nm_obj_has_binary_func(Nob *ob, BinaryOp op)
+{
+  switch (ob->type){
+    case OT_INTEGER:
+      switch (op){
+        case BINARY_ADD:
+          return nm_int_add;
+        case BINARY_SUB:
+          return nm_int_sub;
+        case BINARY_MUL:
+          return nm_int_mul;
+        case BINARY_DIV:
+          return nm_int_div;
+        case BINARY_MOD:
+          return nm_int_mod;
+        default:
+          return NULL;
+      }
+      break;
+    case OT_FLOAT:
+      switch (op){
+        case BINARY_ADD:
+          return nm_float_add;
+        case BINARY_SUB:
+          return nm_float_sub;
+        case BINARY_MUL:
+          return nm_float_mul;
+        case BINARY_DIV:
+          return nm_float_div;
+        default:
+          return NULL;
+      }
+      break;
+    case OT_STRING:
+      switch (op){
+        case BINARY_ADD:
+          return nm_str_add;
+        case BINARY_INDEX:
+          return nm_str_index;
+        default:
+          return NULL;
+      }
+      break;
+    case OT_ARRAY:
+      switch (op){
+        case BINARY_ADD:
+          return nm_arr_add;
+        case BINARY_INDEX:
+          return nm_arr_index;
+        default:
+          return NULL;
+      }
+      break;
+    case OT_FILE:
+      switch (op){
+        default:
+          return NULL;
+      }
+      break;
+    case OT_NULL:
+      switch (op){
+        default:
+          return NULL;
+      }
+      break;
+    case OT_ANY:
+      /* should never get here */
+      return NULL;
+    default:
+      nm_error("unknown object type at %s line %d", __FILE__, __LINE__);
+      nexit();
+      break;
+  }
+
+  return NULL;
+}
+
+UnaryFunc nm_obj_has_unary_func(Nob *ob, UnaryOp op)
+{
+  assert(ob);
+
+  switch (ob->type){
+    case OT_INTEGER:
+      switch (op){
+        case UNARY_PLUS:
+          return nm_int_plus;
+        case UNARY_MINUS:
+          return nm_int_minus;
+        case UNARY_NEGATE:
+          return nm_int_negate;
+        case UNARY_PREINC:  /* fall-through */
+        case UNARY_POSTINC:
+          return nm_int_incr;
+        case UNARY_PREDEC:  /* fall-through */
+        case UNARY_POSTDEC:
+          return nm_int_decr;
+        default:
+          return NULL;
+      }
+      break;
+    case OT_FLOAT:
+      switch (op){
+        case UNARY_PREINC:  /* fall-through */
+        case UNARY_POSTINC:
+          return nm_float_incr;
+        case UNARY_PREDEC:  /* fall-through */
+        case UNARY_POSTDEC:
+          return nm_float_decr;
+        default:
+          return NULL;
+      }
+      break;
+    case OT_STRING:
+      return NULL;
+    case OT_ARRAY:
+      return NULL;
+    case OT_FILE:
+      return NULL;
+    case OT_NULL:
+      return NULL;
+    case OT_ANY:
+      return NULL;
+  }
+
+  return NULL;
+}
+
+CmpFunc nm_obj_has_cmp_func(Nob *ob, BinaryOp op)
+{
+  assert(ob);
+
+  switch (ob->type){
+    case OT_INTEGER:
+      return nm_int_cmp;
+    case OT_FLOAT:
+      return nm_float_cmp;
+    case OT_STRING:
+      return nm_str_cmp;
+    case OT_ARRAY:
+      return NULL;
+    case OT_FILE:
+      return NULL;
+    case OT_NULL:
+      return NULL;
+    case OT_ANY:
+      /* should never get here */
+      return NULL;
+  }
+
+  return NULL;
+}
+
 void nm_obj_destroy(Nob *ob)
 {
   assert(ob);

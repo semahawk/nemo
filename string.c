@@ -96,9 +96,6 @@ Nob *nm_new_str(char *s)
   ob->s[i] = '\0';
   /* set it's functions */
   ob->fn.print = nm_str_print;
-  ob->fn.binary.add = nm_str_add;
-  ob->fn.binary.index = nm_str_index;
-  ob->fn.binary.cmp = nm_str_cmp;
 
   /* append to the free_list */
   list->ob = (Nob *)ob;
@@ -119,9 +116,6 @@ Nob *nm_new_str_from_char(char c)
   ob->s[0] = c;
   ob->s[1] = '\0';
   ob->fn.print = nm_str_print;
-  ob->fn.binary.add = nm_str_add;
-  ob->fn.binary.index = nm_str_index;
-  ob->fn.binary.cmp = nm_str_cmp;
 
   /* append to the free_list */
   list->ob = (Nob *)ob;

@@ -43,11 +43,9 @@ Nob *nm_new_arr(size_t nmemb)
   Nob **arr = nmalloc(nmemb * sizeof(Nob));
 
   ob->type = OT_ARRAY;
-  ob->fn.print = nm_arr_print;
-  ob->fn.binary.add = nm_arr_add;
-  ob->fn.binary.index = nm_arr_index;
   ob->nmemb = nmemb;
   ob->a = arr;
+  ob->fn.print = nm_arr_print;
 
   /* append to the free_list */
   list->ob = (Nob *)ob;

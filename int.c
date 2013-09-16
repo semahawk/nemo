@@ -48,17 +48,6 @@ Nob *nm_new_int(int i)
   ob->type = OT_INTEGER;
   ob->i = i;
   ob->fn.print = nm_int_print;
-  ob->fn.binary.add = nm_int_add;
-  ob->fn.binary.sub = nm_int_sub;
-  ob->fn.binary.mul = nm_int_mul;
-  ob->fn.binary.div = nm_int_div;
-  ob->fn.binary.mod = nm_int_mod;
-  ob->fn.binary.cmp = nm_int_cmp;
-  ob->fn.unary.plus = nm_int_plus;
-  ob->fn.unary.minus = nm_int_minus;
-  ob->fn.unary.negate = nm_int_negate;
-  ob->fn.unary.increment = nm_int_incr;
-  ob->fn.unary.decrement = nm_int_decr;
 
   /* append to the free_list */
   list->ob = (Nob *)ob;

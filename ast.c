@@ -582,7 +582,8 @@ Nob *nm_ast_exec_binop(Node *n)
   else if (nc->op == BINARY_INDEX){
     Nob *ob_left = nm_ast_exec(left);
     Nob *ob_right = nm_ast_exec(right);
-    if (!ob_left->fn.binary.index){
+    BinaryFunc binaryfunc = nm_obj_has_binary_func(ob_left, BINARY_INDEX);
+    if (!binaryfunc){
       nm_parser_error(n, "invalid binary operator '[]' for type '%s'", nm_str_value(nm_obj_typetos(ob_left)));
       nexit();
     }
@@ -591,7 +592,7 @@ Nob *nm_ast_exec_binop(Node *n)
       nexit();
     }
 
-    return ob_left->fn.binary.index(ob_left, ob_right);
+    return binaryfunc(ob_left, ob_right);
   }
   /*
    * XXX BINARY_COMMA
@@ -606,24 +607,21 @@ Nob *nm_ast_exec_binop(Node *n)
 /* a handy macro to check if an object supports given binary operation
  * <func>, and if not, print an error, and exit
  *
- * <ob> is of type { Nob * }
- * <func> is pretty much of type { void *(*)(Nob *, Nob *) }
- *
  * Note: both left and right operands should be of the same type */
-#define ensure_ob_has_func(FUNC) \
-  if (!ob_left->fn.binary.FUNC){ \
+#define ensure_ob_has_binop_func(TYPE) \
+  BinaryFunc binaryfunc = nm_obj_has_binary_func(ob_left, TYPE); \
+  if (!binaryfunc){ \
     nm_parser_error(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(nc->op), nm_str_value(nm_obj_typetos(ob_left)), nm_str_value(nm_obj_typetos(ob_right))); \
     nexit(); \
   }
 
-/* <TYPE> is of type { BinaryOp }
- * <FUNC> is of type { BinaryFunc } */
-#define op(TYPE, FUNC) \
+/* <TYPE> is of type { BinaryOp } */
+#define op(TYPE) \
   case TYPE: \
   { \
-    ensure_ob_has_func(FUNC); \
+    ensure_ob_has_binop_func(TYPE); \
 \
-    ret = ob_left->fn.binary.FUNC(ob_left, ob_right); \
+    ret = binaryfunc(ob_left, ob_right); \
     /* if a binop function returns NULL it means something bad happend */ \
     if (!ret){ \
       nm_parser_error(n, nm_curr_error()); \
@@ -632,11 +630,18 @@ Nob *nm_ast_exec_binop(Node *n)
     break; \
   }
 
+#define ensure_ob_has_cmp_func(TYPE) \
+  CmpFunc cmpfunc = nm_obj_has_cmp_func(ob_left, TYPE); \
+  if (!cmpfunc){ \
+    nm_parser_error(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(nc->op), nm_str_value(nm_obj_typetos(ob_left)), nm_str_value(nm_obj_typetos(ob_right))); \
+    nexit(); \
+  }
+
 #define cmpop(TYPE, CMPRES) \
   case TYPE: { \
-    ensure_ob_has_func(cmp); \
+    ensure_ob_has_cmp_func(TYPE); \
 \
-    ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMPRES ? \
+    ret = cmpfunc(ob_left, ob_right) == CMPRES ? \
           nm_new_int(1) : nm_new_int(0); \
     break; \
   }
@@ -645,35 +650,35 @@ Nob *nm_ast_exec_binop(Node *n)
 #define binary_ops() \
   switch (nc->op){ \
     /* here are all the binary functions that are available */ \
-    op(BINARY_ADD, add); \
-    op(BINARY_SUB, sub); \
-    op(BINARY_MUL, mul); \
-    op(BINARY_DIV, div); \
-    op(BINARY_MOD, mod); \
+    op(BINARY_ADD); \
+    op(BINARY_SUB); \
+    op(BINARY_MUL); \
+    op(BINARY_DIV); \
+    op(BINARY_MOD); \
     cmpop(BINARY_LT, CMP_LT); \
     cmpop(BINARY_GT, CMP_GT); \
     cmpop(BINARY_EQ, CMP_EQ); \
     case BINARY_LE: { \
-      ensure_ob_has_func(cmp); \
+      ensure_ob_has_cmp_func(BINARY_LE); \
 \
-      ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
-            ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
+      ret = cmpfunc(ob_left, ob_right) == CMP_EQ || \
+            cmpfunc(ob_left, ob_right) == CMP_LT ? \
             nm_new_int(1) : nm_new_int(0); \
       break; \
     } \
     case BINARY_GE: { \
-      ensure_ob_has_func(cmp); \
+      ensure_ob_has_cmp_func(BINARY_GE); \
 \
-      ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_EQ || \
-            ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT ? \
+      ret = cmpfunc(ob_left, ob_right) == CMP_EQ || \
+            cmpfunc(ob_left, ob_right) == CMP_GT ? \
             nm_new_int(1) : nm_new_int(0); \
       break; \
     } \
     case BINARY_NE: { \
-      ensure_ob_has_func(cmp); \
+      ensure_ob_has_cmp_func(BINARY_NE); \
 \
-      ret = ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_GT || \
-            ob_left->fn.binary.cmp(ob_left, ob_right) == CMP_LT ? \
+      ret = cmpfunc(ob_left, ob_right) == CMP_GT || \
+            cmpfunc(ob_left, ob_right) == CMP_LT ? \
             nm_new_int(1) : nm_new_int(0); \
       break; \
     } \
@@ -789,47 +794,47 @@ Nob *nm_ast_exec_unop(Node *n)
  * <ob> is of type { Nob * }
  * <func> is of type { UnaryFunc }
  */
-#define ensure_ob_has_func(FUNC) \
-  if (!target->fn.unary.FUNC){ \
+#define ensure_ob_has_func(TYPE) \
+  UnaryFunc unaryfunc = nm_obj_has_unary_func(target, TYPE); \
+  if (!unaryfunc){ \
     nm_parser_error(n, "invalid type '%s' for unary operator %s", nm_str_value(nm_obj_typetos(target)), unopToS(nc->op)); \
     nexit(); \
   }
 
-/* <TYPE> is of type { UnaryOp }
- * <FUNC> is of type { UnaryFunc } */
-#define op(TYPE, FUNC) \
+/* <TYPE> is of type { UnaryOp } */
+#define op(TYPE) \
   case TYPE: { \
-    ensure_ob_has_func(FUNC); \
+    ensure_ob_has_func(TYPE); \
 \
-    ret = target->fn.unary.FUNC(target); \
+    ret = unaryfunc(target); \
     break; \
   }
 
   switch (nc->op){
-    op(UNARY_PLUS, plus);
-    op(UNARY_MINUS, minus);
-    op(UNARY_NEGATE, negate);
+    op(UNARY_PLUS);
+    op(UNARY_MINUS);
+    op(UNARY_NEGATE);
     case UNARY_PREINC: {
-      ensure_ob_has_func(increment);
-      ret = target->fn.unary.increment(target);
+      ensure_ob_has_func(UNARY_PREINC);
+      ret = unaryfunc(target);
       break;
     }
     case UNARY_PREDEC: {
-      ensure_ob_has_func(decrement);
-      ret = target->fn.unary.decrement(target);
+      ensure_ob_has_func(UNARY_PREDEC);
+      ret = unaryfunc(target);
       break;
     }
     case UNARY_POSTINC: {
-      ensure_ob_has_func(increment);
+      ensure_ob_has_func(UNARY_POSTINC);
       Nob *save = nm_obj_dup(target);
-      target->fn.unary.increment(target);
+      unaryfunc(target);
       ret = save;
       break;
     }
     case UNARY_POSTDEC: {
-      ensure_ob_has_func(decrement);
+      ensure_ob_has_func(UNARY_POSTDEC);
       Nob *save = nm_obj_dup(target);
-      target->fn.unary.decrement(target);
+      unaryfunc(target);
       ret = save;
       break;
     }

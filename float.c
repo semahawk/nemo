@@ -44,14 +44,6 @@ Nob *nm_new_float(double f)
   ob->type = OT_FLOAT;
   ob->f = f;
   ob->fn.print = nm_float_print;
-  ob->fn.binary.add = nm_float_add;
-  ob->fn.binary.sub = nm_float_sub;
-  ob->fn.binary.mul = nm_float_mul;
-  ob->fn.binary.div = nm_float_div;
-  ob->fn.binary.index = NULL;
-  ob->fn.binary.cmp = nm_float_cmp;
-  ob->fn.unary.increment = nm_float_incr;
-  ob->fn.unary.decrement = nm_float_decr;
 
   /* append to the free_list */
   list->ob = (Nob *)ob;

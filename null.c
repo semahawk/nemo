@@ -43,16 +43,6 @@ Nob *null = &(Nob){
   .type = OT_NULL,
   .fn = {
     .print = nm_null_print,
-    .binary = {
-      .add = NULL,
-      .index = NULL,
-      .cmp = NULL
-    },
-    .unary = {
-      .plus = NULL,
-      .minus = NULL,
-      .negate = NULL
-    }
   }
 };
 
