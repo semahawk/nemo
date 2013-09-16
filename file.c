@@ -30,6 +30,14 @@
 
 #include "nemo.h"
 
+void nm_file_destroy(NmObject *ob)
+{
+  assert(ob->type == OT_FILE);
+
+  nfree(((NmFileObject *)ob)->name);
+  nfree(ob);
+}
+
 NmObject *nm_file_repr(void)
 {
   return nm_new_str("file");

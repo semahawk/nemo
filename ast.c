@@ -583,7 +583,7 @@ NmObject *nm_ast_exec_binop(Node *n)
     NmObject *ob_left = nm_ast_exec(left);
     NmObject *ob_right = nm_ast_exec(right);
     if (!ob_left->fn.binary.index){
-      nm_parser_error(n, "invalid binary operator '[]' for type '%s'", nm_str_value(ob_left->fn.type_repr()));
+      nm_parser_error(n, "invalid binary operator '[]' for type '%s'", nm_str_value(nm_obj_typetos(ob_left)));
       nexit();
     }
     if (ob_right->type != OT_INTEGER){
@@ -612,7 +612,7 @@ NmObject *nm_ast_exec_binop(Node *n)
  * Note: both left and right operands should be of the same type */
 #define ensure_ob_has_func(FUNC) \
   if (!ob_left->fn.binary.FUNC){ \
-    nm_parser_error(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(nc->op), nm_str_value(ob_left->fn.type_repr()), nm_str_value(ob_right->fn.type_repr())); \
+    nm_parser_error(n, "invalid binary operation %s for types '%s' and '%s'", binopToS(nc->op), nm_str_value(nm_obj_typetos(ob_left)), nm_str_value(nm_obj_typetos(ob_right))); \
     nexit(); \
   }
 
@@ -678,7 +678,7 @@ NmObject *nm_ast_exec_binop(Node *n)
       break; \
     } \
     default: \
-      nm_parser_error(n, "invalid types '%s' and '%s' for binary operation %s", nm_str_value(ob_left->fn.type_repr()), nm_str_value(ob_right->fn.type_repr()), binopToS(nc->op)); \
+      nm_parser_error(n, "invalid types '%s' and '%s' for binary operation %s", nm_str_value(nm_obj_typetos(ob_left)), nm_str_value(nm_obj_typetos(ob_right)), binopToS(nc->op)); \
     nexit(); \
   }
 
@@ -719,7 +719,7 @@ NmObject *nm_ast_exec_binop(Node *n)
     }
     /* if anything else, the operation is simply not permitted */
     else {
-      nm_parser_error(n, "invalid types '%s' and '%s' for binary operation %s", nm_str_value(ob_left->fn.type_repr()), nm_str_value(ob_right->fn.type_repr()), binopToS(nc->op));
+      nm_parser_error(n, "invalid types '%s' and '%s' for binary operation %s", nm_str_value(nm_obj_typetos(ob_left)), nm_str_value(nm_obj_typetos(ob_right)), binopToS(nc->op));
       nexit();
     }
   }
@@ -791,7 +791,7 @@ NmObject *nm_ast_exec_unop(Node *n)
  */
 #define ensure_ob_has_func(FUNC) \
   if (!target->fn.unary.FUNC){ \
-    nm_parser_error(n, "invalid type '%s' for unary operator %s", nm_str_value(target->fn.type_repr()), unopToS(nc->op)); \
+    nm_parser_error(n, "invalid type '%s' for unary operator %s", nm_str_value(nm_obj_typetos(target)), unopToS(nc->op)); \
     nexit(); \
   }
 
@@ -834,7 +834,7 @@ NmObject *nm_ast_exec_unop(Node *n)
       break;
     }
     default:
-      nm_parser_error(n, "invalid unary operator %s for type '%s'", unopToS(nc->op), nm_str_value(target->fn.type_repr()));
+      nm_parser_error(n, "invalid unary operator %s for type '%s'", unopToS(nc->op), nm_str_value(nm_obj_typetos(target)));
       nexit();
   }
 
@@ -1223,7 +1223,10 @@ NmObject *nm_ast_exec_call(Node *n)
             /* actually check the type of the current argument */
             NmObject *ob = nm_ast_exec(*p);
             if (!(ob->type & type)){
-              nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(ob->fn.type_repr()), nm_str_value(nm_obj_typetos(type)));
+              NmObject *dummy = nmalloc(sizeof(NmObject));
+              dummy->type = type;
+              nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(nm_obj_typetos(ob)), nm_str_value(nm_obj_typetos(dummy)));
+              nfree(dummy);
               nexit();
               return NULL;
             }
@@ -1272,8 +1275,14 @@ NmObject *nm_ast_exec_call(Node *n)
         for (unsigned i = 0; i < list->func->argc; i++){
           NmObject *param = nm_ast_exec(nc->params[i]);
           if (list->func->argv[i] != param->type){
-            nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(nm_obj_typetos(param->type)), nm_str_value(nm_obj_typetos(list->func->argv[i])));
+            NmObject *param_dummy = nmalloc(sizeof(NmObject));
+            NmObject *arg_dummy = nmalloc(sizeof(NmObject));
+            param_dummy->type = param->type;
+            arg_dummy->type = list->func->argv[i];
+            nm_parser_error(n, "wrong argument's #%d type for the function '%s' (%s given when %s expected)", i, name, nm_str_value(nm_obj_typetos(param_dummy)), nm_str_value(nm_obj_typetos(arg_dummy)));
             wrong_types = true;
+            nfree(param_dummy);
+            nfree(arg_dummy);
           }
         }
 

@@ -47,8 +47,6 @@ NmObject *nm_new_int(int i)
 
   ob->type = OT_INTEGER;
   ob->i = i;
-  ob->fn.dstr = nm_int_destroy;
-  ob->fn.type_repr = nm_int_repr;
   ob->fn.print = nm_int_print;
   ob->fn.binary.add = nm_int_add;
   ob->fn.binary.sub = nm_int_sub;

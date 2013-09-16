@@ -41,9 +41,38 @@
 
 void nm_obj_destroy(NmObject *ob)
 {
-  ob->fn.dstr(ob);
+  assert(ob);
+
+  switch (ob->type){
+    case OT_INTEGER:
+      nm_int_destroy(ob);
+      break;
+    case OT_FLOAT:
+      nm_float_destroy(ob);
+      break;
+    case OT_STRING:
+      nm_str_destroy(ob);
+      break;
+    case OT_ARRAY:
+      nm_arr_destroy(ob);
+      break;
+    case OT_FILE:
+      nm_file_destroy(ob);
+      break;
+    case OT_NULL:
+      /* well, null is defined statically, so there's no need to free it */
+      /* heck, it wasn't even malloced */
+    case OT_ANY:
+      /* that's strange and shouldn't happen */
+      break;
+    default:
+      nm_error("unknown object type at %s line %d", __FILE__, __LINE__);
+      nexit();
+      break;
+  }
 }
 
+/* this functions wouldn't be needed after we have a garbage collector */
 void nm_obj_cleanup(void)
 {
   nm_int_cleanup();
@@ -89,23 +118,25 @@ NmObject *nm_obj_dup(NmObject *ob)
 /*
  * Translates given <type> to a string.
  */
-NmObject *nm_obj_typetos(NmObjectType type)
+NmObject *nm_obj_typetos(NmObject *ob)
 {
+  assert(ob);
+
   NmObject *ret = nm_new_str("");
   bool first = true;
 
   unsigned num = 7;
   for (unsigned i = 0; i < 7; i++)
-    if (type & (1 << i))
+    if (ob->type & (1 << i))
       num++;
 
   unsigned j = 0;
   for (unsigned i = 0; i < 7; i++){
-    if (type & (1 << i)){
+    if (ob->type & (1 << i)){
       if (!first)
         ret = nm_str_add(ret, nm_new_str(" or "));
       first = false;
-      switch (type & (1 << i)){
+      switch (ob->type & (1 << i)){
         case OT_NULL:
           ret = nm_str_add(ret, nm_new_str("null"));
           j++;

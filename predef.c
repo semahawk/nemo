@@ -71,7 +71,7 @@ static NmObject *predef_assert(NmObject *args, bool *opts)
   /* both are of the same type */
   if (first->type == second->type){
     if (!first->fn.binary.cmp){
-      nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
+      nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
       return NULL;
     }
 
@@ -86,7 +86,7 @@ static NmObject *predef_assert(NmObject *args, bool *opts)
     if (first->type == OT_INTEGER && second->type == OT_FLOAT){
       first = nm_new_float_from_int(nm_int_value(first));
       if (!first->fn.binary.cmp){
-        nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
+        nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
         return NULL;
       }
     }
@@ -94,13 +94,13 @@ static NmObject *predef_assert(NmObject *args, bool *opts)
     else if (first->type == OT_FLOAT && second->type == OT_INTEGER){
       second = nm_new_float_from_int(nm_int_value(second));
       if (!first->fn.binary.cmp){
-        nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
+        nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
         return NULL;
       }
     }
     /* if anything else, the operation is simply not permitted */
     else {
-      nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(first->fn.type_repr()), nm_str_value(second->fn.type_repr()));
+      nm_set_error("can't compare types '%s' and '%s' in 'assert'", nm_str_value(nm_obj_typetos(first)), nm_str_value(nm_obj_typetos(second)));
       return NULL;
     }
   }
@@ -149,28 +149,28 @@ static NmObject *predef_printf(NmObject *args, bool *opts)
       switch (*(p + 1)){
         case 'i':
           if (ob->type != OT_INTEGER){
-            nm_set_error("wrong type '%s' for format 'i'", nm_str_value(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 'i'", nm_str_value(nm_obj_typetos(ob)));
             return NULL;
           }
           i++; p++;
           break;
         case 'f':
           if (ob->type != OT_FLOAT){
-            nm_set_error("wrong type '%s' for format 'f'", nm_str_value(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 'f'", nm_str_value(nm_obj_typetos(ob)));
             return NULL;
           }
           i++; p++;
           break;
         case 's':
           if (ob->type != OT_STRING){
-            nm_set_error("wrong type '%s' for format 's'", nm_str_value(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 's'", nm_str_value(nm_obj_typetos(ob)));
             return NULL;
           }
           i++; p++;
           break;
         case 'a':
           if (ob->type != OT_ARRAY){
-            nm_set_error("wrong type '%s' for format 'a'", nm_str_value(ob->fn.type_repr()));
+            nm_set_error("wrong type '%s' for format 'a'", nm_str_value(nm_obj_typetos(ob)));
             return NULL;
           }
           i++; p++;
@@ -273,7 +273,6 @@ static NmObject *predef_open(NmObject *args, bool *opts)
   new->type = OT_FILE;
   new->fp = fp;
   new->name = nm_strdup(name);
-  new->fn.type_repr = nm_file_repr;
   new->fn.print = nm_file_print;
 
   return (NmObject *)new;
@@ -286,7 +285,6 @@ static NmObject *predef_close(NmObject *args, bool *opts)
 
   NmObject *arg = nm_arr_get_elem(args, 0);
 
-  nfree(((NmFileObject *)arg)->name);
   fclose(((NmFileObject *)arg)->fp);
 
   return nm_new_int(1);

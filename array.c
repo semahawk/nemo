@@ -43,8 +43,6 @@ NmObject *nm_new_arr(size_t nmemb)
   NmObject **arr = nmalloc(nmemb * sizeof(NmObject));
 
   ob->type = OT_ARRAY;
-  ob->fn.dstr = nm_arr_destroy;
-  ob->fn.type_repr = nm_arr_repr;
   ob->fn.print = nm_arr_print;
   ob->fn.binary.add = nm_arr_add;
   ob->fn.binary.index = nm_arr_index;

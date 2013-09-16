@@ -95,8 +95,6 @@ NmObject *nm_new_str(char *s)
   }
   ob->s[i] = '\0';
   /* set it's functions */
-  ob->fn.dstr = nm_str_destroy;
-  ob->fn.type_repr = nm_str_repr;
   ob->fn.print = nm_str_print;
   ob->fn.binary.add = nm_str_add;
   ob->fn.binary.index = nm_str_index;
@@ -120,7 +118,6 @@ NmObject *nm_new_str_from_char(char c)
   ob->s = nmalloc(2);
   ob->s[0] = c;
   ob->s[1] = '\0';
-  ob->fn.dstr = nm_str_destroy;
   ob->fn.print = nm_str_print;
   ob->fn.binary.add = nm_str_add;
   ob->fn.binary.index = nm_str_index;

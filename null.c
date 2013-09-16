@@ -42,8 +42,6 @@
 NmObject *null = &(NmObject){
   .type = OT_NULL,
   .fn = {
-    .dstr = NULL,
-    .type_repr = nm_null_repr,
     .print = nm_null_print,
     .binary = {
       .add = NULL,

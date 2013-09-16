@@ -43,8 +43,6 @@ NmObject *nm_new_float(double f)
 
   ob->type = OT_FLOAT;
   ob->f = f;
-  ob->fn.dstr = nm_float_destroy;
-  ob->fn.type_repr = nm_float_repr;
   ob->fn.print = nm_float_print;
   ob->fn.binary.add = nm_float_add;
   ob->fn.binary.sub = nm_float_sub;

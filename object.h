@@ -81,8 +81,6 @@ typedef NmObject *(*UnaryFunc)(NmObject *);
 struct Node;
 
 struct Fn {
-  void (*dstr)(NmObject *);
-  NmObject *(*type_repr)(void);
   void (*print)(FILE *, NmObject *);
   /* binary operations functions */
   struct {
@@ -158,7 +156,7 @@ void nm_obj_destroy(NmObject *);
 void nm_obj_cleanup(void);
 bool nm_obj_boolish(NmObject *);
 NmObject *nm_obj_dup(NmObject *);
-NmObject *nm_obj_typetos(NmObjectType);
+NmObject *nm_obj_typetos(NmObject *);
 
 NmObject *nm_new_int(int);
 NmObject *nm_int_add(NmObject *, NmObject *);
@@ -210,6 +208,7 @@ void nm_str_cleanup(void);
 
 NmObject *nm_file_repr(void);
 void nm_file_print(FILE *, NmObject *);
+void nm_file_destroy(NmObject *);
 
 NmObject *nm_new_arr(size_t);
 NmObject *nm_new_arr_from_node(struct Node *);
