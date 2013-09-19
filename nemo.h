@@ -32,7 +32,6 @@
 #include "namespace.h"
 #include "error.h"
 #include "mem.h"
-#include "parser.h"
 #include "vars.h"
 
 /*
