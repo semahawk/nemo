@@ -46,6 +46,9 @@
 #include "nemo.h"
 #include "object.h"
 
+/* pointer to the first element on the stack */
+struct arg_stack *Nemo_AS = NULL;
+
 /* a tiny little helpful macro to init the line/column field */
 #define INIT_POS() \
   n->pos.line   = pos.line; \
@@ -165,6 +168,8 @@ Nob *nm_ast_exec_nop(Node *n)
   /* unused parameter */
   (void)n;
 
+  arg_stack_push(null);
+
   return null;
 }
 
@@ -210,8 +215,10 @@ Node *nm_ast_gen_int(Pos pos, int i)
 Nob *nm_ast_exec_int(Node *n)
 {
 #if DEBUG
-  nm_debug_ast(n, "execute integer node");
+  nm_debug_ast(n, "execute int node");
 #endif
+
+  arg_stack_push(nm_new_int(((Node_Int *)n)->i));
 
   return nm_new_int(((Node_Int *)n)->i);
 }
@@ -260,6 +267,8 @@ Nob *nm_ast_exec_float(Node *n)
 #if DEBUG
   nm_debug_ast(n, "execute float node");
 #endif
+
+  arg_stack_push(nm_new_float(((Node_Float *)n)->f));
 
   return nm_new_float(((Node_Float *)n)->f);
 }
@@ -317,7 +326,9 @@ Nob *nm_ast_exec_str(Node *n)
     return NULL;
   }
 
-  return nm_new_str(((Node_String *)n)->s);
+  arg_stack_push(ret);
+
+  return ret;
 }
 
 /*
@@ -380,6 +391,8 @@ Nob *nm_ast_exec_arr(Node *n)
   if (n_arr->a)
     for (Node **p = n_arr->a; *p != NULL; p++, i++)
       nm_arr_set_elem(ob, i, nm_ast_exec(*p));
+
+  arg_stack_push(ob);
 
   return ob;
 }
@@ -473,8 +486,10 @@ Nob *nm_ast_exec_name(Node *n)
 
   /* search for the variable */
   for (VariablesList *vars = nc->namespace->globals; vars != NULL; vars = vars->next)
-    if (!strcmp(vars->var->name, nc->name))
+    if (!strcmp(vars->var->name, nc->name)){
+      arg_stack_push(vars->var->value);
       return vars->var->value;
+    }
 
   nm_parser_error(n, "variable '%s.%s' was not found", nc->namespace->name, nc->name);
   return NULL;
@@ -571,7 +586,8 @@ Nob *nm_ast_exec_binop(Node *n)
       nexit();
     }
     /* actually assign the value */
-    ret = nm_ast_exec(nc->right);
+    nm_ast_exec(nc->right);
+    ret = arg_stack_pop();
     var->value = ret;
 
     return ret;
@@ -580,8 +596,12 @@ Nob *nm_ast_exec_binop(Node *n)
    * XXX BINARY_INDEX
    */
   else if (nc->op == BINARY_INDEX){
-    Nob *ob_left = nm_ast_exec(left);
-    Nob *ob_right = nm_ast_exec(right);
+    /*Nob *ob_left = nm_ast_exec(left);*/
+    /*Nob *ob_right = nm_ast_exec(right);*/
+    nm_ast_exec(left);
+    nm_ast_exec(right);
+    Nob *ob_right = arg_stack_pop();
+    Nob *ob_left = arg_stack_pop();
     BinaryFunc binaryfunc = nm_obj_has_binary_func(ob_left, BINARY_INDEX);
     if (!binaryfunc){
       nm_parser_error(n, "invalid binary operator '[]' for type '%s'", nm_str_value(nm_obj_typetos(ob_left)));
@@ -592,7 +612,11 @@ Nob *nm_ast_exec_binop(Node *n)
       nexit();
     }
 
-    return binaryfunc(ob_left, ob_right);
+    ret = binaryfunc(ob_left, ob_right);
+
+    arg_stack_push(ret);
+
+    return ret;
   }
   /*
    * XXX BINARY_COMMA
@@ -600,8 +624,10 @@ Nob *nm_ast_exec_binop(Node *n)
   else if (nc->op == BINARY_COMMA){
     /* discarding the left's value */
     nm_ast_exec(left);
+    arg_stack_pop();
     /* returning the right's value */
-    return nm_ast_exec(right);
+    ret = nm_ast_exec(right);
+    return ret;
   }
 
 /* a handy macro to check if an object supports given binary operation
@@ -687,8 +713,10 @@ Nob *nm_ast_exec_binop(Node *n)
     nexit(); \
   }
 
-  Nob *ob_left = nm_ast_exec(left);
-  Nob *ob_right = nm_ast_exec(right);
+  nm_ast_exec(left);
+  nm_ast_exec(right);
+  Nob *ob_right = arg_stack_pop();
+  Nob *ob_left = arg_stack_pop();
 
   /* it's all easy when the two types are the same, just look if the type has
    * some function that does the operation, and simply run it and simply return
@@ -731,6 +759,8 @@ Nob *nm_ast_exec_binop(Node *n)
 
 #undef op
 #undef ensure_ob_has_func
+
+  arg_stack_push(ret);
 
   return ret;
 }
@@ -782,7 +812,9 @@ Nob *nm_ast_exec_unop(Node *n)
   Node_Unop *nc = (Node_Unop *)n;
   Nob *ret = null;
 
-  Nob *target = nm_ast_exec(nc->target);
+  /*Nob *target = nm_ast_exec(nc->target);*/
+  nm_ast_exec(nc->target);
+  Nob *target = arg_stack_pop();
 
 #if DEBUG
   nm_debug_ast(n, "execute unary operation node");
@@ -846,6 +878,8 @@ Nob *nm_ast_exec_unop(Node *n)
 #undef op
 #undef ensure_ob_has_func
 
+  arg_stack_push(ret);
+
   return ret;
 }
 
@@ -903,6 +937,7 @@ Nob *nm_ast_exec_if(Node *n)
   Node *body  = nc->body;
   Node *elsee = nc->elsee;
   bool unless = nc->unless;
+  Nob *ret = null;
 
 #if DEBUG
   if (unless)
@@ -911,23 +946,34 @@ Nob *nm_ast_exec_if(Node *n)
     nm_debug_ast(n, "execute if node");
 #endif
 
+  nm_ast_exec(guard);
+  ret = arg_stack_pop();
+
   if (unless){
-    if (!nm_obj_boolish(nm_ast_exec(guard))){
+    if (!nm_obj_boolish(ret)){
       nm_ast_exec(body);
+      ret = arg_stack_pop();
     } else {
-      if (elsee)
+      if (elsee){
         nm_ast_exec(elsee);
+        ret = arg_stack_pop();
+      }
     }
   } else {
-    if (nm_obj_boolish(nm_ast_exec(guard))){
+    if (nm_obj_boolish(ret)){
       nm_ast_exec(body);
+      ret = arg_stack_pop();
     } else {
-      if (elsee)
+      if (elsee){
         nm_ast_exec(elsee);
+        ret = arg_stack_pop();
+      }
     }
   }
 
-  return nm_new_int(1);
+  arg_stack_push(ret);
+
+  return ret;
 }
 
 /*
@@ -1002,6 +1048,7 @@ Nob *nm_ast_exec_while(Node *n)
   Node *body     = nc->body;
   Node *elsee    = nc->elsee;
   bool until     = nc->until;
+  Nob *ret       = null;
 
 #if DEBUG
   if (until)
@@ -1010,27 +1057,42 @@ Nob *nm_ast_exec_while(Node *n)
     nm_debug_ast(n, "execute while node");
 #endif
 
+  nm_ast_exec(guard);
+  ret = arg_stack_pop();
+
+  /*
+   * FIXME
+   */
+
   if (until){
-    if (!nm_obj_boolish(nm_ast_exec(guard))){
-      while (!nm_obj_boolish(nm_ast_exec(guard))){
+    if (!nm_obj_boolish(ret)){
+      while (nm_ast_exec(guard), !nm_obj_boolish(arg_stack_pop())){
         nm_ast_exec(body);
+        ret = arg_stack_pop();
       }
     } else {
-      if (elsee)
+      if (elsee){
         nm_ast_exec(elsee);
+        ret = arg_stack_pop();
+      }
     }
   } else {
-    if (nm_obj_boolish(nm_ast_exec(guard))){
-      while (nm_obj_boolish(nm_ast_exec(guard))){
+    if (nm_obj_boolish(ret)){
+      while (nm_ast_exec(guard), nm_obj_boolish(arg_stack_pop())){
         nm_ast_exec(body);
+        ret = arg_stack_pop();
       }
     } else {
-      if (elsee)
+      if (elsee){
         nm_ast_exec(elsee);
+        ret = arg_stack_pop();
+      }
     }
   }
 
-  return nm_new_int(1);
+  arg_stack_push(ret);
+
+  return ret;
 }
 
 /*
@@ -1101,8 +1163,8 @@ Node *nm_ast_gen_decl(Pos pos, char *name, Node *value, uint8_t flags)
 
   new_var->name = nm_strdup(name);
   if (n->value){
-    Nob *value = nm_ast_exec(n->value);
-    new_var->value = value;
+    nm_ast_exec(n->value);
+    new_var->value = arg_stack_pop();
   } else {
     /* declared variables get to be a integer with the value of 0 */
     new_var->value = nm_new_int(0);
@@ -1128,6 +1190,8 @@ Nob *nm_ast_exec_decl(Node *n)
 #if DEBUG
   nm_debug_ast(n, "execute variable declaration node");
 #endif
+
+  arg_stack_push(nm_new_int(1));
 
   return nm_new_int(1);
 }
@@ -1226,7 +1290,8 @@ Nob *nm_ast_exec_call(Node *n)
               type = list->func->types[i];
             }
             /* actually check the type of the current argument */
-            Nob *ob = nm_ast_exec(*p);
+            nm_ast_exec(*p);
+            Nob *ob = arg_stack_pop();
             if (!(ob->type & type)){
               Nob *dummy = nmalloc(sizeof(Nob));
               dummy->type = type;
@@ -1262,6 +1327,7 @@ Nob *nm_ast_exec_call(Node *n)
           nexit();
           return NULL;
         } else {
+          arg_stack_push(ret);
           return ret;
         }
       }
@@ -1296,13 +1362,15 @@ Nob *nm_ast_exec_call(Node *n)
           return NULL;
         }
         /* execute the functions body */
-        ret = nm_ast_exec(list->func->body);
+        nm_ast_exec(list->func->body);
+        ret = arg_stack_pop();
         /* if a function returns NULL it means something went wrong */
         if (ret == NULL){
           nm_parser_error(n, "executing function '%s' went wrong", name);
           nexit();
           return NULL;
         } else {
+          arg_stack_push(ret);
           return ret;
         }
       }
@@ -1365,7 +1433,7 @@ Node *nm_ast_gen_stmt(Pos pos, Node *expr)
 
   return (Node *)n;
 }
-
+/* TODO: Dump those GD stmts.. */
 Nob *nm_ast_exec_stmt(Node *n)
 {
   return nm_ast_exec(((Node_Stmt *)n)->expr);
@@ -1404,13 +1472,16 @@ Nob *nm_ast_exec_block(Node *n)
 #if DEBUG
       nm_debug_ast(s->stmt, "execute statement node");
 #endif
-      ret = nm_ast_exec(s->stmt);
+      nm_ast_exec(s->stmt);
+      ret = arg_stack_pop();
     }
   }
 
 #if DEBUG
   nm_debug_ast(n, "done executing block node");
 #endif
+
+  arg_stack_push(ret);
 
   return ret;
 }
@@ -1502,6 +1573,8 @@ Nob *nm_ast_exec_funcdef(Node *n)
     nm_debug_ast(n, "execute function declaration node");
 #endif
 
+  arg_stack_push(nm_new_int(1));
+
   return nm_new_int(1);
 }
 
@@ -1565,6 +1638,8 @@ Nob *nm_ast_exec_use(Node *n)
 {
   assert(n);
   assert(n->type == NT_USE);
+
+  arg_stack_push(nm_new_int(1));
 
   return nm_new_int(1);
 }

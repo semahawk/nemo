@@ -64,6 +64,9 @@ void nm_init_module(NmModuleFuncs *);
 bool nm_use_module(char *name);
 bool was_module_included(char *name);
 
+Node *nm_parse_file(char *);
+Node *nm_parse_string(char *);
+
 void predef_init(void);
 
 #endif /* NEMO_H */

@@ -31,94 +31,59 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "nemo.h"
+#include "mem.h"
+#include "object.h"
 
-#include <math.h>
-
-/* the initial size of any created stack */
-#define INITIAL_STACK_SIZE 10
-/* the number by which an nearly-overflowed stack will grow */
-#define STACK_GROW_RATIO 1.5
-
-/*
- * This is Nemo's basic stack structure.
- *
- * Creating:
- *
- *     stack_new(name, type);
- *
- *   This would create a new stack, which values would be of the given type.
- *   For instance:
- *
- *     stack_new(arg, Nob *);
- *
- *   Note: this stack and it's belongings are declared as "static" (functions
- *         are also "inline")!
- *
- * Pushing:
- *
- *     stack_push(name, value);
- *
- *   This would push a given value to the stack named ##name_stack, and the
- *   stack's internal "pointer" would be incremented.
- *   If the stack's size isn't sufficent, it would be grown
- *   STACK_GROW_RATIO times.
- *
- * Popping:
- *
- *      stack_pop(name);
- *
- *   This would return the top-most value from the stack and decrement the
- *   stack's internal "pointer".
- *
- */
-
-/* creates a set of required functions for the stack to operate */
-#define stack_init(_name, _type) \
-  static inline void _name##_stack_push(_type value){ \
-    if (_name##_stack.ptr >= _name##_stack.nmemb){ \
-      if (_name##_stack.nmemb == 0){ \
-        _name##_stack.nmemb = INITIAL_STACK_SIZE; \
-      } else { \
-        _name##_stack.nmemb = floor(_name##_stack.nmemb * STACK_GROW_RATIO); \
-      } \
-      _name##_stack.it = nrealloc(_name##_stack.it, sizeof(_type) * _name##_stack.nmemb); \
-    } \
-\
-    _name##_stack.it[_name##_stack.ptr++] = value; \
-  } \
-\
-  static inline _type _name##_stack_pop(void){ \
-    if (_name##_stack.ptr <= 0){ \
-      nm_error("popping from the '" #_name "' stack, but it's empty!"); \
-      nm_error("returning zero"); \
-      return (_type)0; \
-    } \
-\
-    return _name##_stack.it[--_name##_stack.ptr]; \
-  } \
-\
-  static inline bool _name##_stack_is_empty(void){ \
-    return _name##_stack.ptr < 0 ? true : false; \
+/* THE Arguments Stack */
+struct arg_stack {
+  Nob *arg;
+  struct arg_stack *next;
+};
+/* defined in ast.c */
+extern struct arg_stack *Nemo_AS;
+static inline void arg_stack_print(void)
+{
+  printf("## stack print\n");
+  for (struct arg_stack *p = Nemo_AS; p != NULL; p = p->next){
+    printf("   p:%p arg:%p => ", (void*)p, (void*)p->arg);
+    nm_obj_print(stdout, p->arg);
+    printf("\n");
   }
+  printf("##\n");
+}
+/* the push-ing function */
+static inline void arg_stack_push(Nob *arg)
+{
+  //printf("pushing\n");
+  struct arg_stack *el = nmalloc(sizeof(struct arg_stack));
+  /* init */
+  el->arg = arg;
+  /* append */
+  el->next = Nemo_AS;
+  Nemo_AS = el;
+  //arg_stack_dump();
+}
+/* the pop-ing function */
+static inline Nob *arg_stack_pop(void)
+{
+  //printf("popping\n");
+  if (Nemo_AS == NULL){
+    /* the stack is empty */
+    printf("THE STACK BE EMPTY\n");
+    return null;
+  }
+  /* save the first elements value */
+  Nob *ret = Nemo_AS->arg;
+  /* save the first elements address */
+  struct arg_stack *tmp = Nemo_AS;
+  /* update the pointer */
+  Nemo_AS = Nemo_AS->next;
+  /* freeee */
+  nfree(tmp);
+  //arg_stack_dump();
 
-/* defines the stack */
-#define stack_new(_name, _type) \
-  static struct { \
-    /* the stack itself */ \
-    _type *it; \
-    /* number of members */ \
-    int nmemb; \
-    /* "pointer" to the current member */ \
-    int ptr; \
-  } _name##_stack = { \
-    NULL, 0, 0 \
-  }; \
-\
-  stack_init(_name, _type)
-
-#define stack_push(_name, _value) \
-  _name##_stack_push((_value));
+  return ret;
+}
 
 #endif /* STACK_H */
 
