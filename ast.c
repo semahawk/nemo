@@ -590,6 +590,8 @@ Nob *nm_ast_exec_binop(Node *n)
     ret = arg_stack_pop();
     var->value = ret;
 
+    arg_stack_push(ret);
+
     return ret;
   }
   /*
@@ -928,7 +930,7 @@ Node *nm_ast_gen_if(Pos pos, Node *guard, Node *body, Node *elsee, bool unless)
 
 /*
  * @name - nm_ast_exec_if
- * @desc - do the if loop, return actually anything
+ * @desc - do the if loop
  */
 Nob *nm_ast_exec_if(Node *n)
 {
@@ -952,21 +954,21 @@ Nob *nm_ast_exec_if(Node *n)
   if (unless){
     if (!nm_obj_boolish(ret)){
       nm_ast_exec(body);
-      ret = arg_stack_pop();
     } else {
       if (elsee){
         nm_ast_exec(elsee);
-        ret = arg_stack_pop();
+      } else {
+        arg_stack_push(null);
       }
     }
   } else {
     if (nm_obj_boolish(ret)){
       nm_ast_exec(body);
-      ret = arg_stack_pop();
     } else {
       if (elsee){
         nm_ast_exec(elsee);
-        ret = arg_stack_pop();
+      } else {
+        arg_stack_push(null);
       }
     }
   }
@@ -1066,26 +1068,34 @@ Nob *nm_ast_exec_while(Node *n)
 
   if (until){
     if (!nm_obj_boolish(ret)){
-      while (nm_ast_exec(guard), !nm_obj_boolish(arg_stack_pop())){
+      while (1){
         nm_ast_exec(body);
         ret = arg_stack_pop();
+        nm_ast_exec(guard);
+        if (nm_obj_boolish(arg_stack_pop()))
+          break;
       }
     } else {
       if (elsee){
         nm_ast_exec(elsee);
-        ret = arg_stack_pop();
+      } else {
+        arg_stack_push(null);
       }
     }
   } else {
     if (nm_obj_boolish(ret)){
-      while (nm_ast_exec(guard), nm_obj_boolish(arg_stack_pop())){
+      while (1){
         nm_ast_exec(body);
         ret = arg_stack_pop();
+        nm_ast_exec(guard);
+        if (!nm_obj_boolish(arg_stack_pop()))
+          break;
       }
     } else {
       if (elsee){
         nm_ast_exec(elsee);
-        ret = arg_stack_pop();
+      } else {
+        arg_stack_push(null);
       }
     }
   }

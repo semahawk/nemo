@@ -41,7 +41,7 @@ struct arg_stack {
 };
 /* defined in ast.c */
 extern struct arg_stack *Nemo_AS;
-static inline void arg_stack_print(void)
+static inline void arg_stack_dump(void)
 {
   printf("## stack print\n");
   for (struct arg_stack *p = Nemo_AS; p != NULL; p = p->next){
@@ -64,12 +64,13 @@ static inline void arg_stack_push(Nob *arg)
   //arg_stack_dump();
 }
 /* the pop-ing function */
-static inline Nob *arg_stack_pop(void)
+#define arg_stack_pop() _arg_stack_pop(__FILE__, __LINE__, __func__)
+static inline Nob *_arg_stack_pop(char *file, unsigned line, const char *func)
 {
   //printf("popping\n");
   if (Nemo_AS == NULL){
     /* the stack is empty */
-    printf("THE STACK BE EMPTY\n");
+    printf("THE STACK BE EMPTY %s:%u inside %s\n", file, line, func);
     return null;
   }
   /* save the first elements value */
@@ -83,6 +84,18 @@ static inline Nob *arg_stack_pop(void)
   //arg_stack_dump();
 
   return ret;
+}
+/* return the top element */
+#define arg_stack_top() _arg_stack_top(__FILE__, __LINE__)
+static inline Nob *_arg_stack_top(char *file, unsigned line)
+{
+  if (Nemo_AS == NULL){
+    /* the stack is empty */
+    printf("THE STACK BE EMPTY %s:%u\n", file, line);
+    return null;
+  }
+
+  return Nemo_AS->arg;
 }
 
 #endif /* STACK_H */

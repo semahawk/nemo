@@ -78,6 +78,9 @@ static Nob *predef_assert(Nob *args, bool *opts)
 
     if (cmpfunc(first, second) != CMP_EQ){
       nm_set_error("assertion failed");
+      nm_obj_print(stdout, first);
+      putchar('\n');
+      nm_obj_print(stdout, second);
       return NULL;
     }
   }

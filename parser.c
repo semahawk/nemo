@@ -1446,7 +1446,7 @@ nm_debug_parser(":", name);*/
       nm_debug_parser("if ");
 #endif
       guard = stmt(lex);
-      ret = nm_ast_gen_if(lex->current.pos, ret, guard, NULL, false);
+      ret = nm_ast_gen_if(lex->current.pos, guard, ret, NULL, false);
       /* }}} */
     }
     /*
@@ -1458,7 +1458,7 @@ nm_debug_parser(":", name);*/
       nm_debug_parser("unless ");
 #endif
       guard = stmt(lex);
-      ret = nm_ast_gen_if(lex->current.pos, ret, guard, NULL, true);
+      ret = nm_ast_gen_if(lex->current.pos, guard, ret, NULL, true);
       /* }}} */
     }
     /*
@@ -1470,7 +1470,7 @@ nm_debug_parser(":", name);*/
       nm_debug_parser("while ");
 #endif
       guard = stmt(lex);
-      ret = nm_ast_gen_while(lex->current.pos, ret, guard, NULL, false);
+      ret = nm_ast_gen_while(lex->current.pos, guard, ret, NULL, false);
       /* }}} */
     }
     /*
@@ -1482,7 +1482,7 @@ nm_debug_parser(":", name);*/
       nm_debug_parser("until ");
 #endif
       guard = stmt(lex);
-      ret = nm_ast_gen_while(lex->current.pos, ret, guard, NULL, true);
+      ret = nm_ast_gen_while(lex->current.pos, guard, ret, NULL, true);
       /* }}} */
     }
     /*
