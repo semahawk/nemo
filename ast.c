@@ -214,13 +214,15 @@ Node *nm_ast_gen_int(Pos pos, int i)
  */
 Nob *nm_ast_exec_int(Node *n)
 {
+  Nob *ret = nm_new_int(((Node_Int *)n)->i);
+
 #if DEBUG
   nm_debug_ast(n, "execute int node");
 #endif
 
-  arg_stack_push(nm_new_int(((Node_Int *)n)->i));
+  arg_stack_push(ret);
 
-  return nm_new_int(((Node_Int *)n)->i);
+  return ret;
 }
 
 /*
@@ -1194,16 +1196,15 @@ Node *nm_ast_gen_decl(Pos pos, char *name, Node *value, uint8_t flags)
  */
 Nob *nm_ast_exec_decl(Node *n)
 {
-  /* unused parameter */
-  (void)n;
+  Nob *ret = nm_new_int(1);
 
 #if DEBUG
   nm_debug_ast(n, "execute variable declaration node");
 #endif
 
-  arg_stack_push(nm_new_int(1));
+  arg_stack_push(ret);
 
-  return nm_new_int(1);
+  return ret;
 }
 
 /*

@@ -25,6 +25,7 @@
 #include "config.h"
 #include "stack.h"
 #include "lexer.h"
+#include "gc.h"
 #include "object.h"
 #include "ast.h"
 #include "debug.h"

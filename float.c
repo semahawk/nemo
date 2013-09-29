@@ -30,25 +30,16 @@
 
 #include "nemo.h"
 
-/*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
-static ObFreeList *free_list = NULL;
-
 Nob *nm_new_float(double f)
 {
-  ObFreeList *list = nmalloc(sizeof(ObFreeList));
   Nfob *ob = ncalloc(1, sizeof(Nfob));
 
   ob->type = OT_FLOAT;
   ob->f = f;
+  ob->markbit = GC_WHITE;
   ob->fn.print = nm_float_print;
 
-  /* append to the free_list */
-  list->ob = (Nob *)ob;
-  list->next = free_list;
-  free_list = list;
+  gc_push(ob);
 
   return (Nob *)ob;
 }
@@ -136,16 +127,5 @@ void nm_float_destroy(Nob *ob)
   assert(ob->type == OT_FLOAT);
 
   nfree(ob);
-}
-
-void nm_float_cleanup(void){
-  ObFreeList *list;
-  ObFreeList *next;
-
-  for (list = free_list; list != NULL; list = next){
-    next = list->next;
-    nm_obj_destroy((Nob *)list->ob);
-    nfree(list);
-  }
 }
 

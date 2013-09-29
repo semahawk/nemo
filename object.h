@@ -65,8 +65,6 @@ typedef struct float_ob Nfob;
 typedef struct str_ob Nsob;
 typedef struct arr_ob Naob;
 typedef struct file_ob Nfhob;
-/* we won't need this when we have a garbage collector */
-typedef struct ObFreeList ObFreeList;
 
 /* result of the *_Cmp function */
 typedef enum {
@@ -90,7 +88,8 @@ struct Fn {
 
 #define NMOBJECT_HEAD \
   enum Type type;     \
-  struct Fn fn;
+  struct Fn fn;       \
+  unsigned markbit: 2;
 
 struct ob {
   NMOBJECT_HEAD
@@ -127,17 +126,11 @@ struct file_ob {
   FILE *fp;
 };
 
-struct ObFreeList {
-  Nob *ob;
-  ObFreeList *next;
-};
-
 Nob *nm_null_repr(void);
 void nm_null_print(FILE *, Nob *);
 
 Nob *nm_new_obj(const char *);
 void nm_obj_destroy(Nob *);
-void nm_obj_cleanup(void);
 bool nm_obj_boolish(Nob *);
 Nob *nm_obj_dup(Nob *);
 Nob *nm_obj_typetos(Nob *);
@@ -160,7 +153,6 @@ Nob *nm_int_decr(Nob *);
 Nob *nm_int_repr(void);
 void nm_int_print(FILE *, Nob *);
 void nm_int_destroy(Nob *);
-void nm_int_cleanup(void);
 Nob *nm_new_int_from_void_ptr(void *);
 /* a handy macro to simply cast and return the integer value */
 #define nm_int_value(ob) (((Niob *)ob)->i)
@@ -177,7 +169,6 @@ Nob *nm_float_decr(Nob *);
 Nob *nm_float_repr(void);
 void nm_float_print(FILE *, Nob *);
 void nm_float_destroy(Nob *);
-void nm_float_cleanup(void);
 /* a handy macro to simply cast and return the float value */
 #define nm_float_value(ob) (((Nfob *)ob)->f)
 
@@ -189,7 +180,6 @@ Nob *nm_str_add(Nob *, Nob *);
 Nob *nm_str_index(Nob *, Nob *);
 CmpRes    nm_str_cmp(Nob *, Nob *);
 void nm_str_destroy(Nob *);
-void nm_str_cleanup(void);
 /* a handy macro to simply cast and return the string value */
 #define nm_str_value(ob) (((Nsob *)ob)->s)
 
@@ -204,7 +194,6 @@ void nm_arr_print(FILE *, Nob *);
 Nob *nm_arr_add(Nob *, Nob *);
 Nob *nm_arr_index(Nob *, Nob *);
 void nm_arr_destroy(Nob *);
-void nm_arr_cleanup(void);
 /* a handy macro to simply cast and return the array */
 #define nm_arr_value(ob) (((Naob *)ob)->a)
 #define nm_arr_nmemb(ob) (((Naob *)ob)->nmemb)

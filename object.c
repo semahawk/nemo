@@ -219,18 +219,9 @@ void nm_obj_destroy(Nob *ob)
       break;
     default:
       nm_error("unknown object type at %s line %d", __FILE__, __LINE__);
-      nexit();
+      exit(EXIT_FAILURE);
       break;
   }
-}
-
-/* this functions wouldn't be needed after we have a garbage collector */
-void nm_obj_cleanup(void)
-{
-  nm_int_cleanup();
-  nm_float_cleanup();
-  nm_str_cleanup();
-  nm_arr_cleanup();
 }
 
 /*
@@ -263,6 +254,8 @@ Nob *nm_obj_dup(Nob *ob)
       /* suspress the warnings */
       break;
   }
+
+  gc_push(new);
 
   return (Nob *)new;
 }

@@ -90,11 +90,12 @@ static LibHandlesList *handles = NULL;
 } while (0);
 
 /* here are alllll the things that should be done at the exit */
-#define CLEANUP()  \
-  nm_obj_cleanup(); \
-  nm_namespace_cleanup();  \
-  CLOSE_HANDLES();   \
-  included_tidyup()
+#define CLEANUP() \
+  nm_namespace_cleanup(); \
+  CLOSE_HANDLES(); \
+  gc_sweepall(); \
+  arg_stack_cleanup(); \
+  included_tidyup();
 
 /*
  * Add another position in the included list
@@ -134,6 +135,8 @@ int main(int argc, char *argv[])
    * mode is not run when an argument was not supplied */
   bool met_e_flag = false;
 
+  /* initialize the garbage collector */
+  gc_init();
   /* the kind of global namespace where all the predefined functions etc. reside */
   nm_new_namespace("core");
   /* create the "null" variable */

@@ -98,5 +98,15 @@ static inline Nob *_arg_stack_top(char *file, unsigned line)
   return Nemo_AS->arg;
 }
 
+static inline void arg_stack_cleanup(void)
+{
+  struct arg_stack *curr;
+  struct arg_stack *next;
+  for (curr = Nemo_AS; curr != NULL; curr = next){
+    next = curr->next;
+    nfree(curr);
+  }
+}
+
 #endif /* STACK_H */
 

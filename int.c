@@ -31,28 +31,20 @@
 #include "nemo.h"
 
 /*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
-static ObFreeList *free_list = NULL;
-
-/*
  * @name - nm_new_int
  * @desc - create an object that would contain an int
  */
 Nob *nm_new_int(int i)
 {
-  ObFreeList *list = nmalloc(sizeof(ObFreeList));
   Niob *ob = ncalloc(1, sizeof(Niob));
 
   ob->type = OT_INTEGER;
   ob->i = i;
+  ob->markbit = GC_WHITE;
   ob->fn.print = nm_int_print;
 
-  /* append to the free_list */
-  list->ob = (Nob *)ob;
-  list->next = free_list;
-  free_list = list;
+  gc_push(ob);
+  gc_dump();
 
   return (Nob *)ob;
 }
@@ -96,7 +88,7 @@ CmpRes nm_int_cmp(Nob *left, Nob *right)
 {
   return nm_int_value(left) >  nm_int_value(right) ? CMP_GT :
          nm_int_value(left) <  nm_int_value(right) ? CMP_LT :
-                                               CMP_EQ ;
+                                                     CMP_EQ ;
 }
 
 Nob *nm_int_plus(Nob *target)
@@ -148,16 +140,5 @@ void nm_int_destroy(Nob *ob)
   assert(ob->type == OT_INTEGER);
 
   nfree(ob);
-}
-
-void nm_int_cleanup(void){
-  ObFreeList *list;
-  ObFreeList *next;
-
-  for (list = free_list; list != NULL; list = next){
-    next = list->next;
-    nm_obj_destroy((Nob *)list->ob);
-    nfree(list);
-  }
 }
 

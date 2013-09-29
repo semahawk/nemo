@@ -30,15 +30,8 @@
 
 #include "nemo.h"
 
-/*
- * Simple singly linked list that contains any object that was allocated and
- * needs to be freed.
- */
-static ObFreeList *free_list = NULL;
-
 Nob *nm_new_str(char *s)
 {
-  ObFreeList *list = nmalloc(sizeof(ObFreeList));
   Nsob *ob = ncalloc(1, sizeof(Nsob));
 
   ob->type = OT_STRING;
@@ -94,20 +87,16 @@ Nob *nm_new_str(char *s)
     }
   }
   ob->s[i] = '\0';
-  /* set it's functions */
+  ob->markbit = GC_WHITE;
   ob->fn.print = nm_str_print;
 
-  /* append to the free_list */
-  list->ob = (Nob *)ob;
-  list->next = free_list;
-  free_list = list;
+  gc_push(ob);
 
   return (Nob *)ob;
 }
 
 Nob *nm_new_str_from_char(char c)
 {
-  ObFreeList *list = nmalloc(sizeof(ObFreeList));
   Nsob *ob = ncalloc(1, sizeof(Nsob));
 
   ob->type = OT_STRING;
@@ -115,12 +104,10 @@ Nob *nm_new_str_from_char(char c)
   ob->s = nmalloc(2);
   ob->s[0] = c;
   ob->s[1] = '\0';
+  ob->markbit = GC_WHITE;
   ob->fn.print = nm_str_print;
 
-  /* append to the free_list */
-  list->ob = (Nob *)ob;
-  list->next = free_list;
-  free_list = list;
+  gc_push(ob);
 
   return (Nob *)ob;
 }
@@ -172,16 +159,5 @@ void nm_str_destroy(Nob *ob)
 
   nfree(nm_str_value(ob));
   nfree(ob);
-}
-
-void nm_str_cleanup(void){
-  ObFreeList *list;
-  ObFreeList *next;
-
-  for (list = free_list; list != NULL; list = next){
-    next = list->next;
-    nm_obj_destroy((Nob *)list->ob);
-    nfree(list);
-  }
 }
 

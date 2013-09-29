@@ -279,7 +279,10 @@ static Nob *predef_open(Nob *args, bool *opts)
   new->type = OT_FILE;
   new->fp = fp;
   new->name = nm_strdup(name);
+  new->markbit = GC_WHITE;
   new->fn.print = nm_file_print;
+
+  gc_push(new);
 
   return (Nob *)new;
 }
