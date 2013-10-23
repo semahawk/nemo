@@ -1196,6 +1196,9 @@ Node *nm_ast_gen_decl(Pos pos, char *name, Node *value, uint8_t flags)
  */
 Nob *nm_ast_exec_decl(Node *n)
 {
+  /* unused parameter */
+  (void)n;
+
   Nob *ret = nm_new_int(1);
 
 #if DEBUG
@@ -1575,9 +1578,12 @@ Node *nm_ast_gen_funcdef(Pos pos, char *name, Node *body,
  */
 Nob *nm_ast_exec_funcdef(Node *n)
 {
-  Node_Funcdef *nc = (Node_Funcdef *)n;
+  /* unused parameter */
+  (void)n;
 
 #if DEBUG
+  Node_Funcdef *nc = (Node_Funcdef *)n;
+
   if (nc->body)
     nm_debug_ast(n, "execute function definition node");
   else

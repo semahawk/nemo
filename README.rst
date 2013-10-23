@@ -22,15 +22,23 @@ Install
 
 .. code-block:: sh
 
-    $ ./configure
+    $ cmake . [-DDEBUG=1] [-DLIBDIR="/nonstandard/path/to/lib"]
     $ make
     $ sudo make install
+
+The default values for the specific options are:
+
+.. code-block:: sh
+
+    DEBUG:  0
+    LIBDIR: "/usr/local/lib"
 
 Dependencies
 ============
 
-* a C compiler with C99 support (tested on GCC and Clang)
-* make (Note: on a \*BSD system you may want to need gmake)
+* C compiler with C99 support (tested on GCC and Clang)
+* cmake
+* make
 
 License
 =======

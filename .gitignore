@@ -5,14 +5,16 @@ bar.nc
 stdio.nm
 
 *.o
+*.a
 *.so
 *.so.*
 
-# Autotools stuff
+# Autohell stuff is gone
+# Cmake stuff
+CMakeCache.txt
+CMakeFiles
 Makefile
-autom4te.cache
-config.status
-config.log
+cmake_install.cmake
 config.h
 # Gprof
 gmon.out

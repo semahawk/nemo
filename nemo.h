@@ -16,8 +16,8 @@
 #ifdef HAVE_STDBOOL_H
 #  include <stdbool.h>
 #else
-#  define bool short
-#  define true 1
+#  define bool  short
+#  define true  1
 #  define false 0
 #endif
 

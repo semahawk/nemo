@@ -59,7 +59,7 @@
 #include <readline/history.h>
 
 #include "nemo.h"
-#include "config.h"
+#include "version.h"
 
 static bool running_interactive = false;
 static int nmInteractive(void);
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
         break;
       }
 #endif
-      case 'v': printf("Nemo v" VERSION ", " __DATE__ " " __TIME__"\n");
+      case 'v': printf("Nemo v%d.%d.%d, " __DATE__ " " __TIME__"\n", NM_VERSION_MAJOR, NM_VERSION_MINOR, NM_VERSION_PATCH);
                 return EXIT_SUCCESS;
       case '?': return EXIT_FAILURE;
       default: abort();
@@ -269,7 +269,7 @@ static int nmInteractive(void)
   /* set the running_interactive flag */
   running_interactive = true;
 
-  printf("Welcome to the Nemo " VERSION " interactive!\n");
+  printf("Welcome to the Nemo v%d.%d.%d interactive!\n", NM_VERSION_MAJOR, NM_VERSION_MINOR, NM_VERSION_PATCH);
   printf("If you want to quit, just type 'quit' and hit Enter, or just ^D.\n\n");
 
   for (;;){

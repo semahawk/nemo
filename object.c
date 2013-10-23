@@ -168,6 +168,9 @@ UnaryFunc nm_obj_has_unary_func(Nob *ob, UnaryOp op)
 
 CmpFunc nm_obj_has_cmp_func(Nob *ob, BinaryOp op)
 {
+  /* unused paremeter */
+  (void)op;
+
   assert(ob);
 
   switch (ob->type){
