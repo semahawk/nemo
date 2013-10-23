@@ -44,7 +44,6 @@ Nob *nm_new_int(int i)
   ob->fn.print = nm_int_print;
 
   gc_push(ob);
-  gc_dump();
 
   return (Nob *)ob;
 }

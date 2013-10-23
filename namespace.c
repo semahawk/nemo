@@ -75,7 +75,6 @@ void nm_new_namespace(char *name)
   curr = namespace_list;
   /* create the "__name" variable, which holds the current namespace's name */
   nm_new_var("__name", nm_new_str(name));
-  printf("created a new namespace at %p\n", (void*)namespace);
 }
 
 Namespace *nm_curr_namespace(void)
