@@ -51,3 +51,9 @@ target_link_libraries(nemo libnemo)
 add_subdirectory(lib)
 
 target_link_libraries(nemo readline)
+
+# Linux needs the libdl to be linked into the program
+# FreeBSD has those dl* functions implemented in libc
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  target_link_libraries(nemo dl)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
