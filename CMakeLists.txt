@@ -36,7 +36,7 @@ else(LIBDIR STREQUAL OFF)
   set(LIBDIR "${LIBDIR}")
 endif(LIBDIR STREQUAL OFF)
 
-message("Build config:\n")
+message("\nBuild config:\n")
 message("   BINDIR: ${BINDIR}")
 message("   INCDIR: ${INCDIR}")
 message("   LIBDIR: ${LIBDIR}")

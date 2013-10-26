@@ -62,8 +62,10 @@ void gc_sweep(void)
 
 void gc_sweepall(void)
 {
-  for (unsigned i = 0; i < NM_gc_pool_curr; i++){
-    nm_obj_destroy(NM_gc_pool[i]);
+  for (unsigned i = 0; i < NM_gc_pool_sz; i++){
+    /* skip if NULL */
+    if (NM_gc_pool[i])
+      nm_obj_destroy(NM_gc_pool[i]);
   }
 
   nfree(NM_gc_pool);
