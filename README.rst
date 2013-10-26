@@ -1,13 +1,14 @@
 Nemo
 ****
 
-Nemo is a scripting, interpreted (or compiled to bytecode (but not yet)),
+Nemo is a scripting, interpreted,
 dynamically and strongly typed programming language written entirely in C.
 
 Build status
 ============
 
 .. image:: https://travis-ci.org/semahawk/nemo.png?branch=master
+   :target: https://travis-ci.org/semahawk/nemo
 
 Install
 =======
@@ -22,7 +23,11 @@ Install
 
 .. code-block:: sh
 
-    $ cmake . [-DDEBUG=1] [-DLIBDIR="/nonstandard/path/to/lib"]
+    $ cmake . \
+        [-DDEBUG=ON] \
+        [-DBINDIR=/where/to/install/binaries]  \
+        [-DINCDIR=/where/to/install/headers]   \
+        [-DLIBDIR=/where/to/install/libraries] \
     $ make
     $ sudo make install
 
@@ -31,6 +36,8 @@ The default values for the specific options are:
 .. code-block:: sh
 
     DEBUG:  0
+    BINDIR: "/usr/local/bin"
+    INCDIR: "/usr/local/include"
     LIBDIR: "/usr/local/lib"
 
 Dependencies

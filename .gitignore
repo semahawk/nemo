@@ -9,12 +9,17 @@ stdio.nm
 *.so
 *.so.*
 
+core
+*.core
+
 # Autohell stuff is gone
 # Cmake stuff
 CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
+cmake/cmake_uninstall.cmake
+install_manifest.txt
 config.h
 # Gprof
 gmon.out
