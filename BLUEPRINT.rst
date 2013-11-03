@@ -53,6 +53,8 @@ Hash
 
    { age => 24, name => "John", lastname => "Doe" }
 
+**The tricky part: how to distinguish between a block and a hash?**
+
 Null
 
 .. code-block:: nemo

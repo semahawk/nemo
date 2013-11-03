@@ -4,6 +4,6 @@
 #cmakedefine DEBUG @DEBUG@
 #cmakedefine LIBDIR "@LIBDIR@"
 #cmakedefine HAVE_STDBOOL_H @HAVE_STDBOOL_H@
-#cmakedefine HAVE_LIB_READLINE @HAVE_LIB_READLINE@
+#cmakedefine HAVE_LIBEDIT @HAVE_LIBEDIT@
 
 #endif /* CONFIG_H */

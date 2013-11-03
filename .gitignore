@@ -1,19 +1,16 @@
 nemo
 
-foo.nm
-bar.nc
-stdio.nm
+# every .nm file in the root directory
+/*.nm
 
 *.o
 *.a
-*.so
-*.so.*
+*.so*
 
-core
-*.core
+*core*
 
 # Autohell stuff is gone
-# Cmake stuff
+# CMake stuff
 CMakeCache.txt
 CMakeFiles
 Makefile
