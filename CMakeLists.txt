@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(nemo)
 
 include(CheckIncludeFiles)
+include(CheckFunctionExists)
 include(CheckLibraryExists)
 
 ########### Add uninstall target ###############
@@ -50,16 +51,27 @@ else(DEBUG MATCHES "1" OR DEBUG MATCHES "ON" OR DEBUG MATCHES "YES")
   message("   DEBUG:  OFF\n")
 endif(DEBUG MATCHES "1" OR DEBUG MATCHES "ON" OR DEBUG MATCHES "YES")
 
+CHECK_FUNCTION_EXISTS(strdup HAVE_STRDUP)
 CHECK_INCLUDE_FILES(stdbool.h HAVE_STDBOOL_H)
+
+set(libsrc
+  parser.c
+  lexer.c
+)
 
 set(binsrc
   nemo.c
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -g -lm")
 configure_file("${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_SOURCE_DIR}/config.h")
 
+add_library(libnemo SHARED ${libsrc})
 add_executable(nemo ${binsrc})
+set_target_properties(libnemo
+  PROPERTIES OUTPUT_NAME nemo
+  SOVERSION 0 VERSION 0.4.0)
+target_link_libraries(nemo libnemo)
 
 # Linux needs the libdl to be linked into the program
 # FreeBSD has those dl* functions implemented in libc
@@ -68,3 +80,5 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 install(PROGRAMS nemo DESTINATION ${BINDIR})
+install(TARGETS libnemo DESTINATION ${LIBDIR})
+

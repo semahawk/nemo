@@ -1,9 +1,15 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#cmakedefine DEBUG @DEBUG@
-#cmakedefine LIBDIR "@LIBDIR@"
+#cmakedefine DEBUG          @DEBUG@
+#cmakedefine LIBDIR         "@LIBDIR@"
+#cmakedefine HAVE_STRDUP    @HAVE_STRDUP@
 #cmakedefine HAVE_STDBOOL_H @HAVE_STDBOOL_H@
-#cmakedefine HAVE_LIBEDIT @HAVE_LIBEDIT@
+
+/*
+ * The maximum length a name or keyword can have.
+ * It's to avoid calling malloc so much.
+ */
+#define MAX_NAME_LENGTH 64
 
 #endif /* CONFIG_H */

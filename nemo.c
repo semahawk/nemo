@@ -41,6 +41,7 @@
 #include <string.h>
 #include <getopt.h>
 
+#include "parser.h"
 #include "version.h"
 
 int main(int argc, char *argv[])
@@ -56,8 +57,10 @@ int main(int argc, char *argv[])
 
   while ((ch = getopt_long(argc, argv, "v", longopts, NULL)) != -1){
     switch (ch){
-      case 'v': printf("Nemo v%d.%d.%d, " __DATE__ " " __TIME__"\n", NM_VERSION_MAJOR, NM_VERSION_MINOR, NM_VERSION_PATCH);
-                return 0;
+      case 'v': printf("Nemo v%d.%d.%d, " __DATE__ " " __TIME__"\n",
+                  NM_VERSION_MAJOR, NM_VERSION_MINOR, NM_VERSION_PATCH);
+                break;
+                /*return 0;*/
       case '?': return 1;
       default:  abort();
     }
@@ -66,7 +69,9 @@ int main(int argc, char *argv[])
   argc -= optind;
   argv += optind;
 
-  printf("Welcome to Nemo.\n");
+  if (argc >= 1){
+    parse_file(argv[0]);
+  }
 
   return 0;
 }
@@ -76,7 +81,8 @@ int main(int argc, char *argv[])
  * Helloween, Testament
  * Within Temptation, Nightwish, Avantasia
  * Stratovarius, Steve Vai, At Vance, Rhapsody of Fire
- * Fear Factory, Scar Symmetry
+ * Fear Factory, Scar Symmetry, Dagon, Omnium Gatherum
+ * The Algorithm
  *
  * Family Guy, The Office, Monty Python
  *
