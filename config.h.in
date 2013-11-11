@@ -13,3 +13,8 @@
 #define MAX_NAME_LENGTH 64
 
 #endif /* CONFIG_H */
+
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
+ */
+

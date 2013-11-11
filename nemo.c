@@ -82,9 +82,13 @@ int main(int argc, char *argv[])
  * Within Temptation, Nightwish, Avantasia
  * Stratovarius, Steve Vai, At Vance, Rhapsody of Fire
  * Fear Factory, Scar Symmetry, Dagon, Omnium Gatherum
- * The Algorithm
+ * The Algorithm, Dream Theater, Insomnium
  *
- * Family Guy, The Office, Monty Python
+ * Family Guy, The Office, Monty Python, The I.T. Crowd
  *
+ */
+
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
  */
 

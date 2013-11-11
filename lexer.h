@@ -66,10 +66,11 @@ struct lexer_t {
   unsigned line;
   unsigned col;
   struct {
-    char *pos;    /* saved curr_pos */
+    char *pos; /* saved curr_pos */
     unsigned line;
     unsigned col;
   } save;
+  bool valid_curr; /* whether it is safe to reuse the current token */
   struct token_t curr_tok;
 };
 
@@ -79,4 +80,8 @@ bool accept(struct lexer_t *lexer_state, enum token_type_t type);
 bool peek(struct lexer_t *lexer_state, enum token_type_t type);
 
 #endif /* LEXER_H */
+
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
+ */
 

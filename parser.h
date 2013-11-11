@@ -17,3 +17,7 @@ void parse_file(char *file_name);
 
 #endif /* PARSER_H */
 
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
+ */
+

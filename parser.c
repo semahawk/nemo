@@ -20,14 +20,24 @@
 
 void stmt(struct lexer_t *lex)
 {
-  if (accept(lex, T_KEYWORD)){
-    printf("got a keyword: %s\n", lex->curr_tok.value.s);
-  } else if (accept(lex, T_NAME)){
-    printf("got a name: %s\n", lex->curr_tok.value.s);
-  } else if (accept(lex, T_INTEGER)){
-    printf("got an int: %d\n", lex->curr_tok.value.i);
-  } else if (accept(lex, T_FLOAT)){
-    printf("got a float: %f\n", lex->curr_tok.value.f);
+  /*if (accept(lex, T_KEYWORD)){*/
+    /*printf("got a keyword: %s\n", lex->curr_tok.value.s);*/
+  /*} else if (accept(lex, T_NAME)){*/
+    /*printf("got a name: %s\n", lex->curr_tok.value.s);*/
+  /*} else if (accept(lex, T_INTEGER)){*/
+    /*printf("got an int: %d\n", lex->curr_tok.value.i);*/
+  /*} else if (accept(lex, T_FLOAT)){*/
+    /*printf("got a float: %f\n", lex->curr_tok.value.f);*/
+  /*}*/
+
+  while (peek(lex, T_KEYWORD) || peek(lex, T_NAME)){
+    printf("got a keyword or name: ");
+    if (accept(lex, T_KEYWORD)){
+      printf("a keyword %s\n", lex->curr_tok.value.s);
+    } else {
+      accept(lex, T_NAME);
+      printf("a name %s\n", lex->curr_tok.value.s);
+    }
   }
 }
 
@@ -78,6 +88,7 @@ void parse_file(char *fname)
   lex.save.line         = 1;
   lex.save.col          = 1;
   lex.save.pos          = fbuf;
+  lex.valid_curr        = false;
 
   /* start the parsing process */
   stmt(&lex);
@@ -86,4 +97,8 @@ void parse_file(char *fname)
   free(fbuf);
   fclose(fptr);
 }
+
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
+ */
 

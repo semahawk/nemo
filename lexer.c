@@ -41,16 +41,16 @@ static void err(struct lexer_t *lex, const char *fmt, ...)
 
 static void advance(struct lexer_t *lex)
 {
-  lex->save.line = lex->line;
-  lex->save.col  = lex->col;
-  lex->save.pos  = lex->curr_pos;
+  lex->save.line  = lex->line;
+  lex->save.col   = lex->col;
+  lex->save.pos   = lex->curr_pos;
 }
 
 static void fallback(struct lexer_t *lex)
 {
-  lex->line      = lex->save.line;
-  lex->col       = lex->save.col;
-  lex->curr_pos  = lex->save.pos;
+  lex->line       = lex->save.line;
+  lex->col        = lex->save.col;
+  lex->curr_pos   = lex->save.pos;
 }
 
 struct token_t fetch_token(struct lexer_t *lex)
@@ -67,6 +67,11 @@ struct token_t fetch_token(struct lexer_t *lex)
   if (p == NULL || *p == '\0' || feof(lex->fptr)){
     ret.type = T_EOS;
     return ret;
+  }
+
+  /* return the current token if it's still valid */
+  if (lex->valid_curr){
+    return lex->curr_tok;
   }
 
   /* skip over the whitespace */
@@ -188,8 +193,9 @@ struct token_t force(struct lexer_t *lex, enum token_type_t type)
   struct token_t tok = fetch_token(lex);
 
   if (tok.type == type){
-    advance(lex);
     lex->curr_tok = tok;
+    lex->valid_curr = false;
+    advance(lex);
     return tok;
   } else {
     fprintf(stderr, "expected %d instead of %d\n", type, tok.type);
@@ -202,10 +208,12 @@ bool accept(struct lexer_t *lex, enum token_type_t type)
   struct token_t tok = fetch_token(lex);
 
   if (tok.type == type){
-    advance(lex);
     lex->curr_tok = tok;
-    return true;
-  } else {
+    lex->valid_curr = true;    /* <  I guess these two should be swapped    */
+    advance(lex);              /*    but heck why is this working..?        */
+    return true;               /*                                           */
+  } else {                     /*    I thought that.. erm... it shouldn't.. */
+    lex->valid_curr = false;   /* <  But it is working (somewhy)...         */
     fallback(lex);
     return false;
   }
@@ -219,9 +227,27 @@ bool peek(struct lexer_t *lex, enum token_type_t type)
 
   if (tok.type == type){
     lex->curr_tok = tok;
+    lex->valid_curr = false;
     return true;
   } else {
+    lex->valid_curr = true;
     return false;
   }
 }
+
+void skip(struct lexer_t *lex)
+{
+  struct token_t tok = fetch_token(lex);
+
+  if (tok.type == T_EOS){
+    err(lex, "unexpected <EOF>");
+    exit(1);
+  }
+
+  advance(lex);
+}
+
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
+ */
 

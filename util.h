@@ -40,3 +40,7 @@ char *strdup_(char *p, const char *file, unsigned line)
 
 #endif /* UTIL_H */
 
+/*
+ * vi: ft=c:ts=2:sw=2:expandtab
+ */
+
