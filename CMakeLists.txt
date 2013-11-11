@@ -63,7 +63,7 @@ set(binsrc
   nemo.c
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -g -lm")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -g")
 configure_file("${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_SOURCE_DIR}/config.h")
 
 add_library(libnemo SHARED ${libsrc})

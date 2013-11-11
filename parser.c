@@ -20,23 +20,15 @@
 
 void stmt(struct lexer_t *lex)
 {
-  /*if (accept(lex, T_KEYWORD)){*/
-    /*printf("got a keyword: %s\n", lex->curr_tok.value.s);*/
-  /*} else if (accept(lex, T_NAME)){*/
-    /*printf("got a name: %s\n", lex->curr_tok.value.s);*/
-  /*} else if (accept(lex, T_INTEGER)){*/
-    /*printf("got an int: %d\n", lex->curr_tok.value.i);*/
-  /*} else if (accept(lex, T_FLOAT)){*/
-    /*printf("got a float: %f\n", lex->curr_tok.value.f);*/
-  /*}*/
-
-  while (peek(lex, T_KEYWORD) || peek(lex, T_NAME)){
-    printf("got a keyword or name: ");
+  while (peek(lex, T_KEYWORD) || peek(lex, T_NAME) || peek(lex, T_STRING)){
+    printf("got a keyword, name or a string: ");
     if (accept(lex, T_KEYWORD)){
-      printf("a keyword %s\n", lex->curr_tok.value.s);
+      printf("a keyword: %s\n", lex->curr_tok.value.s);
+    } else if (accept(lex, T_STRING)){
+      printf("a string:  %s\n", lex->curr_tok.value.sp);
     } else {
       accept(lex, T_NAME);
-      printf("a name %s\n", lex->curr_tok.value.s);
+      printf("a name:    %s\n", lex->curr_tok.value.s);
     }
   }
 }
@@ -45,7 +37,8 @@ void parse_file(char *fname)
 {
   FILE *fptr;
   size_t flen;
-  char *fbuf;  /* the file's contents */
+  char *fbuf; /* the file's contents */
+  char **p; /* used when freeing lex's `str_gc' */
   struct stat st;
   struct lexer_t lex;
 
@@ -88,12 +81,22 @@ void parse_file(char *fname)
   lex.save.line         = 1;
   lex.save.col          = 1;
   lex.save.pos          = fbuf;
-  lex.valid_curr        = false;
+  lex.str_gc.size       = 32;
+  if ((lex.str_gc.ptr = calloc(lex.str_gc.size, sizeof(char *))) == NULL){
+    fprintf(stderr, "malloc failed to allocate %lu bytes in `parse_file'\n", sizeof(char *) * lex.str_gc.size);
+    exit(1);
+  }
+  lex.str_gc.curr       = lex.str_gc.ptr;
 
   /* start the parsing process */
   stmt(&lex);
-  stmt(&lex);
 
+  /* free the lexer's `str_gc' */
+  for (p = lex.str_gc.ptr; p != lex.str_gc.curr; p++){
+    free(*p);
+  }
+  free(lex.str_gc.ptr);
+  /* free the rest */
   free(fbuf);
   fclose(fptr);
 }

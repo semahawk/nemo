@@ -13,10 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
-#include <math.h>
 
 #include "config.h"
 #include "nemo.h"
@@ -37,6 +37,27 @@ static void err(struct lexer_t *lex, const char *fmt, ...)
   vfprintf(stderr, fmt, vl);
   fprintf(stderr, " at line %u column %u\n", lex->line, lex->col);
   va_end(vl);
+
+  exit(1);
+}
+
+static void push_str(struct lexer_t *lex, char *str)
+{
+  ptrdiff_t offset = lex->str_gc.curr - lex->str_gc.ptr;
+
+  /* handle overflow */
+  if (offset >= (signed)lex->str_gc.size){
+    /* grow the stack to be twice as big as it was */
+    lex->str_gc.size <<= 1;
+    if ((lex->str_gc.ptr = realloc(lex->str_gc.ptr, sizeof(char *) * lex->str_gc.size)) == NULL){
+      fprintf(stderr, "realloc couldn't reallocate %lu bytes in `push_str'\n", sizeof(char *) * lex->str_gc.size);
+      exit(1);
+    }
+    lex->str_gc.curr = lex->str_gc.ptr + offset;
+  }
+
+  *lex->str_gc.curr = str; /* set up the current 'cell' */
+  lex->str_gc.curr++; /* move on to the next 'cell' */
 }
 
 static void advance(struct lexer_t *lex)
@@ -53,25 +74,22 @@ static void fallback(struct lexer_t *lex)
   lex->curr_pos   = lex->save.pos;
 }
 
-struct token_t fetch_token(struct lexer_t *lex)
+static struct token_t fetch_token(struct lexer_t *lex)
 {
   /* {{{ fetch_token body */
 
 /* a nifty shorthand for the current position */
 #define p (lex->curr_pos)
 
-  char tmp[MAX_NAME_LENGTH] = { '\0' };
+  char tmp_arr[MAX_NAME_LENGTH] = { '\0' };
+  char *tmp_str = NULL;
   int i = 0, keyword_found = 0;
+  int slen = 0;
   struct token_t ret;
 
   if (p == NULL || *p == '\0' || feof(lex->fptr)){
     ret.type = T_EOS;
     return ret;
-  }
-
-  /* return the current token if it's still valid */
-  if (lex->valid_curr){
-    return lex->curr_tok;
   }
 
   /* skip over the whitespace */
@@ -87,16 +105,16 @@ struct token_t fetch_token(struct lexer_t *lex)
   if (isalpha(*p) || *p == '_'){
     /* {{{ NAME */
     const char **kptr = NULL;
-    strncpy(tmp, p, MAX_NAME_LENGTH - 1);
-    tmp[MAX_NAME_LENGTH] = '\0';
+    strncpy(tmp_arr, p, MAX_NAME_LENGTH - 1);
+    tmp_arr[MAX_NAME_LENGTH] = '\0';
 
     while (isalpha(*p) || isdigit(*p) || *p == '_'){
       p++; i++;
     }
-    tmp[i] = '\0';
+    tmp_arr[i] = '\0';
     /* see if it's a keyword */
     for (kptr = keywords; *kptr != NULL; kptr++){
-      if (!strcmp(*kptr, tmp)){
+      if (!strcmp(*kptr, tmp_arr)){
         keyword_found = 1;
         break;
       }
@@ -108,8 +126,8 @@ struct token_t fetch_token(struct lexer_t *lex)
       lex->col += strlen(*kptr);
     } else {
       ret.type = T_NAME;
-      strcpy(ret.value.s, tmp);
-      lex->col += strlen(tmp);
+      strcpy(ret.value.s, tmp_arr);
+      lex->col += strlen(tmp_arr);
     }
     /* }}} */
   }
@@ -119,40 +137,70 @@ struct token_t fetch_token(struct lexer_t *lex)
 
     while (isdigit(*p) || (*p == '_' && isdigit(*(p + 1)))){
       if (isdigit(*p)){
-        tmp[i2++] = *p;
+        tmp_arr[i2++] = *p;
       }
       p++; i++;
     }
 
     if (*p == '.'){
       /* {{{ FLOAT */
-      tmp[i2++] = '.';
+      tmp_arr[i2++] = '.';
       p++; i++; /* skip over the '.' */
       if (isdigit(*p)){
         while (isdigit(*p) || (*p == '_' && isdigit(*(p + 1)))){
           if (isdigit(*p)){
-            tmp[i2++] = *p;
+            tmp_arr[i2++] = *p;
           }
           p++; i++;
         }
-        tmp[i2] = '\0';
+        tmp_arr[i2] = '\0';
         ret.type = T_FLOAT;
-        ret.value.f = atof(tmp);
+        ret.value.f = atof(tmp_arr);
       } else {
         /* it's something like 2. */
-        tmp[i] = '\0';
+        tmp_arr[i] = '\0';
         ret.type = T_FLOAT;
-        ret.value.f = atof(tmp);
+        ret.value.f = atof(tmp_arr);
       }
       /* }}} */
     } else {
       /* {{{ DECIMAL */
       ret.type = T_INTEGER;
-      ret.value.i = atoi(tmp);
+      ret.value.i = atoi(tmp_arr);
       /* }}} */
     }
 
     lex->col += i;
+    /* }}} */
+  }
+  else if (*p == '"'){
+    /* {{{ STRING */
+    char *savep;
+    int i2 = 0;
+    p++; i++; lex->col++; savep = p; /* skip over the opening '"' */
+
+    while (*p != '"' && *p != '\n'){
+      p++; i++; lex->col++; slen++;
+    }
+
+    if (*p == '\n'){
+      err(lex, "unterminated string");
+    }
+
+    if ((tmp_str = malloc(/* sizeof(char) times */slen)) == NULL){
+      fprintf(stderr, "malloc failed to allocate %d bytes in `fetch_token'\n", slen);
+    }
+
+    while (*savep != '"')
+      *(tmp_str + i2++) = *savep++;
+
+    i--;
+    p++; /* jump to the next character so the next `fetch_token' doesn't start
+            lexing at the closing '"' */
+
+    push_str(lex, tmp_str);
+    ret.type = T_STRING;
+    ret.value.sp = tmp_str;
     /* }}} */
   }
   else switch (*p){
@@ -194,7 +242,6 @@ struct token_t force(struct lexer_t *lex, enum token_type_t type)
 
   if (tok.type == type){
     lex->curr_tok = tok;
-    lex->valid_curr = false;
     advance(lex);
     return tok;
   } else {
@@ -209,11 +256,9 @@ bool accept(struct lexer_t *lex, enum token_type_t type)
 
   if (tok.type == type){
     lex->curr_tok = tok;
-    lex->valid_curr = true;    /* <  I guess these two should be swapped    */
-    advance(lex);              /*    but heck why is this working..?        */
-    return true;               /*                                           */
-  } else {                     /*    I thought that.. erm... it shouldn't.. */
-    lex->valid_curr = false;   /* <  But it is working (somewhy)...         */
+    advance(lex);
+    return true;
+  } else {
     fallback(lex);
     return false;
   }
@@ -227,10 +272,8 @@ bool peek(struct lexer_t *lex, enum token_type_t type)
 
   if (tok.type == type){
     lex->curr_tok = tok;
-    lex->valid_curr = false;
     return true;
   } else {
-    lex->valid_curr = true;
     return false;
   }
 }
@@ -241,7 +284,6 @@ void skip(struct lexer_t *lex)
 
   if (tok.type == T_EOS){
     err(lex, "unexpected <EOF>");
-    exit(1);
   }
 
   advance(lex);

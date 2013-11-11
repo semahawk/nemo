@@ -60,21 +60,31 @@ struct token_t {
 
 struct lexer_t {
   FILE *fptr;
-  char *name;     /* name of the source (eg. the file's name) */
-  char *source;   /* malloced/fread chars of the source */
-  char *curr_pos; /* position at which to start fetching a token */
+  /* name of the source (eg. the file's name) */
+  char *name;
+  /* malloced/fread chars of the source */
+  char *source;
+  /* position at which to start fetching a token */
+  char *curr_pos;
   unsigned line;
   unsigned col;
   struct {
-    char *pos; /* saved curr_pos */
+    /* saved curr_pos */
+    char *pos;
     unsigned line;
     unsigned col;
   } save;
-  bool valid_curr; /* whether it is safe to reuse the current token */
   struct token_t curr_tok;
+  struct {
+    /* pointer to the malloced array of char pointers */
+    char **ptr;
+    /* pointer to the current `cell' in the above array */
+    char **curr;
+    /* size of the array */
+    size_t size;
+  } str_gc;
 };
 
-struct token_t fetch_token(struct lexer_t *lexer_state);
 struct token_t force(struct lexer_t *lexer_state, enum token_type_t type);
 bool accept(struct lexer_t *lexer_state, enum token_type_t type);
 bool peek(struct lexer_t *lexer_state, enum token_type_t type);
