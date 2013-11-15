@@ -2,7 +2,9 @@ Nemo
 ****
 
 Nemo is a scripting, interpreted,
-dynamically and strongly typed programming language written entirely in C.
+dynamically and strongly typed programming language written in ANSI C.
+
+**Note** I'm rewriting Nemo from the ground up. There's not much to see right now.
 
 Build status
 ============
@@ -24,7 +26,7 @@ Install
 .. code-block:: sh
 
     $ cmake . \
-        [-DDEBUG=ON] \
+        [-DDEBUG=ON|YES|1] \
         [-DBINDIR=/where/to/install/binaries]  \
         [-DINCDIR=/where/to/install/headers]   \
         [-DLIBDIR=/where/to/install/libraries] \
@@ -43,8 +45,8 @@ The default values for the specific options are:
 Dependencies
 ============
 
-* C compiler with C99 support (tested on GCC and Clang)
-* cmake
+* C90 compatible C compiler
+* `CMake<www.cmake.org>`_
 * make
 
 License

@@ -38,6 +38,8 @@ char *strdup_(char *p, const char *file, unsigned line)
 }
 #endif
 
+const char *itob(int number);
+
 #endif /* UTIL_H */
 
 /*

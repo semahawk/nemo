@@ -23,6 +23,11 @@
 #include "lexer.h"
 #include "util.h"
 
+/* is `c' valid to begin a name with? */
+#define name_beg(c) (isalpha(c) || c == '_' || (unsigned char)c >= 0xC0)
+/* is `c' valid to be in a middle of a name? */
+#define name_mid(c) (isalpha(c) || isdigit(c) || c == '_' || (unsigned char)c >= 0x80)
+
 static const char *keywords[] =
 {
   "my", NULL
@@ -87,7 +92,7 @@ static struct token_t fetch_token(struct lexer_t *lex)
   int slen = 0;
   struct token_t ret;
 
-  if (p == NULL || *p == '\0' || feof(lex->fptr)){
+  if (p == NULL || *p == '\0' || (lex->fptr != NULL && feof(lex->fptr))){
     ret.type = T_EOS;
     return ret;
   }
@@ -102,15 +107,16 @@ static struct token_t fetch_token(struct lexer_t *lex)
     }
   }
 
-  if (isalpha(*p) || *p == '_'){
+  if (name_beg(*p)){
     /* {{{ NAME */
     const char **kptr = NULL;
     strncpy(tmp_arr, p, MAX_NAME_LENGTH - 1);
     tmp_arr[MAX_NAME_LENGTH] = '\0';
 
-    while (isalpha(*p) || isdigit(*p) || *p == '_'){
+    while (name_mid(*p)){
       p++; i++;
     }
+
     tmp_arr[i] = '\0';
     /* see if it's a keyword */
     for (kptr = keywords; *kptr != NULL; kptr++){
@@ -189,6 +195,7 @@ static struct token_t fetch_token(struct lexer_t *lex)
 
     if ((tmp_str = malloc(/* sizeof(char) times */slen)) == NULL){
       fprintf(stderr, "malloc failed to allocate %d bytes in `fetch_token'\n", slen);
+      exit(1);
     }
 
     while (*savep != '"')

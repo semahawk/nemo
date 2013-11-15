@@ -17,6 +17,8 @@
 #include <sys/stat.h>
 
 #include "lexer.h"
+#include "utf8.h"
+#include "util.h"
 
 void stmt(struct lexer_t *lex)
 {
@@ -25,10 +27,10 @@ void stmt(struct lexer_t *lex)
     if (accept(lex, T_KEYWORD)){
       printf("a keyword: %s\n", lex->curr_tok.value.s);
     } else if (accept(lex, T_STRING)){
-      printf("a string:  %s\n", lex->curr_tok.value.sp);
+      printf("a string:  %s (len %u)\n", lex->curr_tok.value.sp, u8_strlen(lex->curr_tok.value.sp));
     } else {
       accept(lex, T_NAME);
-      printf("a name:    %s\n", lex->curr_tok.value.s);
+      printf("a name:    %s (len %u)\n", lex->curr_tok.value.s, u8_strlen(lex->curr_tok.value.s));
     }
   }
 }
@@ -99,6 +101,33 @@ void parse_file(char *fname)
   /* free the rest */
   free(fbuf);
   fclose(fptr);
+}
+
+void parse_string(char *string)
+{
+  struct lexer_t lex;
+
+  /* initialize the lexer's state */
+  lex.fptr              = NULL;
+  lex.name              = string;
+  lex.source            = string;
+  lex.curr_pos          = string;
+  lex.curr_tok.type     = T_EOS;
+  lex.curr_tok.value.sp = NULL;
+  lex.line              = 1;
+  lex.col               = 1;
+  lex.save.line         = 1;
+  lex.save.col          = 1;
+  lex.save.pos          = string;
+  lex.str_gc.size       = 32;
+  if ((lex.str_gc.ptr = calloc(lex.str_gc.size, sizeof(char *))) == NULL){
+    fprintf(stderr, "malloc failed to allocate %lu bytes in `parse_file'\n", sizeof(char *) * lex.str_gc.size);
+    exit(1);
+  }
+  lex.str_gc.curr       = lex.str_gc.ptr;
+
+  /* start the parsing process */
+  stmt(&lex);
 }
 
 /*

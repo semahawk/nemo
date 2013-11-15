@@ -40,12 +40,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <locale.h>
 
 #include "parser.h"
 #include "version.h"
 
 int main(int argc, char *argv[])
 {
+  char *locale;
   /* used for getopt */
   int ch;
 
@@ -54,6 +56,17 @@ int main(int argc, char *argv[])
     { "version", no_argument, NULL, 'v' },
     { NULL, 0, NULL, 0 }
   };
+
+  if (((locale = getenv("LC_ALL")) && *locale) ||
+      ((locale = getenv("LC_CTYPE")) && *locale) ||
+      ((locale = getenv("LANG")) && *locale)){
+    if (!strstr(locale, "UTF-8")){
+      fprintf(stderr, "nemo: the locale '%s' is not supported; the only supported locale is (a variant of) UTF-8\n", locale);
+      exit(1);
+    }
+  }
+
+  setlocale(LC_ALL, "");
 
   while ((ch = getopt_long(argc, argv, "v", longopts, NULL)) != -1){
     switch (ch){
@@ -71,6 +84,8 @@ int main(int argc, char *argv[])
 
   if (argc >= 1){
     parse_file(argv[0]);
+  } else {
+    parse_string("my £ my żółć ¢¥€");
   }
 
   return 0;
@@ -83,6 +98,7 @@ int main(int argc, char *argv[])
  * Stratovarius, Steve Vai, At Vance, Rhapsody of Fire
  * Fear Factory, Scar Symmetry, Dagon, Omnium Gatherum
  * The Algorithm, Dream Theater, Insomnium
+ * Dark Age
  *
  * Family Guy, The Office, Monty Python, The I.T. Crowd
  *

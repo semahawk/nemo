@@ -57,6 +57,8 @@ CHECK_INCLUDE_FILES(stdbool.h HAVE_STDBOOL_H)
 set(libsrc
   parser.c
   lexer.c
+  utf8.c
+  util.c
 )
 
 set(binsrc

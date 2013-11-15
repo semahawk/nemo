@@ -10,7 +10,7 @@
  * The maximum length a name or keyword can have.
  * It's to avoid calling malloc so much.
  */
-#define MAX_NAME_LENGTH 64
+#define MAX_NAME_LENGTH 128
 
 #endif /* CONFIG_H */
 
