@@ -46,7 +46,7 @@ Dependencies
 ============
 
 * C90 compatible C compiler
-* `CMake<www.cmake.org>`_
+* CMake
 * make
 
 License
