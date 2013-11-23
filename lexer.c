@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "nemo.h"
+#include "mem.h"
 #include "lexer.h"
 #include "util.h"
 
@@ -33,7 +34,7 @@ static const char *keywords[] =
   "my", NULL
 };
 
-static void err(struct lexer_t *lex, const char *fmt, ...)
+static void err(struct lexer *lex, const char *fmt, ...)
 {
   va_list vl;
 
@@ -46,7 +47,7 @@ static void err(struct lexer_t *lex, const char *fmt, ...)
   exit(1);
 }
 
-static void push_str(struct lexer_t *lex, char *str)
+static void push_str(struct lexer *lex, char *str)
 {
   ptrdiff_t offset = lex->str_gc.curr - lex->str_gc.ptr;
 
@@ -54,10 +55,7 @@ static void push_str(struct lexer_t *lex, char *str)
   if (offset >= (signed)lex->str_gc.size){
     /* grow the stack to be twice as big as it was */
     lex->str_gc.size <<= 1;
-    if ((lex->str_gc.ptr = realloc(lex->str_gc.ptr, sizeof(char *) * lex->str_gc.size)) == NULL){
-      fprintf(stderr, "realloc couldn't reallocate %lu bytes in `push_str'\n", sizeof(char *) * lex->str_gc.size);
-      exit(1);
-    }
+    lex->str_gc.ptr = nrealloc(lex->str_gc.ptr, sizeof(char *) * lex->str_gc.size);
     lex->str_gc.curr = lex->str_gc.ptr + offset;
   }
 
@@ -65,32 +63,32 @@ static void push_str(struct lexer_t *lex, char *str)
   lex->str_gc.curr++; /* move on to the next 'cell' */
 }
 
-static void advance(struct lexer_t *lex)
+static void advance(struct lexer *lex)
 {
   lex->save.line  = lex->line;
   lex->save.col   = lex->col;
   lex->save.pos   = lex->curr_pos;
 }
 
-static void fallback(struct lexer_t *lex)
+static void fallback(struct lexer *lex)
 {
   lex->line       = lex->save.line;
   lex->col        = lex->save.col;
   lex->curr_pos   = lex->save.pos;
 }
 
-static struct token_t fetch_token(struct lexer_t *lex)
+static struct token fetch_token(struct lexer *lex)
 {
   /* {{{ fetch_token body */
 
 /* a nifty shorthand for the current position */
 #define p (lex->curr_pos)
 
-  char tmp_arr[MAX_NAME_LENGTH] = { '\0' };
+  char tmp_arr[MAX_NAME_LENGTH + 1] = { '\0' };
   char *tmp_str = NULL;
   int i = 0, keyword_found = 0;
   int slen = 0;
-  struct token_t ret;
+  struct token ret;
 
   if (p == NULL || *p == '\0' || (lex->fptr != NULL && feof(lex->fptr))){
     ret.type = T_EOS;
@@ -193,10 +191,7 @@ static struct token_t fetch_token(struct lexer_t *lex)
       err(lex, "unterminated string");
     }
 
-    if ((tmp_str = malloc(/* sizeof(char) times */slen)) == NULL){
-      fprintf(stderr, "malloc failed to allocate %d bytes in `fetch_token'\n", slen);
-      exit(1);
-    }
+    tmp_str = nmalloc(/* sizeof(char) times */slen);
 
     while (*savep != '"')
       *(tmp_str + i2++) = *savep++;
@@ -243,9 +238,9 @@ static struct token_t fetch_token(struct lexer_t *lex)
   /* }}} */
 }
 
-struct token_t force(struct lexer_t *lex, enum token_type_t type)
+struct token force(struct lexer *lex, enum token_type type)
 {
-  struct token_t tok = fetch_token(lex);
+  struct token tok = fetch_token(lex);
 
   if (tok.type == type){
     lex->curr_tok = tok;
@@ -257,9 +252,9 @@ struct token_t force(struct lexer_t *lex, enum token_type_t type)
   }
 }
 
-bool accept(struct lexer_t *lex, enum token_type_t type)
+bool accept(struct lexer *lex, enum token_type type)
 {
-  struct token_t tok = fetch_token(lex);
+  struct token tok = fetch_token(lex);
 
   if (tok.type == type){
     lex->curr_tok = tok;
@@ -271,9 +266,9 @@ bool accept(struct lexer_t *lex, enum token_type_t type)
   }
 }
 
-bool peek(struct lexer_t *lex, enum token_type_t type)
+bool peek(struct lexer *lex, enum token_type type)
 {
-  struct token_t tok = fetch_token(lex);
+  struct token tok = fetch_token(lex);
 
   fallback(lex);
 
@@ -285,9 +280,9 @@ bool peek(struct lexer_t *lex, enum token_type_t type)
   }
 }
 
-void skip(struct lexer_t *lex)
+void skip(struct lexer *lex)
 {
-  struct token_t tok = fetch_token(lex);
+  struct token tok = fetch_token(lex);
 
   if (tok.type == T_EOS){
     err(lex, "unexpected <EOF>");

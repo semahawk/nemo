@@ -55,14 +55,16 @@ CHECK_FUNCTION_EXISTS(strdup HAVE_STRDUP)
 CHECK_INCLUDE_FILES(stdbool.h HAVE_STDBOOL_H)
 
 set(libsrc
-  parser.c
+  ast.c
   lexer.c
+  mem.c
+  parser.c
   utf8.c
-  util.c
 )
 
 set(binsrc
   nemo.c
+  util.c
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -g")

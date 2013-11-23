@@ -17,8 +17,9 @@
 
 #include "config.h"
 #include "nemo.h"
+#include "ast.h"
 
-enum token_type_t {
+enum token_type {
   T_INTEGER,        /*                */
   T_FLOAT,          /*                */
   T_STRING,         /*                */
@@ -47,8 +48,8 @@ enum token_type_t {
   T_EOS             /*  end of script */
 };
 
-struct token_t {
-  enum token_type_t type;
+struct token {
+  enum token_type type;
   union {
     int    i;
     double f;
@@ -58,7 +59,7 @@ struct token_t {
   } value;
 };
 
-struct lexer_t {
+struct lexer {
   FILE *fptr;
   /* name of the source (eg. the file's name) */
   char *name;
@@ -74,7 +75,7 @@ struct lexer_t {
     unsigned line;
     unsigned col;
   } save;
-  struct token_t curr_tok;
+  struct token curr_tok;
   struct {
     /* pointer to the malloced array of char pointers */
     char **ptr;
@@ -83,11 +84,19 @@ struct lexer_t {
     /* size of the array */
     size_t size;
   } str_gc;
+  struct {
+    /* pointer to the malloced array of struct nodes */
+    struct node *ptr;
+    /* pointer to the current `cell' in the above array */
+    struct node *curr;
+    /* size of the pool */
+    size_t size;
+  } nds_pool; /* nodes pool */
 };
 
-struct token_t force(struct lexer_t *lexer_state, enum token_type_t type);
-bool accept(struct lexer_t *lexer_state, enum token_type_t type);
-bool peek(struct lexer_t *lexer_state, enum token_type_t type);
+struct token force(struct lexer *lexer_state, enum token_type type);
+bool accept(struct lexer *lexer_state, enum token_type type);
+bool peek(struct lexer *lexer_state, enum token_type type);
 
 #endif /* LEXER_H */
 

@@ -16,11 +16,12 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#include "mem.h"
 #include "lexer.h"
 #include "utf8.h"
 #include "util.h"
 
-void stmt(struct lexer_t *lex)
+void stmt(struct lexer *lex)
 {
   while (peek(lex, T_KEYWORD) || peek(lex, T_NAME) || peek(lex, T_STRING)){
     printf("got a keyword, name or a string: ");
@@ -42,7 +43,7 @@ void parse_file(char *fname)
   char *fbuf; /* the file's contents */
   char **p; /* used when freeing lex's `str_gc' */
   struct stat st;
-  struct lexer_t lex;
+  struct lexer lex;
 
   if ((fptr = fopen(fname, "r")) == NULL){
     fprintf(stderr, "fopen: %s: %s\n", fname, strerror(errno));
@@ -83,12 +84,12 @@ void parse_file(char *fname)
   lex.save.line         = 1;
   lex.save.col          = 1;
   lex.save.pos          = fbuf;
-  lex.str_gc.size       = 32;
-  if ((lex.str_gc.ptr = calloc(lex.str_gc.size, sizeof(char *))) == NULL){
-    fprintf(stderr, "malloc failed to allocate %lu bytes in `parse_file'\n", sizeof(char *) * lex.str_gc.size);
-    exit(1);
-  }
+  lex.str_gc.size       = 16;
+  lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
+  lex.nds_pool.size     = 32;
+  lex.nds_pool.ptr      = ncalloc(lex.nds_pool.size, sizeof(struct node));
+  lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
   stmt(&lex);
@@ -99,13 +100,14 @@ void parse_file(char *fname)
   }
   free(lex.str_gc.ptr);
   /* free the rest */
+  free(lex.nds_pool.ptr);
   free(fbuf);
   fclose(fptr);
 }
 
 void parse_string(char *string)
 {
-  struct lexer_t lex;
+  struct lexer lex;
 
   /* initialize the lexer's state */
   lex.fptr              = NULL;
@@ -119,15 +121,19 @@ void parse_string(char *string)
   lex.save.line         = 1;
   lex.save.col          = 1;
   lex.save.pos          = string;
-  lex.str_gc.size       = 32;
-  if ((lex.str_gc.ptr = calloc(lex.str_gc.size, sizeof(char *))) == NULL){
-    fprintf(stderr, "malloc failed to allocate %lu bytes in `parse_file'\n", sizeof(char *) * lex.str_gc.size);
-    exit(1);
-  }
+  lex.str_gc.size       = 4;
+  lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
+  lex.nds_pool.size     = 16;
+  lex.nds_pool.ptr      = ncalloc(lex.nds_pool.size, sizeof(struct node));
+  lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
   stmt(&lex);
+
+  /* tidy up */
+  free(lex.str_gc.ptr);
+  free(lex.nds_pool.ptr);
 }
 
 /*
