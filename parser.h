@@ -13,8 +13,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-void parse_file(char *file_name);
-void parse_string(char *string);
+int parse_file(char *file_name);
+int parse_string(char *string);
 
 #endif /* PARSER_H */
 

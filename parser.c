@@ -21,22 +21,26 @@
 #include "utf8.h"
 #include "util.h"
 
-void stmt(struct lexer *lex)
+struct node *stmt(struct lexer *lex)
 {
-  while (peek(lex, T_KEYWORD) || peek(lex, T_NAME) || peek(lex, T_STRING)){
-    printf("got a keyword, name or a string: ");
+  while (peek(lex, T_KEYWORD) || peek(lex, T_NAME) || peek(lex, T_STRING) || peek(lex, T_TYPE)){
+    printf("got a keyword, name, type name or a string: ");
     if (accept(lex, T_KEYWORD)){
       printf("a keyword: %s\n", lex->curr_tok.value.s);
     } else if (accept(lex, T_STRING)){
       printf("a string:  %s (len %u)\n", lex->curr_tok.value.sp, u8_strlen(lex->curr_tok.value.sp));
+    } else if (accept(lex, T_TYPE)){
+      printf("a type: %s\n", lex->curr_tok.value.s);
     } else {
       accept(lex, T_NAME);
       printf("a name:    %s (len %u)\n", lex->curr_tok.value.s, u8_strlen(lex->curr_tok.value.s));
     }
   }
+
+  return new_unop(lex, UNARY_MINUS, new_int(lex, 8));
 }
 
-void parse_file(char *fname)
+int parse_file(char *fname)
 {
   FILE *fptr;
   size_t flen;
@@ -44,16 +48,17 @@ void parse_file(char *fname)
   char **p; /* used when freeing lex's `str_gc' */
   struct stat st;
   struct lexer lex;
+  struct node *node;
 
   if ((fptr = fopen(fname, "r")) == NULL){
     fprintf(stderr, "fopen: %s: %s\n", fname, strerror(errno));
-    return /* NULL */;
+    return 0;
   }
 
   /* get the file's size in bytes */
   if (stat(fname, &st) == -1){
     fprintf(stderr, "stat: %s: %s\n", fname, strerror(errno));
-    return /* NULL */;
+    return 0;
   }
 
   flen = st.st_size;
@@ -61,13 +66,13 @@ void parse_file(char *fname)
   /* make space for the file's contents */
   if ((fbuf = malloc(sizeof(char) * flen)) == NULL){
     fprintf(stderr, "malloc: %s\n", strerror(errno));
-    return /* NULL */;
+    return 0;
   }
 
   /* fetch the file's contents */
   if (fread(fbuf, sizeof(char), flen, fptr) != flen){
     fprintf(stderr, "fread: %s\n", strerror(errno));
-    return /* NULL */;
+    return 0;
   }
   /* nul-terminate the contents */
   fbuf[flen - 1] = '\0';
@@ -92,7 +97,8 @@ void parse_file(char *fname)
   lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
-  stmt(&lex);
+  node = stmt(&lex);
+  node->execf(node);
 
   /* free the lexer's `str_gc' */
   for (p = lex.str_gc.ptr; p != lex.str_gc.curr; p++){
@@ -103,11 +109,14 @@ void parse_file(char *fname)
   free(lex.nds_pool.ptr);
   free(fbuf);
   fclose(fptr);
+
+  return 1;
 }
 
-void parse_string(char *string)
+int parse_string(char *string)
 {
   struct lexer lex;
+  struct node *node;
 
   /* initialize the lexer's state */
   lex.fptr              = NULL;
@@ -129,11 +138,14 @@ void parse_string(char *string)
   lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
-  stmt(&lex);
+  node = stmt(&lex);
+  node->execf(node);
 
   /* tidy up */
   free(lex.str_gc.ptr);
   free(lex.nds_pool.ptr);
+
+  return 1;
 }
 
 /*

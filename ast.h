@@ -75,6 +75,7 @@ enum binop_type {
 struct node {
   enum node_type type;
   struct node *next;
+  void (*execf)(struct node *);
   union {
     int i;   /* NT_INTEGER */
     float f; /* NT_FLOAT */

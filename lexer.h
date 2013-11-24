@@ -25,6 +25,7 @@ enum token_type {
   T_STRING,         /*                */
   T_NAME,           /*                */
   T_KEYWORD,        /*                */
+  T_TYPE,           /*                */
   T_OPT,            /*  -[a-zA-Z]     */
   T_EQ,             /*  "="           */
   T_SEMICOLON,      /*  ";"           */
