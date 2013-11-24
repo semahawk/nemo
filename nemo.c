@@ -51,12 +51,6 @@ int main(int argc, char *argv[])
   /* used for getopt */
   int ch;
 
-  /*  options descriptor */
-  static struct option longopts[] = {
-    { "version", no_argument, NULL, 'v' },
-    { NULL, 0, NULL, 0 }
-  };
-
   if (((locale = getenv("LC_ALL")) && *locale) ||
       ((locale = getenv("LC_CTYPE")) && *locale) ||
       ((locale = getenv("LANG")) && *locale)){
@@ -68,12 +62,11 @@ int main(int argc, char *argv[])
 
   setlocale(LC_ALL, "");
 
-  while ((ch = getopt_long(argc, argv, "v", longopts, NULL)) != -1){
+  while ((ch = getopt(argc, argv, "v")) != -1){
     switch (ch){
       case 'v': printf("Nemo v%d.%d.%d, " __DATE__ " " __TIME__"\n",
                   NM_VERSION_MAJOR, NM_VERSION_MINOR, NM_VERSION_PATCH);
-                break;
-                /*return 0;*/
+                return 0;
       case '?': return 1;
       default:  abort();
     }

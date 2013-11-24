@@ -63,6 +63,7 @@ set(libsrc
 )
 
 set(binsrc
+  ext/getopt.c
   nemo.c
   util.c
 )

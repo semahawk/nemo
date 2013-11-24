@@ -49,6 +49,30 @@ Dependencies
 * CMake
 * make
 
+What's what
+===========
+
++------------------+---------------------------------------------------------+
+| cmake/           | CMake build-only related files                          |
++------------------+---------------------------------------------------------+
+| ext/             | External files/libraries, sometimes replacements for    |
+|                  | existing libc functions                                 |
++------------------+---------------------------------------------------------+
+| ast.c            | AST related stuff - node creation, execution etc.       |
++------------------+---------------------------------------------------------+
+| lexer.c          | The lexer, tokenizing, keywords list etc.               |
++------------------+---------------------------------------------------------+
+| mem.c            | Basically just malloc/realloc/calloc wrappers           |
++------------------+---------------------------------------------------------+
+| nemo.c           | The main file of the executable, contains main()        |
++------------------+---------------------------------------------------------+
+| parser.c         | The parser and all the grammar                          |
++------------------+---------------------------------------------------------+
+| utf8.c           | Handful of handy functions to help with UTF-8           |
++------------------+---------------------------------------------------------+
+| util.c           | Handful of handy functions to help with anything else   |
++------------------+---------------------------------------------------------+
+
 License
 =======
 
