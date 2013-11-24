@@ -52,26 +52,46 @@ Dependencies
 What's what
 ===========
 
-+------------------+---------------------------------------------------------+
-| cmake/           | CMake build-only related files                          |
-+------------------+---------------------------------------------------------+
-| ext/             | External files/libraries, sometimes replacements for    |
-|                  | existing libc functions                                 |
-+------------------+---------------------------------------------------------+
-| ast.c            | AST related stuff - node creation, execution etc.       |
-+------------------+---------------------------------------------------------+
-| lexer.c          | The lexer, tokenizing, keywords list etc.               |
-+------------------+---------------------------------------------------------+
-| mem.c            | Basically just malloc/realloc/calloc wrappers           |
-+------------------+---------------------------------------------------------+
-| nemo.c           | The main file of the executable, contains main()        |
-+------------------+---------------------------------------------------------+
-| parser.c         | The parser and all the grammar                          |
-+------------------+---------------------------------------------------------+
-| utf8.c           | Handful of handy functions to help with UTF-8           |
-+------------------+---------------------------------------------------------+
-| util.c           | Handful of handy functions to help with anything else   |
-+------------------+---------------------------------------------------------+
+.. raw:: html
+
+    <table>
+     <tr>
+      <td><code>cmake/</code></td>
+      <td>CMake build-only related files</td>
+     </tr>
+     <tr>
+      <td><code>ext/</code></td>
+      <td>External files/libraries, sometimes replacements for existing libc functions</td>
+     </tr>
+     <tr>
+      <td><code>ast.c</code></td>
+      <td>AST related stuff - node creation, execution etc.</td>
+     </tr>
+     <tr>
+      <td><code>lexer.c</code></td>
+      <td>The lexer, tokenizing, keywords list etc.</td>
+     </tr>
+     <tr>
+      <td><code>mem.c</code></td>
+      <td>Basically just malloc/realloc/calloc wrappers</td>
+     </tr>
+     <tr>
+      <td><code>nemo.c</code></td>
+      <td>The main file of the executable, contains main(), the REPL</td>
+     </tr>
+     <tr>
+      <td><code>parser.c</code></td>
+      <td>The (recursive-descent) parser and all the grammar</td>
+     </tr>
+     <tr>
+      <td><code>utf8.c</code></td>
+      <td>Handful of handy functions to help with UTF-8</td>
+     </tr>
+     <tr>
+      <td><code>util.c</code></td>
+      <td>Handful of handy functions to help with anything else</td>
+     </tr>
+    </table>
 
 License
 =======
