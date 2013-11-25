@@ -1,8 +1,9 @@
-Nemo [![build status][https://travis-ci.org/semahawk/nemo.png?branch=master]][https://travis-ci.org/semahawk/nemo]
+Nemo
 ====
 
-Nemo is a scripting, interpreted,
-dynamically and strongly typed programming language written in ANSI C.
+[![build status][https://travis-ci.org/semahawk/nemo.png?branch=master]][https://travis-ci.org/semahawk/nemo]
+
+Nemo is a scripting, interpreted, statically and strongly typed programming (well, that's the plan) language written in ANSI C.
 
 **Note** I'm rewriting Nemo from the ground up. There's not much to see right now.
 

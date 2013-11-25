@@ -20,6 +20,10 @@
 
 /* one handy macro */
 #define EXEC(node) ((node)->execf(node))
+/* another one */
+#define RETURN return (NM_pc = nd->next, (intptr_t)NM_pc);
+
+static struct node *NM_pc = NULL;
 
 static struct node *push_node(struct lexer *lex, struct node *node)
 {
@@ -41,32 +45,47 @@ static struct node *push_node(struct lexer *lex, struct node *node)
 }
 
 /* {{{ exec_nodes */
-void exec_const(struct node *n)
+void exec_nodes(struct node *node)
+{
+  NM_pc = node;
+
+  while ((EXEC(node)))
+    ;
+}
+
+int exec_const(struct node *nd)
 {
   /* {{{  */
-  if (n->type == NT_INTEGER)
-    printf("executing an integer (%d)\n", n->in.i);
-  else if (n->type == NT_FLOAT)
-    printf("executing a float (%f)\n", n->in.f);
+  if (nd->type == NT_INTEGER)
+    printf("executing an integer (%d)\n", nd->in.i);
+  else if (nd->type == NT_FLOAT)
+    printf("executing a float (%f)\n", nd->in.f);
+
+  RETURN;
   /* }}} */
 }
 
-void exec_unop(struct node *n)
+int exec_unop(struct node *nd)
 {
   /* {{{ */
-  EXEC(n->in.unop.target);
+  EXEC(nd->in.unop.target);
 
   printf("executing unary operation\n");
+
+  RETURN;
   /* }}} */
+
 }
 
-void exec_binop(struct node *n)
+int exec_binop(struct node *nd)
 {
   /* {{{ */
-  EXEC(n->in.binop.left);
-  EXEC(n->in.binop.right);
+  EXEC(nd->in.binop.left);
+  EXEC(nd->in.binop.right);
 
   printf("executing binary operation\n");
+
+  RETURN;
   /* }}} */
 }
 /* }}} */
@@ -79,6 +98,7 @@ struct node *new_int(struct lexer *lex, int value)
   n.type = NT_INTEGER;
   n.in.i = value;
   n.execf = exec_const;
+  n.next = NULL;
 
   return push_node(lex, &n);
   /* }}} */
@@ -93,6 +113,7 @@ struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *targe
   n.in.unop.type = type;
   n.in.unop.target = target;
   n.execf = exec_unop;
+  n.next = NULL;
 
   return push_node(lex, &n);
   /* }}} */
@@ -108,6 +129,7 @@ struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *lef
   n.in.binop.left = left;
   n.in.binop.right = right;
   n.execf = exec_binop;
+  n.next = NULL;
 
   return push_node(lex, &n);
   /* }}} */

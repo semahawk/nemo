@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#include "ast.h"
 #include "mem.h"
 #include "lexer.h"
 #include "utf8.h"
@@ -37,7 +38,7 @@ struct node *stmt(struct lexer *lex)
     }
   }
 
-  return new_unop(lex, UNARY_MINUS, new_int(lex, 8));
+  return new_binop(lex, BINARY_ADD, new_int(lex, 4), new_unop(lex, UNARY_MINUS, new_int(lex, 8)));
 }
 
 int parse_file(char *fname)
@@ -98,7 +99,7 @@ int parse_file(char *fname)
 
   /* start the parsing process */
   node = stmt(&lex);
-  node->execf(node);
+  exec_nodes(node);
 
   /* free the lexer's `str_gc' */
   for (p = lex.str_gc.ptr; p != lex.str_gc.curr; p++){
@@ -139,7 +140,7 @@ int parse_string(char *string)
 
   /* start the parsing process */
   node = stmt(&lex);
-  node->execf(node);
+  exec_nodes(node);
 
   /* tidy up */
   free(lex.str_gc.ptr);

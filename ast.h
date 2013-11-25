@@ -75,7 +75,7 @@ enum binop_type {
 struct node {
   enum node_type type;
   struct node *next;
-  void (*execf)(struct node *);
+  int (*execf)(struct node *);
   union {
     int i;   /* NT_INTEGER */
     float f; /* NT_FLOAT */
@@ -127,6 +127,8 @@ struct node {
 struct node *new_int(struct lexer *lex, int value);
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target);
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right);
+
+void exec_nodes(struct node *node);
 
 #endif /* AST_H */
 
