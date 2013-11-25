@@ -1,7 +1,5 @@
-Nemo
+Nemo <a href='https://travis-ci.org/semahawk/nemo'><img src='https://travis-ci.org/semahawk/nemo.png?branch=master'></a>
 ====
-
-[![build status][https://travis-ci.org/semahawk/nemo.png?branch=master]][https://travis-ci.org/semahawk/nemo]
 
 Nemo is a scripting, interpreted, statically and strongly typed programming (well, that's the plan) language written in ANSI C.
 
@@ -13,28 +11,28 @@ Install
 **1**. Obtain the sources
 
 ```sh
-    $ git clone https://github.com/semahawk/nemo.git
+$ git clone https://github.com/semahawk/nemo.git
 ```
 
 **2**. Compile
 
 ```sh
-    $ cmake . \
-        [-DDEBUG=ON|YES|1] \
-        [-DBINDIR=/where/to/install/binaries]  \
-        [-DINCDIR=/where/to/install/headers]   \
-        [-DLIBDIR=/where/to/install/libraries] \
-    $ make
-    $ sudo make install
+$ cmake . \
+    [-DDEBUG=ON|YES|1] \
+    [-DBINDIR=/where/to/install/binaries]  \
+    [-DINCDIR=/where/to/install/headers]   \
+    [-DLIBDIR=/where/to/install/libraries] \
+$ make
+$ sudo make install
 ```
 
 The default values for the specific options are:
 
 ```sh
-    DEBUG:  0
-    BINDIR: "/usr/local/bin"
-    INCDIR: "/usr/local/include"
-    LIBDIR: "/usr/local/lib"
+DEBUG:  0
+BINDIR: "/usr/local/bin"
+INCDIR: "/usr/local/include"
+LIBDIR: "/usr/local/lib"
 ```
 
 Dependencies
