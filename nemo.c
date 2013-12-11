@@ -42,6 +42,7 @@
 #include <getopt.h>
 #include <locale.h>
 
+#include "ast.h"
 #include "parser.h"
 #include "version.h"
 
@@ -61,6 +62,9 @@ int main(int argc, char *argv[])
   }
 
   setlocale(LC_ALL, "");
+
+  /* initialize the argument stack */
+  arg_stack_init();
 
   while ((ch = getopt(argc, argv, "v")) != -1){
     switch (ch){

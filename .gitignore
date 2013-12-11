@@ -1,7 +1,7 @@
 nemo
 
 # every .nm file in the root directory
-/*.nm
+foo.nm
 
 *.o
 *.a

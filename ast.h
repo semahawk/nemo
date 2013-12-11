@@ -127,8 +127,17 @@ struct node {
 struct node *new_int(struct lexer *lex, int value);
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target);
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right);
+struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee);
 
 void exec_nodes(struct node *node);
+
+void arg_stack_init(void);
+#define PUSH(i) arg_stack_push(i, __FILE__, __LINE__)
+void arg_stack_push(int value, const char *file, unsigned line);
+#define POP() arg_stack_pop(__FILE__, __LINE__)
+int arg_stack_pop(const char *file, unsigned line);
+#define TOP() arg_stack_top()
+int arg_stack_top(void);
 
 #endif /* AST_H */
 

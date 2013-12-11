@@ -21,12 +21,79 @@
 /* one handy macro */
 #define EXEC(node) ((node)->execf(node))
 /* another one */
-#define RETURN return (NM_pc = nd->next, (intptr_t)NM_pc);
+#define RETURN_NEXT return (NM_pc = nd->next, (intptr_t)NM_pc)
+#define RETURN return ((intptr_t)NM_pc)
 
+/* program counter */
 static struct node *NM_pc = NULL;
+
+/* the argument stack */
+static int   *NM_as      = NULL;
+static int   *NM_as_curr = NULL;
+static size_t NM_as_size = 16;
+
+/* {{{ argument stack manipulation functions */
+void arg_stack_init(void)
+{
+  NM_as = ncalloc(NM_as_size, sizeof(int *));
+  NM_as_curr = NM_as /* nope */;
+}
+
+void arg_stack_push(int value, const char *file, unsigned line)
+{
+  ptrdiff_t offset = NM_as_curr - NM_as;
+  /* hmm, will they be ever used? */
+  (void)file;
+  (void)line;
+
+  /* handle overflow */
+  if (offset >= (signed)NM_as_size){
+    NM_as_size *= 1.5;
+    NM_as = nrealloc(NM_as, sizeof(int *) * NM_as_size);
+    NM_as_curr = NM_as + offset; /* adjust the 'current' pointer */
+  }
+
+  *NM_as_curr = value; /* set up the current `cell' */
+  NM_as_curr++; /* move on to the next `cell' */
+}
+
+int arg_stack_pop(const char *file, unsigned line)
+{
+  ptrdiff_t offset = NM_as_curr - NM_as;
+
+  if (offset < 0){
+    fprintf(stderr, "nemo: argument stack underflow! in %s line %u\n", file, line);
+    exit(1);
+  }
+
+  NM_as_curr--;
+
+  return *NM_as_curr;
+}
+
+int arg_stack_top(void)
+{
+  return *(NM_as_curr - 1);
+}
+
+void arg_stack_dump(void)
+{
+  int i = 0;
+
+  printf("\n## Stack dump:\n");
+  for (; i < (signed)NM_as_size; i++){
+    printf("  %x - %i", i, NM_as[i]);
+    if (&NM_as[i] == NM_as_curr)
+      printf(" <<<");
+    printf("\n");
+  }
+  printf("## END\n\n");
+}
+/* }}} */
 
 static struct node *push_node(struct lexer *lex, struct node *node)
 {
+  /* {{{ */
   ptrdiff_t offset = lex->nds_pool.curr - lex->nds_pool.ptr;
   struct node *ret = lex->nds_pool.curr;
 
@@ -35,13 +102,14 @@ static struct node *push_node(struct lexer *lex, struct node *node)
     /* grow the stack to be twice as big as it was */
     lex->nds_pool.size <<= 1;
     lex->nds_pool.ptr = nrealloc(lex->nds_pool.ptr, sizeof(struct node) * lex->nds_pool.size);
-    lex->nds_pool.curr = lex->nds_pool.ptr + offset;
+    lex->nds_pool.curr = lex->nds_pool.ptr + offset; /* adjust the 'current' pointer */
   }
 
   *lex->nds_pool.curr = *node; /* set up the current 'cell' */
   lex->nds_pool.curr++; /* move on to the next 'cell' */
 
   return ret;
+  /* }}} */
 }
 
 /* {{{ exec_nodes */
@@ -51,17 +119,22 @@ void exec_nodes(struct node *node)
 
   while ((EXEC(node)))
     ;
+
+  arg_stack_dump();
 }
 
 int exec_const(struct node *nd)
 {
   /* {{{  */
-  if (nd->type == NT_INTEGER)
+  if (nd->type == NT_INTEGER){
     printf("executing an integer (%d)\n", nd->in.i);
-  else if (nd->type == NT_FLOAT)
+    PUSH(nd->in.i);
+  } else if (nd->type == NT_FLOAT){
     printf("executing a float (%f)\n", nd->in.f);
+    PUSH(nd->in.f);
+  }
 
-  RETURN;
+  RETURN_NEXT;
   /* }}} */
 }
 
@@ -72,9 +145,12 @@ int exec_unop(struct node *nd)
 
   printf("executing unary operation\n");
 
-  RETURN;
-  /* }}} */
+  switch (nd->in.unop.type){
+    default: PUSH(POP() * -1);
+  }
 
+  RETURN_NEXT;
+  /* }}} */
 }
 
 int exec_binop(struct node *nd)
@@ -85,8 +161,29 @@ int exec_binop(struct node *nd)
 
   printf("executing binary operation\n");
 
-  RETURN;
+  switch (nd->in.binop.type){
+    default: PUSH(POP() + POP());
+  }
+
+  RETURN_NEXT;
   /* }}} */
+}
+
+int exec_if(struct node *nd)
+{
+  int guard;
+  EXEC(nd->in.iff.guard);
+
+  guard = POP();
+
+  printf("guard: %d\n", guard);
+
+  if (guard)
+    EXEC(nd->in.iff.body);
+  else
+    EXEC(nd->in.iff.elsee);
+
+  RETURN_NEXT;
 }
 /* }}} */
 /* {{{ new_nodes */
@@ -129,6 +226,23 @@ struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *lef
   n.in.binop.left = left;
   n.in.binop.right = right;
   n.execf = exec_binop;
+  n.next = NULL;
+
+  return push_node(lex, &n);
+  /* }}} */
+}
+
+struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee)
+{
+  /* {{{ */
+  struct node n;
+
+  n.type = NT_IF;
+  n.in.iff.guard = guard;
+  n.in.iff.body  = body;
+  n.in.iff.elsee = elsee;
+  n.in.iff.unless = false;
+  n.execf = exec_if;
   n.next = NULL;
 
   return push_node(lex, &n);

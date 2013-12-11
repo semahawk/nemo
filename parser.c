@@ -38,7 +38,23 @@ struct node *stmt(struct lexer *lex)
     }
   }
 
-  return new_binop(lex, BINARY_ADD, new_int(lex, 4), new_unop(lex, UNARY_MINUS, new_int(lex, 8)));
+  return
+    new_if(lex,
+      new_int(lex, 0),
+      new_unop(lex, UNARY_MINUS,
+        new_int(lex, 2)),
+      new_binop(lex, BINARY_ADD,
+        new_int(lex, 3),
+        new_if(lex,
+          new_int(lex, 0),
+          new_unop(lex, UNARY_MINUS, new_int(lex, 5)),
+          new_binop(lex, BINARY_SUB,
+            new_int(lex, 6),
+            new_int(lex, 7)
+          )
+        )
+      )
+    );
 }
 
 int parse_file(char *fname)
