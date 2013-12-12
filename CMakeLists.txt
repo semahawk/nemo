@@ -58,6 +58,7 @@ set(libsrc
   ast.c
   lexer.c
   mem.c
+  nob.c
   parser.c
   utf8.c
 )

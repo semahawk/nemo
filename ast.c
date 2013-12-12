@@ -119,8 +119,6 @@ void exec_nodes(struct node *node)
 
   while ((EXEC(node)))
     ;
-
-  arg_stack_dump();
 }
 
 int exec_const(struct node *nd)

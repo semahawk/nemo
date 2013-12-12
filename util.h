@@ -38,7 +38,9 @@ char *strdup_(char *p, const char *file, unsigned line)
 }
 #endif
 
-const char *itob(int number);
+const char *itob4(int number);
+const char *itob8(int number);
+const char *itob64(int64_t number);
 
 #endif /* UTIL_H */
 

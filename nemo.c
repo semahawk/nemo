@@ -45,6 +45,8 @@
 #include "ast.h"
 #include "parser.h"
 #include "version.h"
+#include "util.h"
+#include "nob.h"
 
 int main(int argc, char *argv[])
 {
@@ -85,6 +87,20 @@ int main(int argc, char *argv[])
     parse_string("my £ my żółć ¢¥€");
   }
 
+  {
+    Nob object;
+
+    if (argc >= 2)
+      object = nob_new_int(atoi(argv[1]));
+    else
+      object = nob_new_int(64);
+
+    printf("New object: %s\n", itob64(object));
+    printf("New object's magic nibble: %u, %X (%s)\n", NOB_NIBBLE(object), NOB_NIBBLE(object), itob4(NOB_NIBBLE(object)));
+    printf("New object's value: %d\n", NOB_IMMIDIATE_VAL(object));
+    printf("New object as a pointer: %p\n", NOB_PTR(object));
+  }
+
   return 0;
 }
 
@@ -95,7 +111,8 @@ int main(int argc, char *argv[])
  * Stratovarius, Steve Vai, At Vance, Rhapsody of Fire
  * Fear Factory, Scar Symmetry, Dagon, Omnium Gatherum
  * The Algorithm, Dream Theater, Insomnium
- * Dark Age
+ * Dark Age, Equilibrium, Bolt Thrower, Kalmah
+ * Qntal, Helium Vola
  *
  * Family Guy, The Office, Monty Python, The I.T. Crowd
  *
