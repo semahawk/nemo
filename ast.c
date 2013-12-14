@@ -16,6 +16,7 @@
 
 #include "ast.h"
 #include "mem.h"
+#include "nob.h"
 #include "lexer.h"
 
 /* one handy macro */
@@ -28,30 +29,24 @@
 static struct node *NM_pc = NULL;
 
 /* the argument stack */
-static int   *NM_as      = NULL;
-static int   *NM_as_curr = NULL;
+static Nob   *NM_as      = NULL;
+static Nob   *NM_as_curr = NULL;
 static size_t NM_as_size = 16;
 
 /* {{{ argument stack manipulation functions */
 void arg_stack_init(void)
 {
-  NM_as = ncalloc(NM_as_size, sizeof(int *));
+  NM_as = ncalloc(NM_as_size, sizeof(Nob *));
   NM_as_curr = NM_as;
 }
 
 void arg_stack_finish(void)
 {
-  unsigned i = 0;
-
-  for (; i < NM_as_curr - NM_as; i++){
-    /* TODO */
-    /* fix that when it's Nob pointers, not ints */
-  }
-
-  free(NM_as);
+  nfree(NM_as);
+  NM_as = NULL;
 }
 
-void arg_stack_push(int value, const char *file, unsigned line)
+void arg_stack_push(Nob *ob, const char *file, unsigned line)
 {
   ptrdiff_t offset = NM_as_curr - NM_as;
   /* hmm, will they be ever used? */
@@ -65,11 +60,11 @@ void arg_stack_push(int value, const char *file, unsigned line)
     NM_as_curr = NM_as + offset; /* adjust the 'current' pointer */
   }
 
-  *NM_as_curr = value; /* set up the current `cell' */
+  NM_as_curr = ob; /* set up the current `cell' */
   NM_as_curr++; /* move on to the next `cell' */
 }
 
-int arg_stack_pop(const char *file, unsigned line)
+Nob *arg_stack_pop(const char *file, unsigned line)
 {
   ptrdiff_t offset = NM_as_curr - NM_as;
 
@@ -80,12 +75,12 @@ int arg_stack_pop(const char *file, unsigned line)
 
   NM_as_curr--;
 
-  return *NM_as_curr;
+  return NM_as_curr;
 }
 
-int arg_stack_top(void)
+Nob *arg_stack_top(void)
 {
-  return *(NM_as_curr - 1);
+  return NM_as_curr - 1;
 }
 
 void arg_stack_dump(void)
@@ -93,8 +88,8 @@ void arg_stack_dump(void)
   int i = 0;
 
   printf("\n## Stack dump:\n");
-  for (; i < (signed)NM_as_size; i++){
-    printf("  %x - %i", i, NM_as[i]);
+  for (; i < NM_as_curr - NM_as; i++){
+    printf("  %x - %p", i, (void *)&NM_as[i]);
     if (&NM_as[i] == NM_as_curr)
       printf(" <<<");
     printf("\n");
@@ -138,10 +133,11 @@ int exec_const(struct node *nd)
   /* {{{  */
   if (nd->type == NT_INTEGER){
     printf("executing an integer (%d)\n", nd->in.i);
-    PUSH(nd->in.i);
+    PUSH(new_nob(T_BYTE, nd->in.i));
   } else if (nd->type == NT_FLOAT){
     printf("executing a float (%f)\n", nd->in.f);
-    PUSH(nd->in.f);
+    /* FIXME */
+    PUSH(new_nob(T_BYTE, (int)nd->in.f));
   }
 
   RETURN_NEXT;
@@ -156,7 +152,8 @@ int exec_unop(struct node *nd)
   printf("executing unary operation\n");
 
   switch (nd->in.unop.type){
-    default: PUSH(POP() * -1);
+    /* FIXME */
+    default: /* WIP */;
   }
 
   RETURN_NEXT;
@@ -172,7 +169,8 @@ int exec_binop(struct node *nd)
   printf("executing binary operation\n");
 
   switch (nd->in.binop.type){
-    default: PUSH(POP() + POP());
+    /* FIXME */
+    default: PUSH((POP(), POP()));
   }
 
   RETURN_NEXT;
@@ -181,12 +179,12 @@ int exec_binop(struct node *nd)
 
 int exec_if(struct node *nd)
 {
-  int guard;
+  Nob *guard;
   EXEC(nd->in.iff.guard);
 
-  guard = POP();
+  guard = TOP();
 
-  printf("guard: %d\n", guard);
+  printf("guard: %p\n", (void *)guard);
 
   if (guard)
     EXEC(nd->in.iff.body);

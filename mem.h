@@ -25,6 +25,8 @@ void *ncalloc_(size_t number, size_t size, const char *file, unsigned line);
 #define nrealloc(s,n) nrealloc_(s, n, __FILE__, __LINE__)
 void *nrealloc_(void *ptr, size_t size, const char *file, unsigned line);
 
+void nfree(void *ptr);
+
 #endif /* MEM_H */
 
 /*

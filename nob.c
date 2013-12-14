@@ -10,6 +10,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -33,10 +34,19 @@ struct nob_type **NM_types_curr = NULL;
 /* initial size of the array (updated when the array gets expanded) */
 size_t NM_types_size = 32;
 
+/* the garbage collector object pool */
+/* (an array of Nobs (NOT Nob pointers!)) */
+Nob *NM_gc = NULL;
+/* the current 'slot' in the pool */
+Nob *NM_gc_curr = NULL;
+/* the size of the pool */
+size_t NM_gc_size = 32;
+
+/* {{{ Functions related with types (init, finish, etc) */
 void types_init(void)
 {
   /* set up the array */
-  NM_types = ncalloc(NM_types_size, sizeof(struct nob_type));
+  NM_types = ncalloc(NM_types_size, sizeof(struct nob_type *));
   NM_types_curr = NM_types;
 
   /* create the standard types */
@@ -52,11 +62,11 @@ void types_finish(void)
   ptrdiff_t offset = NM_types_curr - NM_types;
 
   for (i = 0; i < offset; i++){
-    free(NM_types[i]->name);
-    free(NM_types[i]);
+    nfree(NM_types[i]->name);
+    nfree(NM_types[i]);
   }
 
-  free(NM_types);
+  nfree(NM_types);
 }
 
 /*
@@ -75,15 +85,86 @@ static void push_type(struct nob_type *type)
 
   *(NM_types_curr++) = type;
 }
+/* }}} */
 
-/* that's not working, obviously */
-Nob *nob_new_int(int64_t value)
+/* {{{ Functions related with Garbage Collector (init, finish, etc) */
+void gc_init(void)
 {
-  Nob *new = nmalloc(sizeof(Nob));
+  /* set up the pool */
+  NM_gc = ncalloc(NM_gc_size, sizeof(Nob));
+  NM_gc_curr = NM_gc;
+}
 
-  /*new->type = get_type_by_name("");*/
+void gc_finish(void)
+{
+  /* because it's an array of Nobs (not Nob pointers), we only need to free the
+   * array, and not the objects themselves as well */
+  Nob *p = NM_gc;
 
-  return new;
+  for (; p != NM_gc_curr; p++){
+    /* free the value associated with the object */
+    nfree(p->ptr);
+  }
+
+  /* free the whole pool */
+  nfree(NM_gc);
+}
+
+/*
+ * "Pushes" a given <Nob> to the NM_gc pool/array.
+ */
+static Nob *push_nob(Nob *nob)
+{
+  Nob *save = NM_gc_curr;
+  ptrdiff_t offset = NM_gc_curr - NM_gc;
+
+  /* handle overflow */
+  if (offset >= (signed)NM_gc_size){
+    NM_gc_size *= 1.5;
+    NM_gc = nrealloc(NM_gc, sizeof(struct nob_type) * NM_gc_size);
+    NM_gc_curr = NM_gc + offset;
+  }
+
+  *(NM_gc_curr++) = *nob;
+
+  printf("Pushing Nob %p\n", (void *)save);
+
+  return save;
+}
+/* }}} */
+
+/* that's a WIP, obviously */
+Nob *new_nob(struct nob_type *type, ...)
+{
+  va_list vl;
+  Nob new;
+
+  va_start(vl, type);
+
+  /* set up the new object with some knowns */
+  new.type = type;
+  new.ptr = nmalloc(type->size);
+
+  switch (type->primitive){
+    case OT_INTEGER:
+      *new.ptr = va_arg(vl, int64_t);
+      break;
+
+    /* suspress warnings */
+    case OT_REAL:
+    case OT_CHAR:
+    case OT_STRING:
+    case OT_ARRAY:
+    case OT_TUPLE:
+    case OT_FUN:
+      break;
+    default:
+      break;
+  }
+
+  va_end(vl);
+
+  return push_nob(&new);
 }
 
 /*
@@ -91,7 +172,10 @@ Nob *nob_new_int(int64_t value)
  */
 size_t sizeof_nob(Nob *ob)
 {
-  return 0;
+  assert(ob);
+  assert(ob->type);
+
+  return ob->type->size;
 }
 
 /*
@@ -139,16 +223,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   va_end(vl);
 
   return new_type;
-}
-
-struct nob_type *get_type(unsigned typeid)
-{
-  return NULL;
-}
-
-char *get_type_name(unsigned typeid)
-{
-  return NULL;
 }
 
 /*

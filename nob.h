@@ -15,6 +15,8 @@
 
 #include <stdint.h>
 
+#include "nemo.h"
+
 enum nob_primitive_type {
   /* that's kind of a draft only */
   OT_INTEGER = 0x00,
@@ -65,18 +67,24 @@ typedef struct nob {
   /* the object's type, d'oh */
   struct nob_type *type;
   /* pointer to the object's actual value */
-  void *ptr;
+  byte_t *ptr;
 } Nob;
 
 void types_init(void);
 void types_finish(void);
+void gc_init(void);
+void gc_finish(void);
 
-Nob *nob_new_int(int64_t value);
+Nob *new_nob(struct nob_type *type, ...);
 struct nob_type *new_type(char *name, enum nob_primitive_type type, ...);
 size_t sizeof_nob(Nob *ob);
-struct nob_type *get_type(unsigned typeid);
-char *get_type_name(unsigned typeid);
 void dump_types(void);
+
+/* make the variables visible */
+extern struct nob_type *T_BYTE;
+extern struct nob_type *T_WORD;
+extern struct nob_type *T_DWORD;
+extern struct nob_type *T_QWORD;
 
 #endif /* NOB_H */
 

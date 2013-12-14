@@ -21,6 +21,8 @@
 # define false 0
 #endif /* HAVE_STDBOOL_H */
 
+typedef unsigned char byte_t;
+
 #endif /* NEMO_H */
 
 /*

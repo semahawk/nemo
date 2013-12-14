@@ -119,12 +119,12 @@ int parse_file(char *fname)
 
   /* free the lexer's `str_gc' */
   for (p = lex.str_gc.ptr; p != lex.str_gc.curr; p++){
-    free(*p);
+    nfree(*p);
   }
-  free(lex.str_gc.ptr);
+  nfree(lex.str_gc.ptr);
   /* free the rest */
-  free(lex.nds_pool.ptr);
-  free(fbuf);
+  nfree(lex.nds_pool.ptr);
+  nfree(fbuf);
   fclose(fptr);
 
   return 1;
@@ -159,8 +159,8 @@ int parse_string(char *string)
   exec_nodes(node);
 
   /* tidy up */
-  free(lex.str_gc.ptr);
-  free(lex.nds_pool.ptr);
+  nfree(lex.str_gc.ptr);
+  nfree(lex.nds_pool.ptr);
 
   return 1;
 }

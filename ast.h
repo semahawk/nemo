@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "nemo.h"
+#include "nob.h"
 #include "lexer.h"
 
 /* forward */
@@ -135,11 +136,11 @@ void arg_stack_init(void);
 void arg_stack_finish(void);
 
 #define PUSH(i) arg_stack_push(i, __FILE__, __LINE__)
-void arg_stack_push(int value, const char *file, unsigned line);
+void arg_stack_push(Nob *ob, const char *file, unsigned line);
 #define POP() arg_stack_pop(__FILE__, __LINE__)
-int arg_stack_pop(const char *file, unsigned line);
+Nob *arg_stack_pop(const char *file, unsigned line);
 #define TOP() arg_stack_top()
-int arg_stack_top(void);
+Nob *arg_stack_top(void);
 
 #endif /* AST_H */
 

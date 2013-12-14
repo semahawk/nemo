@@ -51,6 +51,14 @@ void *nrealloc_(void *ptr, size_t size, const char *file, unsigned line)
   return p;
 }
 
+void nfree(void *ptr)
+{
+  /* free what's 'under' the pointer */
+  free(ptr);
+  /* 'invalidate' it */
+  ptr = (unsigned char *)0x1;
+}
+
 /*
  * vi: ft=c:ts=2:sw=2:expandtab
  */
