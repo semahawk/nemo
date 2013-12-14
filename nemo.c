@@ -67,6 +67,8 @@ int main(int argc, char *argv[])
 
   /* initialize the argument stack */
   arg_stack_init();
+  /* initialize the types and everything related */
+  types_init();
 
   while ((ch = getopt(argc, argv, "v")) != -1){
     switch (ch){
@@ -87,19 +89,10 @@ int main(int argc, char *argv[])
     parse_string("my £ my żółć ¢¥€");
   }
 
-  {
-    Nob object;
+  dump_types();
 
-    if (argc >= 2)
-      object = nob_new_int(atoi(argv[1]));
-    else
-      object = nob_new_int(64);
-
-    printf("New object: %s\n", itob64(object));
-    printf("New object's magic nibble: %u, %X (%s)\n", NOB_NIBBLE(object), NOB_NIBBLE(object), itob4(NOB_NIBBLE(object)));
-    printf("New object's value: %d\n", NOB_IMMIDIATE_VAL(object));
-    printf("New object as a pointer: %p\n", NOB_PTR(object));
-  }
+  arg_stack_finish();
+  types_finish();
 
   return 0;
 }
@@ -115,6 +108,7 @@ int main(int argc, char *argv[])
  * Qntal, Helium Vola
  *
  * Family Guy, The Office, Monty Python, The I.T. Crowd
+ * Black Books
  *
  */
 

@@ -17,73 +17,66 @@
 
 enum nob_primitive_type {
   /* that's kind of a draft only */
-  OT_INTEGER = 1,
-  OT_WORD,
-  OT_DWORD,
-  OT_QWORD,
-  OT_REAL,
-  OT_CHAR,
-  OT_STRING,
-  OT_ARRAY,
-  OT_TUPLE,
-  OT_FUN
+  OT_INTEGER = 0x00,
+  OT_REAL    = 0x01,
+  OT_CHAR    = 0x02,
+  OT_STRING  = 0x03,
+  OT_ARRAY   = 0x04,
+  OT_TUPLE   = 0x05,
+  OT_FUN     = 0x06
 };
 
 struct nob_type {
-  unsigned id; /* the type's id, to differentiate between them */
-  char *name; /* the type's name, eg. "int", "word" */
-  size_t size; /* the type's total size in bits, eg. 16 for "word" */
+  char *name;  /* name of the type, like "word" */
+  size_t size; /* the type's total size in bytes */
+               /* zero means the size is unknown */
   enum nob_primitive_type primitive;
+  /* additional info about the given type */
+  union {
+    struct {
+      /* an array of the struct's/tuple's or unions or whatevers fields */
+      struct {
+        /* the field's name */
+        char *name;
+        /* and it's type */
+        struct nob_type *type;
+      } fields[32];
+    } mixed;
+
+    struct {
+      /* the return type, d'oh */
+      struct nob_type *return_type;
+      /* the parameters the function can take */
+      /* as you can see, the limit is 16 */
+      struct nob_type *params[16];
+      /* the options the function can take */
+      /* the limit is, well.. 52, the two alphabets, upper- and lowercase (maybe
+       * I'll add numbers later) */
+      char *opts;
+      /* the function's code */
+      struct node *body;
+    } func;
+  } info;
 };
 
-struct nob {
+typedef struct nob {
   /* GC mark */
   unsigned char mark;
-  /* the object's type */
-  struct nob_type type;
-  union {
-    double r;
-    /* to be extended */
-  } in;
-};
+  /* the object's type, d'oh */
+  struct nob_type *type;
+  /* pointer to the object's actual value */
+  void *ptr;
+} Nob;
 
-typedef uint64_t Nob;
-/* The four most significant bits (the four leftmost) are reserved for internal
- * use. This nibble's value indicates the rest of the integer's
- * interpretation. */
-/* Kind of Ruby way, I guess. */
-#define NOB_MASK (0xF000000000000000) /* mask for the magic nibble */
-/* a macro to retrieve the nibble */
-#define NOB_NIBBLE(nob) ((uint8_t)(((nob) & NOB_MASK) >> 60))
+void types_init(void);
+void types_finish(void);
 
-/* Here are the different values the magic nibble can be: */
-#define NOB_IMMIDIATE_POS ((uint64_t)0xA) /* the rest of the integer (60 bits) is an
-immidiate positive value (of an integer) */
-#define NOB_IMMIDIATE_NEG ((uint64_t)0xB) /* the rest of the integer (60 bits) is an
-immidiate negative value (of an integer) */
-
-#define NOB_IMMIDIATE_VAL(nob) ((signed)(~NOB_MASK & (nob))) /* retrieve the value */
-/* TODO: the NOB_IMMIDIATE_VAL macro should take the signedness in account */
-
-/* The immidiate's max value */
-#define NOB_IMMIDIATE_MAX ((unsigned)(~NOB_MASK))
-
-/* This method gives us integers in the range:
- *
- *   -1,152,921,504,606,846,975 to 1,152,921,504,606,846,975
- *
- * A bit less (actually, four bits less :P) than if we used 64 bit integers
- * but that way there's no need to allocate the widely used integers */
-
-/* If the magic nibble is different than any of the specified above, then the
- * rest of the integer (60 bits) is treated as a pointer to an
- * allocated `struct nob'. This way, Nemo is capable of addressing up to
- * 1,152,921,504,606,846,975 bits, or 1,073,741,824 GiB, or exactly 1 ????iB */
-
-#define NOB_PTR(nob) ((unsigned char *)(~(NOB_MASK) & (nob)))
-
-/* the functions prototypes */
-Nob nob_new_int(int64_t value);
+Nob *nob_new_int(int64_t value);
+struct nob_type *new_type(char *name, enum nob_primitive_type type, ...);
+size_t sizeof_nob(Nob *ob);
+struct nob_type *get_type(unsigned typeid);
+char *get_type_name(unsigned typeid);
+void dump_types(void);
 
 #endif /* NOB_H */
 

@@ -36,7 +36,19 @@ static size_t NM_as_size = 16;
 void arg_stack_init(void)
 {
   NM_as = ncalloc(NM_as_size, sizeof(int *));
-  NM_as_curr = NM_as /* nope */;
+  NM_as_curr = NM_as;
+}
+
+void arg_stack_finish(void)
+{
+  unsigned i = 0;
+
+  for (; i < NM_as_curr - NM_as; i++){
+    /* TODO */
+    /* fix that when it's Nob pointers, not ints */
+  }
+
+  free(NM_as);
 }
 
 void arg_stack_push(int value, const char *file, unsigned line)

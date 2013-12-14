@@ -132,6 +132,8 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
 void exec_nodes(struct node *node);
 
 void arg_stack_init(void);
+void arg_stack_finish(void);
+
 #define PUSH(i) arg_stack_push(i, __FILE__, __LINE__)
 void arg_stack_push(int value, const char *file, unsigned line);
 #define POP() arg_stack_pop(__FILE__, __LINE__)
