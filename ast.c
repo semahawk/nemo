@@ -133,7 +133,7 @@ int exec_const(struct node *nd)
   /* {{{  */
   if (nd->type == NT_INTEGER){
     printf("executing an integer (%d)\n", nd->in.i);
-    PUSH(new_nob(T_BYTE, nd->in.i));
+    PUSH(new_nob(T_WORD, nd->in.i));
   } else if (nd->type == NT_FLOAT){
     printf("executing a float (%f)\n", nd->in.f);
     /* FIXME */

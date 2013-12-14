@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "mem.h"
 #include "nob.h"
@@ -102,6 +103,7 @@ void gc_finish(void)
   Nob *p = NM_gc;
 
   for (; p != NM_gc_curr; p++){
+    printf("GC object %p, type %d, size %lu, value %d\n", (void*)p, p->type->primitive, p->type->size, *p->ptr);
     /* free the value associated with the object */
     nfree(p->ptr);
   }
@@ -143,12 +145,21 @@ Nob *new_nob(struct nob_type *type, ...)
 
   /* set up the new object with some knowns */
   new.type = type;
+  printf("reserving %lu bytes (%lu bits) for the objects value\n", type->size, type->size * 8);
   new.ptr = nmalloc(type->size);
 
   switch (type->primitive){
     case OT_INTEGER:
-      *new.ptr = va_arg(vl, int64_t);
+    {
+      int64_t value = va_arg(vl, int64_t);
+      /* check for overflows */
+      if (value > 1 << (type->size * 8)){
+        fprintf(stderr, "warning: possible overflow! trying to fit %ld in %lu byte%s (%d)\n", value, type->size, type->size == 1 ? "" : "s", 1 << (type->size * 8));
+      }
+
+      *new.ptr = value;
       break;
+    }
 
     /* suspress warnings */
     case OT_REAL:

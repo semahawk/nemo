@@ -40,17 +40,17 @@ struct node *stmt(struct lexer *lex)
 
   return
     new_if(lex,
-      new_int(lex, 0),
+      new_int(lex, (1 << 16) + 16),
       new_unop(lex, UNARY_MINUS,
-        new_int(lex, 2)),
+        new_int(lex, 1 << 7)),
       new_binop(lex, BINARY_ADD,
-        new_int(lex, 3),
+        new_int(lex, 1 << 7),
         new_if(lex,
-          new_int(lex, 0),
-          new_unop(lex, UNARY_MINUS, new_int(lex, 5)),
+          new_int(lex, 1 << 7),
+          new_unop(lex, UNARY_MINUS, new_int(lex, 1 << 7)),
           new_binop(lex, BINARY_SUB,
-            new_int(lex, 6),
-            new_int(lex, 7)
+            new_int(lex, 1 << 7),
+            new_int(lex, 1 << 7)
           )
         )
       )
