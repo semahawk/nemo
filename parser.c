@@ -60,15 +60,12 @@ static struct nob_type *type(struct lexer *lex)
 
 struct node *stmt(struct lexer *lex)
 {
-  if (accept(lex, TOK_KEYWORD)){
-    /* there must be a better way of 'accept'ing keywords */
-    if (!strcmp(lex->curr_tok.value.s, "my")){
-      printf("my ");
-      type(lex);
-      putchar(' ');
-      force(lex, TOK_NAME);
-      printf("%s", lex->curr_tok.value.s);
-    }
+  if (accept_keyword(lex, "my")){
+    printf("my ");
+    type(lex);
+    putchar(' ');
+    force(lex, TOK_NAME);
+    printf("%s", lex->curr_tok.value.s);
   }
 
   return

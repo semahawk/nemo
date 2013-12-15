@@ -296,6 +296,15 @@ bool accept(struct lexer *lex, enum token_type type)
   }
 }
 
+bool accept_keyword(struct lexer *lex, const char *name)
+{
+  if (accept(lex, TOK_KEYWORD))
+    if (!strcmp(name, lex->curr_tok.value.s))
+      return true;
+
+  return false;
+}
+
 bool peek(struct lexer *lex, enum token_type type)
 {
   struct token tok = fetch_token(lex);
