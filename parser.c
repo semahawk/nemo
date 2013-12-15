@@ -24,16 +24,16 @@
 
 struct node *stmt(struct lexer *lex)
 {
-  while (peek(lex, T_KEYWORD) || peek(lex, T_NAME) || peek(lex, T_STRING) || peek(lex, T_TYPE)){
+  while (peek(lex, TOK_KEYWORD) || peek(lex, TOK_NAME) || peek(lex, TOK_STRING) || peek(lex, TOK_TYPE)){
     printf("got a keyword, name, type name or a string: ");
-    if (accept(lex, T_KEYWORD)){
+    if (accept(lex, TOK_KEYWORD)){
       printf("a keyword: %s\n", lex->curr_tok.value.s);
-    } else if (accept(lex, T_STRING)){
+    } else if (accept(lex, TOK_STRING)){
       printf("a string:  %s (len %u)\n", lex->curr_tok.value.sp, u8_strlen(lex->curr_tok.value.sp));
-    } else if (accept(lex, T_TYPE)){
+    } else if (accept(lex, TOK_TYPE)){
       printf("a type: %s\n", lex->curr_tok.value.s);
     } else {
-      accept(lex, T_NAME);
+      accept(lex, TOK_NAME);
       printf("a name:    %s (len %u)\n", lex->curr_tok.value.s, u8_strlen(lex->curr_tok.value.s));
     }
   }
@@ -99,7 +99,7 @@ int parse_file(char *fname)
   lex.name              = fname;
   lex.source            = fbuf;
   lex.curr_pos          = fbuf;
-  lex.curr_tok.type     = T_EOS;
+  lex.curr_tok.type     = TOK_EOS;
   lex.curr_tok.value.sp = NULL;
   lex.line              = 1;
   lex.col               = 1;
@@ -140,7 +140,7 @@ int parse_string(char *string)
   lex.name              = string;
   lex.source            = string;
   lex.curr_pos          = string;
-  lex.curr_tok.type     = T_EOS;
+  lex.curr_tok.type     = TOK_EOS;
   lex.curr_tok.value.sp = NULL;
   lex.line              = 1;
   lex.col               = 1;

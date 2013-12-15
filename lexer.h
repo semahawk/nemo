@@ -20,33 +20,33 @@
 #include "ast.h"
 
 enum token_type {
-  T_INTEGER,        /*                */
-  T_FLOAT,          /*                */
-  T_STRING,         /*                */
-  T_NAME,           /*                */
-  T_KEYWORD,        /*                */
-  T_TYPE,           /*                */
-  T_OPT,            /*  -[a-zA-Z]     */
-  T_EQ,             /*  "="           */
-  T_SEMICOLON,      /*  ";"           */
-  T_COMMA,          /*  ","           */
-  T_MINUS,          /*  "-"           */
-  T_PLUS,           /*  "+"           */
-  T_TIMES,          /*  "*"           */
-  T_PERCENT,        /*  "%"           */
-  T_SLASH,          /*  "/"           */
-  T_LPAREN,         /*  "("           */
-  T_RPAREN,         /*  ")"           */
-  T_LMUSTASHE,      /*  "{"           */
-  T_RMUSTASHE,      /*  "}"           */
-  T_LBRACKET,       /*  "["           */
-  T_RBRACKET,       /*  "]"           */
-  T_LCHEVRON,       /*  "<"           */
-  T_RCHEVRON,       /*  ">"           */
-  T_BANG,           /*  "!"           */
-  T_COLON,          /*  ":"           */
-  T_QUESTION,       /*  "?"           */
-  T_EOS             /*  end of script */
+  TOK_INTEGER,        /*                */
+  TOK_FLOAT,          /*                */
+  TOK_STRING,         /*                */
+  TOK_NAME,           /*                */
+  TOK_KEYWORD,        /*                */
+  TOK_TYPE,           /*                */
+  TOK_OPT,            /*  -[a-zA-Z]     */
+  TOK_EQ,             /*  "="           */
+  TOK_SEMICOLON,      /*  ";"           */
+  TOK_COMMA,          /*  ","           */
+  TOK_MINUS,          /*  "-"           */
+  TOK_PLUS,           /*  "+"           */
+  TOK_TIMES,          /*  "*"           */
+  TOK_PERCENT,        /*  "%"           */
+  TOK_SLASH,          /*  "/"           */
+  TOK_LPAREN,         /*  "("           */
+  TOK_RPAREN,         /*  ")"           */
+  TOK_LMUSTASHE,      /*  "{"           */
+  TOK_RMUSTASHE,      /*  "}"           */
+  TOK_LBRACKET,       /*  "["           */
+  TOK_RBRACKET,       /*  "]"           */
+  TOK_LCHEVRON,       /*  "<"           */
+  TOK_RCHEVRON,       /*  ">"           */
+  TOK_BANG,           /*  "!"           */
+  TOK_COLON,          /*  ":"           */
+  TOK_QUESTION,       /*  "?"           */
+  TOK_EOS             /*  end of script */
 };
 
 struct token {

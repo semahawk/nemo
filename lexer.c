@@ -93,7 +93,7 @@ static struct token fetch_token(struct lexer *lex)
   struct token ret;
 
   if (p == NULL || *p == '\0' || (lex->fptr != NULL && feof(lex->fptr))){
-    ret.type = T_EOS;
+    ret.type = TOK_EOS;
     return ret;
   }
 
@@ -148,15 +148,15 @@ static struct token fetch_token(struct lexer *lex)
     }
 
     if (keyword_found){
-      ret.type = T_KEYWORD;
+      ret.type = TOK_KEYWORD;
       strcpy(ret.value.s, *kptr);
       lex->col += strlen(*kptr);
     } else if (typename_found){
-      ret.type = T_TYPE;
+      ret.type = TOK_TYPE;
       strcpy(ret.value.s, tmp_arr);
       lex->col += strlen(tmp_arr);
     } else {
-      ret.type = T_NAME;
+      ret.type = TOK_NAME;
       strcpy(ret.value.s, tmp_arr);
       lex->col += strlen(tmp_arr);
     }
@@ -185,18 +185,18 @@ static struct token fetch_token(struct lexer *lex)
           p++; i++;
         }
         tmp_arr[i2] = '\0';
-        ret.type = T_FLOAT;
+        ret.type = TOK_FLOAT;
         ret.value.f = atof(tmp_arr);
       } else {
         /* it's something like 2. */
         tmp_arr[i] = '\0';
-        ret.type = T_FLOAT;
+        ret.type = TOK_FLOAT;
         ret.value.f = atof(tmp_arr);
       }
       /* }}} */
     } else {
       /* {{{ DECIMAL */
-      ret.type = T_INTEGER;
+      ret.type = TOK_INTEGER;
       ret.value.i = atoi(tmp_arr);
       /* }}} */
     }
@@ -228,31 +228,31 @@ static struct token fetch_token(struct lexer *lex)
             lexing at the closing '"' */
 
     push_str(lex, tmp_str);
-    ret.type = T_STRING;
+    ret.type = TOK_STRING;
     ret.value.sp = tmp_str;
     /* }}} */
   }
   else switch (*p){
     /* {{{ SINGLE CHAR */
-    case '=': p++; ret.type = T_EQ; break;
-    case ':': p++; ret.type = T_COLON; break;
-    case ';': p++; ret.type = T_SEMICOLON; break;
-    case ',': p++; ret.type = T_COMMA; break;
-    case '-': p++; ret.type = T_MINUS; break;
-    case '+': p++; ret.type = T_PLUS; break;
-    case '*': p++; ret.type = T_TIMES; break;
-    case '%': p++; ret.type = T_PERCENT; break;
-    case '/': p++; ret.type = T_SLASH; break;
-    case '(': p++; ret.type = T_LPAREN; break;
-    case ')': p++; ret.type = T_RPAREN; break;
-    case '{': p++; ret.type = T_LMUSTASHE; break;
-    case '}': p++; ret.type = T_RMUSTASHE; break;
-    case '[': p++; ret.type = T_LBRACKET; break;
-    case ']': p++; ret.type = T_RBRACKET; break;
-    case '<': p++; ret.type = T_LCHEVRON; break;
-    case '>': p++; ret.type = T_RCHEVRON; break;
-    case '!': p++; ret.type = T_BANG; break;
-    case '?': p++; ret.type = T_QUESTION; break;
+    case '=': p++; ret.type = TOK_EQ; break;
+    case ':': p++; ret.type = TOK_COLON; break;
+    case ';': p++; ret.type = TOK_SEMICOLON; break;
+    case ',': p++; ret.type = TOK_COMMA; break;
+    case '-': p++; ret.type = TOK_MINUS; break;
+    case '+': p++; ret.type = TOK_PLUS; break;
+    case '*': p++; ret.type = TOK_TIMES; break;
+    case '%': p++; ret.type = TOK_PERCENT; break;
+    case '/': p++; ret.type = TOK_SLASH; break;
+    case '(': p++; ret.type = TOK_LPAREN; break;
+    case ')': p++; ret.type = TOK_RPAREN; break;
+    case '{': p++; ret.type = TOK_LMUSTASHE; break;
+    case '}': p++; ret.type = TOK_RMUSTASHE; break;
+    case '[': p++; ret.type = TOK_LBRACKET; break;
+    case ']': p++; ret.type = TOK_RBRACKET; break;
+    case '<': p++; ret.type = TOK_LCHEVRON; break;
+    case '>': p++; ret.type = TOK_RCHEVRON; break;
+    case '!': p++; ret.type = TOK_BANG; break;
+    case '?': p++; ret.type = TOK_QUESTION; break;
     default:
       fprintf(stderr, "nemo: unknown character '%c' (%p) in %s at line %u column %u\n", *p, (void *)p, lex->name, lex->line, lex->col);
       exit(1);
@@ -311,7 +311,7 @@ void skip(struct lexer *lex)
 {
   struct token tok = fetch_token(lex);
 
-  if (tok.type == T_EOS){
+  if (tok.type == TOK_EOS){
     err(lex, "unexpected <EOF>");
   }
 
