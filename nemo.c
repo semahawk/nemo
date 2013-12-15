@@ -116,8 +116,6 @@ int main(int argc, char *argv[])
 
   if (argc >= 1){
     parse_file(argv[0]);
-  } else {
-    parse_string("my £ my żółć ¢¥€");
   }
 
   dump_types();

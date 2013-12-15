@@ -1,0 +1,3 @@
+my <word, <word, word, byte>> variable;
+typedef <qword> int64_t;
+my int64_t loooooongnumber;

@@ -2,4 +2,4 @@ language: c
 compiler:
   - gcc
   - clang
-script: cmake . && make && ./nemo
+script: cmake . && make && ./nemo example.nm
