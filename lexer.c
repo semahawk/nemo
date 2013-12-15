@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "nemo.h"
+#include "nob.h"
 #include "mem.h"
 #include "lexer.h"
 #include "util.h"
@@ -117,7 +118,7 @@ static struct token fetch_token(struct lexer *lex)
   /* }}} */
 
   if (name_beg(*p)){
-    /* {{{ NAME */
+    /* {{{ NAME / KEYWORD / TYPE NAME */
     const char **kptr = NULL;
     strncpy(tmp_arr, p, MAX_NAME_LENGTH - 1);
     tmp_arr[MAX_NAME_LENGTH] = '\0';
@@ -136,7 +137,14 @@ static struct token fetch_token(struct lexer *lex)
     }
     /* see if it's a type name (only if it's not a keyword already) */
     if (!keyword_found){
-      /* FIXME */
+      unsigned i = 0;
+
+      for (; i < NM_types_curr - NM_types; i++){
+        if (!strcmp(NM_types[i]->name, tmp_arr)){
+          typename_found = true;
+          break;
+        }
+      }
     }
 
     if (keyword_found){
@@ -145,8 +153,8 @@ static struct token fetch_token(struct lexer *lex)
       lex->col += strlen(*kptr);
     } else if (typename_found){
       ret.type = T_TYPE;
-      strcpy(ret.value.s, *kptr);
-      lex->col += strlen(*kptr);
+      strcpy(ret.value.s, tmp_arr);
+      lex->col += strlen(tmp_arr);
     } else {
       ret.type = T_NAME;
       strcpy(ret.value.s, tmp_arr);
