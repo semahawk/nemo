@@ -18,29 +18,62 @@
 
 #include "ast.h"
 #include "mem.h"
+#include "nob.h"
 #include "lexer.h"
 #include "utf8.h"
 #include "util.h"
 
+/*
+ * Fetches the type, at the lexer's current 'position'.
+ * If the type already exists, like "int", it return's the pointer to it.
+ *
+ * If the type doesn't already exist (by the way, it can't be a single word,
+ * lexer wouldn't let it through), like an anonymous tuple, creates it as a
+ * whole new type, and returns the pointer to it.
+ */
+static struct nob_type *type(struct lexer *lex)
+{
+  /* the types used to be passed over to `new_type' */
+  struct nob_type *types[16] = { 0 };
+  /* 'pointer' to the current type */
+  unsigned currt = 0;
+
+  if (accept(lex, TOK_TYPE)){
+    printf("%s", lex->curr_tok.value.s);
+    return get_type_by_name(lex->curr_tok.value.s);
+  } else if (accept(lex, TOK_LCHEVRON)){
+    printf("<");
+    types[currt++] = type(lex);
+    while (accept(lex, TOK_COMMA) && currt < 16){
+      printf(", ");
+      types[currt++] = type(lex);
+    }
+    force(lex, TOK_RCHEVRON);
+    printf(">");
+    /* create the new type. for now it's gonna be anonymous */
+    return new_type(NULL /* no name */, OT_TUPLE, types);
+  }
+
+  /* it's not a type, really */
+  return NULL;
+}
+
 struct node *stmt(struct lexer *lex)
 {
-  while (peek(lex, TOK_KEYWORD) || peek(lex, TOK_NAME) || peek(lex, TOK_STRING) || peek(lex, TOK_TYPE)){
-    printf("got a keyword, name, type name or a string: ");
-    if (accept(lex, TOK_KEYWORD)){
-      printf("a keyword: %s\n", lex->curr_tok.value.s);
-    } else if (accept(lex, TOK_STRING)){
-      printf("a string:  %s (len %u)\n", lex->curr_tok.value.sp, u8_strlen(lex->curr_tok.value.sp));
-    } else if (accept(lex, TOK_TYPE)){
-      printf("a type: %s\n", lex->curr_tok.value.s);
-    } else {
-      accept(lex, TOK_NAME);
-      printf("a name:    %s (len %u)\n", lex->curr_tok.value.s, u8_strlen(lex->curr_tok.value.s));
+  if (accept(lex, TOK_KEYWORD)){
+    /* there must be a better way of 'accept'ing keywords */
+    if (!strcmp(lex->curr_tok.value.s, "my")){
+      printf("my ");
+      type(lex);
+      putchar(' ');
+      force(lex, TOK_NAME);
+      printf("%s", lex->curr_tok.value.s);
     }
   }
 
   return
     new_if(lex,
-      new_int(lex, (1 << 16) + 16),
+      new_int(lex, 1 << 8),
       new_unop(lex, UNARY_MINUS,
         new_int(lex, 1 << 7)),
       new_binop(lex, BINARY_ADD,

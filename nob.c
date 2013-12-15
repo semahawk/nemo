@@ -147,6 +147,7 @@ Nob *new_nob(struct nob_type *type, ...)
   switch (type->primitive){
     case OT_INTEGER:
     {
+      /* {{{ */
       int64_t value = va_arg(vl, int64_t);
       /* check for overflows */
       if (value > 1 << (type->size * 8)){
@@ -155,6 +156,7 @@ Nob *new_nob(struct nob_type *type, ...)
 
       *new.ptr = value;
       break;
+      /* }}} */
     }
 
     /* suspress warnings */
@@ -186,6 +188,20 @@ size_t sizeof_nob(Nob *ob)
 }
 
 /*
+ * Returns the `struct nob' type related with the given <name>
+ */
+struct nob_type *get_type_by_name(char *name)
+{
+  unsigned i = 0;
+
+  for (; i < NM_types_curr - NM_types; i++)
+    if (!strcmp(NM_types[i]->name, name))
+      return NM_types[i];
+
+  return NULL;
+}
+
+/*
  * Creates (and appends to the `types' list) a new type, of a given <name>. The
  * new type is of a primitive type - <type>.
  *
@@ -202,7 +218,11 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   va_start(vl, type);
 
   /* set up the type with some knowns */
-  new_type->name = strdup(name);
+  if (name == NULL) /* no name means anonymous type */
+    new_type->name = NULL;
+  else
+    new_type->name = strdup(name);
+
   new_type->size = 0;
   new_type->primitive = type;
 
@@ -211,13 +231,28 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     case OT_INTEGER:
       new_type->size = va_arg(vl, size_t);
       break;
+    case OT_TUPLE: {
+      struct nob_type **types;
+      struct nob_type **p;
+      size_t total_size = 0;
+
+      types = va_arg(vl, struct nob_type **);
+
+      /* calculate the total size */
+      for (p = types; *p != NULL; p++){
+        total_size += (*p)->size;
+      }
+      /* set the size */
+      new_type->size = total_size;
+
+      break;
+    }
 
     /* suspress warnings */
     case OT_REAL:
     case OT_CHAR:
     case OT_STRING:
     case OT_ARRAY:
-    case OT_TUPLE:
     case OT_FUN:
       break;
     default:

@@ -77,6 +77,7 @@ void gc_finish(void);
 
 Nob *new_nob(struct nob_type *type, ...);
 struct nob_type *new_type(char *name, enum nob_primitive_type type, ...);
+struct nob_type *get_type_by_name(char *name);
 size_t sizeof_nob(Nob *ob);
 void dump_types(void);
 

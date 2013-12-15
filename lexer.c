@@ -140,9 +140,12 @@ static struct token fetch_token(struct lexer *lex)
       unsigned i = 0;
 
       for (; i < NM_types_curr - NM_types; i++){
-        if (!strcmp(NM_types[i]->name, tmp_arr)){
-          typename_found = true;
-          break;
+        /* don't check anonymous types */
+        if (NM_types[i]->name != NULL){
+          if (!strcmp(NM_types[i]->name, tmp_arr)){
+            typename_found = true;
+            break;
+          }
         }
       }
     }
