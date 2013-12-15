@@ -13,30 +13,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "config.h"
+#include "nemo.h"
 #include "mem.h"
+
+/* see how many mallocs/callocs/reallocs/frees there were */
+static unsigned counter = 0;
 
 void *nmalloc_(size_t size, const char *file, unsigned line)
 {
-  void *p;
+  void *ptr;
 
-  if ((p = malloc(size)) == NULL){
+  if ((ptr = malloc(size)) == NULL){
     fprintf(stderr, "malloc couldn't allocate %lu bytes in %s line %u\n", size, file, line);
     exit(1);
   }
 
-  return p;
+#if DEBUG
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
+    counter++;
+    fprintf(stderr, "(%05u) %p: malloc %lu bytes (%s:%u)\n", counter, ptr, size, file, line);
+  }
+#endif /* DEBUG */
+
+  return ptr;
 }
 
 void *ncalloc_(size_t number, size_t size, const char *file, unsigned line)
 {
-  void *p;
+  void *ptr;
 
-  if ((p = calloc(number, size)) == NULL){
+  if ((ptr = calloc(number, size)) == NULL){
     fprintf(stderr, "calloc failed to allocate %lu (%lux%lu) bytes in %s line %u\n", number * size, number, size, file, line);
     exit(1);
   }
 
-  return p;
+#if DEBUG
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
+    counter++;
+    fprintf(stderr, "(%05u) %p: calloc %lu (%lux%lu) bytes (%s:%u)\n", counter, ptr, number * size, number, size, file, line);
+  }
+#endif /* DEBUG */
+
+  return ptr;
 }
 
 void *nrealloc_(void *ptr, size_t size, const char *file, unsigned line)
@@ -48,11 +67,25 @@ void *nrealloc_(void *ptr, size_t size, const char *file, unsigned line)
     exit(1);
   }
 
+#if DEBUG
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
+    counter++;
+    fprintf(stderr, "(%05u) %p: realloc %lu bytes (%s:%u)\n", counter, ptr, size, file, line);
+  }
+#endif /* DEBUG */
+
   return p;
 }
 
-void nfree(void *ptr)
+void nfree_(void *ptr, const char *file, unsigned line)
 {
+#if DEBUG
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
+    counter++;
+    fprintf(stderr, "(%05u) %p: free (%s:%u)\n", counter, ptr, file, line);
+  }
+#endif /* DEBUG */
+
   /* free what's 'under' the pointer */
   free(ptr);
   /* 'invalidate' it */

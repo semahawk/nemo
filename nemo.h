@@ -13,6 +13,8 @@
 #ifndef NEMO_H
 #define NEMO_H
 
+#include <stdint.h>
+
 #if HAVE_STDBOOL_H
 # include <stdbool.h>
 #else /* HAVE_STDBOOL_H */
@@ -21,7 +23,17 @@
 # define false 0
 #endif /* HAVE_STDBOOL_H */
 
+/* one small, quite handy, typedef */
 typedef unsigned char byte_t;
+
+/* globalize the flags (defined in nemo.c) */
+extern uint32_t NM_debug_flags;
+/* the debug flags */
+#define NM_DEBUG_MEM (1 << 0)  /* -dm */
+/* there are, obviously, more to come :) */
+/* few more handy macros to set/get certain debug flags */
+#define NM_DEBUG_SET_FLAG(f) (NM_debug_flags |= (f))
+#define NM_DEBUG_GET_FLAG(f) (NM_debug_flags &  (f))
 
 #endif /* NEMO_H */
 

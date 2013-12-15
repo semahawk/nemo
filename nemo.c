@@ -43,10 +43,16 @@
 #include <locale.h>
 
 #include "ast.h"
+#include "config.h"
 #include "parser.h"
 #include "version.h"
 #include "util.h"
+#include "nemo.h"
 #include "nob.h"
+
+/* the bit pattern of the enabled debug flags */
+/* see nemo.h for more details */
+uint32_t NM_debug_flags = 0;
 
 int main(int argc, char *argv[])
 {
@@ -65,15 +71,38 @@ int main(int argc, char *argv[])
 
   setlocale(LC_ALL, "");
 
-  /* initialize the GC pool and everything */
+  /* initialize the GC pool and everything related */
   gc_init();
   /* initialize the argument stack */
   arg_stack_init();
-  /* initialize the types and everything related */
+  /* initialize the types (which includes creating the standard types) and everything related */
   types_init();
 
-  while ((ch = getopt(argc, argv, "v")) != -1){
+  while ((ch = getopt(argc, argv, "d:v")) != -1){
     switch (ch){
+      case 'd':
+#ifdef DEBUG
+        switch (*optarg){
+          case 'm':
+            NM_DEBUG_SET_FLAG(NM_DEBUG_MEM);
+            break;
+          case 'h':
+            fprintf(stderr, "\nAvailable debug flags:\n");
+            fprintf(stderr, "  m    see how much memory was malloced/freed, etc.\n");
+            fprintf(stderr, "\n");
+            return 0;
+          default:
+            fprintf(stderr, "nemo: unknown option -d%c. run with option -dh "
+              "to see the available debug flags.\n", *optarg);
+            return 1;
+        }
+#else
+        fprintf(stderr, "Nemo was built without the debug support.\n"
+          "To enable it, please recompile the program with "
+          "the option `-DDEBUG=1' set.\n");
+        return 1;
+#endif
+        break;
       case 'v': printf("Nemo v%d.%d.%d, " __DATE__ " " __TIME__"\n",
                   NM_VERSION_MAJOR, NM_VERSION_MINOR, NM_VERSION_PATCH);
                 return 0;
@@ -109,6 +138,8 @@ int main(int argc, char *argv[])
  * The Algorithm, Dream Theater, Insomnium
  * Dark Age, Equilibrium, Bolt Thrower, Kalmah
  * Qntal, Helium Vola
+ *
+ * Johann Strauss
  *
  * Family Guy, The Office, Monty Python, The I.T. Crowd
  * Black Books

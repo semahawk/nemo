@@ -43,7 +43,6 @@ void arg_stack_init(void)
 void arg_stack_finish(void)
 {
   nfree(NM_as);
-  NM_as = NULL;
 }
 
 void arg_stack_push(Nob *ob, const char *file, unsigned line)
@@ -132,10 +131,10 @@ int exec_const(struct node *nd)
 {
   /* {{{  */
   if (nd->type == NT_INTEGER){
-    printf("executing an integer (%d)\n", nd->in.i);
+    /*printf("executing an integer (%d)\n", nd->in.i);*/
     PUSH(new_nob(T_WORD, nd->in.i));
   } else if (nd->type == NT_FLOAT){
-    printf("executing a float (%f)\n", nd->in.f);
+    /*printf("executing a float (%f)\n", nd->in.f);*/
     /* FIXME */
     PUSH(new_nob(T_BYTE, (int)nd->in.f));
   }
@@ -149,7 +148,7 @@ int exec_unop(struct node *nd)
   /* {{{ */
   EXEC(nd->in.unop.target);
 
-  printf("executing unary operation\n");
+  /*printf("executing unary operation\n");*/
 
   switch (nd->in.unop.type){
     /* FIXME */
@@ -166,7 +165,7 @@ int exec_binop(struct node *nd)
   EXEC(nd->in.binop.left);
   EXEC(nd->in.binop.right);
 
-  printf("executing binary operation\n");
+  /*printf("executing binary operation\n");*/
 
   switch (nd->in.binop.type){
     /* FIXME */
@@ -184,7 +183,7 @@ int exec_if(struct node *nd)
 
   guard = TOP();
 
-  printf("guard: %p\n", (void *)guard);
+  /*printf("guard: %p\n", (void *)guard);*/
 
   if (guard)
     EXEC(nd->in.iff.body);

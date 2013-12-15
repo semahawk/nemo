@@ -103,7 +103,6 @@ void gc_finish(void)
   Nob *p = NM_gc;
 
   for (; p != NM_gc_curr; p++){
-    printf("GC object %p, type %d, size %lu, value %d\n", (void*)p, p->type->primitive, p->type->size, *p->ptr);
     /* free the value associated with the object */
     nfree(p->ptr);
   }
@@ -129,8 +128,6 @@ static Nob *push_nob(Nob *nob)
 
   *(NM_gc_curr++) = *nob;
 
-  printf("Pushing Nob %p\n", (void *)save);
-
   return save;
 }
 /* }}} */
@@ -145,7 +142,6 @@ Nob *new_nob(struct nob_type *type, ...)
 
   /* set up the new object with some knowns */
   new.type = type;
-  printf("reserving %lu bytes (%lu bits) for the objects value\n", type->size, type->size * 8);
   new.ptr = nmalloc(type->size);
 
   switch (type->primitive){
