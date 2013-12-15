@@ -34,12 +34,6 @@ static const char *keywords[] =
   "my", NULL
 };
 
-/* TODO: that should/will be resizable/extendable */
-static const char *types[] =
-{
-  "int", NULL
-};
-
 static void err(struct lexer *lex, const char *fmt, ...)
 {
   va_list vl;
@@ -102,33 +96,24 @@ static struct token fetch_token(struct lexer *lex)
     return ret;
   }
 
-  /* {{{ skip over the whitespace */
-  for (; isspace(*p); p++){
-    if (*p == '\n'){
-      lex->line++;
-      lex->col = 0;
-    } else {
-      lex->col++;
+  /* {{{ skip over whitespace and comments */
+  do {
+    if (isspace(*p)){
+      for (; isspace(*p); p++){
+        if (*p == '\n'){
+          lex->line++;
+          lex->col = 0;
+        } else {
+          lex->col++;
+        }
+      }
+    } else if (*p == '/' && *(p + 1) == '*'){
+      for (p++; *p != '\0'; p++)
+        if (*p == '*' && *(p + 1) == '/')
+          break;
+      p += 2;
     }
-  }
-  /* }}} */
-  /* {{{ skip over any comments */
-  if (*p == '/' && *(p + 1) == '*'){
-    for (p++; *p != '\0'; p++)
-      if (*p == '*' && *(p + 1) == '/')
-        break;
-    p += 2;
-  }
-  /* }}} */
-  /* {{{ skip over the whitespace (once again) */
-  for (; isspace(*p); p++){
-    if (*p == '\n'){
-      lex->line++;
-      lex->col = 0;
-    } else {
-      lex->col++;
-    }
-  }
+  } while (isspace(*p) || (*p == '/' && *(p + 1) == '*'));
   /* }}} */
 
   if (name_beg(*p)){
@@ -151,12 +136,7 @@ static struct token fetch_token(struct lexer *lex)
     }
     /* see if it's a type name (only if it's not a keyword already) */
     if (!keyword_found){
-      for (kptr = types; *kptr != NULL; kptr++){
-        if (!strcmp(*kptr, tmp_arr)){
-          typename_found = true;
-          break;
-        }
-      }
+      /* FIXME */
     }
 
     if (keyword_found){
