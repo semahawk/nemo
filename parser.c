@@ -60,12 +60,34 @@ static struct nob_type *type(struct lexer *lex)
 
 struct node *stmt(struct lexer *lex)
 {
-  if (accept_keyword(lex, "my")){
-    printf("my ");
-    type(lex);
-    putchar(' ');
-    force(lex, TOK_NAME);
-    printf("%s", lex->curr_tok.value.s);
+  while (1){
+    if (accept_keyword(lex, "my")){
+      printf("my ");
+      type(lex);
+      putchar(' ');
+      force(lex, TOK_NAME);
+      printf("%s", lex->curr_tok.value.s);
+    }
+    else if (accept_keyword(lex, "typedef")){
+      struct nob_type *new_type;
+
+      printf("typedef ");
+      new_type = type(lex);
+      /* ouch, it's not really a type! */
+      if (!new_type){
+        fprintf(stderr, "error: expected a type\n");
+        exit(1);
+      }
+      /* get the name for the type */
+      force(lex, TOK_NAME);
+      printf(" %s", lex->curr_tok.value.s);
+      new_type->name = strdup(lex->curr_tok.value.s);
+    }
+    else {
+      break;
+    }
+    force(lex, TOK_SEMICOLON);
+    printf(";\n");
   }
 
   return

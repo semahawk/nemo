@@ -63,7 +63,10 @@ void types_finish(void)
   ptrdiff_t offset = NM_types_curr - NM_types;
 
   for (i = 0; i < offset; i++){
-    nfree(NM_types[i]->name);
+    /* anonymous types don't have a name, so there's no point of freeing it */
+    /* I know that free(NULL) is practically a NOP, but, still */
+    if (NM_types[i])
+      nfree(NM_types[i]->name);
     nfree(NM_types[i]);
   }
 
@@ -195,8 +198,10 @@ struct nob_type *get_type_by_name(char *name)
   unsigned i = 0;
 
   for (; i < NM_types_curr - NM_types; i++)
-    if (!strcmp(NM_types[i]->name, name))
-      return NM_types[i];
+    /* don't compare with anonymous types */
+    if (NM_types[i]->name)
+      if (!strcmp(NM_types[i]->name, name))
+        return NM_types[i];
 
   return NULL;
 }

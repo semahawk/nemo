@@ -32,7 +32,7 @@
 
 static const char *keywords[] =
 {
-  "my", NULL
+  "my", "typedef", NULL
 };
 
 static void err(struct lexer *lex, const char *fmt, ...)
@@ -298,9 +298,12 @@ bool accept(struct lexer *lex, enum token_type type)
 
 bool accept_keyword(struct lexer *lex, const char *name)
 {
-  if (accept(lex, TOK_KEYWORD))
-    if (!strcmp(name, lex->curr_tok.value.s))
+  if (peek(lex, TOK_KEYWORD)){
+    if (!strcmp(name, lex->curr_tok.value.s)){
+      force(lex, TOK_KEYWORD);
       return true;
+    }
+  }
 
   return false;
 }
