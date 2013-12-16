@@ -59,7 +59,7 @@ void types_init(void)
 
 void types_finish(void)
 {
-  unsigned i;
+  unsigned i, j;
   ptrdiff_t offset = NM_types_curr - NM_types;
 
   for (i = 0; i < offset; i++){
@@ -67,6 +67,14 @@ void types_finish(void)
     /* I know that free(NULL) is practically a NOP, but, still */
     if (NM_types[i])
       nfree(NM_types[i]->name);
+    /* free some additional data associated with the type */
+    if (NM_types[i]->primitive == OT_TUPLE){
+      /* free the tuple's fields' names */
+      for (j = 0; NM_types[i]->info.mixed.fields[j].name != NULL; j++){
+        nfree(NM_types[i]->info.mixed.fields[j].name);
+      }
+    }
+    /* free the type itself */
     nfree(NM_types[i]);
   }
 
@@ -234,9 +242,15 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
     case OT_INTEGER:
+    {
+      /* {{{ */
       new_type->size = va_arg(vl, size_t);
       break;
-    case OT_TUPLE: {
+      /* }}} */
+    }
+    case OT_TUPLE:
+    {
+      /* {{{ */
       struct field *fields;
       struct field *p;
       unsigned i = 0; /* the counter */
@@ -258,6 +272,15 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       new_type->size = total_size;
 
       break;
+      /* }}} */
+    }
+    case OT_FUN:
+    {
+      /* {{{ */
+      struct nob_type *return_type = va_arg(vl, struct nob_type *);
+
+      new_type->info.func.return_type = return_type;
+      /* }}} */
     }
 
     /* suspress warnings */
@@ -265,7 +288,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     case OT_CHAR:
     case OT_STRING:
     case OT_ARRAY:
-    case OT_FUN:
       break;
     default:
       break;
@@ -292,13 +314,17 @@ void dump_types(void)
     struct nob_type *type = NM_types[i];
     printf("   %p %s (type: %d, size: %lu)\n", (void *)type, type->name, type->primitive, type->size);
     /* print additional info about tuples */
-    if (NM_types[i]->primitive == OT_TUPLE){
+    if (type->primitive == OT_TUPLE){
       unsigned j = 0; /* additional counter */
 
       for (; type->info.mixed.fields[j].name != NULL; j++){
         struct field field = type->info.mixed.fields[j];
         printf("     - %s: %p %s (type: %d, size: %lu)\n", field.name, (void *)field.type, field.type->name, field.type->primitive, field.type->size);
       }
+    } else if (type->primitive == OT_FUN){
+      struct nob_type *ret = type->info.func.return_type;
+
+      printf("     = %s: %p %s (type: %d, size: %lu)\n", ret->name, (void *)ret, ret->name, ret->primitive, ret->size);
     }
   }
   printf("## End\n\n");

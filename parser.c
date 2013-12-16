@@ -33,62 +33,85 @@
  */
 static struct nob_type *type(struct lexer *lex)
 {
-  /* the fields (names + associated types) used to be passed over to `new_type' */
+  /* the nob_type to be returned */
+  struct nob_type *ret = NULL;
+  /* the fields (names + associated types) used to be passed over to `new_type' to create a tuple type */
   struct field fields[MAX_TUPLE_FIELDS + 1] = { { 0, 0 } };
   /* 'pointer' to the current field */
-  unsigned currt = 0;
+  unsigned curr_field = 0;
+  /* if inside of the <>s turns out to be a function's type this might come in
+   * handy */
+  struct nob_type *return_type = NULL;
 
   if (accept(lex, TOK_TYPE)){
+    /* {{{ a single worded type */
     printf("%s", lex->curr_tok.value.s);
-    return get_type_by_name(lex->curr_tok.value.s);
-  } else if (accept(lex, TOK_LCHEVRON)){
-    /* define one handy macro, so we stay DRY */
-#define fetch_name() \
-    /* {{{ fetch_name body */ \
-    do { \
-      /* see if the field was given a name, and if not, print a meaningful \
-       * message */ \
-      if (accept(lex, TOK_NAME)){ \
-        struct field *p = fields; \
-        for (; p->name != NULL && p->type != NULL; p++){ \
-          if (!strcmp(p->name, lex->curr_tok.value.s)){ \
-            fprintf(stderr, "error: duplicate field names ('%s') in a tuple\n", p->name); \
-            exit(1); \
-          } \
-        } \
-        printf(" %s", lex->curr_tok.value.s); \
-        fields[currt].name = strdup(lex->curr_tok.value.s); \
-      } else { \
-        fprintf(stderr, "the field is missing it's name"); \
-        exit(1); \
-      } \
-    } while (0)
+    ret = get_type_by_name(lex->curr_tok.value.s);
     /* }}} */
-
+  } else if (accept(lex, TOK_LCHEVRON)){
+    /* {{{ tuple or a function */
     printf("<");
-    fields[currt].type = type(lex);
-    fetch_name();
-    currt++;
-    /* fetch more fields if they're present */
-    while (accept(lex, TOK_COMMA) && currt <= MAX_TUPLE_FIELDS){
-      printf(", ");
-      fields[currt].type = type(lex);
-      fetch_name();
-      currt++;
+    return_type = fields[curr_field].type = type(lex);
+
+    if (accept(lex, TOK_SEMICOLON)){
+      /* {{{ a function with no parameters <type;> */
+      ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
+      printf(";");
+      /* }}} */
+    } else if (peek(lex, TOK_NAME)){
+      /* {{{ a tuple <type name> */
+#define fetch_name(lex) \
+      /* {{{ fetch_name body */ \
+      do { \
+        /* see if the field was given a name, and if not, print a meaningful \
+         * message */ \
+        if (accept(lex, TOK_NAME)){ \
+          struct field *p = fields; \
+          for (; p->name != NULL && p->type != NULL; p++){ \
+            if (!strcmp(p->name, lex->curr_tok.value.s)){ \
+              fprintf(stderr, "error: duplicate field names ('%s') in a tuple\n", p->name); \
+              exit(1); \
+            } \
+          } \
+          printf(" %s", lex->curr_tok.value.s); \
+          fields[curr_field].name = strdup(lex->curr_tok.value.s); \
+        } else { \
+          fprintf(stderr, "the field is missing it's name"); \
+          exit(1); \
+        } \
+      } while (0)
+      /* }}} */
+
+      fetch_name(lex);
+      curr_field++;
+
+      /* fetch more fields if present */
+      while (accept(lex, TOK_COMMA) && curr_field <= MAX_TUPLE_FIELDS){
+        printf(", ");
+        fields[curr_field].type = type(lex);
+        fetch_name(lex);
+        curr_field++;
+      }
+
+      /* NOTE: there's really no need to NULL-terminate the array, because it was
+       * initialized to zeros, and && curr_field <= MAX_TUPLE_FIELDS guards against
+       * writing to the last element */
+      ret = new_type(NULL /* no name */, OT_TUPLE, fields);
+      /* bye! */
+#undef fetch_name
+      /* }}} */
+    } else {
+      /* {{{ a function with no parameters <type> */
+      ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
+      /* }}} */
     }
-    /* NOTE: there's really no need to NULL-terminate the array, because it was
-     * initialized to zeros, and && currt <= MAX_TUPLE_FIELDS guards against
-     * writing to the last element */
+
     force(lex, TOK_RCHEVRON);
     printf(">");
-    /* we don't need you anymore, bye! */
-#undef fetch_name
-    /* create the new type. for now it's gonna be anonymous */
-    return new_type(NULL /* no name */, OT_TUPLE, fields);
+    /* }}} */
   }
 
-  /* it's not a type, really */
-  return NULL;
+  return ret;
 }
 
 struct node *stmt(struct lexer *lex)

@@ -100,6 +100,8 @@ bool accept(struct lexer *lexer_state, enum token_type type);
 bool accept_keyword(struct lexer *lexer_state, const char *name);
 bool peek(struct lexer *lexer_state, enum token_type type);
 
+const char *tok_to_s(enum token_type);
+
 #endif /* LEXER_H */
 
 /*

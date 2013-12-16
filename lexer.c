@@ -277,7 +277,7 @@ struct token force(struct lexer *lex, enum token_type type)
     advance(lex);
     return tok;
   } else {
-    fprintf(stderr, "expected %d instead of %d\n", type, tok.type);
+    fprintf(stderr, "expected a %s instead of a %s\n", tok_to_s(type), tok_to_s(tok.type));
     exit(1);
   }
 }
@@ -327,10 +327,46 @@ void skip(struct lexer *lex)
   struct token tok = fetch_token(lex);
 
   if (tok.type == TOK_EOS){
-    err(lex, "unexpected <EOF>");
+    err(lex, "unexpected <EOS>");
   }
 
   advance(lex);
+}
+
+const char *tok_to_s(enum token_type type)
+{
+  /* {{{ */
+  switch (type){
+    case TOK_INTEGER:   return "integer";
+    case TOK_FLOAT:     return "float";
+    case TOK_STRING:    return "string";
+    case TOK_NAME:      return "name";
+    case TOK_KEYWORD:   return "keyword";
+    case TOK_TYPE:      return "type name";
+    case TOK_OPT:       return "option";
+    case TOK_EQ:        return "'='";
+    case TOK_SEMICOLON: return "';'";
+    case TOK_COMMA:     return "','";
+    case TOK_MINUS:     return "'-'";
+    case TOK_PLUS:      return "'+'";
+    case TOK_TIMES:     return "'*'";
+    case TOK_PERCENT:   return "'%'";
+    case TOK_SLASH:     return "'/'";
+    case TOK_LPAREN:    return "'('";
+    case TOK_RPAREN:    return "')'";
+    case TOK_LMUSTASHE: return "'{'";
+    case TOK_RMUSTASHE: return "'}'";
+    case TOK_LBRACKET:  return "'['";
+    case TOK_RBRACKET:  return "']'";
+    case TOK_LCHEVRON:  return "'<'";
+    case TOK_RCHEVRON:  return "'>'";
+    case TOK_BANG:      return "'!'";
+    case TOK_COLON:     return "':'";
+    case TOK_QUESTION:  return "'?'";
+    case TOK_EOS:       return "<EOS>";
+    default:            return "##unknown##tok_to_s##";
+  }
+  /* }}} */
 }
 
 /*

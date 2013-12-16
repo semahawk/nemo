@@ -21,6 +21,12 @@
  */
 #define MAX_TUPLE_FIELDS 16
 
+/*
+ * Maximum number of parameters a function can take.
+ * Guess what, it's also to avoid calling malloc so much.
+ */
+#define MAX_FUN_PARAMS 16
+
 #endif /* CONFIG_H */
 
 /*
