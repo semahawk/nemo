@@ -28,6 +28,18 @@ enum nob_primitive_type {
   OT_FUN     = 0x06
 };
 
+/* forward declaration (`struct field' needs it, but `struct nob_type' needs
+ * `struct field') */
+struct nob_type;
+
+/* (for now) to be passed from the parser to `new_nob' */
+struct field {
+  /* the fields name, obviously */
+  char *name;
+  /* and the type associated with the name */
+  struct nob_type *type;
+};
+
 struct nob_type {
   char *name;  /* name of the type, like "word" */
   size_t size; /* the type's total size in bytes */
@@ -37,12 +49,7 @@ struct nob_type {
   union {
     struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */
-      struct {
-        /* the field's name */
-        char *name;
-        /* and it's type */
-        struct nob_type *type;
-      } fields[32];
+      struct field fields[32];
     } mixed;
 
     struct {

@@ -237,15 +237,22 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       new_type->size = va_arg(vl, size_t);
       break;
     case OT_TUPLE: {
-      struct nob_type **types;
-      struct nob_type **p;
+      struct field *fields;
+      struct field *p;
+      unsigned i = 0; /* the counter */
       size_t total_size = 0;
 
-      types = va_arg(vl, struct nob_type **);
+      fields = va_arg(vl, struct field *);
+      /* zero-out the tuple's info.mixed */
+      memset(new_type->info.mixed.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
       /* calculate the total size */
-      for (p = types; *p != NULL; p++){
-        total_size += (*p)->size;
+      for (p = fields; p->type != NULL && p->name != NULL; p++, i++){
+        new_type->info.mixed.fields[i].type = p->type;
+        /* the parser `strdup's the name, so we don't have to */
+        new_type->info.mixed.fields[i].name = p->name;
+        /* add to the total size of the whole type */
+        total_size += p->type->size;
       }
       /* set the size */
       new_type->size = total_size;
@@ -277,11 +284,22 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
  */
 void dump_types(void)
 {
-  unsigned i = 0;
+  /* meh, that's quite a mess */
+  unsigned i = 0; /* the counter */
 
   printf("\n## Types Dump:\n");
   for (; i < NM_types_curr - NM_types; i++){
-    printf("   %p %s (type: %d, size: %lu)\n", (void *)NM_types[i], NM_types[i]->name, NM_types[i]->primitive, NM_types[i]->size);
+    struct nob_type *type = NM_types[i];
+    printf("   %p %s (type: %d, size: %lu)\n", (void *)type, type->name, type->primitive, type->size);
+    /* print additional info about tuples */
+    if (NM_types[i]->primitive == OT_TUPLE){
+      unsigned j = 0; /* additional counter */
+
+      for (; type->info.mixed.fields[j].name != NULL; j++){
+        struct field field = type->info.mixed.fields[j];
+        printf("     - %s: %p %s (type: %d, size: %lu)\n", field.name, (void *)field.type, field.type->name, field.type->primitive, field.type->size);
+      }
+    }
   }
   printf("## End\n\n");
 }

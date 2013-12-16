@@ -33,25 +33,50 @@
  */
 static struct nob_type *type(struct lexer *lex)
 {
-  /* the types used to be passed over to `new_type' */
-  struct nob_type *types[16] = { 0 };
-  /* 'pointer' to the current type */
+  /* the fields (names + associated types) used to be passed over to `new_type' */
+  struct field fields[MAX_TUPLE_FIELDS + 1] = { { 0, 0 } };
+  /* 'pointer' to the current field */
   unsigned currt = 0;
 
   if (accept(lex, TOK_TYPE)){
     printf("%s", lex->curr_tok.value.s);
     return get_type_by_name(lex->curr_tok.value.s);
   } else if (accept(lex, TOK_LCHEVRON)){
+    /* TODO: guard against having two fields of the same name */
     printf("<");
-    types[currt++] = type(lex);
-    while (accept(lex, TOK_COMMA) && currt < 16){
-      printf(", ");
-      types[currt++] = type(lex);
+    fields[currt].type = type(lex);
+    /* see if the field was given a name, and if not, print a meaningful
+     * message */
+    if (accept(lex, TOK_NAME)){
+      printf(" %s", lex->curr_tok.value.s);
+      fields[currt].name = strdup(lex->curr_tok.value.s);
+    } else {
+      fprintf(stderr, "the field is missing it's name");
+      exit(1);
     }
+    currt++;
+    /* fetch more fields if they're present */
+    while (accept(lex, TOK_COMMA) && currt <= MAX_TUPLE_FIELDS){
+      printf(", ");
+      fields[currt].type = type(lex);
+      /* see if the field was given a name, and if not, print a meaningful
+       * message */
+      if (accept(lex, TOK_NAME)){
+        printf(" %s", lex->curr_tok.value.s);
+        fields[currt].name = strdup(lex->curr_tok.value.s);
+      } else {
+        fprintf(stderr, "the field is missing it's name");
+        exit(1);
+      }
+      currt++;
+    }
+    /* NOTE: there's really no need to NULL-terminate the array, because it was
+     * initialized to zeros, and && currt <= MAX_TUPLE_FIELDS guards against
+     * writing to the last element */
     force(lex, TOK_RCHEVRON);
     printf(">");
     /* create the new type. for now it's gonna be anonymous */
-    return new_type(NULL /* no name */, OT_TUPLE, types);
+    return new_type(NULL /* no name */, OT_TUPLE, fields);
   }
 
   /* it's not a type, really */

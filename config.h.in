@@ -1,8 +1,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/* the -DDEBUG flag */
 #cmakedefine DEBUG          @DEBUG@
+/* directory where the (third-party) libraries are located */
 #cmakedefine LIBDIR         "@LIBDIR@"
+
 #cmakedefine HAVE_STRDUP    @HAVE_STRDUP@
 #cmakedefine HAVE_STDBOOL_H @HAVE_STDBOOL_H@
 
@@ -11,6 +14,12 @@
  * It's to avoid calling malloc so much.
  */
 #define MAX_NAME_LENGTH 128
+
+/*
+ * Maximum number of fields in tuples and alike.
+ * It's also to avoid calling malloc so much.
+ */
+#define MAX_TUPLE_FIELDS 16
 
 #endif /* CONFIG_H */
 
