@@ -114,11 +114,28 @@ struct node *stmt(struct lexer *lex)
       /* get the name for the type */
       force(lex, TOK_NAME);
       printf(" %s", lex->curr_tok.value.s);
-      new_type->name = strdup(lex->curr_tok.value.s);
+      /* if the type's name is NULL, then it's an anonymous type, which means
+       * that simply setting it's name would do the thing just perfectly */
+      if (new_type->name == NULL){
+        new_type->name = strdup(lex->curr_tok.value.s);
+      } else {
+        /* if the type has already been named, then we need to copy the type,
+         * with a proper name */
+        /* a FIXME/TODO here is not to create a whole new type if we're, kind
+         * of, aliasing a type */
+        struct nob_type *newer_type = nmalloc(sizeof(struct nob_type));
+        /* copy the contents */
+        memcpy(newer_type, new_type, sizeof(struct nob_type));
+        /* set up the name */
+        newer_type->name = strdup(lex->curr_tok.value.s);
+        /* 'register' the type */
+        push_type(newer_type);
+      }
     }
     else {
       break;
     }
+
     force(lex, TOK_SEMICOLON);
     printf(";\n");
   }

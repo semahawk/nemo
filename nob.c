@@ -76,7 +76,7 @@ void types_finish(void)
 /*
  * "Pushes" a given <type> to the NM_types array.
  */
-static void push_type(struct nob_type *type)
+void push_type(struct nob_type *type)
 {
   ptrdiff_t offset = NM_types_curr - NM_types;
 
