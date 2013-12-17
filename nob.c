@@ -230,6 +230,9 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 
   va_start(vl, type);
 
+  /* zero-out the whole type */
+  memset(new_type, 0x0, sizeof(struct nob_type));
+
   /* set up the type with some knowns */
   if (name == NULL) /* no name means anonymous type */
     new_type->name = NULL;
@@ -241,15 +244,13 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
-    case OT_INTEGER:
-    {
+    case OT_INTEGER: {
       /* {{{ */
       new_type->size = va_arg(vl, size_t);
       break;
       /* }}} */
     }
-    case OT_TUPLE:
-    {
+    case OT_TUPLE: {
       /* {{{ */
       struct field *fields;
       struct field *p;
@@ -274,12 +275,33 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       break;
       /* }}} */
     }
-    case OT_FUN:
-    {
+    case OT_FUN: {
       /* {{{ */
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
+      struct nob_type **params = va_arg(vl, struct nob_type **);
+      struct nob_type **p;
+      unsigned i = 0;
+
+      /* if params is NULL then that means the function doesn't take any
+       * parameters */
+      if (params != NULL){
+        for (p = params; *p != NULL; p++){
+          new_type->info.func.params[i++] = *p;
+        }
+      } else {
+        /*new_type->info.func.params = (struct nob_type **)NULL;*/
+      }
+
+      /* hmm... that's not supposed to ever happen, so let's guard against it */
+      if (return_type == NULL){
+        fprintf(stderr, "ouch! `return_type' is NULL\n");
+        exit(1);
+      }
 
       new_type->info.func.return_type = return_type;
+      /* I really don't what what should that be */
+      /* I'm making it 0 not to mess up other types with function's in them */
+      new_type->size = 0;
       /* }}} */
     }
 
@@ -323,8 +345,18 @@ void dump_types(void)
       }
     } else if (type->primitive == OT_FUN){
       struct nob_type *ret = type->info.func.return_type;
+      struct nob_type **params = type->info.func.params;
+      struct nob_type **p;
 
       printf("     = %s: %p %s (type: %d, size: %lu)\n", ret->name, (void *)ret, ret->name, ret->primitive, ret->size);
+
+      if (params != NULL && *params != NULL){
+        for (p = params; *p != NULL; p++){
+          printf("     - %p %s (type: %d, size: %lu)\n", (void *)(*p), (*p)->name, (*p)->primitive, (*p)->size);
+        }
+      } else {
+        printf("     . no parameters\n");
+      }
     }
   }
   printf("## End\n\n");

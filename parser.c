@@ -40,8 +40,12 @@ static struct nob_type *type(struct lexer *lex)
   /* 'pointer' to the current field */
   unsigned curr_field = 0;
   /* if inside of the <>s turns out to be a function's type this might come in
-   * handy */
+   * handy; to be passed to `new_type' */
   struct nob_type *return_type = NULL;
+  /* function's parameters, to be passed to `new_type' */
+  struct nob_type *params[MAX_FUN_PARAMS + 1] = { 0 };
+  /* 'pointer' to the current parameter */
+  unsigned curr_param = 0;
 
   if (accept(lex, TOK_TYPE)){
     /* {{{ a single worded type */
@@ -49,14 +53,31 @@ static struct nob_type *type(struct lexer *lex)
     ret = get_type_by_name(lex->curr_tok.value.s);
     /* }}} */
   } else if (accept(lex, TOK_LCHEVRON)){
-    /* {{{ tuple or a function */
+    /* {{{ a tuple or a function */
     printf("<");
     return_type = fields[curr_field].type = type(lex);
 
     if (accept(lex, TOK_SEMICOLON)){
-      /* {{{ a function with no parameters <type;> */
-      ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
-      printf(";");
+      /* {{{ a function <type; ...> */
+      printf("; ");
+
+      if ((params[curr_param++] = type(lex)) != NULL){
+        /* a function with at least one parameter */
+        while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
+          /* a function with more parameters */
+          printf(", ");
+
+          if ((params[curr_param++] = type(lex)) == NULL){
+            printf("note: expected a type after the comma\n");
+          }
+        }
+
+        ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
+      } else {
+        /* the function takes no parameters */
+        ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
+      }
+
       /* }}} */
     } else if (peek(lex, TOK_NAME)){
       /* {{{ a tuple <type name> */
@@ -86,7 +107,7 @@ static struct nob_type *type(struct lexer *lex)
       curr_field++;
 
       /* fetch more fields if present */
-      while (accept(lex, TOK_COMMA) && curr_field <= MAX_TUPLE_FIELDS){
+      while (accept(lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
         printf(", ");
         fields[curr_field].type = type(lex);
         fetch_name(lex);
@@ -94,7 +115,7 @@ static struct nob_type *type(struct lexer *lex)
       }
 
       /* NOTE: there's really no need to NULL-terminate the array, because it was
-       * initialized to zeros, and && curr_field <= MAX_TUPLE_FIELDS guards against
+       * initialized to zeros, and && curr_field < MAX_TUPLE_FIELDS guards against
        * writing to the last element */
       ret = new_type(NULL /* no name */, OT_TUPLE, fields);
       /* bye! */
