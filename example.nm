@@ -1,3 +1,5 @@
-my <word a, <word b, word c, byte d> e> variable;
-typedef <qword f> int64_t;
-my int64_t loooooongnumber;
+typedef qword int64;
+
+my <word> func;
+my <word;> func;
+my <word; byte, int64> func;

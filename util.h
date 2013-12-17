@@ -36,7 +36,9 @@ char *strdup_(char *p, const char *file, unsigned line)
 
   return np ? strcpy(np, p) : np;
 }
-#endif
+#else /* HAVE_STRDUP */
+char *strdup(const char *);
+#endif /* HAVE_STRDUP */
 
 const char *itob4(int number);
 const char *itob8(int number);
