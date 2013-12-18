@@ -48,9 +48,19 @@ struct nob_type {
   /* additional info about the given type */
   union {
     struct {
+      /* the 'type\'s' type (as in, each element's type) */
+      struct nob_type *type;
+      /* number of the element's */
+      /* which (I guess) effectively makes word[4] different than word[6] */
+      /* maybe arrays will be given some special treatment, but, I don't know.
+       * we'll see. */
+      size_t nmemb;
+    } array;
+
+    struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */
       struct field fields[32];
-    } mixed;
+    } tuple;
 
     struct {
       /* the return type, d'oh */

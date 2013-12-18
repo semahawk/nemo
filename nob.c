@@ -70,8 +70,8 @@ void types_finish(void)
     /* free some additional data associated with the type */
     if (NM_types[i]->primitive == OT_TUPLE){
       /* free the tuple's fields' names */
-      for (j = 0; NM_types[i]->info.mixed.fields[j].name != NULL; j++){
-        nfree(NM_types[i]->info.mixed.fields[j].name);
+      for (j = 0; NM_types[i]->info.tuple.fields[j].name != NULL; j++){
+        nfree(NM_types[i]->info.tuple.fields[j].name);
       }
     }
     /* free the type itself */
@@ -247,8 +247,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     case OT_INTEGER: {
       /* {{{ */
       new_type->size = va_arg(vl, size_t);
-      break;
       /* }}} */
+      break;
     }
     case OT_TUPLE: {
       /* {{{ */
@@ -258,22 +258,21 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       size_t total_size = 0;
 
       fields = va_arg(vl, struct field *);
-      /* zero-out the tuple's info.mixed */
-      memset(new_type->info.mixed.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
+      /* zero-out the tuple's info.tuple */
+      memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
       /* calculate the total size */
       for (p = fields; p->type != NULL && p->name != NULL; p++, i++){
-        new_type->info.mixed.fields[i].type = p->type;
+        new_type->info.tuple.fields[i].type = p->type;
         /* the parser `strdup's the name, so we don't have to */
-        new_type->info.mixed.fields[i].name = p->name;
+        new_type->info.tuple.fields[i].name = p->name;
         /* add to the total size of the whole type */
         total_size += p->type->size;
       }
       /* set the size */
       new_type->size = total_size;
-
-      break;
       /* }}} */
+      break;
     }
     case OT_FUN: {
       /* {{{ */
@@ -303,13 +302,26 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* I'm making it 0 not to mess up other types with function's in them */
       new_type->size = 0;
       /* }}} */
+      break;
+    }
+    case OT_ARRAY: {
+      /* {{{ */
+      size_t nmemb = va_arg(vl, size_t);
+      struct nob_type *elems_type = va_arg(vl, struct nob_type *);
+
+      assert(elems_type != NULL);
+
+      new_type->size = elems_type->size * nmemb;
+      new_type->info.array.type = elems_type;
+      new_type->info.array.nmemb = nmemb;
+      /* }}} */
+      break;
     }
 
     /* suspress warnings */
     case OT_REAL:
     case OT_CHAR:
     case OT_STRING:
-    case OT_ARRAY:
       break;
     default:
       break;
@@ -335,15 +347,19 @@ void dump_types(void)
   for (; i < NM_types_curr - NM_types; i++){
     struct nob_type *type = NM_types[i];
     printf("   %p %s (type: %d, size: %lu)\n", (void *)type, type->name, type->primitive, type->size);
-    /* print additional info about tuples */
+
+    /* print additional info about some certain types */
     if (type->primitive == OT_TUPLE){
+      /* {{{ */
       unsigned j = 0; /* additional counter */
 
-      for (; type->info.mixed.fields[j].name != NULL; j++){
-        struct field field = type->info.mixed.fields[j];
+      for (; type->info.tuple.fields[j].name != NULL; j++){
+        struct field field = type->info.tuple.fields[j];
         printf("     - %s: %p %s (type: %d, size: %lu)\n", field.name, (void *)field.type, field.type->name, field.type->primitive, field.type->size);
       }
+      /* }}} */
     } else if (type->primitive == OT_FUN){
+      /* {{{ */
       struct nob_type *ret = type->info.func.return_type;
       struct nob_type **params = type->info.func.params;
       struct nob_type **p;
@@ -357,6 +373,12 @@ void dump_types(void)
       } else {
         printf("     . no parameters\n");
       }
+      /* }}} */
+    } else if (type->primitive == OT_ARRAY){
+      /* {{{ */
+      printf("     + of type: %p %s (type: %d, size: %lu)\n", (void *)type->info.array.type, type->info.array.type->name, type->info.array.type->primitive, type->info.array.type->size);
+      printf("     + nmemb: %lu\n", type->info.array.nmemb);
+      /* }}} */
     }
   }
   printf("## End\n\n");

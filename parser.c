@@ -75,6 +75,11 @@ static struct nob_type *type(struct lexer *lex)
         ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
       } else {
         /* the function takes no parameters */
+
+        /* meh, I'm kind of pedantic */
+        /* clear the space and the semicolon */
+        printf("\b\b");
+        /* create the type */
         ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
       }
 
@@ -132,6 +137,20 @@ static struct nob_type *type(struct lexer *lex)
     /* }}} */
   }
 
+  /* an array is basically any type followed by a pair of brackets */
+  if (accept(lex, TOK_LBRACKET)){
+    size_t nmemb = 0;
+    printf("[");
+    /* the array's nmemb */
+    force(lex, TOK_INTEGER);
+    printf("%d", lex->curr_tok.value.i);
+    nmemb = lex->curr_tok.value.i;
+    force(lex, TOK_RBRACKET);
+    printf("]");
+
+    ret = new_type(NULL /* no name */, OT_ARRAY, nmemb, ret);
+  }
+
   return ret;
 }
 
@@ -140,7 +159,10 @@ struct node *stmt(struct lexer *lex)
   while (1){
     if (accept_keyword(lex, "my")){
       printf("my ");
-      type(lex);
+      if (!type(lex)){
+        fprintf(stderr, "syntax error: expected a type for the variable declaration\n");
+        exit(1);
+      }
       putchar(' ');
       force(lex, TOK_NAME);
       printf("%s", lex->curr_tok.value.s);
