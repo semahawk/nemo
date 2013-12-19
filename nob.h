@@ -25,7 +25,8 @@ enum nob_primitive_type {
   OT_STRING  = 0x03,
   OT_ARRAY   = 0x04,
   OT_TUPLE   = 0x05,
-  OT_FUN     = 0x06
+  OT_FUN     = 0x06,
+  OT_PTR     = 0x07
 };
 
 /* forward declaration (`struct field' needs it, but `struct nob_type' needs
@@ -47,6 +48,11 @@ struct nob_type {
   enum nob_primitive_type primitive;
   /* additional info about the given type */
   union {
+    struct {
+      /* the type the pointer points to */
+      struct nob_type *type;
+    } ptr;
+
     struct {
       /* the 'type\'s' type (as in, each element's type) */
       struct nob_type *type;

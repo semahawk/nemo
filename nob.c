@@ -317,6 +317,20 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
+    case OT_PTR: {
+      /* {{{ */
+      /* the type the pointer points to */
+      struct nob_type *t = va_arg(vl, struct nob_type *);
+      /* TODO: make sure there actually is such type */
+
+      assert(t);
+
+      new_type->info.ptr.type = t;
+      /* eight-byte pointers */
+      new_type->size = 8;
+      /* }}} */
+      break;
+    }
 
     /* suspress warnings */
     case OT_REAL:
@@ -364,7 +378,7 @@ void dump_types(void)
       struct nob_type **params = type->info.func.params;
       struct nob_type **p;
 
-      printf("     = %s: %p %s (type: %d, size: %lu)\n", ret->name, (void *)ret, ret->name, ret->primitive, ret->size);
+      printf("     = %p %s (type: %d, size: %lu)\n", (void *)ret, ret->name, ret->primitive, ret->size);
 
       if (params != NULL && *params != NULL){
         for (p = params; *p != NULL; p++){
@@ -378,6 +392,10 @@ void dump_types(void)
       /* {{{ */
       printf("     + of type: %p %s (type: %d, size: %lu)\n", (void *)type->info.array.type, type->info.array.type->name, type->info.array.type->primitive, type->info.array.type->size);
       printf("     + nmemb: %lu\n", type->info.array.nmemb);
+      /* }}} */
+    } else if (type->primitive == OT_PTR){
+      /* {{{ */
+      printf("     + points to: %p %s (type: %d, size: %lu)\n", (void *)type->info.ptr.type, type->info.ptr.type->name, type->info.ptr.type->primitive, type->info.ptr.type->size);
       /* }}} */
     }
   }

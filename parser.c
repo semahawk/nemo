@@ -137,6 +137,12 @@ static struct nob_type *type(struct lexer *lex)
     /* }}} */
   }
 
+  /* meh, pointers */
+  while (accept(lex, TOK_TIMES)){
+    printf("*");
+    ret = new_type(NULL /* no name */, OT_PTR, ret);
+  }
+
   /* an array is basically any type followed by a pair of brackets */
   if (accept(lex, TOK_LBRACKET)){
     size_t nmemb = 0;
