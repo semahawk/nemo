@@ -261,6 +261,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* zero-out the tuple's info.tuple */
       memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
+      assert(fields);
+
       /* calculate the total size */
       for (p = fields; p->type != NULL && p->name != NULL; p++, i++){
         new_type->info.tuple.fields[i].type = p->type;
@@ -280,6 +282,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       struct nob_type **params = va_arg(vl, struct nob_type **);
       struct nob_type **p;
       unsigned i = 0;
+
+      assert(return_type);
 
       /* if params is NULL then that means the function doesn't take any
        * parameters */
@@ -309,7 +313,7 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       size_t nmemb = va_arg(vl, size_t);
       struct nob_type *elems_type = va_arg(vl, struct nob_type *);
 
-      assert(elems_type != NULL);
+      assert(elems_type);
 
       new_type->size = elems_type->size * nmemb;
       new_type->info.array.type = elems_type;
@@ -350,6 +354,25 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 }
 
 /*
+ * Return the primitive type as a string.
+ */
+const char *nob_type_to_s(enum nob_primitive_type type)
+{
+  switch (type){
+    case OT_INTEGER: return "integer";
+    case OT_REAL:    return "real";
+    case OT_CHAR:    return "char";
+    case OT_STRING:  return "string";
+    case OT_ARRAY:   return "array";
+    case OT_TUPLE:   return "tuple";
+    case OT_FUN:     return "function";
+    case OT_PTR:     return "pointer";
+  }
+
+  return "##unknown_type##nob_type_to_s##";
+}
+
+/*
  * DEEEBUG
  */
 void dump_types(void)
@@ -357,19 +380,30 @@ void dump_types(void)
   /* meh, that's quite a mess */
   unsigned i = 0; /* the counter */
 
-  printf("\n## Types Dump:\n");
+  printf("\n## Types Dump:\n\n");
   for (; i < NM_types_curr - NM_types; i++){
     struct nob_type *type = NM_types[i];
-    printf("   %p %s (type: %d, size: %lu)\n", (void *)type, type->name, type->primitive, type->size);
+    printf("   %p", (void *)type);
+    if (type->name != NULL)
+      printf(" \"%s\"", type->name);
+    printf("\n");
+    printf("   - type: %s\n", nob_type_to_s(type->primitive));
+    printf("   - size: %lu\n", type->size);
 
     /* print additional info about some certain types */
     if (type->primitive == OT_TUPLE){
       /* {{{ */
       unsigned j = 0; /* additional counter */
 
-      for (; type->info.tuple.fields[j].name != NULL; j++){
-        struct field field = type->info.tuple.fields[j];
-        printf("     - %s: %p %s (type: %d, size: %lu)\n", field.name, (void *)field.type, field.type->name, field.type->primitive, field.type->size);
+      if (type->info.tuple.fields != NULL){
+        printf("   - fields:\n");
+        for (; type->info.tuple.fields[j].name != NULL; j++){
+          struct field field = type->info.tuple.fields[j];
+          printf("     + %s: %p", field.name, (void *)field.type);
+          if (field.type->name != NULL)
+            printf(" \"%s\"", field.type->name);
+          printf("\n");
+        }
       }
       /* }}} */
     } else if (type->primitive == OT_FUN){
@@ -378,11 +412,19 @@ void dump_types(void)
       struct nob_type **params = type->info.func.params;
       struct nob_type **p;
 
-      printf("     = %p %s (type: %d, size: %lu)\n", (void *)ret, ret->name, ret->primitive, ret->size);
+      printf("   - return type:\n");
+      printf("     = %p", (void *)ret);
+      if (ret->name != NULL)
+        printf(" \"%s\"", ret->name);
+      printf("\n");
 
       if (params != NULL && *params != NULL){
+        printf("   - parameters:\n");
         for (p = params; *p != NULL; p++){
-          printf("     - %p %s (type: %d, size: %lu)\n", (void *)(*p), (*p)->name, (*p)->primitive, (*p)->size);
+          printf("     + %p", (void *)(*p));
+          if ((*p)->name != NULL)
+            printf(" \"%s\"", (*p)->name);
+          printf("\n");
         }
       } else {
         printf("     . no parameters\n");
@@ -390,14 +432,21 @@ void dump_types(void)
       /* }}} */
     } else if (type->primitive == OT_ARRAY){
       /* {{{ */
-      printf("     + of type: %p %s (type: %d, size: %lu)\n", (void *)type->info.array.type, type->info.array.type->name, type->info.array.type->primitive, type->info.array.type->size);
+      printf("     + of type: %p", (void *)type->info.array.type);
+      if (type->info.array.type->name != NULL)
+        printf(" \"%s\"", type->info.array.type->name);
+      printf("\n");
       printf("     + nmemb: %lu\n", type->info.array.nmemb);
       /* }}} */
     } else if (type->primitive == OT_PTR){
       /* {{{ */
-      printf("     + points to: %p %s (type: %d, size: %lu)\n", (void *)type->info.ptr.type, type->info.ptr.type->name, type->info.ptr.type->primitive, type->info.ptr.type->size);
+      printf("     + points to: %p", (void *)type->info.ptr.type);
+      if (type->info.ptr.type->name != NULL)
+        printf(" \"%s\"", type->info.ptr.type->name);
+      printf("\n");
       /* }}} */
     }
+    printf("\n");
   }
   printf("## End\n\n");
 }

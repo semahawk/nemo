@@ -104,6 +104,7 @@ struct nob_type *get_type_by_name(char *name);
 size_t sizeof_nob(Nob *ob);
 void dump_types(void);
 void push_type(struct nob_type *type);
+const char *nob_type_to_s(enum nob_primitive_type);
 
 /* make the variables visible */
 extern struct nob_type *T_BYTE;
