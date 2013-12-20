@@ -37,6 +37,7 @@ static const char *keywords[] =
 
 static void err(struct lexer *lex, const char *fmt, ...)
 {
+  /* {{{ */
   va_list vl;
 
   va_start(vl, fmt);
@@ -46,10 +47,12 @@ static void err(struct lexer *lex, const char *fmt, ...)
   va_end(vl);
 
   exit(1);
+  /* }}} */
 }
 
 static void push_str(struct lexer *lex, char *str)
 {
+  /* {{{ */
   ptrdiff_t offset = lex->str_gc.curr - lex->str_gc.ptr;
 
   /* handle overflow */
@@ -62,20 +65,25 @@ static void push_str(struct lexer *lex, char *str)
 
   *lex->str_gc.curr = str; /* set up the current 'cell' */
   lex->str_gc.curr++; /* move on to the next 'cell' */
+  /* }}} */
 }
 
 static void advance(struct lexer *lex)
 {
+  /* {{{ */
   lex->save.line  = lex->line;
   lex->save.col   = lex->col;
   lex->save.pos   = lex->curr_pos;
+  /* }}} */
 }
 
 static void fallback(struct lexer *lex)
 {
+  /* {{{ */
   lex->line       = lex->save.line;
   lex->col        = lex->save.col;
   lex->curr_pos   = lex->save.pos;
+  /* }}} */
 }
 
 static struct token fetch_token(struct lexer *lex)
@@ -237,25 +245,25 @@ static struct token fetch_token(struct lexer *lex)
   }
   else switch (*p){
     /* {{{ SINGLE CHAR */
-    case '=': p++; ret.type = TOK_EQ; break;
-    case ':': p++; ret.type = TOK_COLON; break;
-    case ';': p++; ret.type = TOK_SEMICOLON; break;
-    case ',': p++; ret.type = TOK_COMMA; break;
-    case '-': p++; ret.type = TOK_MINUS; break;
-    case '+': p++; ret.type = TOK_PLUS; break;
-    case '*': p++; ret.type = TOK_TIMES; break;
-    case '%': p++; ret.type = TOK_PERCENT; break;
-    case '/': p++; ret.type = TOK_SLASH; break;
-    case '(': p++; ret.type = TOK_LPAREN; break;
-    case ')': p++; ret.type = TOK_RPAREN; break;
-    case '{': p++; ret.type = TOK_LMUSTASHE; break;
-    case '}': p++; ret.type = TOK_RMUSTASHE; break;
-    case '[': p++; ret.type = TOK_LBRACKET; break;
-    case ']': p++; ret.type = TOK_RBRACKET; break;
-    case '<': p++; ret.type = TOK_LCHEVRON; break;
-    case '>': p++; ret.type = TOK_RCHEVRON; break;
-    case '!': p++; ret.type = TOK_BANG; break;
-    case '?': p++; ret.type = TOK_QUESTION; break;
+    case '=': ret.value.c = *p; p++; ret.type = TOK_EQ; break;
+    case ':': ret.value.c = *p; p++; ret.type = TOK_COLON; break;
+    case ';': ret.value.c = *p; p++; ret.type = TOK_SEMICOLON; break;
+    case ',': ret.value.c = *p; p++; ret.type = TOK_COMMA; break;
+    case '-': ret.value.c = *p; p++; ret.type = TOK_MINUS; break;
+    case '+': ret.value.c = *p; p++; ret.type = TOK_PLUS; break;
+    case '*': ret.value.c = *p; p++; ret.type = TOK_TIMES; break;
+    case '%': ret.value.c = *p; p++; ret.type = TOK_PERCENT; break;
+    case '/': ret.value.c = *p; p++; ret.type = TOK_SLASH; break;
+    case '(': ret.value.c = *p; p++; ret.type = TOK_LPAREN; break;
+    case ')': ret.value.c = *p; p++; ret.type = TOK_RPAREN; break;
+    case '{': ret.value.c = *p; p++; ret.type = TOK_LMUSTASHE; break;
+    case '}': ret.value.c = *p; p++; ret.type = TOK_RMUSTASHE; break;
+    case '[': ret.value.c = *p; p++; ret.type = TOK_LBRACKET; break;
+    case ']': ret.value.c = *p; p++; ret.type = TOK_RBRACKET; break;
+    case '<': ret.value.c = *p; p++; ret.type = TOK_LCHEVRON; break;
+    case '>': ret.value.c = *p; p++; ret.type = TOK_RCHEVRON; break;
+    case '!': ret.value.c = *p; p++; ret.type = TOK_BANG; break;
+    case '?': ret.value.c = *p; p++; ret.type = TOK_QUESTION; break;
     default:
       fprintf(stderr, "nemo: unknown character '%c' (%p) in %s at line %u column %u\n", *p, (void *)p, lex->name, lex->line, lex->col);
       exit(1);
@@ -268,11 +276,92 @@ static struct token fetch_token(struct lexer *lex)
   /* }}} */
 }
 
+#if DEBUG
+/* one nifty function to print a token (when -dl is on) */
+static void debug_print_token(struct token tok)
+{
+  /* {{{ */
+  switch (tok.type){
+    case TOK_INTEGER:
+      /* {{{ */
+      fprintf(stderr, "integer %d", tok.value.i);
+      /* }}} */
+      break;
+    case TOK_FLOAT:
+      /* {{{ */
+      fprintf(stderr, "float %f", tok.value.f);
+      /* }}} */
+      break;
+    case TOK_STRING:
+      /* {{{ */
+      fprintf(stderr, "string \"%s\"", tok.value.sp);
+      /* }}} */
+      break;
+    case TOK_TYPE:
+      /* {{{ */
+      fprintf(stderr, "type name \"%s\"", tok.value.s);
+      /* }}} */
+      break;
+    case TOK_NAME:
+      /* {{{ */
+      fprintf(stderr, "name \"%s\"", tok.value.s);
+      /* }}} */
+      break;
+    case TOK_KEYWORD:
+      /* {{{ */
+      fprintf(stderr, "keyword \"%s\"", tok.value.s);
+      /* }}} */
+      break;
+    case TOK_EQ:
+    case TOK_SEMICOLON:
+    case TOK_COMMA:
+    case TOK_MINUS:
+    case TOK_PLUS:
+    case TOK_TIMES:
+    case TOK_PERCENT:
+    case TOK_SLASH:
+    case TOK_LPAREN:
+    case TOK_RPAREN:
+    case TOK_LMUSTASHE:
+    case TOK_RMUSTASHE:
+    case TOK_LBRACKET:
+    case TOK_RBRACKET:
+    case TOK_LCHEVRON:
+    case TOK_RCHEVRON:
+    case TOK_BANG:
+    case TOK_COLON:
+    case TOK_QUESTION:
+      /* {{{ */
+      fprintf(stderr, "'%c'", tok.value.c);
+      /* }}} */
+      break;
+    case TOK_EOS:
+      /* {{{ */
+      fprintf(stderr, "<EOS>");
+      /* }}} */
+    default:
+      fprintf(stderr, "unknown");
+      break;
+  }
+  /* }}} */
+}
+#endif
+
 struct token force(struct lexer *lex, enum token_type type)
 {
+  /* {{{ force body */
   struct token tok = fetch_token(lex);
 
   if (tok.type == type){
+#if DEBUG
+    /* {{{ */
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_LEXER)){
+      fprintf(stderr, "%s:%05u:%03u   force  ", lex->name, lex->line, lex->col);
+      debug_print_token(tok);
+      fprintf(stderr, "\n");
+    }
+    /* }}} */
+#endif
     lex->curr_tok = tok;
     advance(lex);
     return tok;
@@ -280,13 +369,24 @@ struct token force(struct lexer *lex, enum token_type type)
     fprintf(stderr, "expected a %s instead of a %s\n", tok_to_s(type), tok_to_s(tok.type));
     exit(1);
   }
+  /* }}} */
 }
 
 bool accept(struct lexer *lex, enum token_type type)
 {
+  /* {{{ accept body */
   struct token tok = fetch_token(lex);
 
   if (tok.type == type){
+#if DEBUG
+    /* {{{ */
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_LEXER)){
+      fprintf(stderr, "%s:%05u:%03u  accept  ", lex->name, lex->line, lex->col);
+      debug_print_token(tok);
+      fprintf(stderr, "\n");
+    }
+    /* }}} */
+#endif
     lex->curr_tok = tok;
     advance(lex);
     return true;
@@ -294,10 +394,12 @@ bool accept(struct lexer *lex, enum token_type type)
     fallback(lex);
     return false;
   }
+  /* }}} */
 }
 
 bool accept_keyword(struct lexer *lex, const char *name)
 {
+  /* {{{ accept_keyword body */
   if (peek(lex, TOK_KEYWORD)){
     if (!strcmp(name, lex->curr_tok.value.s)){
       force(lex, TOK_KEYWORD);
@@ -306,31 +408,55 @@ bool accept_keyword(struct lexer *lex, const char *name)
   }
 
   return false;
+  /* }}} */
 }
 
 bool peek(struct lexer *lex, enum token_type type)
 {
+  /* {{{ peek_body */
   struct token tok = fetch_token(lex);
 
   fallback(lex);
 
   if (tok.type == type){
+#if DEBUG
+    /* {{{ */
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_LEXER)){
+      fprintf(stderr, "%s:%05u:%03u    peek  ", lex->name, lex->line, lex->col);
+      debug_print_token(tok);
+      fprintf(stderr, "\n");
+    }
+    /* }}} */
+#endif
     lex->curr_tok = tok;
     return true;
   } else {
     return false;
   }
+  /* }}} */
 }
 
 void skip(struct lexer *lex)
 {
+  /* {{{ skip body */
   struct token tok = fetch_token(lex);
 
   if (tok.type == TOK_EOS){
     err(lex, "unexpected <EOS>");
   }
 
+#if DEBUG
+  /* {{{ */
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_LEXER)){
+    fprintf(stderr, "%s:%05u:%03u    skip  ", lex->name, lex->line, lex->col);
+    debug_print_token(tok);
+    fprintf(stderr, "\n");
+  }
+  /* }}} */
+#endif
+
   advance(lex);
+  /* }}} */
 }
 
 const char *tok_to_s(enum token_type type)

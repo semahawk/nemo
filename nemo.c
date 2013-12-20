@@ -86,9 +86,13 @@ int main(int argc, char *argv[])
           case 'm':
             NM_DEBUG_SET_FLAG(NM_DEBUG_MEM);
             break;
+          case 'l':
+            NM_DEBUG_SET_FLAG(NM_DEBUG_LEXER);
+            break;
           case 'h':
             fprintf(stderr, "\nAvailable debug flags:\n");
             fprintf(stderr, "  m    see how much memory was malloced/freed, etc.\n");
+            fprintf(stderr, "  l    lexer stuff; see what tokens were fetched\n");
             fprintf(stderr, "\n");
             return 0;
           default:
