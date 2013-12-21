@@ -160,9 +160,62 @@ static struct nob_type *type(struct lexer *lex)
   return ret;
 }
 
+static struct node *primary(struct lexer *lex)
+{
+  if (accept(lex, TOK_INTEGER)){
+    printf("%d ", lex->curr_tok.value.i);
+    return new_int(lex, lex->curr_tok.value.i);
+  } else if (accept(lex, TOK_FLOAT)){
+    printf("%f=16 ", lex->curr_tok.value.f);
+    return new_int(lex, 16);
+  } else if (accept(lex, TOK_STRING)){
+    printf("\"%s\"=32", lex->curr_tok.value.sp);
+    return new_int(lex, 32);
+  } else if (accept(lex, TOK_NAME)){
+    printf("%s=0x6e ", lex->curr_tok.value.s /* meh */);
+    return new_int(lex, 0x6e);
+  }
+
+  return NULL;
+}
+
+static struct node *expr(struct lexer *lex)
+{
+  struct node *right, *left, *ret;
+
+  left = ret = primary(lex);
+
+  while (peek(lex, TOK_PLUS)  || peek(lex, TOK_MINUS)
+      || peek(lex, TOK_TIMES) || peek(lex, TOK_SLASH)){
+    if (accept(lex, TOK_PLUS)){
+      printf("+ ");
+    } else if (accept(lex, TOK_MINUS)){
+      printf("- ");
+    } else if (accept(lex, TOK_TIMES)){
+      printf("* ");
+    } else if (accept(lex, TOK_SLASH)){
+      printf("/ ");
+    }
+
+    right = primary(lex);
+
+    if (!right){
+      fprintf(stderr, "expected an expression at the RHS of the binary operation\n");
+      exit(1);
+    }
+
+    ret = new_binop(lex, BINARY_ADD, left, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
 struct node *stmt(struct lexer *lex)
 {
-  while (1){
+  struct node *ret = new_nop(lex);
+
+  while (!peek(lex, TOK_EOS)){
     if (accept_keyword(lex, "my")){
       printf("my ");
       if (!type(lex)){
@@ -205,30 +258,14 @@ struct node *stmt(struct lexer *lex)
       }
     }
     else {
-      break;
+      ret = expr(lex);
     }
 
     force(lex, TOK_SEMICOLON);
     printf(";\n");
   }
 
-  return
-    new_if(lex,
-      new_int(lex, 1 << 8),
-      new_unop(lex, UNARY_MINUS,
-        new_int(lex, 1 << 7)),
-      new_binop(lex, BINARY_ADD,
-        new_int(lex, 1 << 7),
-        new_if(lex,
-          new_int(lex, 1 << 7),
-          new_unop(lex, UNARY_MINUS, new_int(lex, 1 << 7)),
-          new_binop(lex, BINARY_SUB,
-            new_int(lex, 1 << 7),
-            new_int(lex, 1 << 7)
-          )
-        )
-      )
-    );
+  return ret;
 }
 
 int parse_file(char *fname)

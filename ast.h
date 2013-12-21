@@ -125,6 +125,7 @@ struct node {
   } in;
 };
 
+struct node *new_nop(struct lexer *lex);
 struct node *new_int(struct lexer *lex, int value);
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target);
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right);

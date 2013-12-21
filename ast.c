@@ -127,14 +127,19 @@ void exec_nodes(struct node *node)
     ;
 }
 
+int exec_nop(struct node *nd)
+{
+  RETURN_NEXT;
+}
+
 int exec_const(struct node *nd)
 {
   /* {{{  */
   if (nd->type == NT_INTEGER){
-    /*printf("executing an integer (%d)\n", nd->in.i);*/
+    printf("executing an integer (%d)\n", nd->in.i);
     PUSH(new_nob(T_WORD, nd->in.i));
   } else if (nd->type == NT_FLOAT){
-    /*printf("executing a float (%f)\n", nd->in.f);*/
+    printf("executing a float (%f)\n", nd->in.f);
     /* FIXME */
     PUSH(new_nob(T_BYTE, (int)nd->in.f));
   }
@@ -148,7 +153,7 @@ int exec_unop(struct node *nd)
   /* {{{ */
   EXEC(nd->in.unop.target);
 
-  /*printf("executing unary operation\n");*/
+  printf("executing unary operation\n");
 
   switch (nd->in.unop.type){
     /* FIXME */
@@ -165,11 +170,11 @@ int exec_binop(struct node *nd)
   EXEC(nd->in.binop.left);
   EXEC(nd->in.binop.right);
 
-  /*printf("executing binary operation\n");*/
+  printf("executing binary operation\n");
 
   switch (nd->in.binop.type){
     /* FIXME */
-    default: PUSH((POP(), POP()));
+    default: /* meh */;
   }
 
   RETURN_NEXT;
@@ -183,7 +188,7 @@ int exec_if(struct node *nd)
 
   guard = TOP();
 
-  /*printf("guard: %p\n", (void *)guard);*/
+  printf("guard: %p\n", (void *)guard);
 
   if (guard)
     EXEC(nd->in.iff.body);
@@ -194,6 +199,19 @@ int exec_if(struct node *nd)
 }
 /* }}} */
 /* {{{ new_nodes */
+struct node *new_nop(struct lexer *lex)
+{
+  /* {{{ */
+  struct node n;
+
+  n.type = NT_NOP;
+  n.execf = exec_nop;
+  n.next = NULL;
+
+  return push_node(lex, &n);
+  /* }}} */
+}
+
 struct node *new_int(struct lexer *lex, int value)
 {
   /* {{{ */
