@@ -23,6 +23,23 @@
 #include "utf8.h"
 #include "util.h"
 
+/* statements end with a semicolon, unless it's the last statement in the block
+ * (or the whole program/module/unit) */
+#define stmt_end(lex) \
+  do { \
+    if (!peek(lex, TOK_RMUSTASHE) && \
+        !peek(lex, TOK_EOS)){ \
+      force(lex, TOK_SEMICOLON); \
+      printf(" ENDSTMT;\n"); \
+    } \
+  } while (0)
+
+/* forward declarations */
+struct node *block(struct lexer *lex);
+
+/* pointer to the previous statement */
+struct node *prev_stmt = NULL;
+
 /*
  * Fetches the type, at the lexer's current 'position'.
  * If the type already exists, like "int", it return's the pointer to it.
@@ -182,6 +199,7 @@ static struct node *primary(struct lexer *lex)
 static struct node *expr(struct lexer *lex)
 {
   struct node *right, *left, *ret;
+  enum binop_type type;
 
   left = ret = primary(lex);
 
@@ -189,12 +207,16 @@ static struct node *expr(struct lexer *lex)
       || peek(lex, TOK_TIMES) || peek(lex, TOK_SLASH)){
     if (accept(lex, TOK_PLUS)){
       printf("+ ");
+      type = BINARY_ADD;
     } else if (accept(lex, TOK_MINUS)){
       printf("- ");
+      type = BINARY_SUB;
     } else if (accept(lex, TOK_TIMES)){
       printf("* ");
+      type = BINARY_MUL;
     } else if (accept(lex, TOK_SLASH)){
       printf("/ ");
+      type = BINARY_DIV;
     }
 
     right = primary(lex);
@@ -204,7 +226,7 @@ static struct node *expr(struct lexer *lex)
       exit(1);
     }
 
-    ret = new_binop(lex, BINARY_ADD, left, right);
+    ret = new_binop(lex, type, left, right);
     left = ret;
   }
 
@@ -215,54 +237,116 @@ struct node *stmt(struct lexer *lex)
 {
   struct node *ret = new_nop(lex);
 
-  while (!peek(lex, TOK_EOS)){
-    if (accept_keyword(lex, "my")){
-      printf("my ");
-      if (!type(lex)){
-        fprintf(stderr, "syntax error: expected a type for the variable declaration\n");
-        exit(1);
-      }
-      putchar(' ');
-      force(lex, TOK_NAME);
-      printf("%s", lex->curr_tok.value.s);
-    }
-    else if (accept_keyword(lex, "typedef")){
-      struct nob_type *new_type;
+  if (accept(lex, TOK_SEMICOLON)){ /* NOP */
+    /* {{{ */
+    printf("NOP;\n");
+    /* }}} */
+  }
+  else if (accept(lex, TOK_LMUSTASHE)){ /* a block */
+    /* {{{ */
+    printf("{\n");
+    ret = block(lex);
+    force(lex, TOK_RMUSTASHE);
+    printf("}\n");
+    /* }}} */
+  }
+  else if (accept_keyword(lex, "if")){
+    /* {{{ */
+    struct node *guard;
+    struct node *body  = NULL;
+    struct node *elsee = NULL;
 
-      printf("typedef ");
-      new_type = type(lex);
-      /* ouch, it's not really a type! */
-      if (!new_type){
-        fprintf(stderr, "error: expected a type\n");
-        exit(1);
-      }
-      /* get the name for the type */
-      force(lex, TOK_NAME);
-      printf(" %s", lex->curr_tok.value.s);
-      /* if the type's name is NULL, then it's an anonymous type, which means
-       * that simply setting it's name would do the thing just perfectly */
-      if (new_type->name == NULL){
-        new_type->name = strdup(lex->curr_tok.value.s);
-      } else {
-        /* if the type has already been named, then we need to copy the type,
-         * with a proper name */
-        /* a FIXME/TODO here is not to create a whole new type if we're, kind
-         * of, aliasing a type */
-        struct nob_type *newer_type = nmalloc(sizeof(struct nob_type));
-        /* copy the contents */
-        memcpy(newer_type, new_type, sizeof(struct nob_type));
-        /* set up the name */
-        newer_type->name = strdup(lex->curr_tok.value.s);
-        /* 'register' the type */
-        push_type(newer_type);
-      }
-    }
-    else {
-      ret = expr(lex);
+    printf("if ");
+    force(lex, TOK_LPAREN);
+    printf("(");
+
+    guard = expr(lex);
+    /* no expression, that's a bummer */
+    if (!guard){
+      fprintf(stderr, "%s:%u.%u: warning: expected an expression for if's guard\n", lex->name, lex->line, lex->col);
+      exit(1);
     }
 
-    force(lex, TOK_SEMICOLON);
-    printf(";\n");
+    force(lex, TOK_RPAREN);
+    printf(")");
+
+    body = stmt(lex);
+    /* TODO: if (!body) ... */
+
+    if (accept_keyword(lex, "else")){
+      printf("else ");
+      elsee = stmt(lex);
+    }
+
+    ret = new_if(lex, guard, body, elsee);
+    /* }}} */
+  }
+  else if (accept_keyword(lex, "my")){
+    /* {{{ */
+    printf("my ");
+    if (!type(lex)){
+      fprintf(stderr, "syntax error: expected a type for the variable declaration\n");
+      exit(1);
+    }
+    putchar(' ');
+    force(lex, TOK_NAME);
+    printf("%s", lex->curr_tok.value.s);
+    /* }}} */
+    stmt_end(lex);
+  }
+  else if (accept_keyword(lex, "typedef")){
+    /* {{{ */
+    struct nob_type *new_type;
+
+    printf("typedef ");
+    new_type = type(lex);
+    /* ouch, it's not really a type! */
+    if (!new_type){
+      fprintf(stderr, "error: expected a type\n");
+      exit(1);
+    }
+    /* get the name for the type */
+    force(lex, TOK_NAME);
+    printf(" %s", lex->curr_tok.value.s);
+    /* if the type's name is NULL, then it's an anonymous type, which means
+     * that simply setting it's name would do the thing just perfectly */
+    if (new_type->name == NULL){
+      new_type->name = strdup(lex->curr_tok.value.s);
+    } else {
+      /* if the type has already been named, then we need to copy the type,
+       * with a proper name */
+      /* a FIXME/TODO here is not to create a whole new type if we're, kind
+       * of, aliasing a type */
+      struct nob_type *newer_type = nmalloc(sizeof(struct nob_type));
+      /* copy the contents */
+      memcpy(newer_type, new_type, sizeof(struct nob_type));
+      /* set up the name */
+      newer_type->name = strdup(lex->curr_tok.value.s);
+      /* 'register' the type */
+      push_type(newer_type);
+    }
+    /* }}} */
+    stmt_end(lex);
+  }
+  else { /* expression */
+    /* {{{ */
+    ret = expr(lex);
+    /* }}} */
+    stmt_end(lex);
+  }
+
+  return ret;
+}
+
+struct node *block(struct lexer *lex)
+{
+  struct node *ret = NULL,
+              *tmp;
+
+  while (!peek(lex, TOK_EOS) && !peek(lex, TOK_RMUSTASHE)){
+    /* overwrite `ret' if NULL (ie. set it only the first time) */
+    tmp = stmt(lex);
+    ret = !ret ? tmp : ret;
   }
 
   return ret;
@@ -325,8 +409,8 @@ int parse_file(char *fname)
   lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
-  node = stmt(&lex);
-  exec_nodes(node);
+  node = block(&lex);
+  dump_nodes(node);
 
   /* free the lexer's `str_gc' */
   for (p = lex.str_gc.ptr; p != lex.str_gc.curr; p++){
@@ -366,8 +450,8 @@ int parse_string(char *string)
   lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
-  node = stmt(&lex);
-  exec_nodes(node);
+  node = block(&lex);
+  dump_nodes(node);
 
   /* tidy up */
   nfree(lex.str_gc.ptr);

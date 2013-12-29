@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     parse_file(argv[0]);
   }
 
-  dump_types();
+  /*dump_types();*/
 
   arg_stack_finish();
   types_finish();

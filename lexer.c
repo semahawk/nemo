@@ -32,6 +32,7 @@
 
 static const char *keywords[] =
 {
+  "if", "unless", "while", "until", "else",
   "my", "typedef", NULL
 };
 
@@ -245,25 +246,25 @@ static struct token fetch_token(struct lexer *lex)
   }
   else switch (*p){
     /* {{{ SINGLE CHAR */
-    case '=': ret.value.c = *p; p++; ret.type = TOK_EQ; break;
-    case ':': ret.value.c = *p; p++; ret.type = TOK_COLON; break;
-    case ';': ret.value.c = *p; p++; ret.type = TOK_SEMICOLON; break;
-    case ',': ret.value.c = *p; p++; ret.type = TOK_COMMA; break;
-    case '-': ret.value.c = *p; p++; ret.type = TOK_MINUS; break;
-    case '+': ret.value.c = *p; p++; ret.type = TOK_PLUS; break;
-    case '*': ret.value.c = *p; p++; ret.type = TOK_TIMES; break;
-    case '%': ret.value.c = *p; p++; ret.type = TOK_PERCENT; break;
-    case '/': ret.value.c = *p; p++; ret.type = TOK_SLASH; break;
-    case '(': ret.value.c = *p; p++; ret.type = TOK_LPAREN; break;
-    case ')': ret.value.c = *p; p++; ret.type = TOK_RPAREN; break;
-    case '{': ret.value.c = *p; p++; ret.type = TOK_LMUSTASHE; break;
-    case '}': ret.value.c = *p; p++; ret.type = TOK_RMUSTASHE; break;
-    case '[': ret.value.c = *p; p++; ret.type = TOK_LBRACKET; break;
-    case ']': ret.value.c = *p; p++; ret.type = TOK_RBRACKET; break;
-    case '<': ret.value.c = *p; p++; ret.type = TOK_LCHEVRON; break;
-    case '>': ret.value.c = *p; p++; ret.type = TOK_RCHEVRON; break;
-    case '!': ret.value.c = *p; p++; ret.type = TOK_BANG; break;
-    case '?': ret.value.c = *p; p++; ret.type = TOK_QUESTION; break;
+    case '=': ret.value.c = *p; lex->col++; p++; ret.type = TOK_EQ; break;
+    case ':': ret.value.c = *p; lex->col++; p++; ret.type = TOK_COLON; break;
+    case ';': ret.value.c = *p; lex->col++; p++; ret.type = TOK_SEMICOLON; break;
+    case ',': ret.value.c = *p; lex->col++; p++; ret.type = TOK_COMMA; break;
+    case '-': ret.value.c = *p; lex->col++; p++; ret.type = TOK_MINUS; break;
+    case '+': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PLUS; break;
+    case '*': ret.value.c = *p; lex->col++; p++; ret.type = TOK_TIMES; break;
+    case '%': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PERCENT; break;
+    case '/': ret.value.c = *p; lex->col++; p++; ret.type = TOK_SLASH; break;
+    case '(': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LPAREN; break;
+    case ')': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RPAREN; break;
+    case '{': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LMUSTASHE; break;
+    case '}': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RMUSTASHE; break;
+    case '[': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LBRACKET; break;
+    case ']': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RBRACKET; break;
+    case '<': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LCHEVRON; break;
+    case '>': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RCHEVRON; break;
+    case '!': ret.value.c = *p; lex->col++; p++; ret.type = TOK_BANG; break;
+    case '?': ret.value.c = *p; lex->col++; p++; ret.type = TOK_QUESTION; break;
     default:
       fprintf(stderr, "nemo: unknown character '%c' (%p) in %s at line %u column %u\n", *p, (void *)p, lex->name, lex->line, lex->col);
       exit(1);
@@ -366,7 +367,7 @@ struct token force(struct lexer *lex, enum token_type type)
     advance(lex);
     return tok;
   } else {
-    fprintf(stderr, "expected a %s instead of a %s\n", tok_to_s(type), tok_to_s(tok.type));
+    fprintf(stderr, "%s:%u.%u: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
     exit(1);
   }
   /* }}} */

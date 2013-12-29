@@ -21,7 +21,7 @@
 
 /* one handy macro */
 #define EXEC(node) ((node)->execf(node))
-/* another one */
+/* few more */
 #define RETURN_NEXT return (NM_pc = nd->next, (intptr_t)NM_pc)
 #define RETURN return ((intptr_t)NM_pc)
 
@@ -118,6 +118,114 @@ static struct node *push_node(struct lexer *lex, struct node *node)
   /* }}} */
 }
 
+#if DEBUG
+
+/* maintaining the proper amount of spaces before the node's dump */
+static int nodes_sw = 3;
+#define INDENT() do { nodes_sw += 2; } while (0)
+#define DEDENT() do { nodes_sw -= 2; } while (0)
+#define SPACES() do { \
+  int i; \
+  /* print the proper amount of spaces */ \
+  for (i = 0; i < nodes_sw; putchar(' '), i++); \
+} while (0)
+
+#define DUMP(node) do { \
+  SPACES(); \
+  if ((node) == NULL) \
+    printf("+ (null)\n"); \
+  else \
+    (node)->dumpf((node)); \
+} while (0)
+
+#define DUMPP(msg) do { \
+  SPACES(); \
+  /* meh, anonymous variadic macros were introduced in C99 */ \
+  puts(msg); \
+} while (0)
+
+/* {{{ dump_nodes */
+void dump_nodes(struct node *node)
+{
+  printf("\n## AST Nodes Dump:\n\n");
+
+  for (; node != NULL; node = node->next){
+    DUMP(node);
+  }
+
+  printf("\n## End\n");
+}
+
+void dump_nop(struct node *nd)
+{
+  printf("+ nop\n");
+}
+
+void dump_const(struct node *nd)
+{
+  printf("+ const\n");
+}
+
+void dump_unop(struct node *nd)
+{
+  printf("+ unop\n");
+  INDENT();
+  DUMP(nd->in.unop.target);
+  DEDENT();
+}
+
+void dump_binop(struct node *nd)
+{
+  printf("+ binop ");
+
+  switch (nd->in.binop.type){
+    case BINARY_ADD:
+      printf("'+'\n");
+      break;
+    case BINARY_SUB:
+      printf("'-'\n");
+      break;
+    case BINARY_MUL:
+      printf("'*'\n");
+      break;
+    case BINARY_DIV:
+      printf("'/'\n");
+      break;
+    case BINARY_MOD:
+      printf("'%%'\n");
+      break;
+    default:
+      printf("-- unknown\n");
+      break;
+  }
+
+  INDENT();
+  DUMP(nd->in.binop.left);
+  DUMP(nd->in.binop.right);
+  DEDENT();
+}
+
+void dump_if(struct node *nd)
+{
+  printf("+ if\n");
+  INDENT();
+  DUMPP("- guard:");
+  INDENT();
+  DUMP(nd->in.iff.guard);
+  DEDENT();
+  DUMPP("- body:");
+  INDENT();
+  DUMP(nd->in.iff.body);
+  DEDENT();
+  DUMPP("- else:");
+  INDENT();
+  DUMP(nd->in.iff.elsee);
+  DEDENT();
+  DEDENT();
+}
+/* }}} */
+#endif
+
 /* {{{ exec_nodes */
 void exec_nodes(struct node *node)
 {
@@ -206,6 +314,9 @@ struct node *new_nop(struct lexer *lex)
 
   n.type = NT_NOP;
   n.execf = exec_nop;
+#if DEBUG
+  n.dumpf = dump_nop;
+#endif
   n.next = NULL;
 
   return push_node(lex, &n);
@@ -220,6 +331,9 @@ struct node *new_int(struct lexer *lex, int value)
   n.type = NT_INTEGER;
   n.in.i = value;
   n.execf = exec_const;
+#if DEBUG
+  n.dumpf = dump_nop;
+#endif
   n.next = NULL;
 
   return push_node(lex, &n);
@@ -235,6 +349,9 @@ struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *targe
   n.in.unop.type = type;
   n.in.unop.target = target;
   n.execf = exec_unop;
+#if DEBUG
+  n.dumpf = dump_nop;
+#endif
   n.next = NULL;
 
   return push_node(lex, &n);
@@ -251,6 +368,9 @@ struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *lef
   n.in.binop.left = left;
   n.in.binop.right = right;
   n.execf = exec_binop;
+#if DEBUG
+  n.dumpf = dump_nop;
+#endif
   n.next = NULL;
 
   return push_node(lex, &n);
@@ -268,6 +388,9 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
   n.in.iff.elsee = elsee;
   n.in.iff.unless = false;
   n.execf = exec_if;
+#if DEBUG
+  n.dumpf = dump_nop;
+#endif
   n.next = NULL;
 
   return push_node(lex, &n);

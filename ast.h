@@ -77,6 +77,9 @@ struct node {
   enum node_type type;
   struct node *next;
   int (*execf)(struct node *);
+#if DEBUG
+  void (*dumpf)(struct node *);
+#endif
   union {
     int i;   /* NT_INTEGER */
     float f; /* NT_FLOAT */
@@ -133,14 +136,20 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
 
 void exec_nodes(struct node *node);
 
+#if DEBUG
+void dump_nodes(struct node *node);
+#else
+#define dump_nodes(n) /* NOP */;
+#endif
+
 void arg_stack_init(void);
 void arg_stack_finish(void);
 
 #define PUSH(i) arg_stack_push(i, __FILE__, __LINE__)
-void arg_stack_push(Nob *ob, const char *file, unsigned line);
 #define POP() arg_stack_pop(__FILE__, __LINE__)
-Nob *arg_stack_pop(const char *file, unsigned line);
 #define TOP() arg_stack_top()
+void arg_stack_push(Nob *ob, const char *file, unsigned line);
+Nob *arg_stack_pop(const char *file, unsigned line);
 Nob *arg_stack_top(void);
 
 #endif /* AST_H */
