@@ -77,6 +77,9 @@ struct node {
   enum node_type type;
   struct node *next;
   int (*execf)(struct node *);
+  unsigned id; /* used to better recognize/find the nodes in debug output */
+  /* the `id' probably should also be inside #if DEBUG but then it gives
+   * compilation errors that I can't nicely resolve, meh */
 #if DEBUG
   void (*dumpf)(struct node *);
 #endif

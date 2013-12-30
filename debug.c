@@ -28,7 +28,7 @@ void debug_ast_new(struct node *nd, const char *fmt, ...)
     va_list vl;
 
     va_start(vl, fmt);
-    fprintf(stderr, "%p:  new node: ", (void *)nd);
+    fprintf(stderr, "%p: (#%u) new node: ", (void *)nd, nd->id);
     vfprintf(stderr, fmt, vl);
     fprintf(stderr, "\n");
     va_end(vl);
@@ -41,7 +41,7 @@ void debug_ast_exec(struct node *nd, const char *fmt, ...)
     va_list vl;
 
     va_start(vl, fmt);
-    fprintf(stderr, "%p: exec node: ", (void *)nd);
+    fprintf(stderr, "%p: (#%u) exec node: ", (void *)nd, nd->id);
     vfprintf(stderr, fmt, vl);
     fprintf(stderr, "\n");
     va_end(vl);
