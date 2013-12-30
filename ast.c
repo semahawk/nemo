@@ -15,6 +15,7 @@
 #include <stddef.h>
 
 #include "ast.h"
+#include "debug.h"
 #include "mem.h"
 #include "nob.h"
 #include "lexer.h"
@@ -119,7 +120,7 @@ static struct node *push_node(struct lexer *lex, struct node *node)
 }
 
 #if DEBUG
-
+/* {{{ dump macros */
 /* maintaining the proper amount of spaces before the node's dump */
 static int nodes_sw = 3;
 #define INDENT() do { nodes_sw += 2; } while (0)
@@ -143,17 +144,19 @@ static int nodes_sw = 3;
   /* meh, anonymous variadic macros were introduced in C99 */ \
   puts(msg); \
 } while (0)
-
+/* }}} */
 /* {{{ dump_nodes */
 void dump_nodes(struct node *node)
 {
-  printf("\n## AST Nodes Dump:\n\n");
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_AST)){
+    printf("\n## AST Nodes Dump:\n\n");
 
-  for (; node != NULL; node = node->next){
-    DUMP(node);
+    for (; node != NULL; node = node->next){
+      DUMP(node);
+    }
+
+    printf("\n## End\n");
   }
-
-  printf("\n## End\n");
 }
 
 void dump_nop(struct node *nd)
@@ -237,17 +240,21 @@ void exec_nodes(struct node *node)
 
 int exec_nop(struct node *nd)
 {
+  /* {{{ */
+  debug_ast_exec(nd, "nop");
+
   RETURN_NEXT;
+  /* }}} */
 }
 
 int exec_const(struct node *nd)
 {
   /* {{{  */
   if (nd->type == NT_INTEGER){
-    printf("executing an integer (%d)\n", nd->in.i);
+    debug_ast_exec(nd, "integer (%d)", nd->in.i);
     PUSH(new_nob(T_WORD, nd->in.i));
   } else if (nd->type == NT_FLOAT){
-    printf("executing a float (%f)\n", nd->in.f);
+    debug_ast_exec(nd, "float (%f)", nd->in.f);
     /* FIXME */
     PUSH(new_nob(T_BYTE, (int)nd->in.f));
   }
@@ -259,9 +266,9 @@ int exec_const(struct node *nd)
 int exec_unop(struct node *nd)
 {
   /* {{{ */
-  EXEC(nd->in.unop.target);
+  debug_ast_exec(nd, "unop");
 
-  printf("executing unary operation\n");
+  EXEC(nd->in.unop.target);
 
   switch (nd->in.unop.type){
     /* FIXME */
@@ -275,10 +282,10 @@ int exec_unop(struct node *nd)
 int exec_binop(struct node *nd)
 {
   /* {{{ */
+  debug_ast_exec(nd, "binop");
+
   EXEC(nd->in.binop.left);
   EXEC(nd->in.binop.right);
-
-  printf("executing binary operation\n");
 
   switch (nd->in.binop.type){
     /* FIXME */
@@ -291,12 +298,14 @@ int exec_binop(struct node *nd)
 
 int exec_if(struct node *nd)
 {
+  /* {{{ */
   Nob *guard;
+
+  debug_ast_exec(nd, "if");
+
   EXEC(nd->in.iff.guard);
 
   guard = TOP();
-
-  printf("guard: %p\n", (void *)guard);
 
   if (guard)
     EXEC(nd->in.iff.body);
@@ -304,13 +313,14 @@ int exec_if(struct node *nd)
     EXEC(nd->in.iff.elsee);
 
   RETURN_NEXT;
+  /* }}} */
 }
 /* }}} */
 /* {{{ new_nodes */
 struct node *new_nop(struct lexer *lex)
 {
   /* {{{ */
-  struct node n;
+  struct node n, *ret;
 
   n.type = NT_NOP;
   n.execf = exec_nop;
@@ -319,14 +329,17 @@ struct node *new_nop(struct lexer *lex)
 #endif
   n.next = NULL;
 
-  return push_node(lex, &n);
+  ret = push_node(lex, &n);
+  debug_ast_new(ret, "nop");
+
+  return ret;
   /* }}} */
 }
 
 struct node *new_int(struct lexer *lex, int value)
 {
   /* {{{ */
-  struct node n;
+  struct node n, *ret;
 
   n.type = NT_INTEGER;
   n.in.i = value;
@@ -336,14 +349,17 @@ struct node *new_int(struct lexer *lex, int value)
 #endif
   n.next = NULL;
 
-  return push_node(lex, &n);
+  ret = push_node(lex, &n);
+  debug_ast_new(ret, "integer (%d)", value);
+
+  return ret;
   /* }}} */
 }
 
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target)
 {
   /* {{{ */
-  struct node n;
+  struct node n, *ret;
 
   n.type = NT_UNOP;
   n.in.unop.type = type;
@@ -354,14 +370,17 @@ struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *targe
 #endif
   n.next = NULL;
 
-  return push_node(lex, &n);
+  ret = push_node(lex, &n);
+  debug_ast_new(ret, "unop");
+
+  return ret;
   /* }}} */
 }
 
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right)
 {
   /* {{{ */
-  struct node n;
+  struct node n, *ret;
 
   n.type = NT_BINOP;
   n.in.binop.type = type;
@@ -373,14 +392,17 @@ struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *lef
 #endif
   n.next = NULL;
 
-  return push_node(lex, &n);
+  ret = push_node(lex, &n);
+  debug_ast_new(ret, "binop");
+
+  return ret;
   /* }}} */
 }
 
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee)
 {
   /* {{{ */
-  struct node n;
+  struct node n, *ret;
 
   n.type = NT_IF;
   n.in.iff.guard = guard;
@@ -393,7 +415,10 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
 #endif
   n.next = NULL;
 
-  return push_node(lex, &n);
+  ret = push_node(lex, &n);
+  debug_ast_new(ret, "if");
+
+  return ret;
   /* }}} */
 }
 /* }}} */

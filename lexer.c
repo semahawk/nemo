@@ -19,6 +19,7 @@
 #include <ctype.h>
 
 #include "config.h"
+#include "debug.h"
 #include "nemo.h"
 #include "nob.h"
 #include "mem.h"

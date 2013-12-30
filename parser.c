@@ -410,6 +410,7 @@ int parse_file(char *fname)
 
   /* start the parsing process */
   node = block(&lex);
+  exec_nodes(node);
   dump_nodes(node);
 
   /* free the lexer's `str_gc' */

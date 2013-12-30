@@ -56,6 +56,7 @@ CHECK_INCLUDE_FILES(stdbool.h HAVE_STDBOOL_H)
 
 set(libsrc
   ast.c
+  debug.c
   lexer.c
   mem.c
   nob.c

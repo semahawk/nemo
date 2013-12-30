@@ -44,15 +44,11 @@
 
 #include "ast.h"
 #include "config.h"
+#include "debug.h"
 #include "parser.h"
 #include "version.h"
 #include "util.h"
-#include "nemo.h"
 #include "nob.h"
-
-/* the bit pattern of the enabled debug flags */
-/* see nemo.h for more details */
-uint32_t NM_debug_flags = 0;
 
 int main(int argc, char *argv[])
 {
@@ -83,6 +79,9 @@ int main(int argc, char *argv[])
       case 'd':
 #ifdef DEBUG
         switch (*optarg){
+          case 'a':
+            NM_DEBUG_SET_FLAG(NM_DEBUG_AST);
+            break;
           case 'm':
             NM_DEBUG_SET_FLAG(NM_DEBUG_MEM);
             break;
@@ -91,6 +90,7 @@ int main(int argc, char *argv[])
             break;
           case 'h':
             fprintf(stderr, "\nAvailable debug flags:\n");
+            fprintf(stderr, "  a    AST node creation/execution\n");
             fprintf(stderr, "  m    see how much memory was malloced/freed, etc.\n");
             fprintf(stderr, "  l    lexer stuff; see what tokens were fetched\n");
             fprintf(stderr, "\n");

@@ -26,16 +26,6 @@
 /* one small, quite handy, typedef */
 typedef unsigned char byte_t;
 
-/* globalize the flags (defined in nemo.c) */
-extern uint32_t NM_debug_flags;
-/* the debug flags */
-#define NM_DEBUG_MEM   (1 << 0)  /* -dm */
-#define NM_DEBUG_LEXER (1 << 1)  /* -dl */
-/* there are, obviously, more to come :) */
-/* few more handy macros to set/get certain debug flags */
-#define NM_DEBUG_SET_FLAG(f) (NM_debug_flags |= (f))
-#define NM_DEBUG_GET_FLAG(f) (NM_debug_flags &  (f))
-
 #endif /* NEMO_H */
 
 /*

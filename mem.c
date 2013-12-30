@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 #include "config.h"
-#include "nemo.h"
+#include "debug.h"
 #include "mem.h"
 
 /* see how many mallocs/callocs/reallocs/frees there were */
