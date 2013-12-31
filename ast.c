@@ -23,8 +23,8 @@
 /* one handy macro */
 #define EXEC(node) ((node)->execf(node))
 /* few more */
-#define RETURN_NEXT return (NM_pc = nd->next, (intptr_t)NM_pc)
-#define RETURN return ((intptr_t)NM_pc)
+#define RETURN_NEXT return (NM_pc = nd->next, NM_pc)
+#define RETURN return (NM_pc)
 
 /* program counter */
 static struct node *NM_pc = NULL;
@@ -229,6 +229,14 @@ void dump_if(struct node *nd)
   DEDENT();
   DEDENT();
 }
+
+void dump_wobbly(struct node *nd)
+{
+  /* suspress the warning */
+  (void)nd;
+
+  printf("+ wobbly\n");
+}
 /* }}} */
 #endif /* DEBUG */
 
@@ -237,11 +245,11 @@ void exec_nodes(struct node *node)
 {
   NM_pc = node;
 
-  while ((EXEC(node)))
+  while (EXEC(NM_pc))
     ;
 }
 
-int exec_nop(struct node *nd)
+struct node *exec_nop(struct node *nd)
 {
   /* {{{ */
   debug_ast_exec(nd, "nop");
@@ -250,7 +258,7 @@ int exec_nop(struct node *nd)
   /* }}} */
 }
 
-int exec_const(struct node *nd)
+struct node *exec_const(struct node *nd)
 {
   /* {{{  */
   if (nd->type == NT_INTEGER){
@@ -266,7 +274,7 @@ int exec_const(struct node *nd)
   /* }}} */
 }
 
-int exec_unop(struct node *nd)
+struct node *exec_unop(struct node *nd)
 {
   /* {{{ */
   debug_ast_exec(nd, "unop ('op?', #%u)", nd->in.unop.target->id);
@@ -282,7 +290,7 @@ int exec_unop(struct node *nd)
   /* }}} */
 }
 
-int exec_binop(struct node *nd)
+struct node *exec_binop(struct node *nd)
 {
   /* {{{ */
   debug_ast_exec(nd, "binop ('op?', #%u, #%u)", nd->in.binop.left->id, nd->in.binop.right->id);
@@ -299,7 +307,7 @@ int exec_binop(struct node *nd)
   /* }}} */
 }
 
-int exec_if(struct node *nd)
+struct node *exec_if(struct node *nd)
 {
   /* {{{ */
   Nob *guard;
@@ -323,6 +331,15 @@ int exec_if(struct node *nd)
   else
     if (nd->in.iff.elsee != NULL)
       EXEC(nd->in.iff.elsee);
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *exec_wobbly(struct node *nd)
+{
+  /* {{{ */
+  printf("wobbly dobbly!\n");
 
   RETURN_NEXT;
   /* }}} */
@@ -437,6 +454,26 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
     debug_ast_new(ret, "if (#%u, #%u, #%u)", guard->id, body->id, elsee->id);
   else
     debug_ast_new(ret, "if (#%u, #%u, --)", guard->id, body->id);
+
+  return ret;
+  /* }}} */
+}
+
+struct node *new_wobbly(struct lexer *lex)
+{
+  /* {{{ */
+  struct node n, *ret;
+
+  n.id = currid++;
+  n.type = NT_WOBBLY;
+  n.execf = exec_wobbly;
+#if DEBUG
+  n.dumpf = dump_wobbly;
+#endif
+  n.next = NULL;
+
+  ret = push_node(lex, &n);
+  debug_ast_new(ret, "wobbly");
 
   return ret;
   /* }}} */

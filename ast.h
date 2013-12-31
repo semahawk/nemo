@@ -38,7 +38,8 @@ enum node_type {
   NT_STMT      = 2048,
   NT_BLOCK     = 4096,
   NT_FUNDEF    = 8192,
-  NT_USE       = 16384
+  NT_USE       = 16384,
+  NT_WOBBLY    = 32768
 };
 
 enum unop_type {
@@ -76,7 +77,7 @@ enum binop_type {
 struct node {
   enum node_type type;
   struct node *next;
-  int (*execf)(struct node *);
+  struct node *(*execf)(struct node *);
   unsigned id; /* used to better recognize/find the nodes in debug output */
   /* the `id' probably should also be inside #if DEBUG but then it gives
    * compilation errors that I can't nicely resolve, meh */
@@ -136,6 +137,7 @@ struct node *new_int(struct lexer *lex, int value);
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target);
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right);
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee);
+struct node *new_wobbly(struct lexer *lex);
 
 void exec_nodes(struct node *node);
 

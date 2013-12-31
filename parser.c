@@ -268,7 +268,7 @@ struct node *stmt(struct lexer *lex)
     }
 
     force(lex, TOK_RPAREN);
-    printf(")");
+    printf(")\n");
 
     body = stmt(lex);
     /* TODO: if (!body) ... */
@@ -328,12 +328,24 @@ struct node *stmt(struct lexer *lex)
     /* }}} */
     stmt_end(lex);
   }
+  else if (accept_keyword(lex, "wobbly")){
+    ret = new_wobbly(lex);
+    stmt_end(lex);
+  }
   else { /* expression */
     /* {{{ */
     ret = expr(lex);
     /* }}} */
     stmt_end(lex);
   }
+
+  /* set the previous statement's "next", but only if it's previous value is
+   * different than NULL */
+  if (prev_stmt)
+    if (prev_stmt->next == NULL)
+      prev_stmt->next = ret;
+
+  prev_stmt = ret;
 
   return ret;
 }

@@ -33,6 +33,7 @@
 
 static const char *keywords[] =
 {
+  "wobbly",
   "if", "unless", "while", "until", "else",
   "my", "typedef", NULL
 };
