@@ -101,27 +101,6 @@ void arg_stack_dump(void)
 }
 /* }}} */
 
-static struct node *push_node(struct lexer *lex, struct node *node)
-{
-  /* {{{ */
-  ptrdiff_t offset = lex->nds_pool.curr - lex->nds_pool.ptr;
-  struct node *ret = lex->nds_pool.curr;
-
-  /* handle overflow */
-  if (offset >= (signed)lex->nds_pool.size){
-    /* grow the stack to be twice as big as it was */
-    lex->nds_pool.size <<= 1;
-    lex->nds_pool.ptr = nrealloc(lex->nds_pool.ptr, sizeof(struct node) * lex->nds_pool.size);
-    lex->nds_pool.curr = lex->nds_pool.ptr + offset; /* adjust the 'current' pointer */
-  }
-
-  *lex->nds_pool.curr = *node; /* set up the current 'cell' */
-  lex->nds_pool.curr++; /* move on to the next 'cell' */
-
-  return ret;
-  /* }}} */
-}
-
 #if DEBUG
 /* {{{ dump macros */
 /* maintaining the proper amount of spaces before the node's dump */
@@ -349,133 +328,127 @@ struct node *exec_wobbly(struct node *nd)
 struct node *new_nop(struct lexer *lex)
 {
   /* {{{ */
-  struct node n, *ret;
+  struct node *nd = nmalloc(sizeof(struct node));
 
-  n.id = currid++;
-  n.type = NT_NOP;
-  n.execf = exec_nop;
+  nd->id = currid++;
+  nd->type = NT_NOP;
+  nd->execf = exec_nop;
 #if DEBUG
-  n.dumpf = dump_nop;
+  nd->dumpf = dump_nop;
 #endif
-  n.next = NULL;
+  nd->next = NULL;
 
-  ret = push_node(lex, &n);
-  debug_ast_new(ret, "nop");
+  debug_ast_new(nd, "nop");
 
-  return ret;
+  return nd;
   /* }}} */
 }
 
 struct node *new_int(struct lexer *lex, int value)
 {
   /* {{{ */
-  struct node n, *ret;
+  struct node *nd = nmalloc(sizeof(struct node));
 
-  n.id = currid++;
-  n.type = NT_INTEGER;
-  n.in.i = value;
-  n.execf = exec_const;
+  nd->id = currid++;
+  nd->type = NT_INTEGER;
+  nd->in.i = value;
+  nd->execf = exec_const;
 #if DEBUG
-  n.dumpf = dump_const;
+  nd->dumpf = dump_const;
 #endif
-  n.next = NULL;
+  nd->next = NULL;
 
-  ret = push_node(lex, &n);
-  debug_ast_new(ret, "integer (%d)", value);
+  debug_ast_new(nd, "integer (%d)", value);
 
-  return ret;
+  return nd;
   /* }}} */
 }
 
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target)
 {
   /* {{{ */
-  struct node n, *ret;
+  struct node *nd = nmalloc(sizeof(struct node));
 
-  n.id = currid++;
-  n.type = NT_UNOP;
-  n.in.unop.type = type;
-  n.in.unop.target = target;
-  n.execf = exec_unop;
+  nd->id = currid++;
+  nd->type = NT_UNOP;
+  nd->in.unop.type = type;
+  nd->in.unop.target = target;
+  nd->execf = exec_unop;
 #if DEBUG
-  n.dumpf = dump_unop;
+  nd->dumpf = dump_unop;
 #endif
-  n.next = NULL;
+  nd->next = NULL;
 
-  ret = push_node(lex, &n);
-  debug_ast_new(ret, "unop ('op?', #%u)", ret->in.unop.target->id);
+  debug_ast_new(nd, "unop ('op?', #%u)", nd->in.unop.target->id);
 
-  return ret;
+  return nd;
   /* }}} */
 }
 
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right)
 {
   /* {{{ */
-  struct node n, *ret;
+  struct node *nd = nmalloc(sizeof(struct node));
 
-  n.id = currid++;
-  n.type = NT_BINOP;
-  n.in.binop.type = type;
-  n.in.binop.left = left;
-  n.in.binop.right = right;
-  n.execf = exec_binop;
+  nd->id = currid++;
+  nd->type = NT_BINOP;
+  nd->in.binop.type = type;
+  nd->in.binop.left = left;
+  nd->in.binop.right = right;
+  nd->execf = exec_binop;
 #if DEBUG
-  n.dumpf = dump_binop;
+  nd->dumpf = dump_binop;
 #endif
-  n.next = NULL;
+  nd->next = NULL;
 
-  ret = push_node(lex, &n);
-  debug_ast_new(ret, "binop ('op?', #%u, #%u)", ret->in.binop.left->id, ret->in.binop.right->id);
+  debug_ast_new(nd, "binop ('op?', #%u, #%u)", nd->in.binop.left->id, nd->in.binop.right->id);
 
-  return ret;
+  return nd;
   /* }}} */
 }
 
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee)
 {
   /* {{{ */
-  struct node n, *ret;
+  struct node *nd = nmalloc(sizeof(struct node));
 
-  n.id = currid++;
-  n.type = NT_IF;
-  n.in.iff.guard = guard;
-  n.in.iff.body  = body;
-  n.in.iff.elsee = elsee;
-  n.in.iff.unless = false;
-  n.execf = exec_if;
+  nd->id = currid++;
+  nd->type = NT_IF;
+  nd->in.iff.guard = guard;
+  nd->in.iff.body  = body;
+  nd->in.iff.elsee = elsee;
+  nd->in.iff.unless = false;
+  nd->execf = exec_if;
 #if DEBUG
-  n.dumpf = dump_if;
+  nd->dumpf = dump_if;
 #endif
-  n.next = NULL;
+  nd->next = NULL;
 
-  ret = push_node(lex, &n);
   if (elsee)
-    debug_ast_new(ret, "if (#%u, #%u, #%u)", guard->id, body->id, elsee->id);
+    debug_ast_new(nd, "if (#%u, #%u, #%u)", guard->id, body->id, elsee->id);
   else
-    debug_ast_new(ret, "if (#%u, #%u, --)", guard->id, body->id);
+    debug_ast_new(nd, "if (#%u, #%u, --)", guard->id, body->id);
 
-  return ret;
+  return nd;
   /* }}} */
 }
 
 struct node *new_wobbly(struct lexer *lex)
 {
   /* {{{ */
-  struct node n, *ret;
+  struct node *nd = nmalloc(sizeof(struct node));
 
-  n.id = currid++;
-  n.type = NT_WOBBLY;
-  n.execf = exec_wobbly;
+  nd->id = currid++;
+  nd->type = NT_WOBBLY;
+  nd->execf = exec_wobbly;
 #if DEBUG
-  n.dumpf = dump_wobbly;
+  nd->dumpf = dump_wobbly;
 #endif
-  n.next = NULL;
+  nd->next = NULL;
 
-  ret = push_node(lex, &n);
-  debug_ast_new(ret, "wobbly");
+  debug_ast_new(nd, "wobbly");
 
-  return ret;
+  return nd;
   /* }}} */
 }
 /* }}} */

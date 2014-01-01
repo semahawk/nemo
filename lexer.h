@@ -85,14 +85,6 @@ struct lexer {
     /* size of the array */
     size_t size;
   } str_gc;
-  struct {
-    /* pointer to the malloced array of struct nodes */
-    struct node *ptr;
-    /* pointer to the current `cell' in the above array */
-    struct node *curr;
-    /* size of the pool */
-    size_t size;
-  } nds_pool; /* nodes pool */
 };
 
 struct token force(struct lexer *lexer_state, enum token_type type);

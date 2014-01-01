@@ -416,9 +416,6 @@ int parse_file(char *fname)
   lex.str_gc.size       = 16;
   lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
-  lex.nds_pool.size     = 32;
-  lex.nds_pool.ptr      = ncalloc(lex.nds_pool.size, sizeof(struct node));
-  lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
   node = block(&lex);
@@ -431,7 +428,6 @@ int parse_file(char *fname)
   }
   nfree(lex.str_gc.ptr);
   /* free the rest */
-  nfree(lex.nds_pool.ptr);
   nfree(fbuf);
   fclose(fptr);
 
@@ -458,9 +454,6 @@ int parse_string(char *string)
   lex.str_gc.size       = 4;
   lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
-  lex.nds_pool.size     = 16;
-  lex.nds_pool.ptr      = ncalloc(lex.nds_pool.size, sizeof(struct node));
-  lex.nds_pool.curr     = lex.nds_pool.ptr;
 
   /* start the parsing process */
   node = block(&lex);
@@ -468,7 +461,6 @@ int parse_string(char *string)
 
   /* tidy up */
   nfree(lex.str_gc.ptr);
-  nfree(lex.nds_pool.ptr);
 
   return 1;
 }
