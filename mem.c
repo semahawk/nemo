@@ -32,7 +32,7 @@ void *nmalloc_(size_t size, const char *file, unsigned line)
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "(%05u) %p: malloc %lu bytes (%s:%u)\n", counter, ptr, size, file, line);
+    fprintf(stderr, "%p: (%05u) malloc %lu bytes (%s:%u)\n", ptr, counter, size, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */
@@ -56,7 +56,7 @@ void *ncalloc_(size_t number, size_t size, const char *file, unsigned line)
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "(%05u) %p: calloc %lu (%lux%lu) bytes (%s:%u)\n", counter, ptr, number * size, number, size, file, line);
+    fprintf(stderr, "%p: (%05u) calloc %lu (%lux%lu) bytes (%s:%u)\n", ptr, counter, number * size, number, size, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */
@@ -80,7 +80,7 @@ void *nrealloc_(void *ptr, size_t size, const char *file, unsigned line)
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "(%05u) %p: realloc %lu bytes (%s:%u)\n", counter, ptr, size, file, line);
+    fprintf(stderr, "%p: (%05u) realloc %lu bytes (%s:%u)\n", ptr, counter, size, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */
@@ -97,7 +97,7 @@ void nfree_(void *ptr, const char *file, unsigned line)
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "(%05u) %p: free (%s:%u)\n", counter, ptr, file, line);
+    fprintf(stderr, "%p: (%05u) free (%s:%u)\n", ptr, counter, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */

@@ -211,10 +211,7 @@ void dump_if(struct node *nd)
 
 void dump_wobbly(struct node *nd)
 {
-  /* suspress the warning */
-  (void)nd;
-
-  printf("+ wobbly\n");
+  printf("+ (#%u) wobbly\n", nd->id);
 }
 /* }}} */
 #endif /* DEBUG */
