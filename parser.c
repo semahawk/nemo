@@ -10,6 +10,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -235,10 +236,11 @@ static struct node *expr(struct lexer *lex)
 
 struct node *stmt(struct lexer *lex)
 {
-  struct node *ret = new_nop(lex);
+  struct node *ret = NULL;
 
   if (accept(lex, TOK_SEMICOLON)){ /* NOP */
     /* {{{ */
+    ret = new_nop(lex);
     printf("NOP;\n");
     /* }}} */
   }
@@ -291,6 +293,7 @@ struct node *stmt(struct lexer *lex)
     putchar(' ');
     force(lex, TOK_NAME);
     printf("%s", lex->curr_tok.value.s);
+    ret = new_nop(lex);
     /* }}} */
     stmt_end(lex);
   }
@@ -325,6 +328,7 @@ struct node *stmt(struct lexer *lex)
       /* 'register' the type */
       push_type(newer_type);
     }
+    ret = new_nop(lex);
     /* }}} */
     stmt_end(lex);
   }
@@ -338,6 +342,8 @@ struct node *stmt(struct lexer *lex)
     /* }}} */
     stmt_end(lex);
   }
+
+  assert(ret);
 
   /* set the previous statement's "next", but only if it's previous value is
    * different than NULL */
