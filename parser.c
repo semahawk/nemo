@@ -388,10 +388,7 @@ int parse_file(char *fname)
   flen = st.st_size;
 
   /* make space for the file's contents */
-  if ((fbuf = malloc(sizeof(char) * flen)) == NULL){
-    fprintf(stderr, "malloc: %s\n", strerror(errno));
-    return 0;
-  }
+  fbuf = nmalloc(sizeof(char) * flen);
 
   /* fetch the file's contents */
   if (fread(fbuf, sizeof(char), flen, fptr) != flen){

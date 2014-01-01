@@ -27,12 +27,7 @@ char *strdup_(char *p, const char *file, unsigned line)
   if (p == NULL)
     return NULL;
 
-  char *np = malloc(strlen(p) + 1);
-
-  if (np == NULL){
-    fprintf(stderr, "malloc: %s in %s line %u\n", strerror(errno), file, line);
-    exit(1);
-  }
+  char *np = nmalloc(strlen(p) + 1);
 
   return np ? strcpy(np, p) : np;
 }
