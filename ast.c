@@ -101,6 +101,36 @@ void arg_stack_dump(void)
 }
 /* }}} */
 
+/* new_node
+ *
+ * Allocates a place for a new node, stores it's address in lex's `nds_gc', and
+ * returns the new node.
+ *
+ */
+static struct node *new_node(struct lexer *lex)
+{
+  /* {{{ */
+  ptrdiff_t offset = lex->nds_gc.curr - lex->nds_gc.ptr;
+  struct node *new = nmalloc(sizeof(struct node));
+
+  /* handle overflow */
+  if (offset >= (signed)lex->nds_gc.size){
+    /* grow the stack to be twice as big as it was */
+    lex->nds_gc.size <<= 1;
+    lex->nds_gc.ptr = nrealloc(lex->nds_gc.ptr, sizeof(struct node *) * lex->nds_gc.size);
+    /* adjust the 'current' */
+    lex->nds_gc.curr = lex->nds_gc.ptr + offset;
+  }
+
+  /* set up the current 'cell' */
+  *lex->nds_gc.curr = new;
+  /* move on to the next 'cell' */
+  lex->nds_gc.curr++;
+
+  return new;
+  /* }}} */
+}
+
 #if DEBUG
 /* {{{ dump macros */
 /* maintaining the proper amount of spaces before the node's dump */
@@ -325,7 +355,7 @@ struct node *exec_wobbly(struct node *nd)
 struct node *new_nop(struct lexer *lex)
 {
   /* {{{ */
-  struct node *nd = nmalloc(sizeof(struct node));
+  struct node *nd = new_node(lex);
 
   nd->id = currid++;
   nd->type = NT_NOP;
@@ -344,7 +374,7 @@ struct node *new_nop(struct lexer *lex)
 struct node *new_int(struct lexer *lex, int value)
 {
   /* {{{ */
-  struct node *nd = nmalloc(sizeof(struct node));
+  struct node *nd = new_node(lex);
 
   nd->id = currid++;
   nd->type = NT_INTEGER;
@@ -364,7 +394,7 @@ struct node *new_int(struct lexer *lex, int value)
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target)
 {
   /* {{{ */
-  struct node *nd = nmalloc(sizeof(struct node));
+  struct node *nd = new_node(lex);
 
   nd->id = currid++;
   nd->type = NT_UNOP;
@@ -385,7 +415,7 @@ struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *targe
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right)
 {
   /* {{{ */
-  struct node *nd = nmalloc(sizeof(struct node));
+  struct node *nd = new_node(lex);
 
   nd->id = currid++;
   nd->type = NT_BINOP;
@@ -407,7 +437,7 @@ struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *lef
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee)
 {
   /* {{{ */
-  struct node *nd = nmalloc(sizeof(struct node));
+  struct node *nd = new_node(lex);
 
   nd->id = currid++;
   nd->type = NT_IF;
@@ -433,7 +463,7 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
 struct node *new_wobbly(struct lexer *lex)
 {
   /* {{{ */
-  struct node *nd = nmalloc(sizeof(struct node));
+  struct node *nd = new_node(lex);
 
   nd->id = currid++;
   nd->type = NT_WOBBLY;

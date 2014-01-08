@@ -375,10 +375,11 @@ int parse_file(char *fname)
   FILE *fptr;
   size_t flen;
   char *fbuf; /* the file's contents */
-  char **p; /* used when freeing lex's `str_gc' */
   struct stat st;
   struct lexer lex;
   struct node *node;
+  /* used when freeing lex's `str_gc' and `nds_gc' */
+  unsigned i;
 
   if ((fptr = fopen(fname, "r")) == NULL){
     fprintf(stderr, "fopen: %s: %s\n", fname, strerror(errno));
@@ -419,6 +420,9 @@ int parse_file(char *fname)
   lex.str_gc.size       = 16;
   lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
+  lex.nds_gc.size       = 32;
+  lex.nds_gc.ptr        = ncalloc(lex.nds_gc.size, sizeof(struct node *));
+  lex.nds_gc.curr       = lex.nds_gc.ptr;
 
   /* start the parsing process */
   node = block(&lex);
@@ -426,10 +430,13 @@ int parse_file(char *fname)
   dump_nodes(node);
 
   /* free the lexer's `str_gc' */
-  for (p = lex.str_gc.ptr; p != lex.str_gc.curr; p++){
-    nfree(*p);
-  }
+  for (i = 0; i < lex.str_gc.size; i++)
+    nfree(lex.str_gc.ptr[i]);
   nfree(lex.str_gc.ptr);
+  /* same for the nodes */
+  for (i = 0; i < lex.nds_gc.size; i++)
+    nfree(lex.nds_gc.ptr[i]);
+  nfree(lex.nds_gc.ptr);
   /* free the rest */
   nfree(fbuf);
   fclose(fptr);
@@ -441,6 +448,8 @@ int parse_string(char *string)
 {
   struct lexer lex;
   struct node *node;
+  /* used when freeing lex's `str_gc' and `nds_gc' */
+  unsigned i;
 
   /* initialize the lexer's state */
   lex.fptr              = NULL;
@@ -457,13 +466,22 @@ int parse_string(char *string)
   lex.str_gc.size       = 4;
   lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
+  lex.nds_gc.size       = 8;
+  lex.nds_gc.ptr        = ncalloc(lex.nds_gc.size, sizeof(struct node *));
+  lex.nds_gc.curr       = lex.nds_gc.ptr;
 
   /* start the parsing process */
   node = block(&lex);
   dump_nodes(node);
 
-  /* tidy up */
+  /* free the lexer's `str_gc' */
+  for (i = 0; i < lex.str_gc.size; i++)
+    nfree(lex.str_gc.ptr[i]);
   nfree(lex.str_gc.ptr);
+  /* same for the nodes */
+  for (i = 0; i < lex.nds_gc.size; i++)
+    nfree(lex.nds_gc.ptr[i]);
+  nfree(lex.nds_gc.ptr);
 
   return 1;
 }

@@ -232,7 +232,7 @@ static struct token fetch_token(struct lexer *lex)
       err(lex, "unterminated string");
     }
 
-    tmp_str = nmalloc(/* sizeof(char) times */slen);
+    tmp_str = nmalloc(/* sizeof(char) times */slen + 1);
 
     while (*savep != '"')
       *(tmp_str + i2++) = *savep++;
