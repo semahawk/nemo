@@ -282,8 +282,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       struct nob_type **p;
       unsigned i = 0;
 
-      assert(return_type);
-
       /* if params is NULL then that means the function doesn't take any
        * parameters */
       if (params != NULL){
@@ -292,12 +290,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
         }
       } else {
         /*new_type->info.func.params = (struct nob_type **)NULL;*/
-      }
-
-      /* hmm... that's not supposed to ever happen, so let's guard against it */
-      if (return_type == NULL){
-        fprintf(stderr, "ouch! `return_type' is NULL\n");
-        exit(1);
       }
 
       new_type->info.func.return_type = return_type;
@@ -398,10 +390,14 @@ void dump_types(void)
       struct nob_type **p;
 
       printf("   - return type:\n");
-      printf("     = %p", (void *)ret);
-      if (ret->name != NULL)
-        printf(" \"%s\"", ret->name);
-      printf("\n");
+      if (ret == NULL){
+        printf("     = *\n");
+      } else {
+        printf("     = %p", (void *)ret);
+        if (ret->name != NULL)
+          printf(" \"%s\"", ret->name);
+        printf("\n");
+      }
 
       if (params != NULL && *params != NULL){
         printf("   - parameters:\n");

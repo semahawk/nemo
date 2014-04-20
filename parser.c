@@ -70,40 +70,58 @@ static struct nob_type *type(struct lexer *lex)
     printf("%s", lex->curr_tok.value.s);
     ret = get_type_by_name(lex->curr_tok.value.s);
     /* }}} */
-  } else if (accept(lex, TOK_LCHEVRON)){
-    /* {{{ a tuple or a function */
-    printf("<");
-    return_type = fields[curr_field].type = type(lex);
-
-    if (accept(lex, TOK_SEMICOLON)){
-      /* {{{ a function <type; ...> */
-      printf("; ");
-
-      if ((params[curr_param++] = type(lex)) != NULL){
-        /* a function with at least one parameter */
-        while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
-          /* a function with more parameters */
-          printf(", ");
-
-          if ((params[curr_param++] = type(lex)) == NULL){
-            printf("note: expected a type after the comma\n");
-          }
-        }
-
-        ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
-      } else {
-        /* the function takes no parameters */
-
-        /* meh, I'm kind of pedantic */
-        /* clear the space and the semicolon */
-        printf("\b\b");
-        /* create the type */
-        ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
-      }
-
+  } else if (accept(lex, TOK_LMUSTASHE)){
+    /* {{{ a function */
+    printf("{ ");
+    if (accept(lex, TOK_TIMES)){
+      /* {{{ a polymorphic function {*} */
+      printf("*");
+      ret = new_type(NULL /* no name */, OT_FUN, NULL, NULL /* hmm.. */);
       /* }}} */
-    } else if (peek(lex, TOK_NAME)){
-      /* {{{ a tuple <type name> */
+    } else {
+      /* {{{ a function's 'proper' prototype { return type... } */
+      /* fetch the return type */
+      return_type = type(lex);
+
+      /* fetch the optional params types */
+      if (accept(lex, TOK_SEMICOLON)){
+        printf("; ");
+
+        /* {{{ { return type; ... } */
+        if ((params[curr_param++] = type(lex)) != NULL){
+          /* a function with at least one parameter */
+          while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
+            /* a function with more parameters */
+            printf(", ");
+
+            if ((params[curr_param++] = type(lex)) == NULL){
+              printf("note: expected a type after the comma\n");
+            }
+          }
+
+          ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
+        } else {
+          /* the function takes no parameters */
+          ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
+        }
+        /* }}} */
+      }
+      /* }}} */
+    }
+
+    force(lex, TOK_RMUSTASHE);
+    printf(" }");
+    /* }}} */
+  } else if (accept(lex, TOK_LPAREN)){
+    /* {{{ a tuple */
+    printf("(");
+    fields[curr_field].type = type(lex);
+
+    if (fields[curr_field].type == NULL){
+      fprintf(stderr, "error: expected a type\n");
+      exit(1);
+    }
+
 #define fetch_name(lex) \
       /* {{{ fetch_name body */ \
       do { \
@@ -126,39 +144,27 @@ static struct nob_type *type(struct lexer *lex)
       } while (0)
       /* }}} */
 
+    fetch_name(lex);
+    curr_field++;
+
+    /* fetch more fields if present */
+    while (accept(lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
+      printf(", ");
+      fields[curr_field].type = type(lex);
       fetch_name(lex);
       curr_field++;
-
-      /* fetch more fields if present */
-      while (accept(lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
-        printf(", ");
-        fields[curr_field].type = type(lex);
-        fetch_name(lex);
-        curr_field++;
-      }
-
-      /* NOTE: there's really no need to NULL-terminate the array, because it was
-       * initialized to zeros, and && curr_field < MAX_TUPLE_FIELDS guards against
-       * writing to the last element */
-      ret = new_type(NULL /* no name */, OT_TUPLE, fields);
-      /* bye! */
-#undef fetch_name
-      /* }}} */
-    } else {
-      /* {{{ a function with no parameters <type> */
-      ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
-      /* }}} */
     }
 
-    force(lex, TOK_RCHEVRON);
-    printf(">");
-    /* }}} */
-  }
+    /* NOTE: there's really no need to NULL-terminate the array, because it was
+     * initialized to zeros, and && curr_field < MAX_TUPLE_FIELDS guards against
+     * writing to the last element */
+    ret = new_type(NULL /* no name */, OT_TUPLE, fields);
+    /* bye! */
+#undef fetch_name
 
-  /* meh, pointers */
-  while (accept(lex, TOK_TIMES)){
-    printf("*");
-    ret = new_type(NULL /* no name */, OT_PTR, ret);
+    force(lex, TOK_RPAREN);
+    printf(")");
+    /* }}} */
   }
 
   return ret;
