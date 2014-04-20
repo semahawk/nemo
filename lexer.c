@@ -35,7 +35,7 @@ static const char *keywords[] =
 {
   "wobbly",
   "if", "unless", "while", "until", "else",
-  "my", "typedef", NULL
+  "my", "typedef", "lim", NULL
 };
 
 static void err(struct lexer *lex, const char *fmt, ...)

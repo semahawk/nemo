@@ -153,19 +153,14 @@ Nob *new_nob(struct nob_type *type, ...)
 
   /* set up the new object with some knowns */
   new.type = type;
-  new.ptr = nmalloc(type->size);
+  new.ptr = NULL; /* FIXME */
 
   switch (type->primitive){
     case OT_INTEGER:
     {
       /* {{{ */
       int64_t value = va_arg(vl, int64_t);
-      /* check for overflows */
-      if (value > 1 << (type->size * 8)){
-        fprintf(stderr, "warning: possible overflow! trying to fit %ld in %lu byte%s (%d)\n", value, type->size, type->size == 1 ? "" : "s", 1 << (type->size * 8));
-      }
-
-      *new.ptr = value;
+      /* TODO: set it's value */
       break;
       /* }}} */
     }
@@ -184,17 +179,6 @@ Nob *new_nob(struct nob_type *type, ...)
   va_end(vl);
 
   return push_nob(&new);
-}
-
-/*
- * Return's the size (in bytes) of the given object.
- */
-size_t sizeof_nob(Nob *ob)
-{
-  assert(ob);
-  assert(ob->type);
-
-  return ob->type->size;
 }
 
 /*
@@ -238,40 +222,27 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   else
     new_type->name = strdup(name);
 
-  new_type->size = 0;
   new_type->primitive = type;
 
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
     case OT_INTEGER: {
       /* {{{ */
-      new_type->size = va_arg(vl, size_t);
+      new_type->info.integer.limitless = 1; /* no limits by default */
+      new_type->info.integer.limit_lower = 0;
+      new_type->info.integer.limit_upper = 0;
       /* }}} */
       break;
     }
     case OT_TUPLE: {
       /* {{{ */
       struct field *fields;
-      struct field *p;
-      unsigned i = 0; /* the counter */
-      size_t total_size = 0;
 
       fields = va_arg(vl, struct field *);
       /* zero-out the tuple's info.tuple */
       memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
       assert(fields);
-
-      /* calculate the total size */
-      for (p = fields; p->type != NULL && p->name != NULL; p++, i++){
-        new_type->info.tuple.fields[i].type = p->type;
-        /* the parser `strdup's the name, so we don't have to */
-        new_type->info.tuple.fields[i].name = p->name;
-        /* add to the total size of the whole type */
-        total_size += p->type->size;
-      }
-      /* set the size */
-      new_type->size = total_size;
       /* }}} */
       break;
     }
@@ -280,7 +251,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       struct nob_type *type = va_arg(vl, struct nob_type *);
 
       new_type->info.list.type = type;
-      new_type->size = 0;
       /* }}} */
       break;
     }
@@ -302,9 +272,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       }
 
       new_type->info.func.return_type = return_type;
-      /* I really don't what what should that be */
-      /* I'm making it 0 not to mess up other types with function's in them */
-      new_type->size = 0;
       /* }}} */
       break;
     }
@@ -359,10 +326,16 @@ void dump_types(void)
       printf(" \"%s\"", type->name);
     printf("\n");
     printf("   - type: %s\n", nob_type_to_s(type->primitive));
-    printf("   - size: %lu\n", type->size);
 
     /* print additional info about some certain types */
-    if (type->primitive == OT_TUPLE){
+    if (type->primitive == OT_INTEGER){
+      /* {{{ */
+      if (!type->info.integer.limitless){
+        printf("   - lim %ld, %ld\n", type->info.integer.limit_lower, type->info.integer.limit_upper);
+      }
+      /* }}} */
+    }
+    else if (type->primitive == OT_TUPLE){
       /* {{{ */
       unsigned j = 0; /* additional counter */
 

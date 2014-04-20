@@ -342,9 +342,32 @@ struct node *stmt(struct lexer *lex)
       memcpy(newer_type, new_type, sizeof(struct nob_type));
       /* set up the name */
       newer_type->name = strdup(lex->curr_tok.value.s);
+
+      if (accept_keyword(lex, "lim")){
+        struct node *lower, *upper;
+
+        if (newer_type->primitive != OT_INTEGER){
+          fprintf(stderr, "the construct `lim' is only supported for integers\n");
+          exit(1);
+        }
+
+        lower = primary(lex);
+        force(lex, TOK_COMMA);
+        upper = primary(lex);
+
+        if (lower->in.i >= upper->in.i){
+          fprintf(stderr, "invalid values for `lim'\n");
+          exit(1);
+        }
+
+        newer_type->info.integer.limitless = 0;
+        newer_type->info.integer.limit_lower = lower->in.i;
+        newer_type->info.integer.limit_upper = upper->in.i;
+      }
       /* 'register' the type */
       push_type(newer_type);
     }
+
     ret = new_nop(lex);
     /* }}} */
     stmt_end(lex);

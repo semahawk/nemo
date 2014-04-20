@@ -1,1 +1,1 @@
-typedef [(word a, { word; [byte] } func)] meh;
+typedef qword month lim 1, 12;

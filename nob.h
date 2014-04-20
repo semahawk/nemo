@@ -41,14 +41,20 @@ struct field {
 };
 
 struct nob_type {
-  char *name;  /* name of the type, like "word" */
-  size_t size; /* the type's total size in bytes */
-               /* zero means the size is unknown */
+  char *name;  /* optional name of the type, like "word" */
   enum nob_primitive_type primitive;
   /* additional info about the given type */
   union {
     struct {
+      int limitless;
+      /* TODO: type of these two should be handled better */
+      int64_t limit_lower;
+      int64_t limit_upper;
+    } integer;
+
+    struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */
+      /* there probably shouldn't be any limit */
       struct field fields[32];
     } tuple;
 
