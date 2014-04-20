@@ -24,8 +24,7 @@ enum nob_primitive_type {
   OT_CHAR,
   OT_STRING,
   OT_TUPLE,
-  OT_FUN,
-  OT_PTR
+  OT_FUN
 };
 
 /* forward declaration (`struct field' needs it, but `struct nob_type' needs
@@ -47,11 +46,6 @@ struct nob_type {
   enum nob_primitive_type primitive;
   /* additional info about the given type */
   union {
-    struct {
-      /* the type the pointer points to */
-      struct nob_type *type;
-    } ptr;
-
     struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */
       struct field fields[32];

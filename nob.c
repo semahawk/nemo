@@ -299,21 +299,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
-    case OT_PTR: {
-      /* {{{ */
-      /* the type the pointer points to */
-      struct nob_type *t = va_arg(vl, struct nob_type *);
-      /* TODO: make sure there actually is such type */
-
-      assert(t);
-
-      new_type->info.ptr.type = t;
-      /* eight-byte pointers */
-      new_type->size = 8;
-      /* }}} */
-      break;
-    }
-
     /* suspress warnings */
     case OT_REAL:
     case OT_CHAR:
@@ -343,7 +328,6 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_STRING:  return "string";
     case OT_TUPLE:   return "tuple";
     case OT_FUN:     return "function";
-    case OT_PTR:     return "pointer";
   }
 
   return "##unknown_type##nob_type_to_s##";
@@ -410,13 +394,6 @@ void dump_types(void)
       } else {
         printf("     . no parameters\n");
       }
-      /* }}} */
-    } else if (type->primitive == OT_PTR){
-      /* {{{ */
-      printf("     + points to: %p", (void *)type->info.ptr.type);
-      if (type->info.ptr.type->name != NULL)
-        printf(" \"%s\"", type->info.ptr.type->name);
-      printf("\n");
       /* }}} */
     }
     printf("\n");
