@@ -1,6 +1,1 @@
-typedef qword int64;
-typedef {qword; qword, qword} bin_func;
-typedef {*} polyfunc;
-typedef (word a, word b) tuple;
-
-typedef {(word a); (word a), (word a)} tupply_func;
+typedef [(word a, { word; [byte] } func)] meh;

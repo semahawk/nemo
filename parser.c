@@ -165,6 +165,31 @@ static struct nob_type *type(struct lexer *lex)
     force(lex, TOK_RPAREN);
     printf(")");
     /* }}} */
+  } else if (accept(lex, TOK_LBRACKET)){
+    /* {{{ a list */
+    printf("[");
+
+    if (accept(lex, TOK_TIMES)){
+      /* {{{ polymorphic list */
+      printf("*");
+      ret = new_type(NULL /* no name */, OT_LIST, NULL);
+      /* }}} */
+    } else {
+      /* {{{ 'normal' list */
+      return_type = type(lex);
+      /* it's not a return type, just reusing the variable */
+      if (!return_type){
+        fprintf(stderr, "error: expected a type for the list\n");
+        exit(1);
+      }
+
+      ret = new_type(NULL /* no name */, OT_LIST, return_type);
+      /* }}} */
+    }
+
+    force(lex, TOK_RBRACKET);
+    printf("]");
+    /* }}} */
   }
 
   return ret;

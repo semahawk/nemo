@@ -24,6 +24,7 @@ enum nob_primitive_type {
   OT_CHAR,
   OT_STRING,
   OT_TUPLE,
+  OT_LIST,
   OT_FUN
 };
 
@@ -50,6 +51,13 @@ struct nob_type {
       /* an array of the struct's/tuple's or unions or whatevers fields */
       struct field fields[32];
     } tuple;
+
+    struct {
+      /* number of elements (although, I'm not so sure about that...) */
+      size_t nmemb;
+      /* type of the elements */
+      struct nob_type *type;
+    } list;
 
     struct {
       /* the return type, d'oh */

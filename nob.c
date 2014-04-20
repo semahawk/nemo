@@ -275,6 +275,15 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
+    case OT_LIST: {
+      /* {{{ */
+      struct nob_type *type = va_arg(vl, struct nob_type *);
+
+      new_type->info.list.type = type;
+      new_type->size = 0;
+      /* }}} */
+      break;
+    }
     case OT_FUN: {
       /* {{{ */
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
@@ -327,6 +336,7 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_CHAR:    return "char";
     case OT_STRING:  return "string";
     case OT_TUPLE:   return "tuple";
+    case OT_LIST:    return "list";
     case OT_FUN:     return "function";
   }
 
@@ -365,6 +375,19 @@ void dump_types(void)
             printf(" \"%s\"", field.type->name);
           printf("\n");
         }
+      }
+      /* }}} */
+    } else if (type->primitive == OT_LIST){
+      /* {{{ */
+      struct nob_type *t = type->info.list.type;
+
+      printf("   - type %p", (void *)t);
+      if (t == NULL){
+        printf(" polymorphic ");
+      } else {
+        if (t->name != NULL)
+          printf(" \"%s\"", t->name);
+        printf("\n");
       }
       /* }}} */
     } else if (type->primitive == OT_FUN){
