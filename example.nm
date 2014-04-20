@@ -1,12 +1,12 @@
 typedef qword int64;
-typedef <qword; qword, qword> bin_func;
+typedef {qword; qword, qword} bin_func;
 
-my <word> func;
-my <word;> func;
-my <word; byte, int64> func;
+my {word} func;
+my {word;} func;
+my {word; byte, int64} func;
 
-typedef word[16] word_arr_t;
-my word_arr_t word_array;
+my {word; byte, byte} bin_func;
+my [word] word_list;
+my (word a, word b) word_word_tuple;
+my (string a, (word b, word c)) nested_tuples;
 
-typedef <word[2] a, word b>[16] tuple_arr_t;
-my tuple_arr_t tuple_array;

@@ -3,45 +3,50 @@
  *
  * A basic concept of Nemo's design.
  */
-my byte ah;
-my byte al;
-my word ax;
-my int eax; /* int is an 'alias' to dword (32 bit) */
-my dword ebx; /* dword is an 'alias' to int (32 bit) */
-my qword rcx; /* qword (64 bit) */
+
+/*
+ * Quick overview:
+ *
+ *   o  Strongly typed
+ *   o  Half imperative, half functional
+ *   o  C-like braces
+ */
 
 /* I.
  *
  * Basic blubber.
  */
-word times_two word
-{
-  /* %N would refer to the Nth argument */
-  return %1 * 2;
-  /* maybe that should be dollars? I don't know, I've been doing some NASM
-   * lately. */
-}
 
-map times_two [1, 2, 3, 4, 5];
+/* the "int" type would be of an arbitrary precision */
+/* "my" defines/declares a variable */
+my int much = 3e127;
+/* but! typedef'ed ints would be able to have Ada-like ranges */
+/* ("typedef" and "lim" are keywords, "byte" is the new type's name, 0 is the
+ * lower limit and 255 is the upper limit (both are inclusive)) */
+typedef int uint8_t lim 0, 255;
+typedef int  int8_t lim -127, -127;
+typedef int byte    lim 0, 255;
+typedef int word    lim 0, 65536;
+typedef int bool    lim 0, 1;
+typedef int months  lim 1, 12;
+/* the limits probably shouldn't be just literals, but expressions */
+my int lower_limit = 2;
+my int upper_limit = 64;
+typedef int custom lim lower_limit * 8, upper_limit - 1;
 
-/* anonymous way */
-map word fun word { return %1 * 2 } [1, 2, 3, 4, 5];   /* <-- I don't like that */
-/* or */
-map word word { return %1 * 2 } [1, 2, 3, 4, 5];
-/* or (the fun keyword would stand for an anonymous function that, hm, I don't
- * known, takes an int and returns an int? */
-map fun { return %1 * 2 } [1, 2, 3, 4, 5];
-/* or even? */
-map { return %1 * 2 } [1, 2, 3, 4, 5];
-/* maybe blocks could be an anonymous functions that take an int and return an
- * int? Perl 6-like, kind of... What would the argument be? And the return value? */
+/* XXX: bitwise operations on non-typedefed/non-limited ints? */
+
+/* the rest of default, primitive types */
+my string motd = "hello, world";
+my const real Mills = 1.30637788386308069; /* arbitrary precision? */
+/* notice the keyword "const" */
 
 /* II.
  *
  * Defining a function:
  *
  *   <return type> [function's name] [arg#1 type[, arg#n type]+]
- *   [OPTS opt#1[, opt#n]]
+ *   ["opts" opt#1[, opt#n]]
  *   { <stmts> }
  *
  * By not providing the function's name an anonymous function is created
@@ -49,11 +54,16 @@ map { return %1 * 2 } [1, 2, 3, 4, 5];
  *
  * NOTE: Functions are top-class citizens. They are objects, like ints and the rest.
  *
+ * NOTE#2: arguments inside the function are referenced by '%N', where N is the
+ *         argument's position in the argument list
+ *
  * Eg.:
  */
+
 word concat byte, byte  /* function taking two (byte) arguments, and returning a word */
 {
-  return %1 << 8 | %2
+  return %1 << 8 | %2 /* semicolons are optional if the statement is last in the
+  block */
 }
 
 /* Whereas this: */
@@ -61,63 +71,40 @@ word byte, byte
 {
   return %1 << 8 | %2
 }
-/* would create an anonymous function */
+/* would create an anonymous function (but doing so in the top-level is
+ * completly pointless) */
+
+/*
+ * Function's prototype:
+ *
+ *   '{' [return type] [';' (arg#1 type[, arg#N type])+ [; opts]] '}'
+ *
+ * Eg.:
+ *
+ *   { int; int, int }  is a function that takes two ints, and returns an int
+ *   { string }         is a function that takes no arguments and returns a
+ *                      string
+ *   { int;; aux }      is a function that takes no arguments, returns an int and
+ *                      can take the "a", "u" and "x" options
+ */
+
+/* this would create a variable called 'concat' which would end up being a
+ * function */
+my { word; byte, byte } concat = word byte, byte {
+  return %1 << 8 | %2;
+}
 
 /* III.
  *
- * Functions must return a value. C-like 'void' is not allowed.
- */
-word { return 0xBEEF }
-/* would create an anonymous function that returns a word, and doesn't take any
- * arguments (although doing so in the top-level is pointless) */
-my word meat = word { return 0xBEEF };
-/* That's more like it (function inlining? that'd be good) */
-/* Definition: */
-word word { return %1 }
-/* would create an anonymous function that takes a word, and returns a word */
-
-/* IV.
- *
- * Pushing to (concatenting) an array.
- */
-my int[] arr = [1, 2, 3, 4, 5];
-/* function like? */
-push(arr, 6);
-/* syntax like? */
-push arr, 6;
-/* even more syntax like? (concatenting) */
-arr = arr # [6];
-/* and */
-arr #= [6];
-
-/* V.
- *
  * Function options.
  */
-any[] sort any[]
-opts -r /* sort in reverse */
-     -q /* try to use quicksort */
-     -b /* try to use bubblesort */
+
+word concat byte, byte
+opts r /* reverse */
 {
   /* options should be regular, non-const variables inside the function's body, and of type
    * bool-like (byte?) so that ones can [ex|in]clude others */
 
-  if r {
-    /* reverse */
-  } else {
-    /* normal */
-  }
-}
-/* then calling: */
-sort [4, 2, 1, 5, 3];
-/* would return a sorted array, whereas */
-sort-r [4, 2, 1, 5, 3];
-/* would return an array sorted in reverse order */
-
-/* another example: */
-word concat byte, byte
-opts -r /* concat in reverse */
-{
   if r {
     return %2 << 8 | %1;
   } else {
@@ -126,82 +113,115 @@ opts -r /* concat in reverse */
 }
 
 /* Note: */
-int func opts -meh { /* ... */ }
+int func opts meh { /* ... */ }
 /* would create a function that could take three options, 'm', 'e' and 'h'.
  * and _not_ one option 'meh'. */
 
- /* VI.
-  *
-  * Declaring a variable that is/holds a function.
-  */
- /* Function's 'type' goes like follows:
-  *
-  *   '<' return type [; arg#1 type[, arg#n type]+] [; -[a-zA-Z]+] '>'
-  *
-  * Eg. this:
-  *
-  *   <word; byte, byte; -n> could be a 'prototype'(?) to the function that takes two
-  *   bytes and returns a word, and could take the -n option
-  */
- /* The following: */
- my <word; byte, byte; -n> add = word byte, byte opts -n { return %1 + %2 };
- /* creates a variable called 'add' that holds an anonymous function which takes
-  * two bytes, returns a word, and could take the -n option. */
- /* calling it would look like: */
- my word res = add 2, 2;
-
-/* VII.
+/* IV.
  *
  * Calling a function.
  */
-/* Function defined as: */
-word add byte, byte
+
+/* given a function: */
+int add int, int
 {
   return %1 + %2;
 }
-/* would be nice to could have been called parenthesisless, like this: */
-my word result = add 2, 4;
+/* calling a function happens very much C-like, ie. the function's name,
+ * parethesis and arguments inside */
+my int result = add(2, 4);
 /* (which obviously would make the 'result' contain 6) */
 
-/* BUT */
-/* what about this? */
-my <word; byte, byte> addf = add;
-/* would it make 'addf' kind of an alias to 'add'? or would/should it call add
- * and complain about no arguments given (when 2 expected)? */
-/* maybe something along these lines? */
-my <word; byte, byte> addf = &add;
-/* C-like calling a function (parenthesises required) would solve this mess,
- * but.. Hmmm... */
-my <word; <byte; word>, byte> func;
-/* 'func' is declared to be a function that takes two parameters, #1 a function, which takes a
- * word and returns a byte and #2 a byte, and returns a word. But, uhm... how to
- * initialize it? */
-my <word; <byte; word>, byte> func = word <byte; word>, byte
-{
-  return %1(0x2468) << 8 | %2;
-};
-/* hm.. that seems like it.. */
-/* I can see it go very cryptic very soon but... that's good! :P */
-
-/* VIII.
+/* V.
  *
  * ML-like type inference.
  */
-/* That would be wicked to have!.. */
-my add = int int, int { return %1 + %2 };
-my bed = word { return 0xBED };
 
-/* IX.
+/* That would be wicked to have!.. */
+my rand = { return 4; };
+my beef = { return 0xbeef; };
+/* both `rand' and `beef' would end up being functions */
+
+/* XXX: inlining? */
+
+/* VI.
  *
  * C-structs/ML-tuples
  */
-/* Structs/tuples could be enclosed with '@<' and '>', I guess. */
-/* Or the parser could be smart enough to distinguish between a struct/tuple and
- * a function ;) */
-my @<string name, int age> John;
-/* And accessing the fields: */
-John.name = "John";
-John.age  = 34;
+
+/*
+ * Tuples' prototypes:
+ *
+ *   '(' field#1 type and name [',' field#N type and name]+ ')'
+ */
+
+/* example: */
+my (string name, int age) him = ("John", 34);
+/* and then to access the fields: */
+John.age  = 44; /* timeskip! */
+
+/*
+ * VII.
+ *
+ * Lists
+ */
+
+/*
+ * Lists' prototypes:
+ *
+ *   '[' type ']'
+ */
+
+/* example: */
+my [int] fib = [ 1, 1, 2, 3, 5, 8 ];
+/* another, more cryptic, example (a list of tuples (where one of the fields
+ * is a function)) */
+my [(string cmd, { int; [string /* arguments */] } func)] = [
+  ("cp", int [string] { /* do coppy stuff */ return 1; }),
+  ("mv", int [string] { /* do movvy stuff */ return 1; }),
+];
+
+/*
+ * VIII.
+ *
+ * Polymorphism.
+ */
+
+/*
+ * In Nemo, the asterisk ('*') sign would stand for "any type", thus:
+ *
+ *    *     is any type (think: 'a)
+ *   [*]    is a list of anything (think: 'a list)
+ *   {*}    is a function that could return and take anything (think: f)
+ *
+ *   XXX: tuples?
+ */
+
+/* example: a function which was to count the number of elements in a list wouldn't
+ * need to care of what type the list's elements are */
+/* few examplanatory(?) functions: */
+
+/* function that takes two arguments: #1 a function which returns anything and
+ * takes anything (ie. we don't know what kind of function would be passed) and
+ * #2 a list of anything */
+[*] map {*}, [*]
+{
+  return match %2 {
+    [] => [];
+    /* '*' in `match" matches everything, like a wildcard (think: `_') */
+     * => %1(hd(%2)) :: map(%1, tl(%2));
+     /* `hd' would fetch the list's head (first element) and `tl' would fetch the
+      * list's tail (the whole list without the first element) */
+  };
+}
+
+int size [*]
+{
+  return match %1 {
+    [] => 0;
+     * => 1 + size(tl(%1));
+  };
+}
 
 
 /*

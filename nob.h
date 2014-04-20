@@ -19,14 +19,13 @@
 
 enum nob_primitive_type {
   /* that's kind of a draft only */
-  OT_INTEGER = 0x00,
-  OT_REAL    = 0x01,
-  OT_CHAR    = 0x02,
-  OT_STRING  = 0x03,
-  OT_ARRAY   = 0x04,
-  OT_TUPLE   = 0x05,
-  OT_FUN     = 0x06,
-  OT_PTR     = 0x07
+  OT_INTEGER,
+  OT_REAL,
+  OT_CHAR,
+  OT_STRING,
+  OT_TUPLE,
+  OT_FUN,
+  OT_PTR
 };
 
 /* forward declaration (`struct field' needs it, but `struct nob_type' needs
@@ -52,16 +51,6 @@ struct nob_type {
       /* the type the pointer points to */
       struct nob_type *type;
     } ptr;
-
-    struct {
-      /* the 'type\'s' type (as in, each element's type) */
-      struct nob_type *type;
-      /* number of the element's */
-      /* which (I guess) effectively makes word[4] different than word[6] */
-      /* maybe arrays will be given some special treatment, but, I don't know.
-       * we'll see. */
-      size_t nmemb;
-    } array;
 
     struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */

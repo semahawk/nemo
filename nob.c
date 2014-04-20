@@ -174,7 +174,6 @@ Nob *new_nob(struct nob_type *type, ...)
     case OT_REAL:
     case OT_CHAR:
     case OT_STRING:
-    case OT_ARRAY:
     case OT_TUPLE:
     case OT_FUN:
       break;
@@ -308,19 +307,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
-    case OT_ARRAY: {
-      /* {{{ */
-      size_t nmemb = va_arg(vl, size_t);
-      struct nob_type *elems_type = va_arg(vl, struct nob_type *);
-
-      assert(elems_type);
-
-      new_type->size = elems_type->size * nmemb;
-      new_type->info.array.type = elems_type;
-      new_type->info.array.nmemb = nmemb;
-      /* }}} */
-      break;
-    }
     case OT_PTR: {
       /* {{{ */
       /* the type the pointer points to */
@@ -363,7 +349,6 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_REAL:    return "real";
     case OT_CHAR:    return "char";
     case OT_STRING:  return "string";
-    case OT_ARRAY:   return "array";
     case OT_TUPLE:   return "tuple";
     case OT_FUN:     return "function";
     case OT_PTR:     return "pointer";
@@ -429,14 +414,6 @@ void dump_types(void)
       } else {
         printf("     . no parameters\n");
       }
-      /* }}} */
-    } else if (type->primitive == OT_ARRAY){
-      /* {{{ */
-      printf("     + of type: %p", (void *)type->info.array.type);
-      if (type->info.array.type->name != NULL)
-        printf(" \"%s\"", type->info.array.type->name);
-      printf("\n");
-      printf("     + nmemb: %lu\n", type->info.array.nmemb);
       /* }}} */
     } else if (type->primitive == OT_PTR){
       /* {{{ */

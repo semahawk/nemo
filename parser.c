@@ -161,20 +161,6 @@ static struct nob_type *type(struct lexer *lex)
     ret = new_type(NULL /* no name */, OT_PTR, ret);
   }
 
-  /* an array is basically any type followed by a pair of brackets */
-  if (accept(lex, TOK_LBRACKET)){
-    size_t nmemb = 0;
-    printf("[");
-    /* the array's nmemb */
-    force(lex, TOK_INTEGER);
-    printf("%d", lex->curr_tok.value.i);
-    nmemb = lex->curr_tok.value.i;
-    force(lex, TOK_RBRACKET);
-    printf("]");
-
-    ret = new_type(NULL /* no name */, OT_ARRAY, nmemb, ret);
-  }
-
   return ret;
 }
 

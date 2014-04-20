@@ -24,22 +24,21 @@ struct lexer;
 
 enum node_type {
   NT_NOP       = 0,
-  NT_INTEGER   = 1,
-  NT_FLOAT     = 2,
-  NT_STRING    = 4,
-  NT_ARRAY     = 8,
-  NT_NAME      = 16,
-  NT_UNOP      = 32,
-  NT_BINOP     = 64,
-  NT_IF        = 128,
-  NT_WHILE     = 256,
-  NT_DECL      = 512,
-  NT_CALL      = 1024,
-  NT_STMT      = 2048,
-  NT_BLOCK     = 4096,
-  NT_FUNDEF    = 8192,
-  NT_USE       = 16384,
-  NT_WOBBLY    = 32768
+  NT_INTEGER   = 1 << 0,
+  NT_FLOAT     = 1 << 1,
+  NT_STRING    = 1 << 2,
+  NT_NAME      = 1 << 3,
+  NT_UNOP      = 1 << 4,
+  NT_BINOP     = 1 << 5,
+  NT_IF        = 1 << 6,
+  NT_WHILE     = 1 << 7,
+  NT_DECL      = 1 << 8,
+  NT_CALL      = 1 << 9,
+  NT_STMT      = 1 << 10,
+  NT_BLOCK     = 1 << 11,
+  NT_FUNDEF    = 1 << 12,
+  NT_USE       = 1 << 13,
+  NT_WOBBLY    = 1 << 14
 };
 
 enum unop_type {
