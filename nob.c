@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include "mem.h"
 #include "nob.h"
@@ -23,6 +24,7 @@
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
+struct nob_type *T_INT   = NULL;
 struct nob_type *T_BYTE  = NULL;
 struct nob_type *T_WORD  = NULL;
 struct nob_type *T_DWORD = NULL;
@@ -51,10 +53,11 @@ void types_init(void)
   NM_types_curr = NM_types;
 
   /* create the standard types */
-  T_BYTE  = new_type("byte",  OT_INTEGER, 1);
-  T_WORD  = new_type("word",  OT_INTEGER, 2);
-  T_DWORD = new_type("dword", OT_INTEGER, 4);
-  T_QWORD = new_type("qword", OT_INTEGER, 8);
+  T_INT   = new_type("int",   OT_INTEGER, 1, 0, 0);
+  T_BYTE  = new_type("byte",  OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
+  T_WORD  = new_type("word",  OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
+  T_DWORD = new_type("dword", OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
+  T_QWORD = new_type("qword", OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
 }
 
 void types_finish(void)
@@ -98,7 +101,6 @@ void push_type(struct nob_type *type)
   *(NM_types_curr++) = type;
 }
 /* }}} */
-
 /* {{{ Functions related with Garbage Collector (init, finish, etc) */
 void gc_init(void)
 {
@@ -228,9 +230,13 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   switch (type){
     case OT_INTEGER: {
       /* {{{ */
-      new_type->info.integer.limitless = 1; /* no limits by default */
-      new_type->info.integer.limit_lower = 0;
-      new_type->info.integer.limit_upper = 0;
+      int64_t limitless   = va_arg(vl, int64_t);
+      int64_t limit_lower = va_arg(vl, int64_t);
+      int64_t limit_upper = va_arg(vl, int64_t);
+
+      new_type->info.integer.limitless = limitless; /* no limits by default */
+      new_type->info.integer.limit_lower = limit_lower;
+      new_type->info.integer.limit_upper = limit_upper;
       /* }}} */
       break;
     }
@@ -332,10 +338,11 @@ void dump_types(void)
       /* {{{ */
       if (!type->info.integer.limitless){
         printf("   - lim %ld, %ld\n", type->info.integer.limit_lower, type->info.integer.limit_upper);
+      } else {
+        printf("   - limitless\n");
       }
       /* }}} */
-    }
-    else if (type->primitive == OT_TUPLE){
+    } else if (type->primitive == OT_TUPLE){
       /* {{{ */
       unsigned j = 0; /* additional counter */
 

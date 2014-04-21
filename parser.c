@@ -345,6 +345,7 @@ struct node *stmt(struct lexer *lex)
 
       if (accept_keyword(lex, "lim")){
         struct node *lower, *upper;
+        printf(" lim ");
 
         if (newer_type->primitive != OT_INTEGER){
           fprintf(stderr, "the construct `lim' is only supported for integers\n");
@@ -353,6 +354,7 @@ struct node *stmt(struct lexer *lex)
 
         lower = primary(lex);
         force(lex, TOK_COMMA);
+        printf(", ");
         upper = primary(lex);
 
         if (lower->in.i >= upper->in.i){
