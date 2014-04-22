@@ -376,6 +376,20 @@ struct token force(struct lexer *lex, enum token_type type)
   /* }}} */
 }
 
+bool force_keyword(struct lexer *lex, const char *name)
+{
+  /* {{{ force_keyword body */
+  if (peek(lex, TOK_KEYWORD)){
+    if (!strcmp(name, lex->curr_tok.value.s)){
+      force(lex, TOK_KEYWORD);
+      return true;
+    }
+  }
+
+  return false;
+  /* }}} */
+}
+
 bool accept(struct lexer *lex, enum token_type type)
 {
   /* {{{ accept body */

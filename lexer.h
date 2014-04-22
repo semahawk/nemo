@@ -98,6 +98,7 @@ struct lexer {
 };
 
 struct token force(struct lexer *lexer_state, enum token_type type);
+bool force_keyword(struct lexer *lexer_state, const char *name);
 bool accept(struct lexer *lexer_state, enum token_type type);
 bool accept_keyword(struct lexer *lexer_state, const char *name);
 bool peek(struct lexer *lexer_state, enum token_type type);

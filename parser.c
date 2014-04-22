@@ -26,7 +26,7 @@
 
 /* statements end with a semicolon, unless it's the last statement in the block
  * (or the whole program/module/unit) */
-#define stmt_end(lex) \
+#define expr_end(lex) \
   do { \
     if (!peek(lex, TOK_RMUSTASHE) && \
         !peek(lex, TOK_EOS)){ \
@@ -43,14 +43,15 @@ struct node *prev_stmt = NULL;
 
 /*
  * Fetches the type, at the lexer's current 'position'.
- * If the type already exists, like "int", it return's the pointer to it.
+ * If the type already exists, like "int", it returns a pointer to it.
  *
  * If the type doesn't already exist (by the way, it can't be a single word,
  * lexer wouldn't let it through), like an anonymous tuple, creates it as a
- * whole new type, and returns the pointer to it.
+ * whole new type, and returns a pointer to it.
  */
 static struct nob_type *type(struct lexer *lex)
 {
+  /* {{{ */
   /* the nob_type to be returned */
   struct nob_type *ret = NULL;
   /* the fields (names + associated types) used to be passed over to `new_type' to create a tuple type */
@@ -193,10 +194,12 @@ static struct nob_type *type(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *primary_expr(struct lexer *lex)
 {
+  /* {{{ */
   if (accept(lex, TOK_INTEGER)){
     printf("%d ", lex->curr_tok.value.i);
     return new_int(lex, lex->curr_tok.value.i);
@@ -212,10 +215,12 @@ static struct node *primary_expr(struct lexer *lex)
   }
 
   return NULL;
+  /* }}} */
 }
 
 static struct node *postfix_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *target, *ret;
 
   target = ret = primary_expr(lex);
@@ -240,10 +245,12 @@ static struct node *postfix_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *prefix_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *target, *ret;
   enum unop_type type;
 
@@ -285,10 +292,12 @@ static struct node *prefix_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *mul_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
 
@@ -318,10 +327,12 @@ static struct node *mul_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *add_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
 
@@ -348,10 +359,12 @@ static struct node *add_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *cond_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
 
@@ -388,10 +401,12 @@ static struct node *cond_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *eq_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
 
@@ -422,15 +437,19 @@ static struct node *eq_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *no_comma_expr(struct lexer *lex)
 {
+  /* {{{ */
   return eq_expr(lex);
+  /* }}} */
 }
 
 static struct node *comma_expr(struct lexer *lex)
 {
+  /* {{{ */
   struct node *left, *right, *ret;
 
   left = ret = no_comma_expr(lex);
@@ -450,15 +469,12 @@ static struct node *comma_expr(struct lexer *lex)
   }
 
   return ret;
+  /* }}} */
 }
 
 static struct node *expr(struct lexer *lex)
 {
-  return comma_expr(lex);
-}
-
-struct node *stmt(struct lexer *lex)
-{
+  /* {{{ */
   struct node *ret = NULL;
 
   if (accept(lex, TOK_SEMICOLON)){ /* NOP */
@@ -478,8 +494,8 @@ struct node *stmt(struct lexer *lex)
   else if (accept_keyword(lex, "if")){
     /* {{{ */
     struct node *guard;
-    struct node *body  = NULL;
-    struct node *elsee = NULL;
+    struct node *body;
+    struct node *elsee;
 
     printf("if ");
     force(lex, TOK_LPAREN);
@@ -495,12 +511,20 @@ struct node *stmt(struct lexer *lex)
     force(lex, TOK_RPAREN);
     printf(")\n");
 
-    body = stmt(lex);
-    /* TODO: if (!body) ... */
+    body = expr(lex);
 
-    if (accept_keyword(lex, "else")){
-      printf("else ");
-      elsee = stmt(lex);
+    if (!body){
+      fprintf(stderr, "%s:%u.%u: warning: expected an expression for if's body\n", lex->name, lex->line, lex->col);
+      exit(1);
+    }
+
+    force_keyword(lex, "else");
+    printf("else ");
+    elsee = expr(lex);
+
+    if (!elsee){
+      fprintf(stderr, "%s:%u.%u: warning: expected an expression for if's else branch\n", lex->name, lex->line, lex->col);
+      exit(1);
     }
 
     ret = new_if(lex, guard, body, elsee);
@@ -509,6 +533,7 @@ struct node *stmt(struct lexer *lex)
   else if (accept_keyword(lex, "my")){
     /* {{{ */
     printf("my ");
+
     if (!type(lex)){
       fprintf(stderr, "syntax error: expected a type for the variable declaration\n");
       exit(1);
@@ -517,8 +542,21 @@ struct node *stmt(struct lexer *lex)
     force(lex, TOK_NAME);
     printf("%s", lex->curr_tok.value.s);
     ret = new_nop(lex);
+
+    /*
+     * if the type was omitted, then the initialization should probably be
+     * obligatory.
+     *
+     * the point is to know the variable's type beforehand.
+     */
+
+    if (accept(lex, TOK_EQ)){
+      printf(" = ");
+      /* my [type] name = expr... */
+      /* the variables initial value */
+      expr(lex);
+    }
     /* }}} */
-    stmt_end(lex);
   }
   else if (accept_keyword(lex, "typedef")){
     /* {{{ */
@@ -578,17 +616,14 @@ struct node *stmt(struct lexer *lex)
 
     ret = new_nop(lex);
     /* }}} */
-    stmt_end(lex);
   }
   else if (accept_keyword(lex, "wobbly")){
     ret = new_wobbly(lex);
-    stmt_end(lex);
   }
   else { /* expression */
     /* {{{ */
-    ret = expr(lex);
+    ret = comma_expr(lex);
     /* }}} */
-    stmt_end(lex);
   }
 
   assert(ret);
@@ -602,6 +637,7 @@ struct node *stmt(struct lexer *lex)
   prev_stmt = ret;
 
   return ret;
+  /* }}} */
 }
 
 struct node *block(struct lexer *lex)
@@ -611,8 +647,10 @@ struct node *block(struct lexer *lex)
 
   while (!peek(lex, TOK_EOS) && !peek(lex, TOK_RMUSTASHE)){
     /* overwrite `ret' if NULL (ie. set it only the first time) */
-    tmp = stmt(lex);
+    tmp = expr(lex);
     ret = !ret ? tmp : ret;
+
+    expr_end(lex);
   }
 
   return ret;
