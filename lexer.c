@@ -103,11 +103,6 @@ static struct token fetch_token(struct lexer *lex)
   int slen = 0;
   struct token ret;
 
-  if (p == NULL || *p == '\0' || (lex->fptr != NULL && feof(lex->fptr))){
-    ret.type = TOK_EOS;
-    return ret;
-  }
-
   /* {{{ skip over whitespace and comments */
   do {
     if (isspace(*p)){
@@ -127,6 +122,11 @@ static struct token fetch_token(struct lexer *lex)
     }
   } while (isspace(*p) || (*p == '/' && *(p + 1) == '*'));
   /* }}} */
+
+  if (p == NULL || *p == '\0' || (lex->fptr != NULL && feof(lex->fptr))){
+    ret.type = TOK_EOS;
+    return ret;
+  }
 
   if (name_beg(*p)){
     /* {{{ NAME / KEYWORD / TYPE NAME */
@@ -268,7 +268,8 @@ static struct token fetch_token(struct lexer *lex)
     case '!': ret.value.c = *p; lex->col++; p++; ret.type = TOK_BANG; break;
     case '?': ret.value.c = *p; lex->col++; p++; ret.type = TOK_QUESTION; break;
     default:
-      fprintf(stderr, "nemo: unknown character '%c' (%p) in %s at line %u column %u\n", *p, (void *)p, lex->name, lex->line, lex->col);
+      fprintf(stderr, "nemo: unknown character '%c' (0x%x) in %s"
+          " at line %u column %u\n", *p, *p, lex->name, lex->line, lex->col);
       exit(1);
     /* }}} */
   }
