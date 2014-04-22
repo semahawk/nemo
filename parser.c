@@ -195,7 +195,7 @@ static struct nob_type *type(struct lexer *lex)
   return ret;
 }
 
-static struct node *primary(struct lexer *lex)
+static struct node *primary_expr(struct lexer *lex)
 {
   if (accept(lex, TOK_INTEGER)){
     printf("%d ", lex->curr_tok.value.i);
@@ -214,30 +214,99 @@ static struct node *primary(struct lexer *lex)
   return NULL;
 }
 
-static struct node *expr(struct lexer *lex)
+static struct node *postfix_expr(struct lexer *lex)
 {
-  struct node *right, *left, *ret;
+  struct node *target, *ret;
+
+  target = ret = primary_expr(lex);
+
+  if (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS) || peek(lex, TOK_LPAREN)){
+    if (accept(lex, TOK_PLUS)){
+      if (accept(lex, TOK_PLUS)){
+        /* target ++ */
+        printf(" postfix(++)");
+        ret = new_unop(lex, UNARY_POSTINC, target);
+      }
+    } else if (accept(lex, TOK_MINUS)){
+      if (accept(lex, TOK_MINUS)){
+        /* target -- */
+        printf(" postfix(--)");
+        ret = new_unop(lex, UNARY_POSTDEC, target);
+      }
+    } else if (accept(lex, TOK_LPAREN)){
+      force(lex, TOK_RPAREN);
+      printf("()");
+    }
+  }
+
+  return ret;
+}
+
+static struct node *prefix_expr(struct lexer *lex)
+{
+  struct node *target, *ret;
+  enum unop_type type;
+
+  if (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS) || peek(lex, TOK_BANG)){
+    if (accept(lex, TOK_PLUS)){
+      if (accept(lex, TOK_PLUS)){
+        /* ++ target */
+        printf("prefix(++) ");
+        target = postfix_expr(lex);
+        type = UNARY_PREINC;
+      } else {
+        /*  + target */
+        printf("prefix(+) ");
+        target = postfix_expr(lex);
+        type = UNARY_PLUS;
+      }
+    } else if (accept(lex, TOK_MINUS)){
+      if (accept(lex, TOK_MINUS)){
+        /* -- target */
+        printf("prefix(--) ");
+        target = postfix_expr(lex);
+        type = UNARY_PREDEC;
+      } else {
+        /*  - target */
+        printf("prefix(-) ");
+        target = postfix_expr(lex);
+        type = UNARY_MINUS;
+      }
+    } else if (accept(lex, TOK_BANG)){
+      /*  ! target */
+      printf("prefix(!) ");
+      target = postfix_expr(lex);
+      type = UNARY_NEGATE;
+    }
+
+    ret = new_unop(lex, type, target);
+  } else {
+    ret = postfix_expr(lex);
+  }
+
+  return ret;
+}
+
+static struct node *mul_expr(struct lexer *lex)
+{
+  struct node *left, *right, *ret;
   enum binop_type type;
 
-  left = ret = primary(lex);
+  left = ret = prefix_expr(lex);
 
-  while (peek(lex, TOK_PLUS)  || peek(lex, TOK_MINUS)
-      || peek(lex, TOK_TIMES) || peek(lex, TOK_SLASH)){
-    if (accept(lex, TOK_PLUS)){
-      printf("+ ");
-      type = BINARY_ADD;
-    } else if (accept(lex, TOK_MINUS)){
-      printf("- ");
-      type = BINARY_SUB;
-    } else if (accept(lex, TOK_TIMES)){
+  while (peek(lex, TOK_TIMES) || peek(lex, TOK_SLASH) || peek(lex, TOK_PERCENT)){
+    if (accept(lex, TOK_TIMES)){
       printf("* ");
       type = BINARY_MUL;
     } else if (accept(lex, TOK_SLASH)){
       printf("/ ");
       type = BINARY_DIV;
+    } else if (accept(lex, TOK_PERCENT)){
+      printf("%% ");
+      type = BINARY_MOD;
     }
 
-    right = primary(lex);
+    right = prefix_expr(lex);
 
     if (!right){
       fprintf(stderr, "expected an expression at the RHS of the binary operation\n");
@@ -249,6 +318,143 @@ static struct node *expr(struct lexer *lex)
   }
 
   return ret;
+}
+
+static struct node *add_expr(struct lexer *lex)
+{
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = mul_expr(lex);
+
+  while (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS)){
+    if (accept(lex, TOK_PLUS)){
+      printf("+ ");
+      type = BINARY_ADD;
+    } else if (accept(lex, TOK_MINUS)){
+      printf("- ");
+      type = BINARY_SUB;
+    }
+
+    right = mul_expr(lex);
+
+    if (!right){
+      fprintf(stderr, "expected an expression at the RHS of the binary operation\n");
+      exit(1);
+    }
+
+    ret = new_binop(lex, type, left, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+static struct node *cond_expr(struct lexer *lex)
+{
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = add_expr(lex);
+
+  while (peek(lex, TOK_LCHEVRON) || peek(lex, TOK_RCHEVRON)){
+    if (accept(lex, TOK_LCHEVRON)){
+      if (accept(lex, TOK_EQ)){
+        printf("<= ");
+        type = BINARY_LE;
+      } else {
+        printf("< ");
+        type = BINARY_LT;
+      }
+    } else if (accept(lex, TOK_RCHEVRON)){
+      if (accept(lex, TOK_EQ)){
+        printf(">= ");
+        type = BINARY_GE;
+      } else {
+        printf("> ");
+        type = BINARY_GT;
+      }
+    }
+
+    right = add_expr(lex);
+
+    if (!right){
+      fprintf(stderr, "expected an expression at the RHS of the binary operation\n");
+      exit(1);
+    }
+
+    ret = new_binop(lex, type, left, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+static struct node *eq_expr(struct lexer *lex)
+{
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = cond_expr(lex);
+
+  while (peek(lex, TOK_EQ) || peek(lex, TOK_BANG)){
+    if (accept(lex, TOK_EQ)){
+      if (accept(lex, TOK_EQ)){
+        printf("== ");
+        type = BINARY_EQ;
+      }
+    } else if (accept(lex, TOK_BANG)){
+      if (accept(lex, TOK_EQ)){
+        printf("!= ");
+        type = BINARY_NE;
+      }
+    }
+
+    right = cond_expr(lex);
+
+    if (!right){
+      fprintf(stderr, "expected an expression at the RHS of the binary operation\n");
+      exit(1);
+    }
+
+    ret = new_binop(lex, type, left, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+static struct node *no_comma_expr(struct lexer *lex)
+{
+  return eq_expr(lex);
+}
+
+static struct node *comma_expr(struct lexer *lex)
+{
+  struct node *left, *right, *ret;
+
+  left = ret = no_comma_expr(lex);
+
+  while (accept(lex, TOK_COMMA)){
+    printf(", ");
+
+    right = no_comma_expr(lex);
+
+    if (!right){
+      fprintf(stderr, "expected an expression at the RHS of the binary operation\n");
+      exit(1);
+    }
+
+    ret = new_binop(lex, BINARY_COMMA, left, right);
+    left = ret;
+  }
+
+  return ret;
+}
+
+static struct node *expr(struct lexer *lex)
+{
+  return comma_expr(lex);
 }
 
 struct node *stmt(struct lexer *lex)
@@ -352,10 +558,10 @@ struct node *stmt(struct lexer *lex)
           exit(1);
         }
 
-        lower = primary(lex);
+        lower = primary_expr(lex);
         force(lex, TOK_COMMA);
         printf(", ");
-        upper = primary(lex);
+        upper = primary_expr(lex);
 
         if (lower->in.i >= upper->in.i){
           fprintf(stderr, "invalid values for `lim'\n");

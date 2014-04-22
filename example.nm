@@ -1,1 +1,1 @@
-typedef qword month lim 1, 12;
+typedef int month lim 1, 12;

@@ -12,6 +12,7 @@
  *   Sat Sep 15, 16:05:12 +0200 2012
  *
  * Checkpoints:
+ *   Mon Apr 21, 00:19:50 +0200 2014 - 600 commits!
  *   Sun Jul  7, 19:12:26 +0200 2013 - 500 commits!
  *   Sat May 25, 14:53:00 +0200 2013 - 400 commits!
  *   Sun Mar 31, 19:47:03 +0200 2013 - 300 commits!
@@ -122,7 +123,7 @@ int main(int argc, char *argv[])
     parse_file(argv[0]);
   }
 
-  dump_types();
+  /*dump_types();*/
 
   arg_stack_finish();
   types_finish();

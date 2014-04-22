@@ -183,7 +183,36 @@ void dump_const(struct node *nd)
 
 void dump_unop(struct node *nd)
 {
-  printf("+ (#%u) unop\n", nd->id);
+  printf("+ (#%u) unop ", nd->id);
+
+  switch (nd->in.unop.type){
+    case UNARY_PLUS:
+      printf("'+'");
+      break;
+    case UNARY_MINUS:
+      printf("'-'");
+      break;
+    case UNARY_NEGATE:
+      printf("'!'");
+      break;
+    case UNARY_PREINC:
+      printf("prefix '++'");
+      break;
+    case UNARY_PREDEC:
+      printf("prefix '--'");
+      break;
+    case UNARY_POSTINC:
+      printf("postfix '++'");
+      break;
+    case UNARY_POSTDEC:
+      printf("postfix '--'");
+      break;
+    default:
+      printf(" -- unknown");
+      break;
+  }
+  printf("\n");
+
   INDENT();
   DUMP(nd->in.unop.target);
   DEDENT();
@@ -195,24 +224,46 @@ void dump_binop(struct node *nd)
 
   switch (nd->in.binop.type){
     case BINARY_ADD:
-      printf("'+'\n");
+      printf("'+'");
       break;
     case BINARY_SUB:
-      printf("'-'\n");
+      printf("'-'");
       break;
     case BINARY_MUL:
-      printf("'*'\n");
+      printf("'*'");
       break;
     case BINARY_DIV:
-      printf("'/'\n");
+      printf("'/'");
       break;
     case BINARY_MOD:
-      printf("'%%'\n");
+      printf("'%%'");
+      break;
+    case BINARY_EQ:
+      printf("'=='");
+      break;
+    case BINARY_NE:
+      printf("'!='");
+      break;
+    case BINARY_LE:
+      printf("'<='");
+      break;
+    case BINARY_LT:
+      printf("'<'");
+      break;
+    case BINARY_GE:
+      printf("'>='");
+      break;
+    case BINARY_GT:
+      printf("'>'");
+      break;
+    case BINARY_COMMA:
+      printf("','");
       break;
     default:
-      printf("-- unknown\n");
+      printf("-- unknown");
       break;
   }
+  printf("\n");
 
   INDENT();
   DUMP(nd->in.binop.left);
