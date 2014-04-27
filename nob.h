@@ -47,7 +47,7 @@ struct nob_type {
   union {
     struct {
       int limitless;
-      /* TODO: type of these two should be handled better */
+      /* TODO: type of these two should be handled better (probably..) */
       int64_t limit_lower;
       int64_t limit_upper;
     } integer;

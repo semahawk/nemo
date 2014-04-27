@@ -20,6 +20,7 @@
 #include "ast.h"
 #include "mem.h"
 #include "nob.h"
+#include "infnum.h"
 #include "lexer.h"
 #include "utf8.h"
 #include "util.h"
@@ -58,8 +59,7 @@ static struct nob_type *type(struct lexer *lex)
   struct field fields[MAX_TUPLE_FIELDS + 1] = { { 0, 0 } };
   /* 'pointer' to the current field */
   unsigned curr_field = 0;
-  /* if inside of the <>s turns out to be a function's type this might come in
-   * handy; to be passed to `new_type' */
+  /* function's return type; to be passed to `new_type' */
   struct nob_type *return_type = NULL;
   /* function's parameters, to be passed to `new_type' */
   struct nob_type *params[MAX_FUN_PARAMS + 1] = { 0 };
@@ -201,17 +201,17 @@ static struct node *primary_expr(struct lexer *lex)
 {
   /* {{{ */
   if (accept(lex, TOK_INTEGER)){
-    printf("%d ", lex->curr_tok.value.i);
+    printf("%s ", infnum_to_str(lex->curr_tok.value.i));
     return new_int(lex, lex->curr_tok.value.i);
   } else if (accept(lex, TOK_FLOAT)){
     printf("%f=16 ", lex->curr_tok.value.f);
-    return new_int(lex, 16);
+    return new_int(lex, infnum_from_int(16));
   } else if (accept(lex, TOK_STRING)){
     printf("\"%s\"=32", lex->curr_tok.value.sp);
-    return new_int(lex, 32);
+    return new_int(lex, infnum_from_int(32));
   } else if (accept(lex, TOK_NAME)){
     printf("%s=0x6e ", lex->curr_tok.value.s /* meh */);
-    return new_int(lex, 0x6e);
+    return new_int(lex, infnum_from_int(0x6e));
   }
 
   return NULL;
@@ -601,14 +601,14 @@ static struct node *expr(struct lexer *lex)
         printf(", ");
         upper = primary_expr(lex);
 
-        if (lower->in.i >= upper->in.i){
+        if (infnum_cmp(lower->in.i, upper->in.i) == INFNUM_CMP_GE){
           fprintf(stderr, "invalid values for `lim'\n");
           exit(1);
         }
 
         newer_type->info.integer.limitless = 0;
-        newer_type->info.integer.limit_lower = lower->in.i;
-        newer_type->info.integer.limit_upper = upper->in.i;
+        newer_type->info.integer.limit_lower = infnum_to_qword(lower->in.i);
+        newer_type->info.integer.limit_upper = infnum_to_qword(upper->in.i);
       }
       /* 'register' the type */
       push_type(newer_type);
@@ -620,7 +620,7 @@ static struct node *expr(struct lexer *lex)
   else if (accept_keyword(lex, "wobbly")){
     ret = new_wobbly(lex);
   }
-  else { /* expression */
+  else { /* none of the above */
     /* {{{ */
     ret = comma_expr(lex);
     /* }}} */

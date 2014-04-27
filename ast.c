@@ -422,7 +422,7 @@ struct node *new_nop(struct lexer *lex)
   /* }}} */
 }
 
-struct node *new_int(struct lexer *lex, int value)
+struct node *new_int(struct lexer *lex, struct infnum value)
 {
   /* {{{ */
   struct node *nd = new_node(lex);
@@ -436,7 +436,7 @@ struct node *new_int(struct lexer *lex, int value)
 #endif
   nd->next = NULL;
 
-  debug_ast_new(nd, "integer (%d)", value);
+  debug_ast_new(nd, "integer (%s) ", infnum_to_str(value));
 
   return nd;
   /* }}} */

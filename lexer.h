@@ -17,6 +17,7 @@
 
 #include "config.h"
 #include "nemo.h"
+#include "infnum.h"
 #include "ast.h"
 
 enum token_type {
@@ -52,7 +53,7 @@ enum token_type {
 struct token {
   enum token_type type;
   union {
-    int    i;
+    struct infnum i;
     double f;
     char   s[MAX_NAME_LENGTH];
     char *sp;

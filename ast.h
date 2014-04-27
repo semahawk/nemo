@@ -17,6 +17,7 @@
 
 #include "nemo.h"
 #include "nob.h"
+#include "infnum.h"
 #include "lexer.h"
 
 /* forward */
@@ -84,7 +85,7 @@ struct node {
   void (*dumpf)(struct node *);
 #endif
   union {
-    int i;   /* NT_INTEGER */
+    struct infnum i;   /* NT_INTEGER */
     float f; /* NT_FLOAT */
     char *s; /* NT_STRING */
 
@@ -132,7 +133,7 @@ struct node {
 };
 
 struct node *new_nop(struct lexer *lex);
-struct node *new_int(struct lexer *lex, int value);
+struct node *new_int(struct lexer *lex, struct infnum value);
 struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target);
 struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right);
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee);

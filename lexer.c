@@ -22,6 +22,7 @@
 #include "debug.h"
 #include "nemo.h"
 #include "nob.h"
+#include "infnum.h"
 #include "mem.h"
 #include "lexer.h"
 #include "util.h"
@@ -211,7 +212,7 @@ static struct token fetch_token(struct lexer *lex)
     } else {
       /* {{{ DECIMAL */
       ret.type = TOK_INTEGER;
-      ret.value.i = atoi(tmp_arr);
+      ret.value.i = infnum_from_str(tmp_arr);
       /* }}} */
     }
 
@@ -288,7 +289,7 @@ static void debug_print_token(struct token tok)
   switch (tok.type){
     case TOK_INTEGER:
       /* {{{ */
-      fprintf(stderr, "integer %d", tok.value.i);
+      fprintf(stderr, "integer %s", infnum_to_str(tok.value.i));
       /* }}} */
       break;
     case TOK_FLOAT:

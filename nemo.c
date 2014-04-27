@@ -123,7 +123,26 @@ int main(int argc, char *argv[])
     parse_file(argv[0]);
   }
 
-  /*dump_types();*/
+  dump_types();
+
+  {
+    struct infnum a = infnum_from_int(-127);
+    struct infnum b = infnum_from_int(127);
+    struct infnum c = infnum_from_int(73);
+    struct infnum d = infnum_from_int(-73);
+
+    printf("infnum from int %d: %s\n", 3, infnum_to_str(infnum_from_int(3)));
+    printf("infnum from int %d: %s\n", 73, infnum_to_str(infnum_from_int(73)));
+    printf("infnum from int %d: %s\n", -803, infnum_to_str(infnum_from_int(-803)));
+    printf("infnum from int %d: %s\n", 3927, infnum_to_str(infnum_from_int(3927)));
+
+    printf("%s + %s = %s\n", infnum_to_str(a), infnum_to_str(c), infnum_to_str(infnum_add(a, c)));
+    printf("%s - %s = %s\n", infnum_to_str(a), infnum_to_str(c), infnum_to_str(infnum_sub(a, c)));
+    printf("%s + %s = %s\n", infnum_to_str(b), infnum_to_str(c), infnum_to_str(infnum_add(b, c)));
+    printf("%s - %s = %s\n", infnum_to_str(b), infnum_to_str(c), infnum_to_str(infnum_sub(b, c)));
+    printf("%s + %s = %s\n", infnum_to_str(b), infnum_to_str(d), infnum_to_str(infnum_add(b, d)));
+    printf("%s - %s = %s\n", infnum_to_str(b), infnum_to_str(d), infnum_to_str(infnum_sub(b, d)));
+  }
 
   arg_stack_finish();
   types_finish();
@@ -140,6 +159,7 @@ int main(int argc, char *argv[])
  * Fear Factory, Scar Symmetry, Dagon, Omnium Gatherum
  * The Algorithm, Dream Theater, Insomnium
  * Dark Age, Equilibrium, Bolt Thrower, Kalmah
+ * Coroner, Carach Angren
  * Qntal, Helium Vola
  *
  * Johann Strauss
