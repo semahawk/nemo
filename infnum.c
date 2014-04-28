@@ -124,10 +124,12 @@ struct infnum infnum_add(struct infnum a, struct infnum b)
   if (a.sign == b.sign) sum.sign = a.sign;
   else {
     if (a.sign == INFNUM_SIGN_NEG){
+      /* -a + b = b - a */
       a.sign = INFNUM_SIGN_POS;
       sum = infnum_sub(b, a);
       return sum;
     } else {
+      /* a + (-b) = a - b */
       b.sign = INFNUM_SIGN_POS;
       sum = infnum_sub(a, b);
       return sum;
@@ -144,7 +146,7 @@ struct infnum infnum_add(struct infnum a, struct infnum b)
     char ac = i >= lenof_a ? 0 : a.digits[lenof_a - i - 1] - '0';
     /* current `b' character */
     char bc = i >= lenof_b ? 0 : b.digits[lenof_b - i - 1] - '0';
-    printf("ac: 0x%02x, bc: 0x%02x\n", ac, bc);
+
     sum.digits[max - i - 1] = ((carry + ac + bc) % 10) + '0';
     carry = (carry + ac + bc) / 10;
   }
@@ -167,10 +169,13 @@ struct infnum infnum_sub(struct infnum a, struct infnum b)
   if (a.sign == b.sign) diff.sign = a.sign;
   else {
     if (a.sign == INFNUM_SIGN_NEG){
+      /* -a - b = -(a + b) */
       a.sign = INFNUM_SIGN_POS;
       diff = infnum_add(b, a);
+      diff.sign = INFNUM_SIGN_NEG;
       return diff;
     } else {
+      /* a - (-b) = a + b */
       b.sign = INFNUM_SIGN_POS;
       diff = infnum_add(a, b);
       return diff;
@@ -180,8 +185,11 @@ struct infnum infnum_sub(struct infnum a, struct infnum b)
   /* switch the numbers (if necessary) to always subtract the smaller from the bigger */
   if (infnum_cmp(b, a) == INFNUM_CMP_GT){
     struct infnum temp = a;
+    size_t lentemp = lenof_a;
+
     a = b; b = temp;
-    diff.sign = diff.sign == INFNUM_SIGN_POS ? INFNUM_SIGN_NEG : INFNUM_SIGN_POS;
+    lenof_a = lenof_b; lenof_b = lentemp;
+    diff.sign = a.sign == INFNUM_SIGN_POS ? INFNUM_SIGN_NEG : INFNUM_SIGN_POS;
   }
 
   /* +2 (for nul and for the sign just before the actual number */
@@ -196,7 +204,6 @@ struct infnum infnum_sub(struct infnum a, struct infnum b)
     /* current `b' character */
     char bc = i >= lenof_b ? 0 :    b.digits[lenof_b - i - 1] - '0';
 
-    printf("dc: 0x%02x, bc: 0x%02x\n", dc, bc);
     if (dc >= bc){
       diff.digits[lenof_a - i - 1] = dc - bc + '0';
     } else {
