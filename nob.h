@@ -25,7 +25,9 @@ enum nob_primitive_type {
   OT_STRING,
   OT_TUPLE,
   OT_LIST,
-  OT_FUN
+  OT_FUN,
+
+  OT_ANY
 };
 
 /* forward declaration (`struct field' needs it, but `struct nob_type' needs
@@ -104,6 +106,8 @@ void push_type(struct nob_type *type);
 const char *nob_type_to_s(enum nob_primitive_type);
 
 /* make the variables visible */
+extern struct nob_type *T_ANY;
+extern struct nob_type *T_INT;
 extern struct nob_type *T_BYTE;
 extern struct nob_type *T_WORD;
 extern struct nob_type *T_DWORD;

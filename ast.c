@@ -290,6 +290,21 @@ void dump_if(struct node *nd)
   DEDENT();
 }
 
+void dump_fun(struct node *nd)
+{
+  struct node *d = nd->in.fun.body;
+
+  printf("+ (#%u) fun (%s)\n", nd->id, nd->in.fun.name);
+  INDENT();
+  DUMPP("- body:");
+  INDENT();
+  /* FIXME: right now it's only dumping the first expression in the body */
+  DUMP(d);
+
+  DEDENT();
+  DEDENT();
+}
+
 void dump_wobbly(struct node *nd)
 {
   printf("+ (#%u) wobbly\n", nd->id);
@@ -393,6 +408,15 @@ struct node *exec_if(struct node *nd)
   /* }}} */
 }
 
+struct node *exec_fun(struct node *nd)
+{
+  /* {{{ */
+  printf("executing a function\n");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
 struct node *exec_wobbly(struct node *nd)
 {
   /* {{{ */
@@ -442,7 +466,8 @@ struct node *new_int(struct lexer *lex, struct infnum value)
   /* }}} */
 }
 
-struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target)
+struct node *new_unop(struct lexer *lex, enum unop_type type,
+    struct node *target)
 {
   /* {{{ */
   struct node *nd = new_node(lex);
@@ -463,7 +488,8 @@ struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *targe
   /* }}} */
 }
 
-struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right)
+struct node *new_binop(struct lexer *lex, enum binop_type type,
+    struct node *left, struct node *right)
 {
   /* {{{ */
   struct node *nd = new_node(lex);
@@ -485,7 +511,8 @@ struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *lef
   /* }}} */
 }
 
-struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee)
+struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
+    struct node *elsee)
 {
   /* {{{ */
   struct node *nd = new_node(lex);
@@ -509,6 +536,29 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, st
 
   return nd;
   /* }}} */
+}
+
+struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type,
+    struct nob_type **params, struct node *body, char *opts)
+{
+  struct node *nd = new_node(lex);
+
+  nd->id = currid++;
+  nd->type = NT_FUN;
+  nd->in.fun.name = name;
+  nd->in.fun.body = body;
+  nd->in.fun.return_type = return_type;
+  nd->in.fun.opts = opts;
+  nd->in.fun.params = params;
+  nd->execf = exec_fun;
+#if DEBUG
+  nd->dumpf = dump_fun;
+#endif
+  nd->next = NULL;
+
+  debug_ast_new(nd, "fun (%s, #%u)", name, body->id);
+
+  return nd;
 }
 
 struct node *new_wobbly(struct lexer *lex)

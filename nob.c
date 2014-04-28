@@ -24,6 +24,7 @@
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
+struct nob_type *T_ANY   = NULL;
 struct nob_type *T_INT   = NULL;
 struct nob_type *T_BYTE  = NULL;
 struct nob_type *T_WORD  = NULL;
@@ -53,6 +54,7 @@ void types_init(void)
   NM_types_curr = NM_types;
 
   /* create the standard types */
+  T_ANY   = new_type("*",   OT_ANY);
   T_INT   = new_type("int",   OT_INTEGER, 1, 0, 0);
   T_BYTE  = new_type("byte",  OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
   T_WORD  = new_type("word",  OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
@@ -228,6 +230,9 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
+    case OT_ANY:
+      /* nothing */
+      break;
     case OT_INTEGER: {
       /* {{{ */
       int64_t limitless   = va_arg(vl, int64_t);
@@ -311,6 +316,7 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_TUPLE:   return "tuple";
     case OT_LIST:    return "list";
     case OT_FUN:     return "function";
+    case OT_ANY:     return "any (*)";
   }
 
   return "##unknown_type##nob_type_to_s##";

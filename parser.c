@@ -66,7 +66,12 @@ static struct nob_type *type(struct lexer *lex)
   /* 'pointer' to the current parameter */
   unsigned curr_param = 0;
 
-  if (accept(lex, TOK_TYPE)){
+  if (accept(lex, TOK_TIMES)){
+    /* {{{ a polymorphic type (any) */
+    printf("* ");
+    ret = T_ANY;
+    /* }}} */
+  } else if (accept(lex, TOK_TYPE)){
     /* {{{ a single worded type */
     printf("%s", lex->curr_tok.value.s);
     ret = get_type_by_name(lex->curr_tok.value.s);
@@ -115,6 +120,7 @@ static struct nob_type *type(struct lexer *lex)
     /* }}} */
   } else if (accept(lex, TOK_LPAREN)){
     /* {{{ a tuple */
+    /* TODO there should be no polymorphic types inside a tuple */
     printf("(");
     fields[curr_field].type = type(lex);
 
@@ -170,23 +176,14 @@ static struct nob_type *type(struct lexer *lex)
     /* {{{ a list */
     printf("[");
 
-    if (accept(lex, TOK_TIMES)){
-      /* {{{ polymorphic list */
-      printf("*");
-      ret = new_type(NULL /* no name */, OT_LIST, NULL);
-      /* }}} */
-    } else {
-      /* {{{ 'normal' list */
-      return_type = type(lex);
-      /* it's not a return type, just reusing the variable */
-      if (!return_type){
-        fprintf(stderr, "error: expected a type for the list\n");
-        exit(1);
-      }
-
-      ret = new_type(NULL /* no name */, OT_LIST, return_type);
-      /* }}} */
+    return_type = type(lex);
+    /* it's not a return type, just reusing the variable */
+    if (!return_type){
+      fprintf(stderr, "error: expected a type for the list\n");
+      exit(1);
     }
+
+    ret = new_type(NULL /* no name */, OT_LIST, return_type);
 
     force(lex, TOK_RBRACKET);
     printf("]");
@@ -484,6 +481,7 @@ static struct node *expr(struct lexer *lex)
 {
   /* {{{ */
   struct node *ret = NULL;
+  struct nob_type *return_type;
 
   if (accept(lex, TOK_SEMICOLON)){ /* NOP */
     /* {{{ */
@@ -627,6 +625,54 @@ static struct node *expr(struct lexer *lex)
   }
   else if (accept_keyword(lex, "wobbly")){
     ret = new_wobbly(lex);
+  }
+  else if ((return_type = type(lex)) != NULL){ /* a type (function definition) */
+    char *func_name = NULL;
+    struct nob_type *params[MAX_FUN_PARAMS + 1] = { 0 };
+    int curr_param = 0;
+    struct node *body;
+    struct nob_type *T;
+
+    /* optional name for the function */
+    if (accept(lex, TOK_NAME)){
+      func_name = strdup(lex->curr_tok.value.s);
+      printf(" %s", func_name);
+      /* TODO: append this function to the functions list */
+    }
+
+    force(lex, TOK_SEMICOLON);
+    printf("; ");
+
+    /* fetch the parameters' types */
+    if ((params[curr_param++] = type(lex)) != NULL){
+      /* a function with at least one parameter */
+      while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
+        /* a function with more parameters */
+        printf(", ");
+
+        if ((params[curr_param++] = type(lex)) == NULL){
+          printf("note: expected a type after the comma\n");
+        }
+      }
+
+      /* create a new type out of this */
+      T = new_type(NULL /* anonymous */, OT_FUN, return_type, params);
+    } else {
+      T = new_type(NULL /* anonymous */, OT_FUN, return_type, NULL);
+    }
+
+    force(lex, TOK_LMUSTASHE);
+    printf(" {\n");
+    body = block(lex);
+    force(lex, TOK_RMUSTASHE);
+    printf("}\n");
+
+    if (!body){
+      fprintf(stderr, "expected a body for the function\n");
+      exit(1);
+    }
+
+    ret = new_fun(lex, func_name, T, params, body, NULL /* TODO opts */);
   }
   else { /* none of the above */
     /* {{{ */

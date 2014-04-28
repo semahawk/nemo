@@ -37,7 +37,7 @@ enum node_type {
   NT_CALL      = 1 << 9,
   NT_STMT      = 1 << 10,
   NT_BLOCK     = 1 << 11,
-  NT_FUNDEF    = 1 << 12,
+  NT_FUN       = 1 << 12,
   NT_USE       = 1 << 13,
   NT_WOBBLY    = 1 << 14
 };
@@ -123,20 +123,27 @@ struct node {
       bool until;
     } whilee;
 
-    struct { /* NT_FUNDEF (function definition) */
+    struct { /* NT_FUN (function) */
       char *name;
       struct node *body;
+      struct nob_type *return_type;
+      struct nob_type **params;
       unsigned paramc, optc; /* number of params/options the function can take */
-      char opts[26];
-    } fundef;
+      char *opts;
+    } fun;
   } in;
 };
 
 struct node *new_nop(struct lexer *lex);
 struct node *new_int(struct lexer *lex, struct infnum value);
-struct node *new_unop(struct lexer *lex, enum unop_type type, struct node *target);
-struct node *new_binop(struct lexer *lex, enum binop_type type, struct node *left, struct node *right);
-struct node *new_if(struct lexer *lex, struct node *guard, struct node *body, struct node *elsee);
+struct node *new_unop(struct lexer *lex, enum unop_type type,
+    struct node *target);
+struct node *new_binop(struct lexer *lex, enum binop_type type,
+    struct node *left, struct node *right);
+struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
+    struct node *elsee);
+struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type,
+    struct nob_type **params, struct node *body, char *opts);
 struct node *new_wobbly(struct lexer *lex);
 
 void exec_nodes(struct node *node);
