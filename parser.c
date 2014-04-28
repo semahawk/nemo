@@ -222,21 +222,29 @@ static struct node *postfix_expr(struct lexer *lex)
 {
   /* {{{ */
   struct node *target, *ret;
+  struct lexer save_lex;
 
   target = ret = primary_expr(lex);
 
   if (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS) || peek(lex, TOK_LPAREN)){
+    /* save the lexer's state in case it's actually only one '+' or '-' */
+    save_lex = *lex;
+
     if (accept(lex, TOK_PLUS)){
       if (accept(lex, TOK_PLUS)){
         /* target ++ */
         printf(" postfix(++)");
         ret = new_unop(lex, UNARY_POSTINC, target);
+      } else {
+        *lex = save_lex;
       }
     } else if (accept(lex, TOK_MINUS)){
       if (accept(lex, TOK_MINUS)){
         /* target -- */
         printf(" postfix(--)");
         ret = new_unop(lex, UNARY_POSTDEC, target);
+      } else {
+        *lex = save_lex;
       }
     } else if (accept(lex, TOK_LPAREN)){
       force(lex, TOK_RPAREN);
