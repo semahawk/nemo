@@ -126,15 +126,22 @@ int main(int argc, char *argv[])
   dump_types();
 
   {
-    struct infnum a = infnum_from_int(-127);
-    struct infnum b = infnum_from_int(127);
-    struct infnum c = infnum_from_int(73);
-    struct infnum d = infnum_from_int(-73);
+    /*struct infnum a = infnum_from_int(-127);*/
+    /*struct infnum b = infnum_from_int(127);*/
+    /*struct infnum c = infnum_from_int(73);*/
+    /*struct infnum d = infnum_from_int(-73);*/
+
+    struct infnum a = infnum_from_str("-23");
+    struct infnum b = infnum_from_str("77");
+    struct infnum c = infnum_from_str("23");
+    struct infnum d = infnum_from_str("-77");
 
     printf("infnum from int %d: %s\n", 3, infnum_to_str(infnum_from_int(3)));
     printf("infnum from int %d: %s\n", 73, infnum_to_str(infnum_from_int(73)));
     printf("infnum from int %d: %s\n", -803, infnum_to_str(infnum_from_int(-803)));
     printf("infnum from int %d: %s\n", 3927, infnum_to_str(infnum_from_int(3927)));
+    printf("infnum from str %s: %s\n", "3", infnum_to_str(infnum_from_str("3")));
+    printf("infnum from str %s: %s\n", "-3", infnum_to_str(infnum_from_str("-3")));
 
     printf("%s + %s = %s\n", infnum_to_str(a), infnum_to_str(c), infnum_to_str(infnum_add(a, c)));
     printf("%s - %s = %s\n", infnum_to_str(a), infnum_to_str(c), infnum_to_str(infnum_sub(a, c)));

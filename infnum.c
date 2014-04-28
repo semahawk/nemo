@@ -39,7 +39,9 @@ struct infnum infnum_from_str(char *s)
     num.sign = INFNUM_SIGN_POS;
   }
 
-  num.digits = strdup(s);
+  num.digits = nmalloc(/* sizeof(char) times */ strlen(s) + 2);
+  num.digits++;
+  strncpy(num.digits, s, strlen(s));
 
   return num;
 }
@@ -141,13 +143,13 @@ struct infnum infnum_add(struct infnum a, struct infnum b)
   sum.digits = nmalloc(/* sizeof(char) times */ max + 3);
   sum.digits++;
 
-  for (carry = 0, i = 0; i < max; i++){
+  for (carry = 0, i = 0; i < max + 2; i++){
     /* current `a' character */
     char ac = i >= lenof_a ? 0 : a.digits[lenof_a - i - 1] - '0';
     /* current `b' character */
     char bc = i >= lenof_b ? 0 : b.digits[lenof_b - i - 1] - '0';
 
-    sum.digits[max - i - 1] = ((carry + ac + bc) % 10) + '0';
+    sum.digits[/* max + 2 - i - 1 */ max - i + 1] = ((carry + ac + bc) % 10) + '0';
     carry = (carry + ac + bc) / 10;
   }
 
@@ -184,12 +186,13 @@ struct infnum infnum_sub(struct infnum a, struct infnum b)
 
   /* switch the numbers (if necessary) to always subtract the smaller from the bigger */
   if (infnum_cmp(b, a) == INFNUM_CMP_GT){
+    /* small - big = -(big - small) */
     struct infnum temp = a;
     size_t lentemp = lenof_a;
 
     a = b; b = temp;
     lenof_a = lenof_b; lenof_b = lentemp;
-    diff.sign = a.sign == INFNUM_SIGN_POS ? INFNUM_SIGN_NEG : INFNUM_SIGN_POS;
+    diff.sign = INFNUM_SIGN_NEG;
   }
 
   /* +2 (for nul and for the sign just before the actual number */
