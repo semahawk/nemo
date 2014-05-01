@@ -19,6 +19,7 @@
 #include "mem.h"
 #include "nob.h"
 #include "lexer.h"
+#include "util.h"
 
 /* one handy macro */
 #define EXEC(node) ((node)->execf(node))
@@ -182,6 +183,21 @@ void dump_const(struct node *nd)
     printf("+ (#%u) const (%s)\n", nd->id, infnum_to_str(nd->in.i));
   else
     printf("+ (#%u) const\n", nd->id);
+}
+
+void dump_decl(struct node *nd)
+{
+  printf("+ (#%u) declaration (%s, 0x%02x)\n", nd->id, nd->in.decl.name,
+      nd->in.decl.flags);
+
+  if (nd->in.decl.value){
+    INDENT();
+    DUMPP("- value:");
+    INDENT();
+    DUMP(nd->in.decl.value);
+    DEDENT();
+    DEDENT();
+  }
 }
 
 void dump_unop(struct node *nd)
@@ -352,6 +368,25 @@ struct node *exec_const(struct node *nd)
   /* }}} */
 }
 
+struct node *exec_decl(struct node *nd)
+{
+  /* {{{ */
+  if (nd->in.decl.value)
+    debug_ast_exec(nd, "declaration (%s, 0x%02x, #%u)", nd->in.decl.name,
+        nd->in.decl.flags, nd->in.decl.value->id);
+  else
+    debug_ast_exec(nd, "declaration (%s, 0x%02x, #--)", nd->in.decl.name,
+        nd->in.decl.flags);
+
+  if (nd->in.decl.value)
+    EXEC(nd->in.decl.value);
+
+  /* TODO associate the value with the variable */
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
 struct node *exec_unop(struct node *nd)
 {
   /* {{{ */
@@ -475,6 +510,31 @@ struct node *new_int(struct lexer *lex, struct infnum value)
   nd->next = NULL;
 
   debug_ast_new(nd, "integer (%s) ", infnum_to_str(value));
+
+  return nd;
+  /* }}} */
+}
+
+struct node *new_decl(struct lexer *lex, char *name, uint8_t flags, struct node *value)
+{
+  /* {{{ */
+  struct node *nd = new_node(lex);
+
+  nd->id = currid++;
+  nd->type = NT_DECL;
+  nd->in.decl.name = name;
+  nd->in.decl.flags = flags;
+  nd->in.decl.value = value;
+  nd->execf = exec_decl;
+#if DEBUG
+  nd->dumpf = dump_decl;
+#endif
+  nd->next = NULL;
+
+  if (value)
+    debug_ast_new(nd, "declaration (#%u, 0x%02x) ", value->id, flags);
+  else
+    debug_ast_new(nd, "declaration (#--, 0x%02x) ", flags);
 
   return nd;
   /* }}} */

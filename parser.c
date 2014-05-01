@@ -25,7 +25,7 @@
 #include "utf8.h"
 #include "util.h"
 
-/* statements end with a semicolon, unless it's the last statement in the block
+/* expressions end with a semicolon, unless it's the last expressions in the block
  * (or the whole program/module/unit) */
 #define expr_end(lex) \
   do { \
@@ -543,30 +543,43 @@ static struct node *expr(struct lexer *lex)
   }
   else if (accept_keyword(lex, "my")){
     /* {{{ */
+    char *name;
+    uint8_t flags = 0x0;
+    struct node *value;
+
     printf("my ");
+
+    if (accept_keyword(lex, "const")){
+      NOB_FLAG_SET(flags, NOB_FLAG_CONST);
+    }
 
     if (!type(lex)){
       fprintf(stderr, "syntax error: expected a type for the variable declaration\n");
       exit(1);
     }
+
     putchar(' ');
     force(lex, TOK_NAME);
     printf("%s", lex->curr_tok.value.s);
-    ret = new_nop(lex);
+    name = strdup(lex->curr_tok.value.s);
 
     /*
      * if the type was omitted, then the initialization should probably be
      * obligatory.
      *
      * the point is to know the variable's type beforehand.
+     *
+     * but hey, we need type inference first..
      */
 
     if (accept(lex, TOK_EQ)){
       printf(" = ");
       /* my [type] name = expr... */
       /* the variables initial value */
-      expr(lex);
+      value = expr(lex);
     }
+
+    ret = new_decl(lex, name, flags, value);
     /* }}} */
   }
   else if (accept_keyword(lex, "typedef")){

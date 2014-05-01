@@ -17,6 +17,12 @@
 
 #include "nemo.h"
 
+/* object flags (eg. if it's immutable) */
+#define NOB_FLAG_CONST (1 << 0)
+/* few macros to help with the flags */
+#define NOB_FLAG_SET(ob, flag) ((ob) |= (flag))
+#define NOB_FLAG_GET(ob) ((ob) & (flag))
+
 enum nob_primitive_type {
   /* that's kind of a draft only */
   OT_INTEGER,
