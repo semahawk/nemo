@@ -178,7 +178,10 @@ void dump_nop(struct node *nd)
 
 void dump_const(struct node *nd)
 {
-  printf("+ (#%u) const\n", nd->id);
+  if (nd->type == NT_INTEGER)
+    printf("+ (#%u) const (%s)\n", nd->id, infnum_to_str(nd->in.i));
+  else
+    printf("+ (#%u) const\n", nd->id);
 }
 
 void dump_unop(struct node *nd)
@@ -298,8 +301,10 @@ void dump_fun(struct node *nd)
   INDENT();
   DUMPP("- body:");
   INDENT();
-  /* FIXME: right now it's only dumping the first expression in the body */
-  DUMP(d);
+
+  do {
+    DUMP(d);
+  } while ((d = d->next) != NULL);
 
   DEDENT();
   DEDENT();
@@ -334,7 +339,7 @@ struct node *exec_const(struct node *nd)
 {
   /* {{{  */
   if (nd->type == NT_INTEGER){
-    debug_ast_exec(nd, "integer (%d)", nd->in.i);
+    debug_ast_exec(nd, "integer (%s)", infnum_to_str(nd->in.i));
     PUSH(new_nob(T_WORD, nd->in.i));
   } else if (nd->type == NT_FLOAT){
     debug_ast_exec(nd, "float (%f)", nd->in.f);
@@ -411,7 +416,15 @@ struct node *exec_if(struct node *nd)
 struct node *exec_fun(struct node *nd)
 {
   /* {{{ */
-  printf("executing a function\n");
+  struct node *e = nd->in.fun.body;
+
+  if (nd->in.fun.execute){
+    debug_ast_exec(nd, "executing a function");
+
+    do {
+      EXEC(e);
+    } while ((e = e->next) != NULL);
+  }
 
   RETURN_NEXT;
   /* }}} */
@@ -539,8 +552,9 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
 }
 
 struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type,
-    struct nob_type **params, struct node *body, char *opts)
+    struct nob_type **params, struct node *body, char *opts, bool execute)
 {
+  /* {{{ */
   struct node *nd = new_node(lex);
 
   nd->id = currid++;
@@ -550,15 +564,17 @@ struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type
   nd->in.fun.return_type = return_type;
   nd->in.fun.opts = opts;
   nd->in.fun.params = params;
+  nd->in.fun.execute = execute;
   nd->execf = exec_fun;
 #if DEBUG
   nd->dumpf = dump_fun;
 #endif
   nd->next = NULL;
 
-  debug_ast_new(nd, "fun (%s, #%u)", name, body->id);
+  debug_ast_new(nd, "fun (%s, #%u, %d)", name, body->id, execute);
 
   return nd;
+  /* }}} */
 }
 
 struct node *new_wobbly(struct lexer *lex)

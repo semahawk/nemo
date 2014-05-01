@@ -24,22 +24,21 @@
 struct lexer;
 
 enum node_type {
-  NT_NOP       = 0,
-  NT_INTEGER   = 1 << 0,
-  NT_FLOAT     = 1 << 1,
-  NT_STRING    = 1 << 2,
-  NT_NAME      = 1 << 3,
-  NT_UNOP      = 1 << 4,
-  NT_BINOP     = 1 << 5,
-  NT_IF        = 1 << 6,
-  NT_WHILE     = 1 << 7,
-  NT_DECL      = 1 << 8,
-  NT_CALL      = 1 << 9,
-  NT_STMT      = 1 << 10,
-  NT_BLOCK     = 1 << 11,
-  NT_FUN       = 1 << 12,
-  NT_USE       = 1 << 13,
-  NT_WOBBLY    = 1 << 14
+  NT_NOP,
+  NT_INTEGER,
+  NT_FLOAT,
+  NT_STRING,
+  NT_NAME,
+  NT_UNOP,
+  NT_BINOP,
+  NT_IF,
+  NT_WHILE,
+  NT_DECL,
+  NT_CALL,
+  NT_BLOCK,
+  NT_FUN,
+  NT_USE,
+  NT_WOBBLY
 };
 
 enum unop_type {
@@ -130,6 +129,10 @@ struct node {
       struct nob_type **params;
       unsigned paramc, optc; /* number of params/options the function can take */
       char *opts;
+      /* `true' in case of 'blocks', `false' in case of a 'normal' function */
+      /* that is, if it's `true', the function will be executed automatically */
+      /* if `false' it has to be called explicitly */
+      bool execute;
     } fun;
   } in;
 };
@@ -143,7 +146,7 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
     struct node *elsee);
 struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type,
-    struct nob_type **params, struct node *body, char *opts);
+    struct nob_type **params, struct node *body, char *opts, bool execute);
 struct node *new_wobbly(struct lexer *lex);
 
 void exec_nodes(struct node *node);

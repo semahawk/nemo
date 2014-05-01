@@ -37,10 +37,7 @@
   } while (0)
 
 /* forward declarations */
-struct node *block(struct lexer *lex);
-
-/* pointer to the previous statement */
-struct node *prev_stmt = NULL;
+struct node *expr_list(struct lexer *lex);
 
 /*
  * Fetches the type, at the lexer's current 'position'.
@@ -491,10 +488,18 @@ static struct node *expr(struct lexer *lex)
   }
   else if (accept(lex, TOK_LMUSTASHE)){ /* a block */
     /* {{{ */
+    struct node *body;
+
     printf("{\n");
-    ret = block(lex);
+
+    body = expr_list(lex);
+
     force(lex, TOK_RMUSTASHE);
     printf("}\n");
+
+    ret = new_fun(lex, NULL /* anonymous */, T_INT /* wait for inference */,
+        NULL /* no params */, body, NULL /* no opts */,
+        true /* execute right away */);
     /* }}} */
   }
   else if (accept_keyword(lex, "if")){
@@ -626,7 +631,8 @@ static struct node *expr(struct lexer *lex)
   else if (accept_keyword(lex, "wobbly")){
     ret = new_wobbly(lex);
   }
-  else if ((return_type = type(lex)) != NULL){ /* a type (function definition) */
+  else if ((return_type = type(lex)) != NULL){ /* a type (ie. a function) */
+    /* {{{ */
     char *func_name = NULL;
     struct nob_type *params[MAX_FUN_PARAMS + 1] = { 0 };
     int curr_param = 0;
@@ -663,7 +669,7 @@ static struct node *expr(struct lexer *lex)
 
     force(lex, TOK_LMUSTASHE);
     printf(" {\n");
-    body = block(lex);
+    body = expr_list(lex);
     force(lex, TOK_RMUSTASHE);
     printf("}\n");
 
@@ -672,7 +678,8 @@ static struct node *expr(struct lexer *lex)
       exit(1);
     }
 
-    ret = new_fun(lex, func_name, T, params, body, NULL /* TODO opts */);
+    ret = new_fun(lex, func_name, T, params, body, NULL /* TODO opts */, false);
+    /* }}} */
   }
   else { /* none of the above */
     /* {{{ */
@@ -680,34 +687,36 @@ static struct node *expr(struct lexer *lex)
     /* }}} */
   }
 
-  assert(ret);
-
-  /* set the previous statement's "next", but only if it's previous value is
-   * different than NULL */
-  if (prev_stmt)
-    if (prev_stmt->next == NULL)
-      prev_stmt->next = ret;
-
-  prev_stmt = ret;
+  assert(ret != NULL);
 
   return ret;
   /* }}} */
 }
 
-struct node *block(struct lexer *lex)
+struct node *expr_list(struct lexer *lex)
 {
-  struct node *ret = NULL,
-              *tmp;
+  /* {{{ */
+  struct node *first = NULL, *prev = NULL, *last;
 
   while (!peek(lex, TOK_EOS) && !peek(lex, TOK_RMUSTASHE)){
     /* overwrite `ret' if NULL (ie. set it only the first time) */
-    tmp = expr(lex);
-    ret = !ret ? tmp : ret;
+    last = expr(lex);
+    first = !first ? last : first;
+
+    if (prev)
+      if (prev->next == NULL)
+        prev->next = last;
+
+    prev = last;
 
     expr_end(lex);
   }
 
-  return ret;
+  /* set the last expression's `next' to NULL (ie. terminate the sequence) */
+  last->next = NULL;
+
+  return first;
+  /* }}} */
 }
 
 int parse_file(char *fname)
@@ -765,7 +774,7 @@ int parse_file(char *fname)
   lex.nds_gc.curr       = lex.nds_gc.ptr;
 
   /* start the parsing process */
-  node = block(&lex);
+  node = expr_list(&lex);
   exec_nodes(node);
   dump_nodes(node);
 
@@ -811,7 +820,7 @@ int parse_string(char *string)
   lex.nds_gc.curr       = lex.nds_gc.ptr;
 
   /* start the parsing process */
-  node = block(&lex);
+  node = expr_list(&lex);
   dump_nodes(node);
 
   /* free the lexer's `str_gc' */
