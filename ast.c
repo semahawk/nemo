@@ -322,8 +322,9 @@ void exec_nodes(struct node *node)
 {
   NM_pc = node;
 
-  while (EXEC(NM_pc))
-    ;
+  if (NM_pc)
+    while (EXEC(NM_pc))
+      ;
 }
 
 struct node *exec_nop(struct node *nd)
