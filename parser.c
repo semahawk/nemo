@@ -584,9 +584,9 @@ static struct node *expr(struct lexer *lex)
   }
   else if (accept_keyword(lex, "print")){
     /* {{{ */
-    struct nodes_list *exprs = NULL, *new;
-    struct node *e;
+    struct nodes_list *exprs = NULL;
     struct nodes_list *prev, *curr, *next;
+    struct node *e;
 
     printf("print ");
 
@@ -684,9 +684,6 @@ static struct node *expr(struct lexer *lex)
 
     ret = new_nop(lex);
     /* }}} */
-  }
-  else if (accept_keyword(lex, "wobbly")){
-    ret = new_wobbly(lex);
   }
   else if ((return_type = type(lex)) != NULL){ /* a type (ie. a function) */
     /* {{{ */

@@ -39,8 +39,7 @@ enum node_type {
   NT_BLOCK,
   NT_FUN,
   NT_USE,
-  NT_PRINT,
-  NT_WOBBLY
+  NT_PRINT
 };
 
 enum unop_type {
@@ -160,7 +159,6 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
     struct node *elsee);
 struct node *new_fun(struct lexer *lex, char *name, struct nob_type *ret_type,
     struct nob_type **params, struct node *body, char *opts, bool execute);
-struct node *new_wobbly(struct lexer *lex);
 struct node *new_print(struct lexer *lex, struct nodes_list *exprs);
 
 void exec_nodes(struct node *node);

@@ -330,11 +330,6 @@ void dump_fun(struct node *nd)
   DEDENT();
 }
 
-void dump_wobbly(struct node *nd)
-{
-  printf("+ (#%u) wobbly\n", nd->id);
-}
-
 void dump_print(struct node *nd)
 {
   struct nodes_list *expr;
@@ -482,15 +477,6 @@ struct node *exec_fun(struct node *nd)
       EXEC(e);
     } while ((e = e->next) != NULL);
   }
-
-  RETURN_NEXT;
-  /* }}} */
-}
-
-struct node *exec_wobbly(struct node *nd)
-{
-  /* {{{ */
-  printf("wobbly dobbly!\n");
 
   RETURN_NEXT;
   /* }}} */
@@ -690,25 +676,6 @@ struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type
     debug_ast_new(nd, "fun (%s, #%u, %d)", name, body->id, execute);
   else
     debug_ast_new(nd, "lambda (#%u, %d)", name, body->id, execute);
-
-  return nd;
-  /* }}} */
-}
-
-struct node *new_wobbly(struct lexer *lex)
-{
-  /* {{{ */
-  struct node *nd = new_node(lex);
-
-  nd->id = currid++;
-  nd->type = NT_WOBBLY;
-  nd->execf = exec_wobbly;
-#if DEBUG
-  nd->dumpf = dump_wobbly;
-#endif
-  nd->next = NULL;
-
-  debug_ast_new(nd, "wobbly");
 
   return nd;
   /* }}} */
