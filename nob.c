@@ -20,6 +20,7 @@
 
 #include "mem.h"
 #include "nob.h"
+#include "infnum.h"
 #include "util.h"
 
 /* global variables to make the life easier, and not to have to remember the
@@ -163,8 +164,12 @@ Nob *new_nob(struct nob_type *type, ...)
     case OT_INTEGER:
     {
       /* {{{ */
-      int64_t value = va_arg(vl, int64_t);
-      /* TODO: set it's value */
+      char *value = va_arg(vl, char *);
+      struct infnum num = infnum_from_str(value);
+
+      new.ptr = nmalloc(sizeof(struct infnum));
+      *(struct infnum *)new.ptr = num;
+
       break;
       /* }}} */
     }

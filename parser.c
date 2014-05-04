@@ -582,6 +582,50 @@ static struct node *expr(struct lexer *lex)
     ret = new_decl(lex, name, flags, value);
     /* }}} */
   }
+  else if (accept_keyword(lex, "print")){
+    /* {{{ */
+    struct nodes_list *exprs = NULL, *new;
+    struct node *e;
+    struct nodes_list *prev, *curr, *next;
+
+    printf("print ");
+
+    if ((e = no_comma_expr(lex)) != NULL){
+      struct nodes_list *new = nmalloc(sizeof(struct nodes_list));
+
+      new->node = e;
+      new->next = exprs;
+      exprs = new;
+
+      while (accept(lex, TOK_COMMA)){
+        printf(", ");
+        e = no_comma_expr(lex);
+
+        if (e){
+          new = nmalloc(sizeof(struct nodes_list));
+          new->node = e;
+          new->next = exprs;
+          exprs = new;
+        }
+      }
+    }
+
+    /* reverse the list */
+    prev = NULL;
+    curr = exprs;
+
+    while (curr != NULL){
+      next = curr->next;
+      curr->next = prev;
+      prev = curr;
+      curr = next;
+    }
+
+    exprs = prev;
+
+    ret = new_print(lex, exprs);
+    /* }}} */
+  }
   else if (accept_keyword(lex, "typedef")){
     /* {{{ */
     struct nob_type *new_type;

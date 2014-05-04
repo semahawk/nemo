@@ -38,6 +38,7 @@ static const char *keywords[] =
   "if", "unless", "while", "until", "else",
   "my", "const",
   "typedef", "lim",
+  "print",
   NULL
 };
 

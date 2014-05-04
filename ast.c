@@ -31,8 +31,8 @@
 static struct node *NM_pc = NULL;
 
 /* the argument stack */
-static Nob   *NM_as      = NULL;
-static Nob   *NM_as_curr = NULL;
+static Nob  **NM_as      = NULL;
+static Nob  **NM_as_curr = NULL;
 static size_t NM_as_size = 16;
 
 /* the current node's id */
@@ -64,7 +64,7 @@ void arg_stack_push(Nob *ob, const char *file, unsigned line)
     NM_as_curr = NM_as + offset; /* adjust the 'current' pointer */
   }
 
-  NM_as_curr = ob; /* set up the current `cell' */
+  *NM_as_curr = ob; /* set up the current `cell' */
   NM_as_curr++; /* move on to the next `cell' */
 }
 
@@ -79,12 +79,12 @@ Nob *arg_stack_pop(const char *file, unsigned line)
 
   NM_as_curr--;
 
-  return NM_as_curr;
+  return *NM_as_curr;
 }
 
 Nob *arg_stack_top(void)
 {
-  return NM_as_curr - 1;
+  return *(NM_as_curr - 1);
 }
 
 void arg_stack_dump(void)
@@ -313,7 +313,11 @@ void dump_fun(struct node *nd)
 {
   struct node *d = nd->in.fun.body;
 
-  printf("+ (#%u) fun (%s)\n", nd->id, nd->in.fun.name);
+  if (nd->in.fun.name)
+    printf("+ (#%u) fun (%s)\n", nd->id, nd->in.fun.name);
+  else
+    printf("+ (#%u) lambda\n", nd->id);
+
   INDENT();
   DUMPP("- body:");
   INDENT();
@@ -329,6 +333,23 @@ void dump_fun(struct node *nd)
 void dump_wobbly(struct node *nd)
 {
   printf("+ (#%u) wobbly\n", nd->id);
+}
+
+void dump_print(struct node *nd)
+{
+  struct nodes_list *expr;
+
+  printf("+ (#%u) print\n", nd->id);
+  INDENT();
+
+  for (expr = nd->in.print.exprs; expr != NULL; expr = expr->next){
+    DUMPP("- expr:");
+    INDENT();
+    DUMP(expr->node);
+    DEDENT();
+  }
+
+  DEDENT();
 }
 /* }}} */
 #endif /* DEBUG */
@@ -357,7 +378,7 @@ struct node *exec_const(struct node *nd)
   /* {{{  */
   if (nd->type == NT_INTEGER){
     debug_ast_exec(nd, "integer (%s)", infnum_to_str(nd->in.i));
-    PUSH(new_nob(T_WORD, nd->in.i));
+    PUSH(new_nob(T_INT, nd->in.i));
   } else if (nd->type == NT_FLOAT){
     debug_ast_exec(nd, "float (%f)", nd->in.f);
     /* FIXME */
@@ -470,6 +491,39 @@ struct node *exec_wobbly(struct node *nd)
 {
   /* {{{ */
   printf("wobbly dobbly!\n");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *exec_print(struct node *nd)
+{
+  /* {{{ */
+  struct nodes_list *expr;
+  Nob *value;
+
+  debug_ast_exec(nd, "print");
+
+  for (expr = nd->in.print.exprs; expr != NULL; expr = expr->next){
+    EXEC(expr->node);
+    value = POP();
+
+    switch (value->type->primitive){
+      case OT_INTEGER:
+        printf("%s", infnum_to_str(*(struct infnum *)value->ptr));
+        break;
+
+      /* fall through */
+      case OT_REAL:
+      case OT_CHAR:
+      case OT_STRING:
+      case OT_TUPLE:
+      case OT_LIST:
+      case OT_FUN:
+      case OT_ANY:
+        break;
+    }
+  }
 
   RETURN_NEXT;
   /* }}} */
@@ -632,7 +686,10 @@ struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type
 #endif
   nd->next = NULL;
 
-  debug_ast_new(nd, "fun (%s, #%u, %d)", name, body->id, execute);
+  if (name)
+    debug_ast_new(nd, "fun (%s, #%u, %d)", name, body->id, execute);
+  else
+    debug_ast_new(nd, "lambda (#%u, %d)", name, body->id, execute);
 
   return nd;
   /* }}} */
@@ -652,6 +709,26 @@ struct node *new_wobbly(struct lexer *lex)
   nd->next = NULL;
 
   debug_ast_new(nd, "wobbly");
+
+  return nd;
+  /* }}} */
+}
+
+struct node *new_print(struct lexer *lex, struct nodes_list *exprs)
+{
+  /* {{{ */
+  struct node *nd = new_node(lex);
+
+  nd->id = currid++;
+  nd->type = NT_PRINT;
+  nd->in.print.exprs = exprs;
+  nd->execf = exec_print;
+#if DEBUG
+  nd->dumpf = dump_print;
+#endif
+  nd->next = NULL;
+
+  debug_ast_new(nd, "print");
 
   return nd;
   /* }}} */

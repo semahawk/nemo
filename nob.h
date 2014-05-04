@@ -95,7 +95,7 @@ typedef struct nob {
   /* the object's type, d'oh */
   struct nob_type *type;
   /* pointer to the object's actual value */
-  byte_t *ptr;
+  void *ptr;
 } Nob;
 
 void types_init(void);

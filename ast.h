@@ -22,6 +22,7 @@
 
 /* forward */
 struct lexer;
+struct nodes_list;
 
 enum node_type {
   NT_NOP,
@@ -38,6 +39,7 @@ enum node_type {
   NT_BLOCK,
   NT_FUN,
   NT_USE,
+  NT_PRINT,
   NT_WOBBLY
 };
 
@@ -134,7 +136,16 @@ struct node {
       /* if `false' it has to be called explicitly */
       bool execute;
     } fun;
+
+    struct { /* NT_PRINT */
+      struct nodes_list *exprs;
+    } print;
   } in;
+};
+
+struct nodes_list {
+  struct node *node;
+  struct nodes_list *next;
 };
 
 struct node *new_nop(struct lexer *lex);
@@ -147,9 +158,10 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
     struct node *left, struct node *right);
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
     struct node *elsee);
-struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type,
+struct node *new_fun(struct lexer *lex, char *name, struct nob_type *ret_type,
     struct nob_type **params, struct node *body, char *opts, bool execute);
 struct node *new_wobbly(struct lexer *lex);
+struct node *new_print(struct lexer *lex, struct nodes_list *exprs);
 
 void exec_nodes(struct node *node);
 
