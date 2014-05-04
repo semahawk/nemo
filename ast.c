@@ -422,13 +422,45 @@ struct node *exec_unop(struct node *nd)
 struct node *exec_binop(struct node *nd)
 {
   /* {{{ */
+  Nob *left, *right;
+
   debug_ast_exec(nd, "binop ('op?', #%u, #%u)", nd->in.binop.left->id, nd->in.binop.right->id);
 
   EXEC(nd->in.binop.left);
   EXEC(nd->in.binop.right);
 
+  right = POP();
+  left  = POP();
+
   switch (nd->in.binop.type){
-    /* FIXME */
+    case BINARY_ADD:
+      PUSH(new_nob(T_INT, infnum_add(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
+      break;
+    case BINARY_SUB:
+      PUSH(new_nob(T_INT, infnum_sub(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
+      break;
+
+    /* fall through */
+    case BINARY_GT:
+    case BINARY_LT:
+    case BINARY_GE:
+    case BINARY_LE:
+    case BINARY_EQ:
+    case BINARY_NE:
+    /*case BINARY_ADD:*/
+    /*case BINARY_SUB:*/
+    case BINARY_MUL:
+    case BINARY_DIV:
+    case BINARY_MOD:
+    case BINARY_ASSIGN:
+    case BINARY_ASSIGN_ADD:
+    case BINARY_ASSIGN_SUB:
+    case BINARY_ASSIGN_MUL:
+    case BINARY_ASSIGN_DIV:
+    case BINARY_ASSIGN_MOD:
+    case BINARY_INDEX:
+    case BINARY_COMMA:
+        break;
     default: /* meh */;
   }
 
