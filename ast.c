@@ -458,7 +458,6 @@ struct node *exec_binop(struct node *nd)
     case BINARY_ASSIGN_MUL:
     case BINARY_ASSIGN_DIV:
     case BINARY_ASSIGN_MOD:
-    case BINARY_INDEX:
     case BINARY_COMMA:
         break;
     default: /* meh */;
@@ -733,6 +732,31 @@ struct node *new_print(struct lexer *lex, struct nodes_list *exprs)
   /* }}} */
 }
 /* }}} */
+
+const char *binop_to_s(enum binop_type type)
+{
+  switch (type){
+    case BINARY_GT:         return ">";
+    case BINARY_LT:         return "<";
+    case BINARY_GE:         return ">=";
+    case BINARY_LE:         return "<=";
+    case BINARY_EQ:         return "==";
+    case BINARY_NE:         return "!=";
+    case BINARY_ADD:        return "+";
+    case BINARY_SUB:        return "-";
+    case BINARY_MUL:        return "*";
+    case BINARY_DIV:        return "/";
+    case BINARY_MOD:        return "%";
+    case BINARY_ASSIGN:     return "=";
+    case BINARY_ASSIGN_ADD: return "+=";
+    case BINARY_ASSIGN_SUB: return "-=";
+    case BINARY_ASSIGN_MUL: return "*=";
+    case BINARY_ASSIGN_DIV: return "/=";
+    case BINARY_ASSIGN_MOD: return "%=";
+    case BINARY_COMMA:      return ",";
+    default: return "#unknown#binop_to_s#";
+  }
+}
 
 /*
  * vi: ft=c:ts=2:sw=2:expandtab

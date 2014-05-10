@@ -70,7 +70,6 @@ enum binop_type {
   BINARY_ASSIGN_MUL,
   BINARY_ASSIGN_DIV,
   BINARY_ASSIGN_MOD,
-  BINARY_INDEX,
   BINARY_COMMA
 };
 
@@ -84,6 +83,7 @@ struct node {
 #if DEBUG
   void (*dumpf)(struct node *);
 #endif
+  bool lvalue; /* is it an lvalue? if not, it's only a rvalue */
   union {
     struct infnum i;   /* NT_INTEGER */
     float f; /* NT_FLOAT */
@@ -178,6 +178,8 @@ void arg_stack_finish(void);
 void arg_stack_push(Nob *ob, const char *file, unsigned line);
 Nob *arg_stack_pop(const char *file, unsigned line);
 Nob *arg_stack_top(void);
+
+const char *binop_to_s(enum binop_type);
 
 #endif /* AST_H */
 
