@@ -32,6 +32,7 @@ enum node_type {
   NT_NAME,
   NT_UNOP,
   NT_BINOP,
+  NT_TERNOP,
   NT_IF,
   NT_WHILE,
   NT_DECL,
@@ -99,6 +100,10 @@ struct node {
       struct node *left, *right;
     } binop;
 
+    struct { /* NT_TERNOP */
+      struct node *predicate, *yes, *no;
+    } ternop;
+
     struct { /* NT_DECL (my [flags] <name> [= <value>]) */
       char *name;
       uint8_t flags;
@@ -155,6 +160,8 @@ struct node *new_unop(struct lexer *lex, enum unop_type type,
     struct node *target);
 struct node *new_binop(struct lexer *lex, enum binop_type type,
     struct node *left, struct node *right);
+struct node *new_ternop(struct lexer *lex, struct node *predicate,
+    struct node *yes, struct node *no);
 struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
     struct node *elsee);
 struct node *new_fun(struct lexer *lex, char *name, struct nob_type *ret_type,

@@ -290,6 +290,24 @@ void dump_binop(struct node *nd)
   DEDENT();
 }
 
+void dump_ternop(struct node *nd)
+{
+  printf("+ (#%u) ternop\n", nd->id);
+  INDENT();
+  DUMPP("- predicate:");
+  INDENT();
+  DUMP(nd->in.ternop.predicate);
+  DEDENT();
+  DUMPP("- 'true' branch:");
+  INDENT();
+  DUMP(nd->in.ternop.yes);
+  DEDENT();
+  DUMPP("- 'false' branch:");
+  INDENT();
+  DUMP(nd->in.ternop.no);
+  DEDENT();
+}
+
 void dump_if(struct node *nd)
 {
   printf("+ (#%u) if\n", nd->id);
@@ -461,6 +479,27 @@ struct node *exec_binop(struct node *nd)
     case BINARY_COMMA:
         break;
     default: /* meh */;
+  }
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *exec_ternop(struct node *nd)
+{
+  /* {{{ */
+  Nob *predicate, *yes, *no;
+
+  debug_ast_exec(nd, "ternop (#%u, #%u, #%u)", nd->in.ternop.predicate->id,
+      nd->in.ternop.yes->id, nd->in.ternop.no->id);
+
+  EXEC(nd->in.ternop.predicate);
+  predicate = POP();
+
+  if (nob_is_true(predicate)){
+    EXEC(nd->in.ternop.yes);
+  } else {
+    EXEC(nd->in.ternop.no);
   }
 
   RETURN_NEXT;
@@ -651,6 +690,29 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
   nd->next = NULL;
 
   debug_ast_new(nd, "binop ('op?', #%u, #%u)", nd->in.binop.left->id, nd->in.binop.right->id);
+
+  return nd;
+  /* }}} */
+}
+
+struct node *new_ternop(struct lexer *lex, struct node *predicate,
+    struct node *yes, struct node *no)
+{
+  /* {{{ */
+  struct node *nd = new_node(lex);
+
+  nd->id = currid++;
+  nd->type = NT_TERNOP;
+  nd->in.ternop.predicate = predicate;
+  nd->in.ternop.yes = yes;
+  nd->in.ternop.no = no;
+  nd->execf = exec_ternop;
+#if DEBUG
+  nd->dumpf = dump_ternop;
+#endif
+  nd->next = NULL;
+
+  debug_ast_new(nd, "ternop (#%u, #%u, #%u)", nd->in.ternop.predicate->id, nd->in.ternop.yes->id, nd->in.ternop.no->id);
 
   return nd;
   /* }}} */

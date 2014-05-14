@@ -110,6 +110,7 @@ size_t sizeof_nob(Nob *ob);
 void dump_types(void);
 void push_type(struct nob_type *type);
 const char *nob_type_to_s(enum nob_primitive_type);
+bool nob_is_true(Nob *ob);
 
 /* make the variables visible */
 extern struct nob_type *T_ANY;

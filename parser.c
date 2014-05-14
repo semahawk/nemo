@@ -38,6 +38,7 @@
 
 /* forward declarations */
 struct node *expr_list(struct lexer *lex);
+static struct node *expr(struct lexer *lex);
 
 /*
  * Fetches the type, at the lexer's current 'position'.
@@ -465,13 +466,50 @@ static struct node *eq_expr(struct lexer *lex)
   /* }}} */
 }
 
+static struct node *ternary_expr(struct lexer *lex)
+{
+  /* {{{ */
+  struct node *predicate, *yes, *no, *ret;
+
+  predicate = ret = eq_expr(lex);
+
+  if (accept(lex, TOK_QUESTION)){
+    if (predicate == NULL){
+      fprintf(stderr, "expected an expression for the predicate\n");
+      exit(1);
+    }
+
+    printf("? (");
+
+    if ((yes = expr(lex)) == NULL){
+      yes = predicate;
+    }
+
+    printf(") ");
+    force(lex, TOK_COLON);
+    printf(": (");
+
+    if ((no = ternary_expr(lex)) == NULL){
+      fprintf(stderr, "expected an expression for the 'no' branch\n");
+      exit(1);
+    }
+
+    printf(")");
+
+    ret = new_ternop(lex, predicate, yes, no);
+  }
+
+  return ret;
+  /* }}} */
+}
+
 static struct node *assign_expr(struct lexer *lex)
 {
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
 
-  left = ret = eq_expr(lex);
+  left = ret = ternary_expr(lex);
 
   while (peek(lex, TOK_EQ) /* TODO */){
     if (accept(lex, TOK_EQ)){
@@ -484,7 +522,7 @@ static struct node *assign_expr(struct lexer *lex)
       type = BINARY_ASSIGN;
     }
 
-    right = eq_expr(lex);
+    right = ternary_expr(lex);
 
     if (!right){
       fprintf(stderr, "assign_expr: expected an expression at the RHS of the binary '%s' operation\n", binop_to_s(type));
@@ -805,11 +843,11 @@ static struct node *expr(struct lexer *lex)
   else { /* none of the above */
     /* {{{ */
     ret = comma_expr(lex);
-    ret->lvalue = false;
+
+    if (ret)
+      ret->lvalue = false;
     /* }}} */
   }
-
-  assert(ret != NULL);
 
   return ret;
   /* }}} */

@@ -151,6 +151,7 @@ static Nob *push_nob(Nob *nob)
 /* that's a WIP, obviously */
 Nob *new_nob(struct nob_type *type, ...)
 {
+  /* {{{ */
   va_list vl;
   Nob new;
 
@@ -188,6 +189,7 @@ Nob *new_nob(struct nob_type *type, ...)
   va_end(vl);
 
   return push_nob(&new);
+  /* }}} */
 }
 
 /*
@@ -215,6 +217,7 @@ struct nob_type *get_type_by_name(char *name)
  */
 struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 {
+  /* {{{ */
   /* the new type */
   struct nob_type *new_type = nmalloc(sizeof(struct nob_type));
   /* the stdargs list */
@@ -306,6 +309,36 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   va_end(vl);
 
   return new_type;
+  /* }}} */
+}
+
+/*
+ * See if a given object is considered to be 'true'
+ */
+bool nob_is_true(Nob *ob)
+{
+  assert(ob);
+
+  switch (ob->type->primitive){
+    case OT_INTEGER:
+      if (infnum_cmp(*(struct infnum *)ob->ptr, infnum_from_str("0")) == INFNUM_CMP_EQ)
+        return false;
+      else
+        return true;
+
+    /* fall through */
+    case OT_REAL:
+    case OT_CHAR:
+    case OT_STRING:
+    case OT_TUPLE:
+    case OT_LIST:
+    case OT_FUN:
+    case OT_ANY:
+      return false;
+  }
+
+  /* should never get here */
+  return false;
 }
 
 /*
