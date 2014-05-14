@@ -578,14 +578,7 @@ static struct node *expr(struct lexer *lex)
   struct node *ret = NULL;
   struct nob_type *return_type;
 
-  if (accept(lex, TOK_SEMICOLON)){ /* NOP */
-    /* {{{ */
-    ret = new_nop(lex);
-    ret->lvalue = false;
-    printf("NOP;\n");
-    /* }}} */
-  }
-  else if (accept(lex, TOK_LMUSTASHE)){ /* a block */
+  if (accept(lex, TOK_LMUSTASHE)){ /* a block */
     /* {{{ */
     struct node *body;
 
@@ -646,7 +639,8 @@ static struct node *expr(struct lexer *lex)
     /* {{{ */
     char *name;
     uint8_t flags = 0x0;
-    struct node *value;
+    struct node *value = NULL;
+    struct nob_type *var_type;
 
     printf("my ");
 
@@ -654,14 +648,11 @@ static struct node *expr(struct lexer *lex)
       NOB_FLAG_SET(flags, NOB_FLAG_CONST);
     }
 
-    if (!type(lex)){
-      fprintf(stderr, "syntax error: expected a type for the variable declaration\n");
-      exit(1);
-    }
+    var_type = type(lex);
 
     putchar(' ');
     force(lex, TOK_NAME);
-    printf("%s", lex->curr_tok.value.s);
+    printf("%s ", lex->curr_tok.value.s);
     name = strdup(lex->curr_tok.value.s);
 
     /*
@@ -673,11 +664,22 @@ static struct node *expr(struct lexer *lex)
      * but hey, we need type inference first..
      */
 
-    if (accept(lex, TOK_EQ)){
+    if (peek(lex, TOK_LMUSTASHE)){
+      value = expr(lex);
+    } else if (accept(lex, TOK_EQ)){
       printf(" = ");
       /* my [type] name = expr... */
-      /* the variables initial value */
-      value = expr(lex);
+      /* the variable's initial value */
+      if ((value = expr(lex)) == NULL){
+        fprintf(stderr, "nothing was initialized\n");
+        exit(1);
+      }
+    } else {
+      /* see if a type was given */
+      if (!var_type){
+        fprintf(stderr, "uninitialized variables lacks a type declaration\n");
+        exit(1);
+      }
     }
 
     ret = new_decl(lex, name, flags, value);

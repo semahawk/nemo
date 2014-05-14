@@ -488,7 +488,7 @@ struct node *exec_binop(struct node *nd)
 struct node *exec_ternop(struct node *nd)
 {
   /* {{{ */
-  Nob *predicate, *yes, *no;
+  Nob *predicate;
 
   debug_ast_exec(nd, "ternop (#%u, #%u, #%u)", nd->in.ternop.predicate->id,
       nd->in.ternop.yes->id, nd->in.ternop.no->id);
@@ -641,7 +641,7 @@ struct node *new_decl(struct lexer *lex, char *name, uint8_t flags, struct node 
 #endif
   nd->next = NULL;
 
-  if (value)
+  if (value != NULL)
     debug_ast_new(nd, "declaration (#%u, 0x%02x) ", value->id, flags);
   else
     debug_ast_new(nd, "declaration (#--, 0x%02x) ", flags);

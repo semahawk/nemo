@@ -373,7 +373,13 @@ struct token force(struct lexer *lex, enum token_type type)
     advance(lex);
     return tok;
   } else {
-    fprintf(stderr, "%s:%u.%u: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
+    if (tok.type == TOK_KEYWORD)
+      fprintf(stderr, "%s:%u.%u: expected a %s instead of a keyword (%s)\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok.value.s);
+    else if (tok.type == TOK_NAME)
+      fprintf(stderr, "%s:%u.%u: expected a %s instead of a name (%s)\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok.value.s);
+    else
+      fprintf(stderr, "%s:%u.%u: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
+
     exit(1);
   }
   /* }}} */
