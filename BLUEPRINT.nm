@@ -204,7 +204,7 @@ my [(string cmd, { int; [string /* arguments */] } func)] = [
 /* function that takes two arguments: #1 a function which returns anything and
  * takes anything (ie. we don't know what kind of function would be passed) and
  * #2 a list of anything */
-[*] map {*}, [*]
+my {[*]; {*}, [*]} map =
 {
   return match %2 {
     [] => [];
@@ -215,7 +215,7 @@ my [(string cmd, { int; [string /* arguments */] } func)] = [
   };
 }
 
-int size [*]
+my {int; [*]} size =
 {
   return match %1 {
     [] => 0;

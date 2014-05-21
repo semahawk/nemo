@@ -197,7 +197,23 @@ static struct node *primary_expr(struct lexer *lex)
   /* {{{ */
   struct node *ret = NULL;
 
-  if (accept(lex, TOK_INTEGER)){
+  if (accept(lex, TOK_LMUSTASHE)){ /* a block */
+    /* {{{ */
+    struct node *body;
+
+    printf("{\n");
+
+    body = expr_list(lex);
+
+    force(lex, TOK_RMUSTASHE);
+    printf("}\n");
+
+    ret = new_fun(lex, NULL /* anonymous */, T_INT /* wait for inference */,
+        NULL /* no params */, body, NULL /* no opts */,
+        true /* execute right away */);
+    ret->lvalue = false; /* hmm.. */
+    /* }}} */
+  } else if (accept(lex, TOK_INTEGER)){
     printf("%s ", infnum_to_str(lex->curr_tok.value.i));
     ret = new_int(lex, lex->curr_tok.value.i);
     ret->lvalue = false;
@@ -251,7 +267,7 @@ static struct node *postfix_expr(struct lexer *lex)
       }
     } else if (accept(lex, TOK_LPAREN)){
       force(lex, TOK_RPAREN);
-      printf("()");
+      printf("(function call)");
     }
   }
 
@@ -576,26 +592,8 @@ static struct node *expr(struct lexer *lex)
 {
   /* {{{ */
   struct node *ret = NULL;
-  struct nob_type *return_type;
 
-  if (accept(lex, TOK_LMUSTASHE)){ /* a block */
-    /* {{{ */
-    struct node *body;
-
-    printf("{\n");
-
-    body = expr_list(lex);
-
-    force(lex, TOK_RMUSTASHE);
-    printf("}\n");
-
-    ret = new_fun(lex, NULL /* anonymous */, T_INT /* wait for inference */,
-        NULL /* no params */, body, NULL /* no opts */,
-        true /* execute right away */);
-    ret->lvalue = false; /* hmm.. */
-    /* }}} */
-  }
-  else if (accept_keyword(lex, "if")){
+  if (accept_keyword(lex, "if")){
     /* {{{ */
     struct node *guard;
     struct node *body;
@@ -788,57 +786,6 @@ static struct node *expr(struct lexer *lex)
     }
 
     ret = new_nop(lex);
-    ret->lvalue = false;
-    /* }}} */
-  }
-  else if ((return_type = type(lex)) != NULL){ /* a type (ie. a function) */
-    /* {{{ */
-    char *func_name = NULL;
-    struct nob_type *params[MAX_FUN_PARAMS + 1] = { 0 };
-    int curr_param = 0;
-    struct node *body;
-    struct nob_type *T;
-
-    /* optional name for the function */
-    if (accept(lex, TOK_NAME)){
-      func_name = strdup(lex->curr_tok.value.s);
-      printf(" %s", func_name);
-      /* TODO: append this function to the functions list */
-    }
-
-    force(lex, TOK_SEMICOLON);
-    printf("; ");
-
-    /* fetch the parameters' types */
-    if ((params[curr_param++] = type(lex)) != NULL){
-      /* a function with at least one parameter */
-      while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
-        /* a function with more parameters */
-        printf(", ");
-
-        if ((params[curr_param++] = type(lex)) == NULL){
-          printf("note: expected a type after the comma\n");
-        }
-      }
-
-      /* create a new type out of this */
-      T = new_type(NULL /* anonymous */, OT_FUN, return_type, params);
-    } else {
-      T = new_type(NULL /* anonymous */, OT_FUN, return_type, NULL);
-    }
-
-    force(lex, TOK_LMUSTASHE);
-    printf(" {\n");
-    body = expr_list(lex);
-    force(lex, TOK_RMUSTASHE);
-    printf("}\n");
-
-    if (!body){
-      fprintf(stderr, "expected a body for the function\n");
-      exit(1);
-    }
-
-    ret = new_fun(lex, func_name, T, params, body, NULL /* TODO opts */, false);
     ret->lvalue = false;
     /* }}} */
   }

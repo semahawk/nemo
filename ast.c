@@ -17,6 +17,7 @@
 #include "ast.h"
 #include "debug.h"
 #include "mem.h"
+#include "infnum.h"
 #include "nob.h"
 #include "lexer.h"
 #include "util.h"
@@ -93,7 +94,7 @@ void arg_stack_dump(void)
 
   printf("\n## Stack dump:\n");
   for (; i < NM_as_curr - NM_as; i++){
-    printf("  %x - %p", i, (void *)&NM_as[i]);
+    printf("  %x - %p (%s)", i, (void *)NM_as[i], nob_type_to_s(NM_as[i]->type->primitive));
     if (&NM_as[i] == NM_as_curr)
       printf(" <<<");
     printf("\n");
@@ -239,51 +240,7 @@ void dump_unop(struct node *nd)
 
 void dump_binop(struct node *nd)
 {
-  printf("+ (#%u) binop ", nd->id);
-
-  switch (nd->in.binop.type){
-    case BINARY_ADD:
-      printf("'+'");
-      break;
-    case BINARY_SUB:
-      printf("'-'");
-      break;
-    case BINARY_MUL:
-      printf("'*'");
-      break;
-    case BINARY_DIV:
-      printf("'/'");
-      break;
-    case BINARY_MOD:
-      printf("'%%'");
-      break;
-    case BINARY_EQ:
-      printf("'=='");
-      break;
-    case BINARY_NE:
-      printf("'!='");
-      break;
-    case BINARY_LE:
-      printf("'<='");
-      break;
-    case BINARY_LT:
-      printf("'<'");
-      break;
-    case BINARY_GE:
-      printf("'>='");
-      break;
-    case BINARY_GT:
-      printf("'>'");
-      break;
-    case BINARY_COMMA:
-      printf("','");
-      break;
-    default:
-      printf("-- unknown");
-      break;
-  }
-  printf("\n");
-
+  printf("+ (#%u) binop '%s'\n", nd->id, binop_to_s(nd->in.binop.type));
   INDENT();
   DUMP(nd->in.binop.left);
   DUMP(nd->in.binop.right);
@@ -442,7 +399,8 @@ struct node *exec_binop(struct node *nd)
   /* {{{ */
   Nob *left, *right;
 
-  debug_ast_exec(nd, "binop ('op?', #%u, #%u)", nd->in.binop.left->id, nd->in.binop.right->id);
+  debug_ast_exec(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
+      nd->in.binop.left->id, nd->in.binop.right->id);
 
   EXEC(nd->in.binop.left);
   EXEC(nd->in.binop.right);
@@ -538,14 +496,19 @@ struct node *exec_if(struct node *nd)
 struct node *exec_fun(struct node *nd)
 {
   /* {{{ */
-  struct node *e = nd->in.fun.body;
+  struct node *e;
 
   if (nd->in.fun.execute){
     debug_ast_exec(nd, "executing a function");
 
-    do {
+    for (e = nd->in.fun.body; e != NULL; e = e->next){
       EXEC(e);
-    } while ((e = e->next) != NULL);
+
+      /* leave only the last expression on the stack */
+      /* which effectively makes it the function's return value */
+      if (e->next != NULL)
+        POP();
+    }
   }
 
   RETURN_NEXT;
@@ -580,6 +543,8 @@ struct node *exec_print(struct node *nd)
         break;
     }
   }
+
+  PUSH(new_nob(T_INT, "1"));
 
   RETURN_NEXT;
   /* }}} */
@@ -689,7 +654,8 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
 #endif
   nd->next = NULL;
 
-  debug_ast_new(nd, "binop ('op?', #%u, #%u)", nd->in.binop.left->id, nd->in.binop.right->id);
+  debug_ast_new(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
+      nd->in.binop.left->id, nd->in.binop.right->id);
 
   return nd;
   /* }}} */
