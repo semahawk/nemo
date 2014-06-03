@@ -397,11 +397,11 @@ struct token force(struct parser *parser, struct lexer *lex, enum token_type typ
     return tok;
   } else {
     if (tok.type == TOK_KEYWORD)
-      fprintf(stderr, "%s:%u.%u: expected a %s instead of a keyword (%s)\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok.value.s);
+      fprintf(stderr, "%s:%u.%u: error: expected a %s instead of a keyword (%s)\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok.value.s);
     else if (tok.type == TOK_NAME)
-      fprintf(stderr, "%s:%u.%u: expected a %s instead of a name (%s)\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok.value.s);
+      fprintf(stderr, "%s:%u.%u: error: expected a %s instead of a name (%s)\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok.value.s);
     else
-      fprintf(stderr, "%s:%u.%u: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
+      fprintf(stderr, "%s:%u.%u: error: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
 
     parser->errorless = false;
     /* shut up, errors */
@@ -415,7 +415,7 @@ bool force_keyword(struct parser *parser, struct lexer *lex, const char *name)
   /* {{{ force_keyword body */
   if (peek(lex, TOK_KEYWORD)){
     if (!strcmp(name, lex->curr_tok.value.s)){
-      force(parser, lex, TOK_KEYWORD);
+      skip(lex);
       return true;
     }
   }

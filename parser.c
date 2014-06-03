@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -40,6 +41,20 @@
 /* forward declarations */
 struct node *expr_list(struct parser *parser, struct lexer *lex);
 static struct node *expr(struct parser *parser, struct lexer *lex);
+
+/*
+ * Prints a nicely error message.
+ */
+static void err(struct lexer *lex, const char *fmt, ...)
+{
+  va_list vl;
+
+  va_start(vl, fmt);
+  fprintf(stderr, "%s:%u.%u: error: ", lex->name, lex->line, lex->col);
+  vfprintf(stderr, fmt, vl);
+  fprintf(stderr, "\n");
+  va_end(vl);
+}
 
 /*
  * Fetches the type, at the lexer's current 'position'.
@@ -351,7 +366,7 @@ static struct node *mul_expr(struct parser *parser, struct lexer *lex)
     right = prefix_expr(parser, lex);
 
     if (!right){
-      fprintf(stderr, "mul_expr: expected an expression at the RHS of the binary '%s' operation\n", binop_to_s(type));
+      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       parser->errorless = false;
       return NULL;
     }
@@ -385,7 +400,7 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
     right = mul_expr(parser, lex);
 
     if (!right){
-      fprintf(stderr, "add_expr: expected an expression at the RHS of the binary '%s' operation\n", binop_to_s(type));
+      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       parser->errorless = false;
       return NULL;
     }
@@ -429,7 +444,7 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
     right = add_expr(parser, lex);
 
     if (!right){
-      fprintf(stderr, "cond_expr: expected an expression at the RHS of the binary '%s' operation\n", binop_to_s(type));
+      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       parser->errorless = false;
       return NULL;
     }
@@ -473,7 +488,7 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
     right = cond_expr(parser, lex);
 
     if (!right){
-      fprintf(stderr, "eq_expr: expected an expression at the RHS of the binary '%s' operation\n", binop_to_s(type));
+      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       parser->errorless = false;
       return NULL;
     }
@@ -496,7 +511,7 @@ static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
 
   if (accept(lex, TOK_QUESTION)){
     if (predicate == NULL){
-      fprintf(stderr, "expected an expression for the predicate\n");
+      err(lex, "expected an expression for the predicate");
       parser->errorless = false;
       return NULL;
     }
@@ -512,7 +527,7 @@ static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
     printf(": (");
 
     if ((no = ternary_expr(parser, lex)) == NULL){
-      fprintf(stderr, "expected an expression for the 'no' branch\n");
+      err(lex, "expected an expression for the 'no' branch");
       parser->errorless = false;
       return NULL;
     }
@@ -537,7 +552,7 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
   while (peek(lex, TOK_EQ) /* TODO */){
     if (accept(lex, TOK_EQ)){
       if (left->lvalue == false){
-        fprintf(stderr, "expected an lvalue at the LHS of the binary '=' operation\n");
+        err(lex, "expected an lvalue at the LHS of the binary '=' operation");
         parser->errorless = false;
         return NULL;
       }
@@ -549,7 +564,7 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
     right = ternary_expr(parser, lex);
 
     if (!right){
-      fprintf(stderr, "assign_expr: expected an expression at the RHS of the binary '%s' operation\n", binop_to_s(type));
+      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       parser->errorless = false;
       return NULL;
     }
@@ -583,8 +598,8 @@ static struct node *comma_expr(struct parser *parser, struct lexer *lex)
     right = no_comma_expr(parser, lex);
 
     if (!right){
-      fprintf(stderr, "comma_expr: expected an expression at the RHS of the"
-          " binary '%s' operation\n", binop_to_s(BINARY_COMMA));
+      err(lex, "expected an expression at the RHS of the"
+          " binary '%s' operation", binop_to_s(BINARY_COMMA));
       parser->errorless = false;
       return NULL;
     }
@@ -616,7 +631,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     guard = expr(parser, lex);
     /* no expression, that's a bummer */
     if (!guard){
-      fprintf(stderr, "%s:%u.%u: warning: expected an expression for if's guard\n", lex->name, lex->line, lex->col);
+      err(lex, "expected an expression for if's guard");
       parser->errorless = false;
       return NULL;
     }
@@ -627,7 +642,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     body = expr(parser, lex);
 
     if (!body){
-      fprintf(stderr, "%s:%u.%u: warning: expected an expression for if's body\n", lex->name, lex->line, lex->col);
+      err(lex, "expected an expression for if's body");
       parser->errorless = false;
       return NULL;
     }
@@ -637,7 +652,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     elsee = expr(parser, lex);
 
     if (!elsee){
-      fprintf(stderr, "%s:%u.%u: warning: expected an expression for if's else branch\n", lex->name, lex->line, lex->col);
+      err(lex, "expected an expression for if's else branch");
       parser->errorless = false;
       return NULL;
     }
@@ -682,14 +697,14 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       /* my [type] name = expr... */
       /* the variable's initial value */
       if ((value = expr(parser, lex)) == NULL){
-        fprintf(stderr, "nothing was initialized\n");
+        err(lex, "nothing was initialized");
         parser->errorless = false;
         return NULL;
       }
     } else {
       /* see if a type was given */
       if (!var_type){
-        fprintf(stderr, "uninitialized variables lacks a type declaration\n");
+        err(lex, "uninitialized variables lacks a type declaration");
         parser->errorless = false;
         return NULL;
       }
@@ -752,7 +767,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     new_type = type(parser, lex);
     /* ouch, it's not really a type! */
     if (!new_type){
-      fprintf(stderr, "error: expected a type\n");
+      err(lex, "expected a type");
       parser->errorless = false;
       return NULL;
     }
@@ -779,7 +794,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
         printf(" lim ");
 
         if (newer_type->primitive != OT_INTEGER){
-          fprintf(stderr, "the construct `lim' is only supported for integers\n");
+          err(lex, "the construct `lim' is only supported for integers");
           parser->errorless = false;
           return NULL;
         }
@@ -790,7 +805,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
         upper = primary_expr(parser, lex);
 
         if (infnum_cmp(lower->in.i, upper->in.i) == INFNUM_CMP_GE){
-          fprintf(stderr, "invalid values for `lim'\n");
+          err(lex, "invalid values for `lim'");
           parser->errorless = false;
           return NULL;
         }
