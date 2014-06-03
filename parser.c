@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 
 #include "ast.h"
+#include "debug.h"
 #include "mem.h"
 #include "nob.h"
 #include "infnum.h"
@@ -34,7 +35,8 @@
     if (!peek(lex, TOK_RMUSTASHE) && \
         !peek(lex, TOK_EOS)){ \
       force(parser, lex, TOK_SEMICOLON); \
-      printf(" ENDSTMT;\n"); \
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)) \
+        printf(" ENDSTMT;\n"); \
     } \
   } while (0)
 
@@ -45,7 +47,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex);
 /*
  * Prints a nicely error message.
  */
-static void err(struct lexer *lex, const char *fmt, ...)
+static void err(struct parser *parser, struct lexer *lex, const char *fmt, ...)
 {
   va_list vl;
 
@@ -54,6 +56,8 @@ static void err(struct lexer *lex, const char *fmt, ...)
   vfprintf(stderr, fmt, vl);
   fprintf(stderr, "\n");
   va_end(vl);
+
+  parser->errorless = false;
 }
 
 /*
@@ -82,20 +86,24 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
   if (accept(lex, TOK_TIMES)){
     /* {{{ a polymorphic type (any) */
-    printf("* ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("* ");
     ret = T_ANY;
     /* }}} */
   } else if (accept(lex, TOK_TYPE)){
     /* {{{ a single worded type */
-    printf("%s", lex->curr_tok.value.s);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%s", lex->curr_tok.value.s);
     ret = get_type_by_name(lex->curr_tok.value.s);
     /* }}} */
   } else if (accept(lex, TOK_LMUSTASHE)){
     /* {{{ a function */
-    printf("{ ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("{ ");
     if (accept(lex, TOK_TIMES)){
       /* {{{ a polymorphic function {*} */
-      printf("*");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("*");
       ret = new_type(NULL /* no name */, OT_FUN, NULL, NULL /* hmm.. */);
       /* }}} */
     } else {
@@ -105,14 +113,16 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
       /* fetch the optional params types */
       if (accept(lex, TOK_SEMICOLON)){
-        printf("; ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("; ");
 
         /* {{{ { return type; ... } */
         if ((params[curr_param++] = type(parser, lex)) != NULL){
           /* a function with at least one parameter */
           while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
             /* a function with more parameters */
-            printf(", ");
+            if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+              printf(", ");
 
             if ((params[curr_param++] = type(parser, lex)) == NULL){
               printf("note: expected a type after the comma\n");
@@ -130,17 +140,19 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     }
 
     force(parser, lex, TOK_RMUSTASHE);
-    printf(" }");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(" }");
     /* }}} */
   } else if (accept(lex, TOK_LPAREN)){
     /* {{{ a tuple */
     /* TODO there should be no polymorphic types inside a tuple */
-    printf("(");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("(");
     fields[curr_field].type = type(parser, lex);
 
     if (fields[curr_field].type == NULL){
-      fprintf(stderr, "error: expected a type\n");
-      exit(1);
+      err(parser, lex, "expected a type");
+      return ret;
     }
 
 #define fetch_name(lex) \
@@ -152,15 +164,15 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
           struct field *p = fields; \
           for (; p->name != NULL && p->type != NULL; p++){ \
             if (!strcmp(p->name, lex->curr_tok.value.s)){ \
-              fprintf(stderr, "error: duplicate field names ('%s') in a tuple\n", p->name); \
-              exit(1); \
+              err(parser, lex, "duplicate field names ('%s') in a tuple", p->name); \
+              return ret; \
             } \
           } \
           printf(" %s", lex->curr_tok.value.s); \
           fields[curr_field].name = strdup(lex->curr_tok.value.s); \
         } else { \
-          fprintf(stderr, "the field is missing it's name"); \
-          exit(1); \
+          err(parser, lex, "the field is missing it's name"); \
+          return ret; \
         } \
       } while (0)
       /* }}} */
@@ -170,7 +182,8 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
     /* fetch more fields if present */
     while (accept(lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
-      printf(", ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(", ");
       fields[curr_field].type = type(parser, lex);
       fetch_name(lex);
       curr_field++;
@@ -184,23 +197,26 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 #undef fetch_name
 
     force(parser, lex, TOK_RPAREN);
-    printf(")");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(")");
     /* }}} */
   } else if (accept(lex, TOK_LBRACKET)){
     /* {{{ a list */
-    printf("[");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("[");
 
     return_type = type(parser, lex);
     /* it's not a return type, just reusing the variable */
     if (!return_type){
-      fprintf(stderr, "error: expected a type for the list\n");
-      exit(1);
+      err(parser, lex, "expected a type for the list");
+      return ret;
     }
 
     ret = new_type(NULL /* no name */, OT_LIST, return_type);
 
     force(parser, lex, TOK_RBRACKET);
-    printf("]");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("]");
     /* }}} */
   }
 
@@ -217,12 +233,14 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* {{{ */
     struct node *body;
 
-    printf("{\n");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("{\n");
 
     body = expr_list(parser, lex);
 
     force(parser, lex, TOK_RMUSTASHE);
-    printf("}\n");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("}\n");
 
     ret = new_fun(lex, NULL /* anonymous */, T_INT /* wait for inference */,
         NULL /* no params */, body, NULL /* no opts */,
@@ -230,19 +248,23 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false; /* hmm.. */
     /* }}} */
   } else if (accept(lex, TOK_INTEGER)){
-    printf("%s ", infnum_to_str(lex->curr_tok.value.i));
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%s ", infnum_to_str(lex->curr_tok.value.i));
     ret = new_int(lex, lex->curr_tok.value.i);
     ret->lvalue = false;
   } else if (accept(lex, TOK_FLOAT)){
-    printf("%f=16 ", lex->curr_tok.value.f);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%f=16 ", lex->curr_tok.value.f);
     ret = new_int(lex, infnum_from_int(16));
     ret->lvalue = false;
   } else if (accept(lex, TOK_STRING)){
-    printf("\"%s\"=32", lex->curr_tok.value.sp);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("\"%s\"=32", lex->curr_tok.value.sp);
     ret = new_int(lex, infnum_from_int(32));
     ret->lvalue = false;
   } else if (accept(lex, TOK_NAME)){
-    printf("%s=0x6e ", lex->curr_tok.value.s /* meh */);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%s=0x6e ", lex->curr_tok.value.s /* meh */);
     ret = new_int(lex, infnum_from_int(0x6e));
     ret->lvalue = true;
   }
@@ -266,7 +288,8 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
     if (accept(lex, TOK_PLUS)){
       if (accept(lex, TOK_PLUS)){
         /* target ++ */
-        printf(" postfix(++)");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(" postfix(++)");
         ret = new_unop(lex, UNARY_POSTINC, target);
         ret->lvalue = false;
       } else {
@@ -275,7 +298,8 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
     } else if (accept(lex, TOK_MINUS)){
       if (accept(lex, TOK_MINUS)){
         /* target -- */
-        printf(" postfix(--)");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(" postfix(--)");
         ret = new_unop(lex, UNARY_POSTDEC, target);
         ret->lvalue = false;
       } else {
@@ -283,7 +307,8 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       }
     } else if (accept(lex, TOK_LPAREN)){
       force(parser, lex, TOK_RPAREN);
-      printf("(function call)");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("(function call)");
     }
   }
 
@@ -301,13 +326,15 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
     if (accept(lex, TOK_PLUS)){
       if (accept(lex, TOK_PLUS)){
         /* ++ target */
-        printf("prefix(++) ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("prefix(++) ");
         target = postfix_expr(parser, lex);
         target->lvalue = false;
         type = UNARY_PREINC;
       } else {
         /*  + target */
-        printf("prefix(+) ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("prefix(+) ");
         target = postfix_expr(parser, lex);
         target->lvalue = false;
         type = UNARY_PLUS;
@@ -315,20 +342,23 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
     } else if (accept(lex, TOK_MINUS)){
       if (accept(lex, TOK_MINUS)){
         /* -- target */
-        printf("prefix(--) ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("prefix(--) ");
         target = postfix_expr(parser, lex);
         target->lvalue = false;
         type = UNARY_PREDEC;
       } else {
         /*  - target */
-        printf("prefix(-) ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("prefix(-) ");
         target = postfix_expr(parser, lex);
         target->lvalue = false;
         type = UNARY_MINUS;
       }
     } else if (accept(lex, TOK_BANG)){
       /*  ! target */
-      printf("prefix(!) ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("prefix(!) ");
       target = postfix_expr(parser, lex);
       target->lvalue = false;
       type = UNARY_NEGATE;
@@ -353,21 +383,23 @@ static struct node *mul_expr(struct parser *parser, struct lexer *lex)
 
   while (peek(lex, TOK_TIMES) || peek(lex, TOK_SLASH) || peek(lex, TOK_PERCENT)){
     if (accept(lex, TOK_TIMES)){
-      printf("* ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("* ");
       type = BINARY_MUL;
     } else if (accept(lex, TOK_SLASH)){
-      printf("/ ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("/ ");
       type = BINARY_DIV;
     } else if (accept(lex, TOK_PERCENT)){
-      printf("%% ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("%% ");
       type = BINARY_MOD;
     }
 
     right = prefix_expr(parser, lex);
 
     if (!right){
-      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
-      parser->errorless = false;
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       return NULL;
     }
 
@@ -390,18 +422,19 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
 
   while (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS)){
     if (accept(lex, TOK_PLUS)){
-      printf("+ ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("+ ");
       type = BINARY_ADD;
     } else if (accept(lex, TOK_MINUS)){
-      printf("- ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("- ");
       type = BINARY_SUB;
     }
 
     right = mul_expr(parser, lex);
 
     if (!right){
-      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
-      parser->errorless = false;
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       return NULL;
     }
 
@@ -425,18 +458,22 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
   if (peek(lex, TOK_LCHEVRON) || peek(lex, TOK_RCHEVRON)){
     if (accept(lex, TOK_LCHEVRON)){
       if (accept(lex, TOK_EQ)){
-        printf("<= ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("<= ");
         type = BINARY_LE;
       } else {
-        printf("< ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("< ");
         type = BINARY_LT;
       }
     } else if (accept(lex, TOK_RCHEVRON)){
       if (accept(lex, TOK_EQ)){
-        printf(">= ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(">= ");
         type = BINARY_GE;
       } else {
-        printf("> ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("> ");
         type = BINARY_GT;
       }
     }
@@ -444,8 +481,7 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
     right = add_expr(parser, lex);
 
     if (!right){
-      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
-      parser->errorless = false;
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       return NULL;
     }
 
@@ -472,7 +508,8 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
 
     if (accept(lex, TOK_EQ)){
       if (accept(lex, TOK_EQ)){
-        printf("== ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("== ");
         type = BINARY_EQ;
       } else {
         *lex = save_lex;
@@ -480,7 +517,8 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
       }
     } else if (accept(lex, TOK_BANG)){
       if (accept(lex, TOK_EQ)){
-        printf("!= ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("!= ");
         type = BINARY_NE;
       }
     }
@@ -488,8 +526,7 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
     right = cond_expr(parser, lex);
 
     if (!right){
-      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
-      parser->errorless = false;
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       return NULL;
     }
 
@@ -511,28 +548,30 @@ static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
 
   if (accept(lex, TOK_QUESTION)){
     if (predicate == NULL){
-      err(lex, "expected an expression for the predicate");
-      parser->errorless = false;
+      err(parser, lex, "expected an expression for the predicate");
       return NULL;
     }
 
-    printf("? (");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("? (");
 
     if ((yes = expr(parser, lex)) == NULL){
       yes = predicate;
     }
 
-    printf(") ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(") ");
     force(parser, lex, TOK_COLON);
-    printf(": (");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(": (");
 
     if ((no = ternary_expr(parser, lex)) == NULL){
-      err(lex, "expected an expression for the 'no' branch");
-      parser->errorless = false;
+      err(parser, lex, "expected an expression for the 'no' branch");
       return NULL;
     }
 
-    printf(")");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(")");
 
     ret = new_ternop(lex, predicate, yes, no);
   }
@@ -552,20 +591,19 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
   while (peek(lex, TOK_EQ) /* TODO */){
     if (accept(lex, TOK_EQ)){
       if (left->lvalue == false){
-        err(lex, "expected an lvalue at the LHS of the binary '=' operation");
-        parser->errorless = false;
+        err(parser, lex, "expected an lvalue at the LHS of the binary '=' operation");
         return NULL;
       }
 
-      printf("= ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("= ");
       type = BINARY_ASSIGN;
     }
 
     right = ternary_expr(parser, lex);
 
     if (!right){
-      err(lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
-      parser->errorless = false;
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
       return NULL;
     }
 
@@ -593,14 +631,14 @@ static struct node *comma_expr(struct parser *parser, struct lexer *lex)
   left = ret = no_comma_expr(parser, lex);
 
   while (accept(lex, TOK_COMMA)){
-    printf(", ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(", ");
 
     right = no_comma_expr(parser, lex);
 
     if (!right){
-      err(lex, "expected an expression at the RHS of the"
+      err(parser, lex, "expected an expression at the RHS of the"
           " binary '%s' operation", binop_to_s(BINARY_COMMA));
-      parser->errorless = false;
       return NULL;
     }
 
@@ -624,36 +662,37 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     struct node *body;
     struct node *elsee;
 
-    printf("if ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("if ");
     force(parser, lex, TOK_LPAREN);
-    printf("(");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("(");
 
     guard = expr(parser, lex);
     /* no expression, that's a bummer */
     if (!guard){
-      err(lex, "expected an expression for if's guard");
-      parser->errorless = false;
+      err(parser, lex, "expected an expression for if's guard");
       return NULL;
     }
 
     force(parser, lex, TOK_RPAREN);
-    printf(")\n");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(")\n");
 
     body = expr(parser, lex);
 
     if (!body){
-      err(lex, "expected an expression for if's body");
-      parser->errorless = false;
+      err(parser, lex, "expected an expression for if's body");
       return NULL;
     }
 
     force_keyword(parser, lex, "else");
-    printf("else ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("else ");
     elsee = expr(parser, lex);
 
     if (!elsee){
-      err(lex, "expected an expression for if's else branch");
-      parser->errorless = false;
+      err(parser, lex, "expected an expression for if's else branch");
       return NULL;
     }
 
@@ -668,7 +707,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     struct node *value = NULL;
     struct nob_type *var_type;
 
-    printf("my ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("my ");
 
     if (accept_keyword(lex, "const")){
       NOB_FLAG_SET(flags, NOB_FLAG_CONST);
@@ -678,7 +718,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     putchar(' ');
     force(parser, lex, TOK_NAME);
-    printf("%s ", lex->curr_tok.value.s);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%s ", lex->curr_tok.value.s);
     name = strdup(lex->curr_tok.value.s);
 
     /*
@@ -693,19 +734,18 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     if (peek(lex, TOK_LMUSTASHE)){
       value = expr(parser, lex);
     } else if (accept(lex, TOK_EQ)){
-      printf(" = ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(" = ");
       /* my [type] name = expr... */
       /* the variable's initial value */
       if ((value = expr(parser, lex)) == NULL){
-        err(lex, "nothing was initialized");
-        parser->errorless = false;
+        err(parser, lex, "nothing was initialized");
         return NULL;
       }
     } else {
       /* see if a type was given */
       if (!var_type){
-        err(lex, "uninitialized variables lacks a type declaration");
-        parser->errorless = false;
+        err(parser, lex, "uninitialized variables lacks a type declaration");
         return NULL;
       }
     }
@@ -720,7 +760,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     struct nodes_list *prev, *curr, *next;
     struct node *e;
 
-    printf("print ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("print ");
 
     if ((e = no_comma_expr(parser, lex)) != NULL){
       struct nodes_list *new = nmalloc(sizeof(struct nodes_list));
@@ -730,7 +771,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       exprs = new;
 
       while (accept(lex, TOK_COMMA)){
-        printf(", ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(", ");
         e = no_comma_expr(parser, lex);
 
         if (e){
@@ -763,17 +805,18 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     /* {{{ */
     struct nob_type *new_type;
 
-    printf("typedef ");
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("typedef ");
     new_type = type(parser, lex);
     /* ouch, it's not really a type! */
     if (!new_type){
-      err(lex, "expected a type");
-      parser->errorless = false;
+      err(parser, lex, "expected a type");
       return NULL;
     }
     /* get the name for the type */
     force(parser, lex, TOK_NAME);
-    printf(" %s", lex->curr_tok.value.s);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(" %s", lex->curr_tok.value.s);
     /* if the type's name is NULL, then it's an anonymous type, which means
      * that simply setting it's name would do the thing just perfectly */
     if (new_type->name == NULL){
@@ -791,22 +834,22 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
       if (accept_keyword(lex, "lim")){
         struct node *lower, *upper;
-        printf(" lim ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(" lim ");
 
         if (newer_type->primitive != OT_INTEGER){
-          err(lex, "the construct `lim' is only supported for integers");
-          parser->errorless = false;
+          err(parser, lex, "the construct `lim' is only supported for integers");
           return NULL;
         }
 
         lower = primary_expr(parser, lex);
         force(parser, lex, TOK_COMMA);
-        printf(", ");
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(", ");
         upper = primary_expr(parser, lex);
 
         if (infnum_cmp(lower->in.i, upper->in.i) == INFNUM_CMP_GE){
-          err(lex, "invalid values for `lim'");
-          parser->errorless = false;
+          err(parser, lex, "invalid values for `lim'");
           return NULL;
         }
 
