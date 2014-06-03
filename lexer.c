@@ -354,7 +354,30 @@ static void debug_print_token(struct token tok)
 }
 #endif
 
-struct token force(struct lexer *lex, enum token_type type)
+void skip(struct lexer *lex)
+{
+  /* {{{ skip body */
+  struct token tok = fetch_token(lex);
+
+  if (tok.type == TOK_EOS){
+    err(lex, "unexpected <EOS>");
+  }
+
+#if DEBUG
+  /* {{{ */
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_LEXER)){
+    fprintf(stderr, "%s:%05u:%03u    skip  ", lex->name, lex->line, lex->col);
+    debug_print_token(tok);
+    fprintf(stderr, "\n");
+  }
+  /* }}} */
+#endif
+
+  advance(lex);
+  /* }}} */
+}
+
+struct token force(struct parser *parser, struct lexer *lex, enum token_type type)
 {
   /* {{{ force body */
   struct token tok = fetch_token(lex);
@@ -380,20 +403,24 @@ struct token force(struct lexer *lex, enum token_type type)
     else
       fprintf(stderr, "%s:%u.%u: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
 
-    exit(1);
+    parser->errorless = false;
+    /* shut up, errors */
+    return tok;
   }
   /* }}} */
 }
 
-bool force_keyword(struct lexer *lex, const char *name)
+bool force_keyword(struct parser *parser, struct lexer *lex, const char *name)
 {
   /* {{{ force_keyword body */
   if (peek(lex, TOK_KEYWORD)){
     if (!strcmp(name, lex->curr_tok.value.s)){
-      force(lex, TOK_KEYWORD);
+      force(parser, lex, TOK_KEYWORD);
       return true;
     }
   }
+
+  parser->errorless = false;
 
   return false;
   /* }}} */
@@ -429,7 +456,7 @@ bool accept_keyword(struct lexer *lex, const char *name)
   /* {{{ accept_keyword body */
   if (peek(lex, TOK_KEYWORD)){
     if (!strcmp(name, lex->curr_tok.value.s)){
-      force(lex, TOK_KEYWORD);
+      skip(lex);
       return true;
     }
   }
@@ -460,29 +487,6 @@ bool peek(struct lexer *lex, enum token_type type)
   } else {
     return false;
   }
-  /* }}} */
-}
-
-void skip(struct lexer *lex)
-{
-  /* {{{ skip body */
-  struct token tok = fetch_token(lex);
-
-  if (tok.type == TOK_EOS){
-    err(lex, "unexpected <EOS>");
-  }
-
-#if DEBUG
-  /* {{{ */
-  if (NM_DEBUG_GET_FLAG(NM_DEBUG_LEXER)){
-    fprintf(stderr, "%s:%05u:%03u    skip  ", lex->name, lex->line, lex->col);
-    debug_print_token(tok);
-    fprintf(stderr, "\n");
-  }
-  /* }}} */
-#endif
-
-  advance(lex);
   /* }}} */
 }
 

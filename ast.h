@@ -75,16 +75,25 @@ enum binop_type {
 };
 
 struct node {
+  /* d'uh */
   enum node_type type;
+  /* pointer to the next node (expression) to be executed in the execution
+   * chain */
   struct node *next;
+  /* pointer to a function that is responsible for executing the node
+   * and maintaining the stack (ie. pushing the node's result value onto it) */
   struct node *(*execf)(struct node *);
-  unsigned id; /* used to better recognize/find the nodes in debug output */
+  /* used to better recognize/find the nodes in debug output */
   /* the `id' probably should also be inside #if DEBUG but then it gives
    * compilation errors that I can't nicely resolve, meh */
+  unsigned id;
 #if DEBUG
+  /* function which dumps the node (option `-da`) */
   void (*dumpf)(struct node *);
 #endif
-  bool lvalue; /* is it an lvalue? if not, it's only a rvalue */
+  /* is it an lvalue? if not, it's only a rvalue */
+  bool lvalue;
+  /* values specific to a certain kind of a node */
   union {
     struct infnum i;   /* NT_INTEGER */
     float f; /* NT_FLOAT */

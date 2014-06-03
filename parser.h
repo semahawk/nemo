@@ -13,6 +13,15 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "nemo.h"
+
+struct parser {
+  /* whether there were any errors or not */
+  /* ie. if `true', it means the code can be safely executed (no error/warning
+   * message was critical) */
+  bool errorless;
+};
+
 int parse_file(char *file_name);
 int parse_string(char *string);
 

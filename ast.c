@@ -27,6 +27,8 @@
 /* few more */
 #define RETURN_NEXT return (NM_pc = nd->next, NM_pc)
 #define RETURN return (NM_pc)
+/* returns <node>'s id, or 0 if the node is none */
+#define NDID(node) ((node) == NULL ? 0 : (node)->id)
 
 /* program counter */
 static struct node *NM_pc = NULL;
@@ -37,7 +39,7 @@ static Nob  **NM_as_curr = NULL;
 static size_t NM_as_size = 16;
 
 /* the current node's id */
-static unsigned currid = 0;
+static unsigned currid = 1;
 
 /* {{{ argument stack manipulation functions */
 void arg_stack_init(void)
@@ -606,10 +608,7 @@ struct node *new_decl(struct lexer *lex, char *name, uint8_t flags, struct node 
 #endif
   nd->next = NULL;
 
-  if (value != NULL)
-    debug_ast_new(nd, "declaration (#%u, 0x%02x) ", value->id, flags);
-  else
-    debug_ast_new(nd, "declaration (#--, 0x%02x) ", flags);
+  debug_ast_new(nd, "declaration (#%u, 0x%02x) ", NDID(value), flags);
 
   return nd;
   /* }}} */
@@ -631,7 +630,7 @@ struct node *new_unop(struct lexer *lex, enum unop_type type,
 #endif
   nd->next = NULL;
 
-  debug_ast_new(nd, "unop ('op?', #%u)", nd->in.unop.target->id);
+  debug_ast_new(nd, "unop ('op?', #%u)", NDID(nd->in.unop.target));
 
   return nd;
   /* }}} */
@@ -655,7 +654,7 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
   nd->next = NULL;
 
   debug_ast_new(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
-      nd->in.binop.left->id, nd->in.binop.right->id);
+      NDID(nd->in.binop.left), NDID(nd->in.binop.right));
 
   return nd;
   /* }}} */
@@ -678,7 +677,8 @@ struct node *new_ternop(struct lexer *lex, struct node *predicate,
 #endif
   nd->next = NULL;
 
-  debug_ast_new(nd, "ternop (#%u, #%u, #%u)", nd->in.ternop.predicate->id, nd->in.ternop.yes->id, nd->in.ternop.no->id);
+  debug_ast_new(nd, "ternop (#%u, #%u, #%u)", NDID(nd->in.ternop.predicate),
+      NDID(nd->in.ternop.yes), NDID(nd->in.ternop.no));
 
   return nd;
   /* }}} */
@@ -702,10 +702,7 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
 #endif
   nd->next = NULL;
 
-  if (elsee)
-    debug_ast_new(nd, "if (#%u, #%u, #%u)", guard->id, body->id, elsee->id);
-  else
-    debug_ast_new(nd, "if (#%u, #%u, --)", guard->id, body->id);
+  debug_ast_new(nd, "if (#%u, #%u, #%u)", NDID(guard), NDID(body), NDID(elsee));
 
   return nd;
   /* }}} */
@@ -732,9 +729,9 @@ struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type
   nd->next = NULL;
 
   if (name)
-    debug_ast_new(nd, "fun (%s, #%u, %d)", name, body->id, execute);
+    debug_ast_new(nd, "fun (%s, #%u, %d)", name, NDID(body), execute);
   else
-    debug_ast_new(nd, "lambda (#%u, %d)", name, body->id, execute);
+    debug_ast_new(nd, "lambda (#%u, %d)", name, NDID(body), execute);
 
   return nd;
   /* }}} */

@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
   char *locale;
   /* used for getopt */
   int ch;
+  /* return value */
+  int ret = 0;
 
   if (((locale = getenv("LC_ALL")) && *locale) ||
       ((locale = getenv("LC_CTYPE")) && *locale) ||
@@ -120,7 +122,23 @@ int main(int argc, char *argv[])
   argv += optind;
 
   if (argc >= 1){
-    parse_file(argv[0]);
+    if (!parse_file(argv[0])){
+      fprintf(stderr, "nemo: execution failed :c\n");
+      ret = 1;
+    }
+  } else {
+    /* interactive */
+    char input[512];
+
+    for (;;){
+      printf("N: ");
+      fgets(input, 512, stdin);
+
+      if (!strcmp(input, "q\n"))
+        break;
+
+      parse_string(input);
+    }
   }
 
   /*dump_types();*/
@@ -129,7 +147,7 @@ int main(int argc, char *argv[])
   types_finish();
   gc_finish();
 
-  return 0;
+  return ret;
 }
 
 /*
@@ -142,6 +160,7 @@ int main(int argc, char *argv[])
  * Dark Age, Equilibrium, Bolt Thrower, Kalmah
  * Coroner, Carach Angren
  * Qntal, Helium Vola
+ * Mourning Beloveth, Doom:VS, Draconian
  *
  * Johann Strauss
  *
