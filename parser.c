@@ -100,6 +100,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     /* {{{ a function */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("{ ");
+
     if (accept(lex, TOK_TIMES)){
       /* {{{ a polymorphic function {*} */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -110,6 +111,11 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       /* {{{ a function's 'proper' prototype { return type... } */
       /* fetch the return type */
       return_type = type(parser, lex);
+
+      if (!return_type){
+        err(parser, lex, "expected a return type in the function's prototype");
+        return ret;
+      }
 
       /* fetch the optional params types */
       if (accept(lex, TOK_SEMICOLON)){
@@ -125,7 +131,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
               printf(", ");
 
             if ((params[curr_param++] = type(parser, lex)) == NULL){
-              printf("note: expected a type after the comma\n");
+              fprintf(stderr, "note: expected a type after the comma\n");
             }
           }
 
@@ -135,6 +141,9 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
           ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
         }
         /* }}} */
+      } else {
+        /* the function takes no parameters */
+        ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
       }
       /* }}} */
     }
@@ -168,7 +177,8 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
               return ret; \
             } \
           } \
-          printf(" %s", lex->curr_tok.value.s); \
+          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)) \
+            printf(" %s", lex->curr_tok.value.s); \
           fields[curr_field].name = strdup(lex->curr_tok.value.s); \
         } else { \
           err(parser, lex, "the field is missing it's name"); \
@@ -745,7 +755,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     } else {
       /* see if a type was given */
       if (!var_type){
-        err(parser, lex, "uninitialized variables lacks a type declaration");
+        err(parser, lex, "uninitialized variable lacks a type declaration");
         return NULL;
       }
     }

@@ -47,9 +47,9 @@ static void err(struct lexer *lex, const char *fmt, ...)
   va_list vl;
 
   va_start(vl, fmt);
-  fprintf(stderr, "%s: ", lex->name);
+  fprintf(stderr, "%s:%u.%u: error: ", lex->name, lex->line, lex->col);
   vfprintf(stderr, fmt, vl);
-  fprintf(stderr, " at line %u column %u\n", lex->line, lex->col);
+  fprintf(stderr, "\n");
   va_end(vl);
 
   exit(1);
@@ -404,6 +404,9 @@ struct token force(struct parser *parser, struct lexer *lex, enum token_type typ
       fprintf(stderr, "%s:%u.%u: error: expected a %s instead of a %s\n", lex->name, lex->save.line, lex->save.col, tok_to_s(type), tok_to_s(tok.type));
 
     parser->errorless = false;
+    /* advance to the next token (sometimes there is an infinite loop that
+     * fails to `force` a token) */
+    skip(lex);
     /* shut up, errors */
     return tok;
   }

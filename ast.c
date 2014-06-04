@@ -383,9 +383,9 @@ struct node *exec_decl(struct node *nd)
 struct node *exec_unop(struct node *nd)
 {
   /* {{{ */
-  debug_ast_exec(nd, "unop ('op?', #%u)", nd->in.unop.target->id);
-
   EXEC(nd->in.unop.target);
+
+  debug_ast_exec(nd, "unop ('op?', #%u)", NDID(nd->in.unop.target));
 
   switch (nd->in.unop.type){
     /* FIXME */
@@ -401,11 +401,11 @@ struct node *exec_binop(struct node *nd)
   /* {{{ */
   Nob *left, *right;
 
-  debug_ast_exec(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
-      nd->in.binop.left->id, nd->in.binop.right->id);
-
   EXEC(nd->in.binop.left);
   EXEC(nd->in.binop.right);
+
+  debug_ast_exec(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
+      nd->in.binop.left->id, nd->in.binop.right->id);
 
   right = POP();
   left  = POP();
@@ -425,8 +425,6 @@ struct node *exec_binop(struct node *nd)
     case BINARY_LE:
     case BINARY_EQ:
     case BINARY_NE:
-    /*case BINARY_ADD:*/
-    /*case BINARY_SUB:*/
     case BINARY_MUL:
     case BINARY_DIV:
     case BINARY_MOD:
