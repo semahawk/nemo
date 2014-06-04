@@ -1,1 +1,1 @@
-typedef int month lim 1, 12;
+print 2 + { 3 };

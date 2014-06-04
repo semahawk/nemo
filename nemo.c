@@ -94,12 +94,16 @@ int main(int argc, char *argv[])
           case 'p':
             NM_DEBUG_SET_FLAG(NM_DEBUG_PARSER);
             break;
+          case 't':
+            NM_DEBUG_SET_FLAG(NM_DEBUG_TYPES);
+            break;
           case 'h':
             fprintf(stderr, "\nAvailable debug flags:\n");
             fprintf(stderr, "  a    AST node creation/execution\n");
             fprintf(stderr, "  l    lexer stuff; see what tokens were fetched\n");
             fprintf(stderr, "  m    see how much memory was malloced/freed, etc.\n");
             fprintf(stderr, "  p    parser stuff; see a primitive representation of the parsing process\n");
+            fprintf(stderr, "  t    dump the object types at the end of execution\n");
             fprintf(stderr, "\n");
             return 0;
           default:
@@ -145,7 +149,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  dump_types();
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_TYPES))
+    dump_types();
 
   arg_stack_finish();
   types_finish();

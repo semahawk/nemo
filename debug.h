@@ -25,6 +25,7 @@ extern uint32_t NM_debug_flags;
 #define NM_DEBUG_LEXER  (1 << 1)  /* -dl */
 #define NM_DEBUG_MEM    (1 << 2)  /* -dm */
 #define NM_DEBUG_PARSER (1 << 3)  /* -dp */
+#define NM_DEBUG_TYPES  (1 << 4)  /* -dt */
 /* there are, obviously, more to come :) */
 /* few more handy macros to set/get certain debug flags */
 #define NM_DEBUG_SET_FLAG(f) (NM_debug_flags |= (f))
