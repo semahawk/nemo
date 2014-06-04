@@ -583,6 +583,7 @@ struct node *new_int(struct lexer *lex, struct infnum value)
   nd->dumpf = dump_const;
 #endif
   nd->next = NULL;
+  nd->result_type = T_INT;
 
   debug_ast_new(nd, "integer (%s) ", infnum_to_str(value));
 

@@ -261,6 +261,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* zero-out the tuple's info.tuple */
       memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
+      memcpy(new_type->info.tuple.fields, fields, MAX_TUPLE_FIELDS * sizeof(struct field));
+
       assert(fields);
       /* }}} */
       break;
@@ -339,6 +341,46 @@ bool nob_is_true(Nob *ob)
 
   /* should never get here */
   return false;
+}
+
+bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
+{
+#if DEBUG
+  if (a == NULL || b == NULL)
+    return false;
+#endif
+
+  assert(a != NULL && b != NULL);
+
+  if (a->primitive != b->primitive)
+    return false;
+
+  if (a->primitive == OT_LIST){
+    /* lists are equal if their underlying types are equal */
+    return nob_types_are_equal(a->info.list.type, b->info.list.type);
+  } else if (a->primitive == OT_TUPLE){
+    /* tuples are equal if each of their respective fields' types are equal */
+    unsigned i;
+
+    for (i = 0; i < MAX_TUPLE_FIELDS; i++)
+      if (!nob_types_are_equal(a->info.tuple.fields[i].type, b->info.tuple.fields[i].type))
+        return false;
+
+    return true;
+  } else if (a->primitive == OT_FUN){
+    unsigned i;
+
+    if (!nob_types_are_equal(a->info.func.return_type, b->info.func.return_type))
+      return false;
+
+    for (i = 0; i < MAX_FUN_PARAMS; i++)
+      if (!nob_types_are_equal(a->info.func.params[i], b->info.func.params[i]))
+        return false;
+
+    return true;
+  } else {
+    return true;
+  }
 }
 
 /*

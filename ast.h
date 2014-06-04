@@ -77,6 +77,8 @@ enum binop_type {
 struct node {
   /* d'uh */
   enum node_type type;
+  /* type of a Nob the expression is going to result in */
+  struct nob_type *result_type;
   /* pointer to the next node (expression) to be executed in the execution
    * chain */
   struct node *next;
