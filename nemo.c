@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  /*dump_types();*/
+  dump_types();
 
   arg_stack_finish();
   types_finish();

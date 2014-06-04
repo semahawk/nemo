@@ -41,8 +41,9 @@
   } while (0)
 
 /* forward declarations */
-struct node *expr_list(struct parser *parser, struct lexer *lex);
-static struct node *expr(struct parser *parser, struct lexer *lex);
+struct node *expr_list(struct parser *, struct lexer *);
+static struct node *expr(struct parser *, struct lexer *);
+static struct node *primary_expr(struct parser *, struct lexer *);
 
 /*
  * Prints a nicely error message.
@@ -94,7 +95,42 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     /* {{{ a single worded type */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s", lex->curr_tok.value.s);
+
     ret = get_type_by_name(lex->curr_tok.value.s);
+
+    if (ret)
+      if (ret->primitive == OT_INTEGER)
+        if (accept_keyword(lex, "lim")){
+          struct nob_type *new_type = nmalloc(sizeof(struct nob_type));
+          struct node *lower, *upper;
+
+          new_type->name = NULL;
+          new_type->primitive = OT_INTEGER;
+
+          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+            printf(" lim ");
+
+          lower = primary_expr(parser, lex);
+          force(parser, lex, TOK_COMMA);
+
+          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+            printf(", ");
+
+          upper = primary_expr(parser, lex);
+
+          if (infnum_cmp(lower->in.i, upper->in.i) == INFNUM_CMP_GE){
+            err(parser, lex, "invalid values for `lim'");
+            return ret;
+          }
+
+          new_type->info.integer.limitless = 0;
+          new_type->info.integer.limit_lower = infnum_to_qword(lower->in.i);
+          new_type->info.integer.limit_upper = infnum_to_qword(upper->in.i);
+
+          /* 'register' the new type */
+          push_type(new_type);
+          /* TODO: see if there already exists such type */
+        }
     /* }}} */
   } else if (accept(lex, TOK_LMUSTASHE)){
     /* {{{ a function */
@@ -842,31 +878,6 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       /* set up the name */
       newer_type->name = strdup(lex->curr_tok.value.s);
 
-      if (accept_keyword(lex, "lim")){
-        struct node *lower, *upper;
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf(" lim ");
-
-        if (newer_type->primitive != OT_INTEGER){
-          err(parser, lex, "the construct `lim' is only supported for integers");
-          return NULL;
-        }
-
-        lower = primary_expr(parser, lex);
-        force(parser, lex, TOK_COMMA);
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf(", ");
-        upper = primary_expr(parser, lex);
-
-        if (infnum_cmp(lower->in.i, upper->in.i) == INFNUM_CMP_GE){
-          err(parser, lex, "invalid values for `lim'");
-          return NULL;
-        }
-
-        newer_type->info.integer.limitless = 0;
-        newer_type->info.integer.limit_lower = infnum_to_qword(lower->in.i);
-        newer_type->info.integer.limit_upper = infnum_to_qword(upper->in.i);
-      }
       /* 'register' the type */
       push_type(newer_type);
     }
