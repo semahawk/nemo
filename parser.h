@@ -22,8 +22,8 @@ struct parser {
   bool errorless;
 };
 
-int parse_file(char *file_name);
-int parse_string(char *string);
+struct node *parse_file(char *file_name);
+struct node *parse_string(char *string);
 
 #endif /* PARSER_H */
 

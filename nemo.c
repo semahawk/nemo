@@ -58,6 +58,8 @@ int main(int argc, char *argv[])
   int ch;
   /* return value */
   int ret = 0;
+  /* the top-most node created from parsing */
+  struct node *root;
 
   if (((locale = getenv("LC_ALL")) && *locale) ||
       ((locale = getenv("LC_CTYPE")) && *locale) ||
@@ -130,10 +132,14 @@ int main(int argc, char *argv[])
   argv += optind;
 
   if (argc >= 1){
-    if (!parse_file(argv[0])){
+    if ((root = parse_file(argv[0])) == NULL){
       fprintf(stderr, "nemo: execution failed :c\n");
       ret = 1;
+      goto end;
     }
+
+    exec_nodes(root);
+    /* TODO clean up after the parser, lexer, etc. */
   } else {
     /* interactive */
     char input[512];
@@ -145,13 +151,16 @@ int main(int argc, char *argv[])
       if (!strcmp(input, "q\n"))
         break;
 
-      parse_string(input);
+      if ((root = parse_string(input)) != NULL)
+        exec_nodes(root);
+        /* TODO clean up after the parser, lexer, etc. */
     }
   }
 
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_TYPES))
     dump_types();
 
+end:
   arg_stack_finish();
   types_finish();
   gc_finish();
