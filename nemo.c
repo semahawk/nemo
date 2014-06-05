@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
       if (!strcmp(input, "q\n"))
         break;
 
-      if ((root = parse_string(input)) != NULL)
+      if ((root = parse_string("stdin", input)) != NULL)
         exec_nodes(root);
         /* TODO clean up after the parser, lexer, etc. */
     }

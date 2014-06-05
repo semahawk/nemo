@@ -23,7 +23,7 @@ struct parser {
 };
 
 struct node *parse_file(char *file_name);
-struct node *parse_string(char *string);
+struct node *parse_string(char *name, char *string);
 
 #endif /* PARSER_H */
 

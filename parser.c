@@ -994,7 +994,7 @@ struct node *parse_file(char *fname)
   return ret;
 }
 
-struct node *parse_string(char *string)
+struct node *parse_string(char *name, char *string)
 {
   struct lexer lex;
   struct parser parser;
@@ -1004,7 +1004,7 @@ struct node *parse_string(char *string)
   parser.errorless      = true;
   /* initialize the lexer's state */
   lex.fptr              = NULL;
-  lex.name              = string;
+  lex.name              = name;
   lex.source            = string;
   lex.curr_pos          = string;
   lex.curr_tok.type     = TOK_EOS;
