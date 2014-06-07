@@ -19,6 +19,7 @@
 #include "nob.h"
 #include "infnum.h"
 #include "lexer.h"
+#include "scope.h"
 
 /* forward */
 struct lexer;
@@ -85,6 +86,10 @@ struct node {
   /* pointer to a function that is responsible for executing the node
    * and maintaining the stack (ie. pushing the node's result value onto it) */
   struct node *(*execf)(struct node *);
+  /* a scope in which the expression exists */
+  /* this is where all the variables and alike where be searched for */
+  /* (of cource, following `scope`s parent scopes) */
+  struct scope *scope;
   /* used to better recognize/find the nodes in debug output */
   /* the `id' probably should also be inside #if DEBUG but then it gives
    * compilation errors that I can't nicely resolve, meh */
@@ -163,21 +168,22 @@ struct nodes_list {
   struct nodes_list *next;
 };
 
-struct node *new_nop(struct lexer *lex);
-struct node *new_int(struct lexer *lex, struct infnum value);
-struct node *new_decl(struct lexer *lex, char *name, uint8_t flags,
-    struct node *value);
-struct node *new_unop(struct lexer *lex, enum unop_type type,
+struct node *new_nop(struct parser *parser, struct lexer *lex);
+struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum value);
+struct node *new_decl(struct parser *parser, struct lexer *lex, char *name, uint8_t flags,
+    struct node *value, struct scope *scope);
+struct node *new_name(struct parser *parser, struct lexer *lex, char *name);
+struct node *new_unop(struct parser *parser, struct lexer *lex, enum unop_type type,
     struct node *target);
-struct node *new_binop(struct lexer *lex, enum binop_type type,
+struct node *new_binop(struct parser *parser, struct lexer *lex, enum binop_type type,
     struct node *left, struct node *right);
-struct node *new_ternop(struct lexer *lex, struct node *predicate,
+struct node *new_ternop(struct parser *parser, struct lexer *lex, struct node *predicate,
     struct node *yes, struct node *no);
-struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
+struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard, struct node *body,
     struct node *elsee);
-struct node *new_fun(struct lexer *lex, char *name, struct nob_type *ret_type,
+struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struct nob_type *ret_type,
     struct nob_type **params, struct node *body, char *opts, bool execute);
-struct node *new_print(struct lexer *lex, struct nodes_list *exprs);
+struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_list *exprs);
 
 void exec_nodes(struct node *node);
 

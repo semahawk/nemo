@@ -111,11 +111,16 @@ void arg_stack_dump(void)
  * returns the new node.
  *
  */
-static struct node *new_node(struct lexer *lex)
+static struct node *new_node(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   ptrdiff_t offset = lex->nds_gc.curr - lex->nds_gc.ptr;
   struct node *new = nmalloc(sizeof(struct node));
+
+  /* set the node's default values */
+  new->id = currid++;
+  new->next = NULL;
+  new->scope = parser->curr_scope;
 
   /* handle overflow */
   if (offset >= (signed)lex->nds_gc.size){
@@ -186,6 +191,11 @@ void dump_const(struct node *nd)
     printf("+ (#%u) const (%s)\n", nd->id, infnum_to_str(nd->in.i));
   else
     printf("+ (#%u) const\n", nd->id);
+}
+
+void dump_name(struct node *nd)
+{
+  printf("+ (#%u) name (%s)\n", NDID(nd), nd->in.s);
 }
 
 void dump_decl(struct node *nd)
@@ -355,6 +365,22 @@ struct node *exec_const(struct node *nd)
     debug_ast_exec(nd, "float (%f)", nd->in.f);
     /* FIXME */
     PUSH(new_nob(T_BYTE, (int)nd->in.f));
+  }
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *exec_name(struct node *nd)
+{
+  /* {{{  */
+  struct var *var = var_lookup(nd->in.s, nd->scope);
+
+  if (var)
+    EXEC(var->value);
+  else {
+    fprintf(stderr, "variable '%s' not found! runtime!!\n", nd->in.s);
+    exit(1);
   }
 
   RETURN_NEXT;
@@ -551,18 +577,16 @@ struct node *exec_print(struct node *nd)
 }
 /* }}} */
 /* {{{ new_nodes */
-struct node *new_nop(struct lexer *lex)
+struct node *new_nop(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_NOP;
   nd->execf = exec_nop;
 #if DEBUG
   nd->dumpf = dump_nop;
 #endif
-  nd->next = NULL;
 
   debug_ast_new(nd, "nop");
 
@@ -570,19 +594,17 @@ struct node *new_nop(struct lexer *lex)
   /* }}} */
 }
 
-struct node *new_int(struct lexer *lex, struct infnum value)
+struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum value)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_INTEGER;
   nd->in.i = value;
   nd->execf = exec_const;
 #if DEBUG
   nd->dumpf = dump_const;
 #endif
-  nd->next = NULL;
   nd->result_type = T_INT;
 
   debug_ast_new(nd, "integer (%s) ", infnum_to_str(value));
@@ -591,12 +613,30 @@ struct node *new_int(struct lexer *lex, struct infnum value)
   /* }}} */
 }
 
-struct node *new_decl(struct lexer *lex, char *name, uint8_t flags, struct node *value)
+struct node *new_name(struct parser *parser, struct lexer *lex, char *name)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
+  nd->type = NT_NAME;
+  nd->in.s = strdup(name);
+  nd->execf = exec_name;
+#if DEBUG
+  nd->dumpf = dump_name;
+#endif
+
+  debug_ast_new(nd, "name (%s)", name);
+
+  return nd;
+  /* }}} */
+}
+
+struct node *new_decl(struct parser *parser, struct lexer *lex, char *name,
+    uint8_t flags, struct node *value, struct scope *scope)
+{
+  /* {{{ */
+  struct node *nd = new_node(parser, lex);
+
   nd->type = NT_DECL;
   nd->in.decl.name = name;
   nd->in.decl.flags = flags;
@@ -605,7 +645,12 @@ struct node *new_decl(struct lexer *lex, char *name, uint8_t flags, struct node 
 #if DEBUG
   nd->dumpf = dump_decl;
 #endif
-  nd->next = NULL;
+
+  /* declare the variable in the given <scope> */
+  if (value)
+    new_var(name, flags, value, value->result_type, scope);
+  else
+    new_var(name, flags, value, NULL,               scope);
 
   debug_ast_new(nd, "declaration (#%u, 0x%02x) ", NDID(value), flags);
 
@@ -613,13 +658,12 @@ struct node *new_decl(struct lexer *lex, char *name, uint8_t flags, struct node 
   /* }}} */
 }
 
-struct node *new_unop(struct lexer *lex, enum unop_type type,
+struct node *new_unop(struct parser *parser, struct lexer *lex, enum unop_type type,
     struct node *target)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_UNOP;
   nd->in.unop.type = type;
   nd->in.unop.target = target;
@@ -627,7 +671,6 @@ struct node *new_unop(struct lexer *lex, enum unop_type type,
 #if DEBUG
   nd->dumpf = dump_unop;
 #endif
-  nd->next = NULL;
 
   debug_ast_new(nd, "unop ('op?', #%u)", NDID(nd->in.unop.target));
 
@@ -635,13 +678,12 @@ struct node *new_unop(struct lexer *lex, enum unop_type type,
   /* }}} */
 }
 
-struct node *new_binop(struct lexer *lex, enum binop_type type,
+struct node *new_binop(struct parser *parser, struct lexer *lex, enum binop_type type,
     struct node *left, struct node *right)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_BINOP;
   nd->in.binop.type = type;
   nd->in.binop.left = left;
@@ -650,7 +692,6 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
 #if DEBUG
   nd->dumpf = dump_binop;
 #endif
-  nd->next = NULL;
 
   debug_ast_new(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
       NDID(nd->in.binop.left), NDID(nd->in.binop.right));
@@ -659,13 +700,12 @@ struct node *new_binop(struct lexer *lex, enum binop_type type,
   /* }}} */
 }
 
-struct node *new_ternop(struct lexer *lex, struct node *predicate,
+struct node *new_ternop(struct parser *parser, struct lexer *lex, struct node *predicate,
     struct node *yes, struct node *no)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_TERNOP;
   nd->in.ternop.predicate = predicate;
   nd->in.ternop.yes = yes;
@@ -674,7 +714,6 @@ struct node *new_ternop(struct lexer *lex, struct node *predicate,
 #if DEBUG
   nd->dumpf = dump_ternop;
 #endif
-  nd->next = NULL;
 
   debug_ast_new(nd, "ternop (#%u, #%u, #%u)", NDID(nd->in.ternop.predicate),
       NDID(nd->in.ternop.yes), NDID(nd->in.ternop.no));
@@ -683,13 +722,12 @@ struct node *new_ternop(struct lexer *lex, struct node *predicate,
   /* }}} */
 }
 
-struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
+struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard, struct node *body,
     struct node *elsee)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_IF;
   nd->in.iff.guard = guard;
   nd->in.iff.body  = body;
@@ -699,7 +737,6 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
 #if DEBUG
   nd->dumpf = dump_if;
 #endif
-  nd->next = NULL;
 
   debug_ast_new(nd, "if (#%u, #%u, #%u)", NDID(guard), NDID(body), NDID(elsee));
 
@@ -707,13 +744,12 @@ struct node *new_if(struct lexer *lex, struct node *guard, struct node *body,
   /* }}} */
 }
 
-struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type,
+struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struct nob_type *return_type,
     struct nob_type **params, struct node *body, char *opts, bool execute)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_FUN;
   nd->in.fun.name = name;
   nd->in.fun.body = body;
@@ -725,7 +761,6 @@ struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type
 #if DEBUG
   nd->dumpf = dump_fun;
 #endif
-  nd->next = NULL;
 
   if (name)
     debug_ast_new(nd, "fun (%s, #%u, %d)", name, NDID(body), execute);
@@ -736,19 +771,17 @@ struct node *new_fun(struct lexer *lex, char *name, struct nob_type *return_type
   /* }}} */
 }
 
-struct node *new_print(struct lexer *lex, struct nodes_list *exprs)
+struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_list *exprs)
 {
   /* {{{ */
-  struct node *nd = new_node(lex);
+  struct node *nd = new_node(parser, lex);
 
-  nd->id = currid++;
   nd->type = NT_PRINT;
   nd->in.print.exprs = exprs;
   nd->execf = exec_print;
 #if DEBUG
   nd->dumpf = dump_print;
 #endif
-  nd->next = NULL;
 
   debug_ast_new(nd, "print");
 

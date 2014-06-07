@@ -62,6 +62,7 @@ set(libsrc
   mem.c
   nob.c
   parser.c
+  scope.c
   utf8.c
 )
 

@@ -14,16 +14,19 @@
 #define PARSER_H
 
 #include "nemo.h"
+#include "scope.h"
 
 struct parser {
   /* whether there were any errors or not */
   /* ie. if `true', it means the code can be safely executed (no error/warning
    * message was critical) */
   bool errorless;
+  /* the current scope the 'compilation control' is in */
+  struct scope *curr_scope;
 };
 
-struct node *parse_file(char *file_name);
-struct node *parse_string(char *name, char *string);
+struct node *parse_file(char *file_name, struct scope *scope);
+struct node *parse_string(char *name, char *string, struct scope *scope);
 
 #endif /* PARSER_H */
 

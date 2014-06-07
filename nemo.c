@@ -60,6 +60,8 @@ int main(int argc, char *argv[])
   int ret = 0;
   /* the top-most node created from parsing */
   struct node *root;
+  /* THE scope */
+  struct scope *_main = new_scope("main", NULL);
 
   if (((locale = getenv("LC_ALL")) && *locale) ||
       ((locale = getenv("LC_CTYPE")) && *locale) ||
@@ -132,7 +134,7 @@ int main(int argc, char *argv[])
   argv += optind;
 
   if (argc >= 1){
-    if ((root = parse_file(argv[0])) == NULL){
+    if ((root = parse_file(argv[0], _main)) == NULL){
       fprintf(stderr, "nemo: execution failed :c\n");
       ret = 1;
       goto end;
@@ -151,7 +153,7 @@ int main(int argc, char *argv[])
       if (!strcmp(input, "q\n"))
         break;
 
-      if ((root = parse_string("stdin", input)) != NULL)
+      if ((root = parse_string("stdin", input, _main)) != NULL)
         exec_nodes(root);
         /* TODO clean up after the parser, lexer, etc. */
     }
@@ -164,6 +166,7 @@ end:
   arg_stack_finish();
   types_finish();
   gc_finish();
+  scopes_finish();
 
   return ret;
 }

@@ -25,6 +25,7 @@
 #include "infnum.h"
 #include "lexer.h"
 #include "parser.h"
+#include "scope.h"
 #include "utf8.h"
 #include "util.h"
 
@@ -275,20 +276,29 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *ret = NULL;
 
-  if (accept(lex, TOK_LMUSTASHE)){ /* a block */
+  if (accept(lex, TOK_LMUSTASHE)){ /* a function */
     /* {{{ */
+    struct scope *prev_scope;
     struct node *body;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("{\n");
 
+    /* create a new scope for the function */
+    prev_scope = parser->curr_scope;
+    parser->curr_scope = new_scope(NULL, parser->curr_scope);
+
+    /* all the expressions here will 'use' the new scope */
     body = expr_list(parser, lex);
+
+    /* restore the parser's former scope */
+    parser->curr_scope = prev_scope;
 
     force(parser, lex, TOK_RMUSTASHE);
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("}\n");
 
-    ret = new_fun(lex, NULL /* anonymous */, T_INT /* wait for inference */,
+    ret = new_fun(parser, lex, NULL /* anonymous */, T_INT /* wait for inference */,
         NULL /* no params */, body, NULL /* no opts */,
         true /* execute right away */);
     ret->lvalue = false; /* hmm.. */
@@ -296,22 +306,28 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   } else if (accept(lex, TOK_INTEGER)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", infnum_to_str(lex->curr_tok.value.i));
-    ret = new_int(lex, lex->curr_tok.value.i);
+    ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->lvalue = false;
   } else if (accept(lex, TOK_FLOAT)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%f=16 ", lex->curr_tok.value.f);
-    ret = new_int(lex, infnum_from_int(16));
+    ret = new_int(parser, lex, infnum_from_int(16));
     ret->lvalue = false;
   } else if (accept(lex, TOK_STRING)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("\"%s\"=32", lex->curr_tok.value.sp);
-    ret = new_int(lex, infnum_from_int(32));
+    ret = new_int(parser, lex, infnum_from_int(32));
     ret->lvalue = false;
   } else if (accept(lex, TOK_NAME)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("%s=0x6e ", lex->curr_tok.value.s /* meh */);
-    ret = new_int(lex, infnum_from_int(0x6e));
+      printf("%s ", lex->curr_tok.value.s /* meh */);
+
+    if (!var_lookup(lex->curr_tok.value.s, parser->curr_scope)){
+      err(parser, lex, "variable '%s' not found", lex->curr_tok.value.s);
+      return NULL;
+    }
+
+    ret = new_name(parser, lex, lex->curr_tok.value.s);
     ret->lvalue = true;
   }
 
@@ -336,7 +352,7 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
         /* target ++ */
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf(" postfix(++)");
-        ret = new_unop(lex, UNARY_POSTINC, target);
+        ret = new_unop(parser, lex, UNARY_POSTINC, target);
         ret->lvalue = false;
       } else {
         *lex = save_lex;
@@ -346,7 +362,7 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
         /* target -- */
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf(" postfix(--)");
-        ret = new_unop(lex, UNARY_POSTDEC, target);
+        ret = new_unop(parser, lex, UNARY_POSTDEC, target);
         ret->lvalue = false;
       } else {
         *lex = save_lex;
@@ -410,7 +426,7 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
       type = UNARY_NEGATE;
     }
 
-    ret = new_unop(lex, type, target);
+    ret = new_unop(parser, lex, type, target);
   } else {
     ret = postfix_expr(parser, lex);
   }
@@ -449,7 +465,7 @@ static struct node *mul_expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_binop(lex, type, left, right);
+    ret = new_binop(parser, lex, type, left, right);
     ret->lvalue = false;
     left = ret;
   }
@@ -484,7 +500,7 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_binop(lex, type, left, right);
+    ret = new_binop(parser, lex, type, left, right);
     ret->lvalue = false;
     left = ret;
   }
@@ -531,7 +547,7 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_binop(lex, type, left, right);
+    ret = new_binop(parser, lex, type, left, right);
     ret->lvalue = false;
     left = ret;
   }
@@ -576,7 +592,7 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_binop(lex, type, left, right);
+    ret = new_binop(parser, lex, type, left, right);
     ret->lvalue = false;
     left = ret;
   }
@@ -619,7 +635,7 @@ static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(")");
 
-    ret = new_ternop(lex, predicate, yes, no);
+    ret = new_ternop(parser, lex, predicate, yes, no);
   }
 
   return ret;
@@ -653,7 +669,7 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_binop(lex, type, left, right);
+    ret = new_binop(parser, lex, type, left, right);
     ret->lvalue = false;
     left = ret;
   }
@@ -688,7 +704,7 @@ static struct node *comma_expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_binop(lex, BINARY_COMMA, left, right);
+    ret = new_binop(parser, lex, BINARY_COMMA, left, right);
     ret->lvalue = false; /* hmm.. */
     left = ret;
   }
@@ -742,7 +758,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_if(lex, guard, body, elsee);
+    ret = new_if(parser, lex, guard, body, elsee);
     ret->lvalue = false;
     /* }}} */
   }
@@ -758,11 +774,13 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     if (accept_keyword(lex, "const")){
       NOB_FLAG_SET(flags, NOB_FLAG_CONST);
+
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("const ");
     }
 
     var_type = type(parser, lex);
 
-    putchar(' ');
     force(parser, lex, TOK_NAME);
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", lex->curr_tok.value.s);
@@ -796,7 +814,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       }
     }
 
-    ret = new_decl(lex, name, flags, value);
+    ret = new_decl(parser, lex, name, flags, value, parser->curr_scope);
     ret->lvalue = false; /* hmm.. */
     /* }}} */
   }
@@ -843,7 +861,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     exprs = prev;
 
-    ret = new_print(lex, exprs);
+    ret = new_print(parser, lex, exprs);
     ret->lvalue = false;
     /* }}} */
   }
@@ -882,7 +900,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       push_type(newer_type);
     }
 
-    ret = new_nop(lex);
+    ret = new_nop(parser, lex);
     ret->lvalue = false;
     /* }}} */
   }
@@ -926,7 +944,7 @@ struct node *expr_list(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
-struct node *parse_file(char *fname)
+struct node *parse_file(char *fname, struct scope *scope)
 {
   FILE *fptr;
   size_t flen;
@@ -962,6 +980,7 @@ struct node *parse_file(char *fname)
 
   /* initialize the parser's state */
   parser.errorless      = true;
+  parser.curr_scope     = scope;
   /* initialize the lexer's state */
   lex.fptr              = fptr;
   lex.name              = fname;
@@ -994,7 +1013,7 @@ struct node *parse_file(char *fname)
   return ret;
 }
 
-struct node *parse_string(char *name, char *string)
+struct node *parse_string(char *name, char *string, struct scope *scope)
 {
   struct lexer lex;
   struct parser parser;
@@ -1002,6 +1021,7 @@ struct node *parse_string(char *name, char *string)
 
   /* initialize the parser's state */
   parser.errorless      = true;
+  parser.curr_scope     = scope;
   /* initialize the lexer's state */
   lex.fptr              = NULL;
   lex.name              = name;
