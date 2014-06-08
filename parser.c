@@ -33,8 +33,8 @@
  * (or the whole program/module/unit) */
 #define expr_end(parser, lex) \
   do { \
-    if (!peek(lex, TOK_RMUSTASHE) && \
-        !peek(lex, TOK_EOS)){ \
+    if (!peek(parser, lex, TOK_RMUSTASHE) && \
+        !peek(parser, lex, TOK_EOS)){ \
       force(parser, lex, TOK_SEMICOLON); \
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)) \
         printf(" ENDSTMT;\n"); \
@@ -86,13 +86,13 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   /* 'pointer' to the current parameter */
   unsigned curr_param = 0;
 
-  if (accept(lex, TOK_TIMES)){
+  if (accept(parser, lex, TOK_TIMES)){
     /* {{{ a polymorphic type (any) */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("* ");
     ret = T_ANY;
     /* }}} */
-  } else if (accept(lex, TOK_TYPE)){
+  } else if (accept(parser, lex, TOK_TYPE)){
     /* {{{ a single worded type */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s", lex->curr_tok.value.s);
@@ -101,7 +101,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
     if (ret)
       if (ret->primitive == OT_INTEGER)
-        if (accept_keyword(lex, "lim")){
+        if (accept_keyword(parser, lex, "lim")){
           struct nob_type *new_type = nmalloc(sizeof(struct nob_type));
           struct node *lower, *upper;
 
@@ -133,12 +133,12 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
           /* TODO: see if there already exists such type */
         }
     /* }}} */
-  } else if (accept(lex, TOK_LMUSTASHE)){
+  } else if (accept(parser, lex, TOK_LMUSTASHE)){
     /* {{{ a function */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("{ ");
 
-    if (accept(lex, TOK_TIMES)){
+    if (accept(parser, lex, TOK_TIMES)){
       /* {{{ a polymorphic function {*} */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("*");
@@ -155,14 +155,14 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       }
 
       /* fetch the optional params types */
-      if (accept(lex, TOK_SEMICOLON)){
+      if (accept(parser, lex, TOK_SEMICOLON)){
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("; ");
 
         /* {{{ { return type; ... } */
         if ((params[curr_param++] = type(parser, lex)) != NULL){
           /* a function with at least one parameter */
-          while (accept(lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
+          while (accept(parser, lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
             /* a function with more parameters */
             if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
               printf(", ");
@@ -189,7 +189,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(" }");
     /* }}} */
-  } else if (accept(lex, TOK_LPAREN)){
+  } else if (accept(parser, lex, TOK_LPAREN)){
     /* {{{ a tuple */
     /* TODO there should be no polymorphic types inside a tuple */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -206,7 +206,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       do { \
         /* see if the field was given a name, and if not, print a meaningful \
          * message */ \
-        if (accept(lex, TOK_NAME)){ \
+        if (accept(parser, lex, TOK_NAME)){ \
           struct field *p = fields; \
           for (; p->name != NULL && p->type != NULL; p++){ \
             if (!strcmp(p->name, lex->curr_tok.value.s)){ \
@@ -228,7 +228,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     curr_field++;
 
     /* fetch more fields if present */
-    while (accept(lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
+    while (accept(parser, lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(", ");
       fields[curr_field].type = type(parser, lex);
@@ -247,7 +247,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(")");
     /* }}} */
-  } else if (accept(lex, TOK_LBRACKET)){
+  } else if (accept(parser, lex, TOK_LBRACKET)){
     /* {{{ a list */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("[");
@@ -276,7 +276,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *ret = NULL;
 
-  if (accept(lex, TOK_LMUSTASHE)){ /* a function */
+  if (accept(parser, lex, TOK_LMUSTASHE)){ /* a function */
     /* {{{ */
     struct scope *prev_scope;
     struct node *body;
@@ -303,31 +303,31 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
         true /* execute right away */);
     ret->lvalue = false; /* hmm.. */
     /* }}} */
-  } else if (accept(lex, TOK_INTEGER)){
+  } else if (accept(parser, lex, TOK_INTEGER)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", infnum_to_str(lex->curr_tok.value.i));
 
     ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->lvalue = false;
-  } else if (accept(lex, TOK_FLOAT)){
+  } else if (accept(parser, lex, TOK_FLOAT)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%f=16 ", lex->curr_tok.value.f);
 
     ret = new_int(parser, lex, infnum_from_int(16));
     ret->lvalue = false;
-  } else if (accept(lex, TOK_STRING)){
+  } else if (accept(parser, lex, TOK_STRING)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("\"%s\"=32 ", lex->curr_tok.value.sp);
 
     ret = new_int(parser, lex, infnum_from_int(32));
     ret->lvalue = false;
-  } else if (accept(lex, TOK_CHAR)){
+  } else if (accept(parser, lex, TOK_CHAR)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("'%c' ", lex->curr_tok.value.c);
 
     ret = new_char(parser, lex, lex->curr_tok.value.c);
     ret->lvalue = false;
-  } else if (accept(lex, TOK_NAME)){
+  } else if (accept(parser, lex, TOK_NAME)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", lex->curr_tok.value.s /* meh */);
 
@@ -352,12 +352,12 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
 
   target = ret = primary_expr(parser, lex);
 
-  if (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS) || peek(lex, TOK_LPAREN)){
+  if (peek(parser, lex, TOK_PLUS) || peek(parser, lex, TOK_MINUS) || peek(parser, lex, TOK_LPAREN)){
     /* save the lexer's state in case it's actually only one '+' or '-' */
     save_lex = *lex;
 
-    if (accept(lex, TOK_PLUS)){
-      if (accept(lex, TOK_PLUS)){
+    if (accept(parser, lex, TOK_PLUS)){
+      if (accept(parser, lex, TOK_PLUS)){
         /* target ++ */
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf(" postfix(++)");
@@ -366,8 +366,8 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       } else {
         *lex = save_lex;
       }
-    } else if (accept(lex, TOK_MINUS)){
-      if (accept(lex, TOK_MINUS)){
+    } else if (accept(parser, lex, TOK_MINUS)){
+      if (accept(parser, lex, TOK_MINUS)){
         /* target -- */
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf(" postfix(--)");
@@ -376,7 +376,7 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       } else {
         *lex = save_lex;
       }
-    } else if (accept(lex, TOK_LPAREN)){
+    } else if (accept(parser, lex, TOK_LPAREN)){
       force(parser, lex, TOK_RPAREN);
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("(function call)");
@@ -393,9 +393,9 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
   struct node *target, *ret;
   enum unop_type type;
 
-  if (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS) || peek(lex, TOK_BANG)){
-    if (accept(lex, TOK_PLUS)){
-      if (accept(lex, TOK_PLUS)){
+  if (peek(parser, lex, TOK_PLUS) || peek(parser, lex, TOK_MINUS) || peek(parser, lex, TOK_BANG)){
+    if (accept(parser, lex, TOK_PLUS)){
+      if (accept(parser, lex, TOK_PLUS)){
         /* ++ target */
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("prefix(++) ");
@@ -410,8 +410,8 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
         target->lvalue = false;
         type = UNARY_PLUS;
       }
-    } else if (accept(lex, TOK_MINUS)){
-      if (accept(lex, TOK_MINUS)){
+    } else if (accept(parser, lex, TOK_MINUS)){
+      if (accept(parser, lex, TOK_MINUS)){
         /* -- target */
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("prefix(--) ");
@@ -426,7 +426,7 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
         target->lvalue = false;
         type = UNARY_MINUS;
       }
-    } else if (accept(lex, TOK_BANG)){
+    } else if (accept(parser, lex, TOK_BANG)){
       /*  ! target */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("prefix(!) ");
@@ -452,16 +452,16 @@ static struct node *mul_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = prefix_expr(parser, lex);
 
-  while (peek(lex, TOK_TIMES) || peek(lex, TOK_SLASH) || peek(lex, TOK_PERCENT)){
-    if (accept(lex, TOK_TIMES)){
+  while (peek(parser, lex, TOK_TIMES) || peek(parser, lex, TOK_SLASH) || peek(parser, lex, TOK_PERCENT)){
+    if (accept(parser, lex, TOK_TIMES)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("* ");
       type = BINARY_MUL;
-    } else if (accept(lex, TOK_SLASH)){
+    } else if (accept(parser, lex, TOK_SLASH)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("/ ");
       type = BINARY_DIV;
-    } else if (accept(lex, TOK_PERCENT)){
+    } else if (accept(parser, lex, TOK_PERCENT)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("%% ");
       type = BINARY_MOD;
@@ -491,12 +491,12 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = mul_expr(parser, lex);
 
-  while (peek(lex, TOK_PLUS) || peek(lex, TOK_MINUS)){
-    if (accept(lex, TOK_PLUS)){
+  while (peek(parser, lex, TOK_PLUS) || peek(parser, lex, TOK_MINUS)){
+    if (accept(parser, lex, TOK_PLUS)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("+ ");
       type = BINARY_ADD;
-    } else if (accept(lex, TOK_MINUS)){
+    } else if (accept(parser, lex, TOK_MINUS)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("- ");
       type = BINARY_SUB;
@@ -526,9 +526,9 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = add_expr(parser, lex);
 
-  if (peek(lex, TOK_LCHEVRON) || peek(lex, TOK_RCHEVRON)){
-    if (accept(lex, TOK_LCHEVRON)){
-      if (accept(lex, TOK_EQ)){
+  if (peek(parser, lex, TOK_LCHEVRON) || peek(parser, lex, TOK_RCHEVRON)){
+    if (accept(parser, lex, TOK_LCHEVRON)){
+      if (accept(parser, lex, TOK_EQ)){
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("<= ");
         type = BINARY_LE;
@@ -537,8 +537,8 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
           printf("< ");
         type = BINARY_LT;
       }
-    } else if (accept(lex, TOK_RCHEVRON)){
-      if (accept(lex, TOK_EQ)){
+    } else if (accept(parser, lex, TOK_RCHEVRON)){
+      if (accept(parser, lex, TOK_EQ)){
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf(">= ");
         type = BINARY_GE;
@@ -574,11 +574,11 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = cond_expr(parser, lex);
 
-  while (peek(lex, TOK_EQ) || peek(lex, TOK_BANG)){
+  while (peek(parser, lex, TOK_EQ) || peek(parser, lex, TOK_BANG)){
     save_lex = *lex;
 
-    if (accept(lex, TOK_EQ)){
-      if (accept(lex, TOK_EQ)){
+    if (accept(parser, lex, TOK_EQ)){
+      if (accept(parser, lex, TOK_EQ)){
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("== ");
         type = BINARY_EQ;
@@ -586,8 +586,8 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
         *lex = save_lex;
         return ret;
       }
-    } else if (accept(lex, TOK_BANG)){
-      if (accept(lex, TOK_EQ)){
+    } else if (accept(parser, lex, TOK_BANG)){
+      if (accept(parser, lex, TOK_EQ)){
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("!= ");
         type = BINARY_NE;
@@ -617,7 +617,7 @@ static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
 
   predicate = ret = eq_expr(parser, lex);
 
-  if (accept(lex, TOK_QUESTION)){
+  if (accept(parser, lex, TOK_QUESTION)){
     if (predicate == NULL){
       err(parser, lex, "expected an expression for the predicate");
       return NULL;
@@ -659,8 +659,8 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = ternary_expr(parser, lex);
 
-  while (peek(lex, TOK_EQ) /* TODO */){
-    if (accept(lex, TOK_EQ)){
+  while (peek(parser, lex, TOK_EQ) /* TODO */){
+    if (accept(parser, lex, TOK_EQ)){
       if (left->lvalue == false){
         err(parser, lex, "expected an lvalue at the LHS of the binary '=' operation");
         return NULL;
@@ -701,7 +701,7 @@ static struct node *comma_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = no_comma_expr(parser, lex);
 
-  while (accept(lex, TOK_COMMA)){
+  while (accept(parser, lex, TOK_COMMA)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(", ");
 
@@ -727,7 +727,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *ret = NULL;
 
-  if (accept_keyword(lex, "if")){
+  if (accept_keyword(parser, lex, "if")){
     /* {{{ */
     struct node *guard;
     struct node *body;
@@ -771,7 +771,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false;
     /* }}} */
   }
-  else if (accept_keyword(lex, "my")){
+  else if (accept_keyword(parser, lex, "my")){
     /* {{{ */
     char *name;
     uint8_t flags = 0x0;
@@ -781,7 +781,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("my ");
 
-    if (accept_keyword(lex, "const")){
+    if (accept_keyword(parser, lex, "const")){
       NOB_FLAG_SET(flags, NOB_FLAG_CONST);
 
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -809,9 +809,9 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
      * but hey, we need type inference first..
      */
 
-    if (peek(lex, TOK_LMUSTASHE)){
+    if (peek(parser, lex, TOK_LMUSTASHE)){
       value = expr(parser, lex);
-    } else if (accept(lex, TOK_EQ)){
+    } else if (accept(parser, lex, TOK_EQ)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(" = ");
       /* my [type] name = expr... */
@@ -832,7 +832,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false; /* hmm.. */
     /* }}} */
   }
-  else if (accept_keyword(lex, "print")){
+  else if (accept_keyword(parser, lex, "print")){
     /* {{{ */
     struct nodes_list *exprs = NULL;
     struct nodes_list *prev, *curr, *next;
@@ -848,7 +848,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       new->next = exprs;
       exprs = new;
 
-      while (accept(lex, TOK_COMMA)){
+      while (accept(parser, lex, TOK_COMMA)){
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf(", ");
         e = no_comma_expr(parser, lex);
@@ -879,7 +879,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false;
     /* }}} */
   }
-  else if (accept_keyword(lex, "typedef")){
+  else if (accept_keyword(parser, lex, "typedef")){
     /* {{{ */
     struct nob_type *new_type;
 
@@ -893,7 +893,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
     /* get the name for the type */
-    if (accept(lex, TOK_TYPE)){
+    if (accept(parser, lex, TOK_TYPE)){
       err(parser, lex, "cannot redefine the type '%s'", lex->curr_tok.value.s);
       return NULL;
     }
@@ -944,7 +944,7 @@ struct node *expr_list(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *first = NULL, *prev = NULL, *last;
 
-  while (!peek(lex, TOK_EOS) && !peek(lex, TOK_RMUSTASHE)){
+  while (!peek(parser, lex, TOK_EOS) && !peek(parser, lex, TOK_RMUSTASHE)){
     /* overwrite `first' if NULL (ie. set it only the first time) */
     last = expr(parser, lex);
     first = !first ? last : first;

@@ -41,7 +41,7 @@ static const char *keywords[] =
   NULL
 };
 
-static void err(struct lexer *lex, const char *fmt, ...)
+static void err(struct parser *parser, struct lexer *lex, const char *fmt, ...)
 {
   /* {{{ */
   va_list vl;
@@ -52,7 +52,9 @@ static void err(struct lexer *lex, const char *fmt, ...)
   fprintf(stderr, "\n");
   va_end(vl);
 
-  exit(1);
+  parser->errorless = false;
+  /* the skip makes the error messages not repeat themselves */
+  skip(parser, lex);
   /* }}} */
 }
 
@@ -92,7 +94,7 @@ static void fallback(struct lexer *lex)
   /* }}} */
 }
 
-static struct token fetch_token(struct lexer *lex)
+static struct token fetch_token(struct parser *parser, struct lexer *lex)
 {
   /* {{{ fetch_token body */
 
@@ -240,7 +242,7 @@ static struct token fetch_token(struct lexer *lex)
     wchar_t value = *(++p);
 
     if (*(p + 1) != '\'')
-      err(lex, "unterminated character");
+      err(parser, lex, "unterminated character");
 
     p += 2;
 
@@ -259,7 +261,7 @@ static struct token fetch_token(struct lexer *lex)
     }
 
     if (*p == '\n'){
-      err(lex, "unterminated string");
+      err(parser, lex, "unterminated string");
     }
 
     tmp_str = nmalloc(/* sizeof(char) times */slen + 1);
@@ -386,13 +388,13 @@ static void debug_print_token(struct token tok)
 }
 #endif
 
-void skip(struct lexer *lex)
+void skip(struct parser *parser, struct lexer *lex)
 {
   /* {{{ skip body */
-  struct token tok = fetch_token(lex);
+  struct token tok = fetch_token(parser, lex);
 
   if (tok.type == TOK_EOS){
-    err(lex, "unexpected <EOS>");
+    err(parser, lex, "unexpected <EOS>");
   }
 
 #if DEBUG
@@ -412,7 +414,7 @@ void skip(struct lexer *lex)
 struct token force(struct parser *parser, struct lexer *lex, enum token_type type)
 {
   /* {{{ force body */
-  struct token tok = fetch_token(lex);
+  struct token tok = fetch_token(parser, lex);
 
   if (tok.type == type){
 #if DEBUG
@@ -438,7 +440,7 @@ struct token force(struct parser *parser, struct lexer *lex, enum token_type typ
     parser->errorless = false;
     /* advance to the next token (sometimes there is an infinite loop that
      * fails to `force` a token) */
-    skip(lex);
+    skip(parser, lex);
     /* shut up, errors */
     return tok;
   }
@@ -448,9 +450,9 @@ struct token force(struct parser *parser, struct lexer *lex, enum token_type typ
 bool force_keyword(struct parser *parser, struct lexer *lex, const char *name)
 {
   /* {{{ force_keyword body */
-  if (peek(lex, TOK_KEYWORD)){
+  if (peek(parser, lex, TOK_KEYWORD)){
     if (!strcmp(name, lex->curr_tok.value.s)){
-      skip(lex);
+      skip(parser, lex);
       return true;
     }
   }
@@ -461,10 +463,10 @@ bool force_keyword(struct parser *parser, struct lexer *lex, const char *name)
   /* }}} */
 }
 
-bool accept(struct lexer *lex, enum token_type type)
+bool accept(struct parser *parser, struct lexer *lex, enum token_type type)
 {
   /* {{{ accept body */
-  struct token tok = fetch_token(lex);
+  struct token tok = fetch_token(parser, lex);
 
   if (tok.type == type){
 #if DEBUG
@@ -486,12 +488,12 @@ bool accept(struct lexer *lex, enum token_type type)
   /* }}} */
 }
 
-bool accept_keyword(struct lexer *lex, const char *name)
+bool accept_keyword(struct parser *parser, struct lexer *lex, const char *name)
 {
   /* {{{ accept_keyword body */
-  if (peek(lex, TOK_KEYWORD)){
+  if (peek(parser, lex, TOK_KEYWORD)){
     if (!strcmp(name, lex->curr_tok.value.s)){
-      skip(lex);
+      skip(parser, lex);
       return true;
     }
   }
@@ -500,10 +502,10 @@ bool accept_keyword(struct lexer *lex, const char *name)
   /* }}} */
 }
 
-bool peek(struct lexer *lex, enum token_type type)
+bool peek(struct parser *parser, struct lexer *lex, enum token_type type)
 {
   /* {{{ peek_body */
-  struct token tok = fetch_token(lex);
+  struct token tok = fetch_token(parser, lex);
 
   fallback(lex);
 

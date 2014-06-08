@@ -100,13 +100,14 @@ struct lexer {
   } nds_gc;
 };
 
-struct token force(struct parser *parser, struct lexer *lexer_state,
+struct token force(struct parser *parser, struct lexer *lex,
     enum token_type type);
-bool force_keyword(struct parser *parser, struct lexer *lexer_state,
+bool force_keyword(struct parser *parser, struct lexer *lex,
     const char *name);
-bool accept(struct lexer *lexer_state, enum token_type type);
-bool accept_keyword(struct lexer *lexer_state, const char *name);
-bool peek(struct lexer *lexer_state, enum token_type type);
+bool accept(struct parser *parser, struct lexer *lex, enum token_type type);
+bool accept_keyword(struct parser *parser, struct lexer *lex, const char *name);
+bool peek(struct parser *parser, struct lexer *lex, enum token_type type);
+void skip(struct parser *parser, struct lexer *lex);
 
 const char *tok_to_s(enum token_type);
 
