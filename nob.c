@@ -25,13 +25,14 @@
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
-struct nob_type *T_ANY   = NULL;
-struct nob_type *T_INT   = NULL;
-struct nob_type *T_BYTE  = NULL;
-struct nob_type *T_WORD  = NULL;
-struct nob_type *T_DWORD = NULL;
-struct nob_type *T_QWORD = NULL;
-struct nob_type *T_CHAR  = NULL;
+struct nob_type *T_ANY;
+struct nob_type *T_INT;
+struct nob_type *T_BYTE;
+struct nob_type *T_WORD;
+struct nob_type *T_DWORD;
+struct nob_type *T_QWORD;
+struct nob_type *T_CHAR;
+struct nob_type *T_STRING;
 
 /* an (malloced, d'oh) array of `struct nob_type' pointers */
 struct nob_type **NM_types = NULL;
@@ -56,13 +57,14 @@ void types_init(void)
   NM_types_curr = NM_types;
 
   /* create the standard types */
-  T_ANY   = new_type("*", OT_ANY);
-  T_INT   = new_type("int", OT_INTEGER, 1, 0, 0);
-  T_BYTE  = new_type("byte", OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
-  T_WORD  = new_type("word", OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
-  T_DWORD = new_type("dword", OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
-  T_QWORD = new_type("qword", OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
-  T_CHAR  = new_type("char", OT_CHAR);
+  T_ANY    = new_type("*", OT_ANY);
+  T_INT    = new_type("int", OT_INTEGER, 1, 0, 0);
+  T_BYTE   = new_type("byte", OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
+  T_WORD   = new_type("word", OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
+  T_DWORD  = new_type("dword", OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
+  T_QWORD  = new_type("qword", OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
+  T_CHAR   = new_type("char", OT_CHAR);
+  T_STRING = new_type("string", OT_LIST, T_CHAR);
 }
 
 void types_finish(void)

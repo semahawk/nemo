@@ -885,6 +885,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("typedef ");
+
     new_type = type(parser, lex);
     /* ouch, it's not really a type! */
     if (!new_type){
@@ -892,9 +893,16 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
     /* get the name for the type */
+    if (accept(lex, TOK_TYPE)){
+      err(parser, lex, "cannot redefine the type '%s'", lex->curr_tok.value.s);
+      return NULL;
+    }
+
     force(parser, lex, TOK_NAME);
+
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(" %s", lex->curr_tok.value.s);
+
     /* if the type's name is NULL, then it's an anonymous type, which means
      * that simply setting it's name would do the thing just perfectly */
     if (new_type->name == NULL){

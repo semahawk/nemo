@@ -120,6 +120,7 @@ extern struct nob_type *T_WORD;
 extern struct nob_type *T_DWORD;
 extern struct nob_type *T_QWORD;
 extern struct nob_type *T_CHAR;
+extern struct nob_type *T_STRING;
 /* lexer, for instance, could use this */
 extern struct nob_type **NM_types;
 extern struct nob_type **NM_types_curr;
