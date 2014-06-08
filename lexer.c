@@ -118,10 +118,24 @@ static struct token fetch_token(struct lexer *lex)
         }
       }
     } else if (*p == '/' && *(p + 1) == '*'){
-      for (p++; *p != '\0'; p++)
-        if (*p == '*' && *(p + 1) == '/')
-          break;
+      int nest_level = 1;
+
       p += 2;
+      lex->col += 2;
+
+      for (; *p != '\0' && nest_level > 0; p++){
+        if (*p == '\n'){
+          lex->line++;
+          lex->col = 0;
+        } else if (*p == '/' && *(p + 1) == '*'){
+          nest_level++;
+          p++; lex->col += 2;
+        } else if (*p == '*' && *(p + 1) == '/'){
+          nest_level--;
+          p++; lex->col += 2;
+        } else
+          lex->col++;
+      }
     }
   } while (isspace(*p) || (*p == '/' && *(p + 1) == '*'));
   /* }}} */
