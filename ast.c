@@ -188,7 +188,9 @@ void dump_nop(struct node *nd)
 void dump_const(struct node *nd)
 {
   if (nd->type == NT_INTEGER)
-    printf("+ (#%u) const (%s)\n", nd->id, infnum_to_str(nd->in.i));
+    printf("+ (#%u) const (integer %s)\n", nd->id, infnum_to_str(nd->in.i));
+  else if (nd->type == NT_CHAR)
+    printf("+ (#%u) const (char %c)\n", nd->id, nd->in.c);
   else
     printf("+ (#%u) const\n", nd->id);
 }
@@ -365,6 +367,9 @@ struct node *exec_const(struct node *nd)
     debug_ast_exec(nd, "float (%f)", nd->in.f);
     /* FIXME */
     PUSH(new_nob(T_BYTE, (int)nd->in.f));
+  } else if (nd->type == NT_CHAR){
+    debug_ast_exec(nd, "char (%c)", nd->in.c);
+    PUSH(new_nob(T_CHAR, nd->in.c));
   }
 
   RETURN_NEXT;
@@ -557,10 +562,12 @@ struct node *exec_print(struct node *nd)
       case OT_INTEGER:
         printf("%s", infnum_to_str(*(struct infnum *)value->ptr));
         break;
+      case OT_CHAR:
+        printf("%c", (wchar_t)value->ptr);
+        break;
 
       /* fall through */
       case OT_REAL:
-      case OT_CHAR:
       case OT_STRING:
       case OT_TUPLE:
       case OT_LIST:
@@ -608,6 +615,24 @@ struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum val
   nd->result_type = T_INT;
 
   debug_ast_new(nd, "integer (%s) ", infnum_to_str(value));
+
+  return nd;
+  /* }}} */
+}
+
+struct node *new_char(struct parser *parser, struct lexer *lex, wchar_t value)
+{
+  /* {{{ */
+  struct node *nd = new_node(parser, lex);
+
+  nd->type = NT_CHAR;
+  nd->in.c = value;
+  nd->execf = exec_const;
+#if DEBUG
+  nd->dumpf = dump_const;
+#endif
+
+  debug_ast_new(nd, "char (%c) ", value);
 
   return nd;
   /* }}} */

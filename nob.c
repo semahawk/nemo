@@ -31,6 +31,7 @@ struct nob_type *T_BYTE  = NULL;
 struct nob_type *T_WORD  = NULL;
 struct nob_type *T_DWORD = NULL;
 struct nob_type *T_QWORD = NULL;
+struct nob_type *T_CHAR  = NULL;
 
 /* an (malloced, d'oh) array of `struct nob_type' pointers */
 struct nob_type **NM_types = NULL;
@@ -55,12 +56,13 @@ void types_init(void)
   NM_types_curr = NM_types;
 
   /* create the standard types */
-  T_ANY   = new_type("*",   OT_ANY);
-  T_INT   = new_type("int",   OT_INTEGER, 1, 0, 0);
-  T_BYTE  = new_type("byte",  OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
-  T_WORD  = new_type("word",  OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
+  T_ANY   = new_type("*", OT_ANY);
+  T_INT   = new_type("int", OT_INTEGER, 1, 0, 0);
+  T_BYTE  = new_type("byte", OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
+  T_WORD  = new_type("word", OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
   T_DWORD = new_type("dword", OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
   T_QWORD = new_type("qword", OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
+  T_CHAR  = new_type("char", OT_CHAR);
 }
 
 void types_finish(void)
@@ -120,7 +122,9 @@ void gc_finish(void)
 
   for (; p != NM_gc_curr; p++){
     /* free the value associated with the object */
-    nfree(p->ptr);
+    /* unless it's a OT_CHAR (where the pointer is the actual value) */
+    if (p->type->primitive != OT_CHAR)
+      nfree(p->ptr);
   }
 
   /* free the whole pool */
@@ -170,14 +174,23 @@ Nob *new_nob(struct nob_type *type, ...)
 
       new.ptr = nmalloc(sizeof(struct infnum));
       *(struct infnum *)new.ptr = num;
-
-      break;
       /* }}} */
+      break;
+    }
+    case OT_CHAR:
+    {
+      /* {{{ */
+      wchar_t value = va_arg(vl, wchar_t);
+
+      /* the pointer is the actual value */
+      new.ptr = value;
+      /* this approach most likely needs serious help */
+      /* }}} */
+      break;
     }
 
     /* suspress warnings */
     case OT_REAL:
-    case OT_CHAR:
     case OT_STRING:
     case OT_TUPLE:
     case OT_FUN:
@@ -241,7 +254,11 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     case OT_ANY:
       /* nothing */
       break;
-    case OT_INTEGER: {
+    case OT_CHAR:
+      /* nothing */
+      break;
+    case OT_INTEGER:
+    {
       /* {{{ */
       int64_t limitless   = va_arg(vl, int64_t);
       int64_t limit_lower = va_arg(vl, int64_t);
@@ -253,7 +270,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
-    case OT_TUPLE: {
+    case OT_TUPLE:
+    {
       /* {{{ */
       struct field *fields;
 
@@ -267,7 +285,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
-    case OT_LIST: {
+    case OT_LIST:
+    {
       /* {{{ */
       struct nob_type *type = va_arg(vl, struct nob_type *);
 
@@ -275,7 +294,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
-    case OT_FUN: {
+    case OT_FUN:
+    {
       /* {{{ */
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
       struct nob_type **params = va_arg(vl, struct nob_type **);
@@ -296,9 +316,9 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
+
     /* suspress warnings */
     case OT_REAL:
-    case OT_CHAR:
     case OT_STRING:
       break;
     default:

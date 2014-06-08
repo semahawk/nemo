@@ -163,9 +163,10 @@ int main(int argc, char *argv[])
     dump_types();
 
 end:
+  /* the order quite matters */
   arg_stack_finish();
-  types_finish();
   gc_finish();
+  types_finish();
   scopes_finish();
 
   return ret;

@@ -25,6 +25,7 @@ enum token_type {
   TOK_INTEGER,        /*                */
   TOK_FLOAT,          /*                */
   TOK_STRING,         /*                */
+  TOK_CHAR,           /*                */
   TOK_NAME,           /*                */
   TOK_KEYWORD,        /*                */
   TOK_TYPE,           /*                */
@@ -55,10 +56,10 @@ struct token {
   enum token_type type;
   union {
     struct infnum i;
-    double f;
-    char   s[MAX_NAME_LENGTH];
-    char *sp;
-    char   c;
+    double  f;
+    char    s[MAX_NAME_LENGTH];
+    char  *sp;
+    wchar_t c;
   } value;
 };
 

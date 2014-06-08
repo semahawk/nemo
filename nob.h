@@ -55,7 +55,6 @@ struct nob_type {
   union {
     struct {
       int limitless;
-      /* TODO: type of these two should be handled better (probably..) */
       int64_t limit_lower;
       int64_t limit_upper;
     } integer;
@@ -120,6 +119,7 @@ extern struct nob_type *T_BYTE;
 extern struct nob_type *T_WORD;
 extern struct nob_type *T_DWORD;
 extern struct nob_type *T_QWORD;
+extern struct nob_type *T_CHAR;
 /* lexer, for instance, could use this */
 extern struct nob_type **NM_types;
 extern struct nob_type **NM_types_curr;

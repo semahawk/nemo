@@ -306,17 +306,26 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   } else if (accept(lex, TOK_INTEGER)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", infnum_to_str(lex->curr_tok.value.i));
+
     ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->lvalue = false;
   } else if (accept(lex, TOK_FLOAT)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%f=16 ", lex->curr_tok.value.f);
+
     ret = new_int(parser, lex, infnum_from_int(16));
     ret->lvalue = false;
   } else if (accept(lex, TOK_STRING)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("\"%s\"=32", lex->curr_tok.value.sp);
+      printf("\"%s\"=32 ", lex->curr_tok.value.sp);
+
     ret = new_int(parser, lex, infnum_from_int(32));
+    ret->lvalue = false;
+  } else if (accept(lex, TOK_CHAR)){
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("'%c' ", lex->curr_tok.value.c);
+
+    ret = new_char(parser, lex, lex->curr_tok.value.c);
     ret->lvalue = false;
   } else if (accept(lex, TOK_NAME)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -781,9 +790,14 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     var_type = type(parser, lex);
 
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      putchar(' ');
+
     force(parser, lex, TOK_NAME);
+
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", lex->curr_tok.value.s);
+
     name = strdup(lex->curr_tok.value.s);
 
     /*

@@ -235,6 +235,19 @@ static struct token fetch_token(struct lexer *lex)
     lex->col += i;
     /* }}} */
   }
+  else if (*p == '\''){
+    /* {{{ CHAR */
+    wchar_t value = *(++p);
+
+    if (*(p + 1) != '\'')
+      err(lex, "unterminated character");
+
+    p += 2;
+
+    ret.type = TOK_CHAR;
+    ret.value.c = value;
+    /* }}} */
+  }
   else if (*p == '"'){
     /* {{{ STRING */
     char *savep;
@@ -264,7 +277,7 @@ static struct token fetch_token(struct lexer *lex)
     /* }}} */
   }
   else switch (*p){
-    /* {{{ SINGLE CHAR */
+    /* {{{ OTHER (SINGLE CHAR) */
     case '=': ret.value.c = *p; lex->col++; p++; ret.type = TOK_EQ; break;
     case ':': ret.value.c = *p; lex->col++; p++; ret.type = TOK_COLON; break;
     case ';': ret.value.c = *p; lex->col++; p++; ret.type = TOK_SEMICOLON; break;
@@ -316,6 +329,11 @@ static void debug_print_token(struct token tok)
     case TOK_STRING:
       /* {{{ */
       fprintf(stderr, "string \"%s\"", tok.value.sp);
+      /* }}} */
+      break;
+    case TOK_CHAR:
+      /* {{{ */
+      fprintf(stderr, "char '%c'", tok.value.c);
       /* }}} */
       break;
     case TOK_TYPE:
@@ -514,6 +532,7 @@ const char *tok_to_s(enum token_type type)
     case TOK_INTEGER:   return "integer";
     case TOK_FLOAT:     return "float";
     case TOK_STRING:    return "string";
+    case TOK_CHAR:      return "character";
     case TOK_NAME:      return "name";
     case TOK_KEYWORD:   return "keyword";
     case TOK_TYPE:      return "type name";
