@@ -119,8 +119,8 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
           upper = primary_expr(parser, lex);
 
-          if (infnum_cmp(lower->in.i, upper->in.i) == INFNUM_CMP_GE){
-            err(parser, lex, "invalid values for `lim'");
+          if (infnum_cmp(lower->in.i, upper->in.i) & (INFNUM_CMP_GT | INFNUM_CMP_EQ)){
+            err(parser, lex, "invalid values for `lim', the upper limit must be larger than the lower limit");
             return ret;
           }
 
@@ -304,8 +304,10 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false; /* hmm.. */
     /* }}} */
   } else if (accept(parser, lex, TOK_INTEGER)){
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("%s ", infnum_to_str(lex->curr_tok.value.i));
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)){
+      infnum_print(lex->curr_tok.value.i, stdout);
+      putchar(' ');
+    }
 
     ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->lvalue = false;
@@ -313,13 +315,13 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%f=16 ", lex->curr_tok.value.f);
 
-    ret = new_int(parser, lex, infnum_from_int(16));
+    ret = new_int(parser, lex, infnum_from_byte(16));
     ret->lvalue = false;
   } else if (accept(parser, lex, TOK_STRING)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("\"%s\"=32 ", lex->curr_tok.value.sp);
 
-    ret = new_int(parser, lex, infnum_from_int(32));
+    ret = new_int(parser, lex, infnum_from_byte(32));
     ret->lvalue = false;
   } else if (accept(parser, lex, TOK_CHAR)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))

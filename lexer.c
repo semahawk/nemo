@@ -320,7 +320,8 @@ static void debug_print_token(struct token tok)
   switch (tok.type){
     case TOK_INTEGER:
       /* {{{ */
-      fprintf(stderr, "integer %s", infnum_to_str(tok.value.i));
+      fprintf(stderr, "integer ");
+      infnum_print(tok.value.i, stderr);
       /* }}} */
       break;
     case TOK_FLOAT:

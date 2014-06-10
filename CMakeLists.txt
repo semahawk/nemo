@@ -72,7 +72,7 @@ set(binsrc
   util.c
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -g")
 configure_file("${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_SOURCE_DIR}/config.h")
 
 add_library(libnemo SHARED ${libsrc})
@@ -80,6 +80,7 @@ add_executable(nemo ${binsrc})
 set_target_properties(libnemo
   PROPERTIES OUTPUT_NAME nemo
   SOVERSION 0 VERSION 0.4.0)
+target_link_libraries(nemo m)
 target_link_libraries(nemo libnemo)
 
 # Linux needs the libdl to be linked into the program

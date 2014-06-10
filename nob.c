@@ -165,17 +165,16 @@ Nob *new_nob(struct nob_type *type, ...)
 
   /* set up the new object with some knowns */
   new.type = type;
-  new.ptr = NULL; /* FIXME */
+  new.ptr = NULL;
 
   switch (type->primitive){
     case OT_INTEGER:
     {
       /* {{{ */
-      char *value = va_arg(vl, char *);
-      struct infnum num = infnum_from_str(value);
+      struct infnum value = va_arg(vl, struct infnum);
 
       new.ptr = nmalloc(sizeof(struct infnum));
-      *(struct infnum *)new.ptr = num;
+      *(struct infnum *)new.ptr = value;
       /* }}} */
       break;
     }
@@ -345,7 +344,7 @@ bool nob_is_true(Nob *ob)
 
   switch (ob->type->primitive){
     case OT_INTEGER:
-      if (infnum_cmp(*(struct infnum *)ob->ptr, infnum_from_str("0")) == INFNUM_CMP_EQ)
+      if (infnum_is_zero(*(struct infnum *)ob->ptr))
         return false;
       else
         return true;

@@ -187,9 +187,11 @@ void dump_nop(struct node *nd)
 
 void dump_const(struct node *nd)
 {
-  if (nd->type == NT_INTEGER)
-    printf("+ (#%u) const (integer %s)\n", nd->id, infnum_to_str(nd->in.i));
-  else if (nd->type == NT_CHAR)
+  if (nd->type == NT_INTEGER){
+    printf("+ (#%u) const (integer ", nd->id);
+    infnum_print(nd->in.i, stdout);
+    printf(")\n");
+  } else if (nd->type == NT_CHAR)
     printf("+ (#%u) const (char %c)\n", nd->id, nd->in.c);
   else
     printf("+ (#%u) const\n", nd->id);
@@ -361,7 +363,7 @@ struct node *exec_const(struct node *nd)
 {
   /* {{{  */
   if (nd->type == NT_INTEGER){
-    debug_ast_exec(nd, "integer (%s)", infnum_to_str(nd->in.i));
+    debug_ast_exec(nd, "integer");
     PUSH(new_nob(T_INT, nd->in.i));
   } else if (nd->type == NT_FLOAT){
     debug_ast_exec(nd, "float (%f)", nd->in.f);
@@ -448,6 +450,9 @@ struct node *exec_binop(struct node *nd)
     case BINARY_SUB:
       PUSH(new_nob(T_INT, infnum_sub(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
       break;
+    case BINARY_MUL:
+      PUSH(new_nob(T_INT, infnum_mul(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
+      break;
 
     /* fall through */
     case BINARY_GT:
@@ -456,7 +461,6 @@ struct node *exec_binop(struct node *nd)
     case BINARY_LE:
     case BINARY_EQ:
     case BINARY_NE:
-    case BINARY_MUL:
     case BINARY_DIV:
     case BINARY_MOD:
     case BINARY_ASSIGN:
@@ -560,7 +564,7 @@ struct node *exec_print(struct node *nd)
 
     switch (value->type->primitive){
       case OT_INTEGER:
-        printf("%s", infnum_to_str(*(struct infnum *)value->ptr));
+        infnum_print(*(struct infnum *)value->ptr, stdout);
         break;
       case OT_CHAR:
         printf("%c", (wchar_t)value->ptr);
@@ -614,7 +618,7 @@ struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum val
 #endif
   nd->result_type = T_INT;
 
-  debug_ast_new(nd, "integer (%s) ", infnum_to_str(value));
+  debug_ast_new(nd, "integer");
 
   return nd;
   /* }}} */

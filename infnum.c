@@ -10,215 +10,516 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "infnum.h"
 #include "mem.h"
 #include "util.h"
 
 /*
- * Nemo's implementation of arbitrary precision numbers.
+ * Nemo's (lousy) implementation of arbitrary precision numbers.
+ *
+ * Some parts were taken from here[1], which makes it actualy a bit less lousy.
+ *
+ * [1] http://en.literateprograms.org/Arbitrary-precision_integer_arithmetic_(C)
  */
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+struct infnum infnum_raw(unsigned nmemb)
+{
+  struct infnum num;
+  unsigned i;
+
+  num.nmemb = nmemb;
+  num.digits = nmalloc(sizeof(infnum_digit_t) * nmemb);
+  num.sign = INFNUM_SIGN_POS;
+
+  /* zero-out, d'uh */
+  for (i = 0; i < nmemb; i++)
+    num.digits[i] = 0;
+
+  return num;
+}
+
+bool infnum_is_zero(struct infnum num)
+{
+  unsigned i;
+
+  for (i = 0; i < num.nmemb; i++)
+    if (num.digits[i] != 0)
+      return false;
+
+  return true;
+}
+
+struct infnum infnum_from_byte(uint8_t v)
+{
+  struct infnum ret;
+
+  ret.digits = nmalloc(sizeof(infnum_digit_t) * 1);
+  ret.digits[0] = (infnum_digit_t)v;
+  ret.nmemb = 1;
+  ret.sign = INFNUM_SIGN_POS;
+
+  return ret;
+}
+
+struct infnum infnum_from_word(uint16_t v)
+{
+  struct infnum ret;
+
+  ret.digits = nmalloc(sizeof(infnum_digit_t) * 1);
+  ret.digits[0] = (infnum_digit_t)v;
+  ret.nmemb = 1;
+  ret.sign = INFNUM_SIGN_POS;
+
+  return ret;
+}
+
+struct infnum infnum_from_dword(uint32_t v)
+{
+  struct infnum ret;
+
+  ret.digits = nmalloc(sizeof(infnum_digit_t) * 1);
+  ret.digits[0] = (infnum_digit_t)v;
+  ret.nmemb = 1;
+  ret.sign = INFNUM_SIGN_POS;
+
+  return ret;
+}
+
+struct infnum infnum_from_qword(uint64_t v)
+{
+  struct infnum ret;
+
+  ret.digits = nmalloc(sizeof(infnum_digit_t) * 2);
+  ret.digits[0] = (INFNUM_MAX_DIGIT_VALUE & v);
+  ret.digits[1] = (((infnum_double_digit_t)INFNUM_MAX_DIGIT_VALUE << INFNUM_DIGIT_BITS) & v) >> INFNUM_DIGIT_BITS;
+  ret.nmemb = 2;
+  ret.sign = INFNUM_SIGN_POS;
+
+  return ret;
+}
 
 struct infnum infnum_from_str(char *s)
 {
   struct infnum num;
+  struct infnum digit = infnum_from_word(1);
+  unsigned i;
 
-  /* see if the first digit is a sign 'digit' */
-  if (*s == '+' || *s == '-'){
-    if (*s == '+')
-      num.sign = INFNUM_SIGN_POS;
-    else if (*s == '-')
-      num.sign = INFNUM_SIGN_NEG;
-    s++;
-  } else {
-    /* positive is the default */
-    num.sign = INFNUM_SIGN_POS;
+  assert(s);
+
+  num = infnum_raw((int)ceil(LOG_2_10 * strlen(s) /
+        INFNUM_DIGIT_BITS));
+
+  for (i = 0; s[i] != '\0'; i++){
+    infnum_mul_by_small_inline(num, 10, num);
+    digit.digits[0] = s[i] - '0';
+    infnum_add_inline(num, digit, num);
   }
 
-  num.digits = nmalloc(/* sizeof(char) times */ strlen(s) + 2);
-  num.digits++;
-  strncpy(num.digits, s, strlen(s));
+  free_infnum(digit);
 
   return num;
 }
 
-struct infnum infnum_from_int(int v)
+void infnum_print(struct infnum num, FILE *fp)
 {
-  struct infnum num;
-  unsigned digits_count; /* number of digits, d'uh */
-  int temp, i;
+  int i;
 
-  if (v >= 0) num.sign = INFNUM_SIGN_POS;
-  else        num.sign = INFNUM_SIGN_NEG;
+  if (num.sign == INFNUM_SIGN_NEG)
+    fprintf(fp, "-");
 
-  v = abs(v);
+  fprintf(fp, "0x");
 
-  /* calculate the number of digits in <i> */
-  for (temp = v, digits_count = 0; temp > 0; temp /= 10, digits_count++)
-    ;
-
-  num.digits = nmalloc(/* sizeof(char) times */ digits_count + 2);
-  /* leave a space for the sign bit (this space is actually only used by
-   * `infnum_to_str') */
-  num.digits++;
-
-  for (i = digits_count - 1, temp = v; temp > 0 && i >= 0; temp /= 10, i--)
-    num.digits[i] = temp % 10 + '0';
-
-  num.digits[digits_count] = '\0';
-
-  return num;
+  /* the 'digits' are stored in reverse order */
+  for (i = num.nmemb - 1; i >= 0; i--)
+    fprintf(fp, "%x", num.digits[i]);
 }
 
-char *infnum_to_str(struct infnum num)
+uint8_t infnum_to_byte(struct infnum num)
 {
-  if (num.sign == INFNUM_SIGN_POS)
-    return num.digits;
-  else {
-    /* ugly (but very handy) hack */
-    *(num.digits - 1) = '-';
-    return num.digits - 1;
-  }
+  if (num.nmemb >= 1)
+    return 0xff & num.digits[0];
+  else
+    /* this probably should be handled better */
+    return 0;
 }
 
-int64_t infnum_to_qword(struct infnum num)
+uint16_t infnum_to_word(struct infnum num)
 {
-  return 0xdeadcafe;
+  if (num.nmemb >= 1)
+    return 0xffff & num.digits[0];
+  else
+    /* this probably should be handled better */
+    return 0;
+}
+
+uint32_t infnum_to_dword(struct infnum num)
+{
+  if (num.nmemb >= 1)
+    return num.digits[0];
+  else
+    /* this probably should be handled better */
+    return 0;
+}
+
+uint64_t infnum_to_qword(struct infnum num)
+{
+  if (num.nmemb >= 2)
+    return ((infnum_double_digit_t)num.digits[1] << INFNUM_DIGIT_BITS) | num.digits[0];
+  else if (num.nmemb == 1)
+    return (infnum_digit_t)num.digits[0];
+  else
+    /* this probably should be handled better */
+    return 0;
 }
 
 enum infnum_cmp infnum_cmp(struct infnum a, struct infnum b)
 {
-  size_t lenof_a, lenof_b;
+  /* {{{ */
+  int i = MAX(a.nmemb - 1, b.nmemb - 1);
 
-  if (a.sign == INFNUM_SIGN_POS && b.sign == INFNUM_SIGN_NEG) return INFNUM_CMP_GT;
-  if (a.sign == INFNUM_SIGN_NEG && b.sign == INFNUM_SIGN_POS) return INFNUM_CMP_LT;
+  for (; i >= 0; i--){
+#define digit(n) ((((unsigned)i) < (n).nmemb) ? (n).digits[i] : 0)
 
-  lenof_a = strlen(a.digits);
-  lenof_b = strlen(b.digits);
+    if (digit(a) < digit(b))
+      return INFNUM_CMP_LT;
+    else if (digit(a) > digit(b))
+      return INFNUM_CMP_GT;
 
-  if (lenof_a > lenof_b) return INFNUM_CMP_GT; else
-  if (lenof_a < lenof_b) return INFNUM_CMP_LT;
-  else {
-    size_t i;
-
-    for (i = 0; i < lenof_a; i++)
-      if (a.digits[i] != b.digits[i])
-        return INFNUM_CMP_NE;
-
-    return INFNUM_CMP_EQ;
+#undef digit
   }
+
+  return INFNUM_CMP_EQ;
+  /* }}} */
 }
 
 struct infnum infnum_add(struct infnum a, struct infnum b)
 {
+  /* {{{ */
   struct infnum sum;
-  size_t lenof_a = strlen(a.digits);
-  size_t lenof_b = strlen(b.digits);
-  char *ap, *bp;
+  infnum_double_digit_t carry;
   unsigned i;
-  int carry;
-  size_t max = MAX(lenof_a, lenof_b);
 
-  if (a.sign == b.sign) sum.sign = a.sign;
+  sum.nmemb = MAX(a.nmemb, b.nmemb) + 2;
+  sum.digits = nmalloc(sizeof(infnum_digit_t) * sum.nmemb);
+
+  if (a.sign == a.sign) sum.sign = a.sign;
   else {
     if (a.sign == INFNUM_SIGN_NEG){
-      /* -a + b = b - a */
+      /* -a + b becomes b - a */
       a.sign = INFNUM_SIGN_POS;
       sum = infnum_sub(b, a);
       return sum;
     } else {
-      /* a + (-b) = a - b */
+      /* a + (-b) becomes a - b */
       b.sign = INFNUM_SIGN_POS;
       sum = infnum_sub(a, b);
       return sum;
     }
   }
 
-  /* assume there is always going to be 'overflow' (hence +2) */
-  /* additional +1 (for the sign just before the actual number) */
-  sum.digits = nmalloc(/* sizeof(char) times */ max + 3);
-  sum.digits++;
+  for (carry = 0, i = 0; i < sum.nmemb; i++){
+#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
 
-  for (carry = 0, i = 0; i < max + 2; i++){
-    /* current `a' character */
-    char ac = i >= lenof_a ? 0 : a.digits[lenof_a - i - 1] - '0';
-    /* current `b' character */
-    char bc = i >= lenof_b ? 0 : b.digits[lenof_b - i - 1] - '0';
+    sum.digits[i] = (infnum_digit_t)(digit(a) + digit(b) + carry);
+    carry = ((infnum_double_digit_t)digit(a) + digit(b)) >> (INFNUM_DIGIT_BITS);
 
-    sum.digits[/* max + 2 - i - 1 */ max - i + 1] = ((carry + ac + bc) % 10) + '0';
-    carry = (carry + ac + bc) / 10;
+#undef digit
   }
 
-  /* nul-terminate */
-  sum.digits[i] = '\0';
-
   return sum;
+  /* }}} */
+}
+
+void infnum_add_inline(struct infnum a, struct infnum b, struct infnum result)
+{
+  /* {{{ */
+  infnum_double_digit_t carry;
+  unsigned i;
+
+  if (a.sign == a.sign) result.sign = a.sign;
+  else {
+    if (a.sign == INFNUM_SIGN_NEG){
+      /* -a + b becomes b - a */
+      a.sign = INFNUM_SIGN_POS;
+      infnum_sub_inline(a, b, result);
+      return;
+    } else {
+      /* a + (-b) becomes a - b */
+      b.sign = INFNUM_SIGN_POS;
+      infnum_sub_inline(b, a, result);
+      return;
+    }
+  }
+
+  for (carry = 0, i = 0; i < result.nmemb; i++){
+#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
+
+    result.digits[i] = (infnum_digit_t)(digit(a) + digit(b) + carry);
+    carry = ((infnum_double_digit_t)digit(a) + digit(b)) >> (INFNUM_DIGIT_BITS);
+
+#undef digit
+  }
+
+  return;
+  /* }}} */
 }
 
 struct infnum infnum_sub(struct infnum a, struct infnum b)
 {
+  /* {{{ */
   struct infnum diff;
-  size_t lenof_a = strlen(a.digits);
-  size_t lenof_b = strlen(b.digits);
-  char *ap, *bp;
   unsigned i;
-  size_t max = MAX(lenof_a, lenof_b);
+  bool borrow;
 
   if (a.sign == b.sign) diff.sign = a.sign;
   else {
     if (a.sign == INFNUM_SIGN_NEG){
-      /* -a - b = -(a + b) */
+      /* -a - b becomes -(a + b) */
       a.sign = INFNUM_SIGN_POS;
-      diff = infnum_add(b, a);
+      diff = infnum_add(a, b);
       diff.sign = INFNUM_SIGN_NEG;
       return diff;
     } else {
-      /* a - (-b) = a + b */
+      /* a - (-b) becomes a + b */
       b.sign = INFNUM_SIGN_POS;
       diff = infnum_add(a, b);
       return diff;
     }
   }
 
-  /* switch the numbers (if necessary) to always subtract the smaller from the bigger */
-  if (infnum_cmp(b, a) == INFNUM_CMP_GT){
-    /* small - big = -(big - small) */
+  /* switch the values in place if necessary, so that <a> is the bigger one */
+  if (infnum_cmp(a, b) == INFNUM_CMP_LT){
+    /* small - big becomes -(big - small) */
     struct infnum temp = a;
-    size_t lentemp = lenof_a;
 
     a = b; b = temp;
-    lenof_a = lenof_b; lenof_b = lentemp;
     diff.sign = INFNUM_SIGN_NEG;
   }
 
-  /* +2 (for nul and for the sign just before the actual number */
-  diff.digits = nmalloc(/* sizeof(char) times */ lenof_a + 2);
-  diff.digits++;
+  diff.nmemb = MAX(a.nmemb, b.nmemb);
+  diff.digits = nmalloc(sizeof(infnum_digit_t) * diff.nmemb);
 
-  strcpy(diff.digits, a.digits);
+  for (borrow = false, i = 0; i < a.nmemb; i++){
+    infnum_double_digit_t lhs = a.digits[i];
+    infnum_double_digit_t rhs = i < b.nmemb ? b.digits[i] : 0;
 
-  for (i = 0; i < lenof_a; i++){
-    /* current `diff' character */
-    char dc = i >= lenof_a ? 0 : diff.digits[lenof_a - i - 1] - '0';
-    /* current `b' character */
-    char bc = i >= lenof_b ? 0 :    b.digits[lenof_b - i - 1] - '0';
+    if (borrow){
+      if (lhs <= rhs){
+        /* leave borrow set */
+        lhs += (INFNUM_MAX_DIGIT_VALUE + 1) - 1;
+      } else {
+        borrow = false;
+        lhs--;
+      }
+    }
 
-    if (dc >= bc){
-      diff.digits[lenof_a - i - 1] = dc - bc + '0';
+    if (lhs < rhs){
+      borrow = true;
+      lhs += INFNUM_MAX_DIGIT_VALUE + 1;
+    }
+
+    diff.digits[i] = lhs - rhs;
+  }
+
+  for (; i < diff.nmemb; i++)
+    diff.digits[i] = 0;
+
+  return diff;
+  /* }}} */
+}
+
+void infnum_sub_inline(struct infnum a, struct infnum b, struct infnum result)
+{
+  /* {{{ */
+  unsigned i;
+  bool borrow;
+
+  if (a.sign == b.sign) result.sign = a.sign;
+  else {
+    if (a.sign == INFNUM_SIGN_NEG){
+      /* -a - b becomes -(a + b) */
+      a.sign = INFNUM_SIGN_POS;
+      infnum_add_inline(a, b, result);
+      result.sign = INFNUM_SIGN_NEG;
+      return;
     } else {
-      diff.digits[lenof_a - i - 2] -= 1;
-      diff.digits[lenof_a - i - 1] += 10 - bc;
+      /* a - (-b) becomes a + b */
+      b.sign = INFNUM_SIGN_POS;
+      infnum_add_inline(a, b, result);
+      return;
     }
   }
 
-  /* nul-terminate */
-  diff.digits[i] = '\0';
+  /* switch the values in place if necessary, so that <a> is the bigger one */
+  if (infnum_cmp(a, b) == INFNUM_CMP_LT){
+    /* small - big = -(big - small) */
+    struct infnum temp = a;
 
-  return diff;
+    a = b; b = temp;
+    result.sign = INFNUM_SIGN_NEG;
+  }
+
+  for (borrow = false, i = 0; i < a.nmemb; i++){
+    infnum_double_digit_t lhs = a.digits[i];
+    infnum_double_digit_t rhs = i < b.nmemb ? b.digits[i] : 0;
+
+    if (borrow){
+      if (lhs <= rhs){
+        /* leave borrow set */
+        lhs += (INFNUM_MAX_DIGIT_VALUE + 1) - 1;
+      } else {
+        borrow = false;
+        lhs--;
+      }
+    }
+
+    if (lhs < rhs){
+      borrow = true;
+      lhs += INFNUM_MAX_DIGIT_VALUE + 1;
+    }
+
+    result.digits[i] = lhs - rhs;
+  }
+
+  for (; i < result.nmemb; i++)
+    result.digits[i] = 0;
+
+  /* }}} */
+}
+
+struct infnum infnum_mul(struct infnum a, struct infnum b)
+{
+  /* {{{ */
+  struct infnum prod;
+  int i, lidx, ridx;
+  infnum_double_digit_t carry = 0;
+  int max_size_no_carry;
+  int a_max_digit = a.nmemb - 1;
+  int b_max_digit = b.nmemb - 1;
+
+  while (a.digits[a_max_digit] == 0) a_max_digit--;
+  while (b.digits[b_max_digit] == 0) b_max_digit--;
+
+  max_size_no_carry = a_max_digit + b_max_digit;
+
+  prod.nmemb = a.nmemb + b.nmemb;
+  prod.digits = nmalloc(sizeof(infnum_digit_t) * prod.nmemb);
+
+  for (i = 0; i <= max_size_no_carry || carry != 0; i++){
+    infnum_double_digit_t partial_sum = carry;
+    carry = 0;
+    lidx = MIN(i, a_max_digit);
+    ridx = i - lidx;
+
+    while (lidx >= 0 && ridx <= b_max_digit){
+      partial_sum += ((infnum_double_digit_t)a.digits[lidx]) * b.digits[ridx];
+      carry += partial_sum >> INFNUM_DIGIT_BITS;
+      partial_sum &= INFNUM_MAX_DIGIT_VALUE;
+      lidx--; ridx++;
+    }
+
+    prod.digits[i] = partial_sum;
+  }
+
+  for (; (unsigned)i < prod.nmemb; i++)
+    prod.digits[i] = 0;
+
+  return prod;
+  /* }}} */
+}
+
+void infnum_mul_inline(struct infnum a, struct infnum b, struct infnum result)
+{
+  /* {{{ */
+  int i, lidx, ridx;
+  infnum_double_digit_t carry = 0;
+  int max_size_no_carry;
+  int a_max_digit = a.nmemb - 1;
+  int b_max_digit = b.nmemb - 1;
+
+  while (a.digits[a_max_digit] == 0) a_max_digit--;
+  while (b.digits[b_max_digit] == 0) b_max_digit--;
+
+  max_size_no_carry = a_max_digit + b_max_digit;
+
+  for (i = 0; i <= max_size_no_carry || carry != 0; i++){
+    infnum_double_digit_t partial_sum = carry;
+    carry = 0;
+    lidx = MIN(i, a_max_digit);
+    ridx = i - lidx;
+
+    while (lidx >= 0 && ridx <= b_max_digit){
+      partial_sum += ((infnum_double_digit_t)a.digits[lidx]) * b.digits[ridx];
+      carry += partial_sum >> INFNUM_DIGIT_BITS;
+      partial_sum &= INFNUM_MAX_DIGIT_VALUE;
+      lidx--; ridx++;
+    }
+
+    result.digits[i] = partial_sum;
+  }
+
+  for (; (unsigned)i < result.nmemb; i++)
+    result.digits[i] = 0;
+
+  /* }}} */
+}
+
+struct infnum infnum_mul_by_small(struct infnum a, infnum_digit_t b)
+{
+  /* {{{ */
+  struct infnum prod;
+  unsigned i;
+  infnum_double_digit_t carry;
+
+  prod.nmemb = a.nmemb + 1; /* hmm.. */
+  prod.digits = nmalloc(sizeof(infnum_digit_t) * prod.nmemb);
+
+  for (carry = 0, i = 0; i < prod.nmemb; i++){
+#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
+
+    prod.digits[i] = digit(a) * b + carry;
+    carry = ((infnum_double_digit_t)digit(a) + b) >> INFNUM_DIGIT_BITS;
+
+#undef digit
+  }
+
+  return prod;
+  /* }}} */
+}
+
+void infnum_mul_by_small_inline(struct infnum a, infnum_digit_t b, struct infnum result)
+{
+  /* {{{ */
+  infnum_double_digit_t carry = 0;
+  unsigned i;
+
+  for (i = 0; i < a.nmemb || carry != 0; i++){
+    infnum_double_digit_t partial_sum = carry;
+    carry = 0;
+
+    if (i < a.nmemb) partial_sum += (infnum_double_digit_t)a.digits[i] * b;
+
+    carry = partial_sum >> INFNUM_DIGIT_BITS;
+    result.digits[i] = (infnum_digit_t)(partial_sum & INFNUM_MAX_DIGIT_VALUE);
+  }
+
+  for (; i < result.nmemb; i++)
+    result.digits[i] = 0;
+
+  /* }}} */
+}
+
+void free_infnum(struct infnum num)
+{
+  nfree(num.digits);
 }
 
 /*

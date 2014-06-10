@@ -162,6 +162,47 @@ int main(int argc, char *argv[])
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_TYPES))
     dump_types();
 
+#if 0
+  printf("mul_by_small:\n");
+  infnum_print(infnum_mul_by_small(infnum_from_dword(686), 37), stdout);
+  printf("\n");
+  printf("an astounding number: 127000000000000000000:\n");
+  infnum_print(infnum_from_str("127000000000000000000"), stdout);
+  printf("\n");
+
+    struct infnum a = infnum_from_dword(0xffffffff);
+    struct infnum b = infnum_from_dword(0xdeadcafe);
+    struct infnum c = infnum_raw(3);
+
+    printf("\n\n\n");
+
+    infnum_print(a, stdout);
+    printf("\n");
+    infnum_print(b, stdout);
+    printf("\n");
+
+    infnum_print(infnum_add(a, b), stdout);
+    printf("\n");
+
+    infnum_mul_by_small_inline(a, 0x7f, c);
+    infnum_print(c, stdout);
+    printf("\n");
+
+    struct infnum d = infnum_from_dword(0xffffffff);
+    struct infnum e = infnum_from_dword(0xffffffff);
+    struct infnum f = infnum_raw(3);
+
+    infnum_add_inline(d, e, f);
+    infnum_print(f, stdout);
+    printf("\n");
+
+#if 0
+    infnum_add_inline(a, b, a);
+    infnum_print(a, stdout);
+    printf("\n");
+#endif
+#endif
+
 end:
   /* the order quite matters */
   arg_stack_finish();

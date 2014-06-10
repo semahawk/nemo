@@ -38,7 +38,7 @@ LIBDIR: "/usr/local/lib"
 Dependencies
 ============
 
-* C90 compatible C compiler
+* C99 compatible C compiler
 * CMake
 * make
 
