@@ -10,6 +10,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -97,6 +98,10 @@ void arg_stack_dump(void)
   printf("\n## Stack dump:\n");
   for (; i < NM_as_curr - NM_as; i++){
     printf("  %x - %p (%s)", i, (void *)NM_as[i], nob_type_to_s(NM_as[i]->type->primitive));
+    if (NM_as[i]->type->primitive == OT_INTEGER){
+      putchar(' ');
+      infnum_print(*(struct infnum *)NM_as[i]->ptr, stdout);
+    }
     if (&NM_as[i] == NM_as_curr)
       printf(" <<<");
     printf("\n");
@@ -421,7 +426,10 @@ struct node *exec_unop(struct node *nd)
   debug_ast_exec(nd, "unop ('op?', #%u)", NDID(nd->in.unop.target));
 
   switch (nd->in.unop.type){
-    /* FIXME */
+    case UNARY_MINUS:
+      /* simply set the top argument's sign to 'minus' */
+      (*(struct infnum *)TOP()->ptr).sign = INFNUM_SIGN_NEG;
+      break;
     default: /* WIP */;
   }
 
@@ -442,6 +450,9 @@ struct node *exec_binop(struct node *nd)
 
   right = POP();
   left  = POP();
+
+  assert(left->ptr != NULL);
+  assert(right->ptr != NULL);
 
   switch (nd->in.binop.type){
     case BINARY_ADD:
@@ -581,7 +592,7 @@ struct node *exec_print(struct node *nd)
     }
   }
 
-  PUSH(new_nob(T_INT, "1"));
+  PUSH(new_nob(T_INT, infnum_from_dword(1)));
 
   RETURN_NEXT;
   /* }}} */

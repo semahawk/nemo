@@ -276,7 +276,17 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *ret = NULL;
 
-  if (accept(parser, lex, TOK_LMUSTASHE)){ /* a function */
+  if (accept(parser, lex, TOK_LPAREN)){
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("(\n");
+
+    ret = expr(parser, lex);
+
+    force(parser, lex, TOK_RPAREN);
+
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(")\n");
+  } else if (accept(parser, lex, TOK_LMUSTASHE)){ /* a function */
     /* {{{ */
     struct scope *prev_scope;
     struct node *body;
