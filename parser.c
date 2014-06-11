@@ -840,6 +840,14 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       }
     }
 
+    /* see if the variable already exists */
+    /* TODO there can be two different variables with the same name, but only
+     *      when they are in two different modules */
+    if (var_lookup(name, parser->curr_scope)){
+      err(parser, lex, "variable '%s' already exists", name);
+      return NULL;
+    }
+
     ret = new_decl(parser, lex, name, flags, value, parser->curr_scope);
     ret->lvalue = false; /* hmm.. */
     /* }}} */

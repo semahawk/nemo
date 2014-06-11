@@ -80,8 +80,8 @@ add_executable(nemo ${binsrc})
 set_target_properties(libnemo
   PROPERTIES OUTPUT_NAME nemo
   SOVERSION 0 VERSION 0.4.0)
-target_link_libraries(nemo m)
 target_link_libraries(nemo libnemo)
+target_link_libraries(nemo m)
 
 # Linux needs the libdl to be linked into the program
 # FreeBSD has those dl* functions implemented in libc
