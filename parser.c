@@ -793,11 +793,11 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("my ");
 
-    if (accept_keyword(parser, lex, "const")){
-      NOB_FLAG_SET(flags, NOB_FLAG_CONST);
+    if (accept_keyword(parser, lex, "mutable")){
+      NOB_FLAG_SET(flags, NOB_FLAG_MUTABLE);
 
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-        printf("const ");
+        printf("mutable ");
     }
 
     var_type = type(parser, lex);

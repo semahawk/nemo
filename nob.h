@@ -17,8 +17,8 @@
 
 #include "nemo.h"
 
-/* object flags (eg. if it's immutable) */
-#define NOB_FLAG_CONST (1 << 0)
+/* object flags (eg. if it's mutable) */
+#define NOB_FLAG_MUTABLE (1 << 0)
 /* few macros to help with the flags */
 #define NOB_FLAG_SET(ob, flag) ((ob) |= (flag))
 #define NOB_FLAG_GET(ob) ((ob) & (flag))
