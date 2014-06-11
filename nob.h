@@ -23,6 +23,10 @@
 #define NOB_FLAG_SET(ob, flag) ((ob) |= (flag))
 #define NOB_FLAG_GET(ob) ((ob) & (flag))
 
+/* few handy macros, to help retrieving values from certain kinds of Nob */
+#define NOB_GET_INTEGER(ob) (*(struct infnum *)(ob)->ptr)
+#define NOB_GET_CHAR(ob) ((wchar_t)(uintptr_t)(ob)->ptr)
+
 enum nob_primitive_type {
   /* that's kind of a draft only */
   OT_INTEGER,

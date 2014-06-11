@@ -150,8 +150,6 @@ void infnum_print(struct infnum num, FILE *fp)
   /* the 'digits' are stored in reverse order */
   for (i = num.nmemb - 1; i >= 0; i--)
     fprintf(fp, "%x", num.digits[i]);
-
-  printf("\n");
 }
 
 uint8_t infnum_to_byte(struct infnum num)

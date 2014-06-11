@@ -166,7 +166,7 @@ Nob *new_nob(struct nob_type *type, ...)
       wchar_t value = va_arg(vl, wchar_t);
 
       /* the pointer is the actual value */
-      new.ptr = value;
+      new.ptr = (void *)(uintptr_t)value;
       /* this approach most likely needs serious help */
       /* }}} */
       break;
@@ -326,7 +326,7 @@ bool nob_is_true(Nob *ob)
 
   switch (ob->type->primitive){
     case OT_INTEGER:
-      if (infnum_is_zero(*(struct infnum *)ob->ptr))
+      if (infnum_is_zero(NOB_GET_INTEGER(ob)))
         return false;
       else
         return true;

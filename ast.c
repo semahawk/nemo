@@ -100,7 +100,7 @@ void arg_stack_dump(void)
     printf("  %x - %p (%s)", i, (void *)NM_as[i], nob_type_to_s(NM_as[i]->type->primitive));
     if (NM_as[i]->type->primitive == OT_INTEGER){
       putchar(' ');
-      infnum_print(*(struct infnum *)NM_as[i]->ptr, stdout);
+      infnum_print(NOB_GET_INTEGER(NM_as[i]), stdout);
     }
     if (&NM_as[i] == NM_as_curr)
       printf(" <<<");
@@ -428,7 +428,7 @@ struct node *exec_unop(struct node *nd)
   switch (nd->in.unop.type){
     case UNARY_MINUS:
       /* simply set the top argument's sign to 'minus' */
-      (*(struct infnum *)TOP()->ptr).sign = INFNUM_SIGN_NEG;
+      NOB_GET_INTEGER(TOP()).sign = INFNUM_SIGN_NEG;
       break;
     default: /* WIP */;
   }
@@ -456,13 +456,13 @@ struct node *exec_binop(struct node *nd)
 
   switch (nd->in.binop.type){
     case BINARY_ADD:
-      PUSH(new_nob(T_INT, infnum_add(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
+      PUSH(new_nob(T_INT, infnum_add(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;
     case BINARY_SUB:
-      PUSH(new_nob(T_INT, infnum_sub(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
+      PUSH(new_nob(T_INT, infnum_sub(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;
     case BINARY_MUL:
-      PUSH(new_nob(T_INT, infnum_mul(*(struct infnum *)left->ptr, *(struct infnum *)right->ptr)));
+      PUSH(new_nob(T_INT, infnum_mul(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;
 
     /* fall through */
@@ -575,10 +575,10 @@ struct node *exec_print(struct node *nd)
 
     switch (value->type->primitive){
       case OT_INTEGER:
-        infnum_print(*(struct infnum *)value->ptr, stdout);
+        infnum_print(NOB_GET_INTEGER(value), stdout);
         break;
       case OT_CHAR:
-        printf("%c", (wchar_t)value->ptr);
+        printf("%c", NOB_GET_CHAR(value));
         break;
 
       /* fall through */
