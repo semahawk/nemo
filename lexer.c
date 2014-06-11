@@ -168,7 +168,6 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
 
     /* see if it's a type name (only if it's not a keyword already) */
     if (!keyword_found){
-      unsigned i = 0;
       struct types_list *q;
 
       for (q = NM_types; q != NULL; q = q->next){

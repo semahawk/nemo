@@ -40,8 +40,8 @@ struct infnum {
   /* stored in reverse order (least significant 'digit' first) */
   infnum_digit_t *digits;
   /* number of 'digits' (a buttload tops, apparently) */
-  uint64_t nmemb;
-  unsigned char sign;
+  uint64_t nmemb: 63;
+  unsigned char sign: 1;
 };
 
 enum infnum_cmp {
