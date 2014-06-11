@@ -74,8 +74,6 @@ int main(int argc, char *argv[])
 
   setlocale(LC_ALL, "");
 
-  /* initialize the GC pool and everything related */
-  gc_init();
   /* initialize the argument stack */
   arg_stack_init();
   /* initialize the types (which includes creating the standard types) and everything related */

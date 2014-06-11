@@ -88,6 +88,13 @@ struct nob_type {
   } info;
 };
 
+/* a singly-linked list of <struct nob_type>s */
+/* all the ever-created types are stored using this struct */
+struct types_list {
+  struct nob_type *type;
+  struct types_list *next;
+};
+
 typedef struct nob {
   /* GC mark */
   unsigned char mark;
@@ -99,7 +106,6 @@ typedef struct nob {
 
 void types_init(void);
 void types_finish(void);
-void gc_init(void);
 void gc_finish(void);
 
 Nob *new_nob(struct nob_type *type, ...);
@@ -122,8 +128,7 @@ extern struct nob_type *T_QWORD;
 extern struct nob_type *T_CHAR;
 extern struct nob_type *T_STRING;
 /* lexer, for instance, could use this */
-extern struct nob_type **NM_types;
-extern struct nob_type **NM_types_curr;
+extern struct types_list *NM_types;
 
 #endif /* NOB_H */
 

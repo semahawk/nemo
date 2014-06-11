@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
+#include <math.h>
 
 #include "mem.h"
 #include "nob.h"
@@ -34,61 +35,59 @@ struct nob_type *T_QWORD;
 struct nob_type *T_CHAR;
 struct nob_type *T_STRING;
 
-/* an (malloced, d'oh) array of `struct nob_type' pointers */
-struct nob_type **NM_types = NULL;
-/* pointer to the current type in the array */
-struct nob_type **NM_types_curr = NULL;
-/* initial size of the array (updated when the array gets expanded) */
-size_t NM_types_size = 32;
+/* the head of a singly-linked list of <struct types_list> */
+struct types_list *NM_types;
 
-/* the garbage collector object pool */
-/* (an array of Nobs (NOT Nob pointers!)) */
-Nob *NM_gc = NULL;
-/* the current 'slot' in the pool */
-Nob *NM_gc_curr = NULL;
-/* the size of the pool */
-size_t NM_gc_size = 32;
+struct gc_pool {
+  /* not a pointer! */
+  /* whenever you see a Nob *ob = new_nob(whatever), then it's a pointer to
+   * this <nob>'s address */
+  Nob nob;
+  struct gc_pool *next;
+};
+/* the garbage collector's object pool */
+/* (the head of a singly linked list of <struct gc_pool>s) */
+struct gc_pool *NM_gc;
 
 /* {{{ Functions related with types (init, finish, etc) */
 void types_init(void)
 {
-  /* set up the array */
-  NM_types = ncalloc(NM_types_size, sizeof(struct nob_type *));
-  NM_types_curr = NM_types;
-
   /* create the standard types */
-  T_ANY    = new_type("*", OT_ANY);
-  T_INT    = new_type("int", OT_INTEGER, 1, 0, 0);
-  T_BYTE   = new_type("byte", OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
-  T_WORD   = new_type("word", OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
-  T_DWORD  = new_type("dword", OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
-  T_QWORD  = new_type("qword", OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
-  T_CHAR   = new_type("char", OT_CHAR);
+  T_ANY    = new_type("*",      OT_ANY);
+  T_INT    = new_type("int",    OT_INTEGER, 1, 0, 0);
+  T_BYTE   = new_type("byte",   OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
+  T_WORD   = new_type("word",   OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
+  T_DWORD  = new_type("dword",  OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
+  T_QWORD  = new_type("qword",  OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
+  T_CHAR   = new_type("char",   OT_CHAR);
   T_STRING = new_type("string", OT_LIST, T_CHAR);
 }
 
 void types_finish(void)
 {
-  unsigned i, j;
-  ptrdiff_t offset = NM_types_curr - NM_types;
+  unsigned i;
+  struct types_list *curr, *next;
 
-  for (i = 0; i < offset; i++){
+  for (curr = NM_types; curr != NULL; curr = next){
+    next = curr->next;
+
+    if (!curr->type)
+      continue;
+
     /* anonymous types don't have a name, so there's no point of freeing it */
     /* I know that free(NULL) is practically a NOP, but, still */
-    if (NM_types[i])
-      nfree(NM_types[i]->name);
+    nfree(curr->type->name);
+
     /* free some additional data associated with the type */
-    if (NM_types[i]->primitive == OT_TUPLE){
+    if (curr->type->primitive == OT_TUPLE){
       /* free the tuple's fields' names */
-      for (j = 0; NM_types[i]->info.tuple.fields[j].name != NULL; j++){
-        nfree(NM_types[i]->info.tuple.fields[j].name);
+      for (i = 0; curr->type->info.tuple.fields[i].name != NULL; i++){
+        nfree(curr->type->info.tuple.fields[i].name);
       }
     }
     /* free the type itself */
-    nfree(NM_types[i]);
+    nfree(curr->type);
   }
-
-  nfree(NM_types);
 }
 
 /*
@@ -96,41 +95,29 @@ void types_finish(void)
  */
 void push_type(struct nob_type *type)
 {
-  ptrdiff_t offset = NM_types_curr - NM_types;
+  struct types_list *new = nmalloc(sizeof(struct types_list));
 
-  /* handle overflow */
-  if (offset >= (signed)NM_types_size){
-    NM_types_size *= 1.5;
-    NM_types = nrealloc(NM_types, sizeof(struct nob_type) * NM_types_size);
-    NM_types_curr = NM_types + offset;
-  }
-
-  *(NM_types_curr++) = type;
+  new->type = type;
+  new->next = NM_types;
+  NM_types  = new;
 }
 /* }}} */
 /* {{{ Functions related with Garbage Collector (init, finish, etc) */
-void gc_init(void)
-{
-  /* set up the pool */
-  NM_gc = ncalloc(NM_gc_size, sizeof(Nob));
-  NM_gc_curr = NM_gc;
-}
-
 void gc_finish(void)
 {
-  /* because it's an array of Nobs (not Nob pointers), we only need to free the
-   * array, and not the objects themselves as well */
-  Nob *p = NM_gc;
+  struct gc_pool *curr, *next;
 
-  for (; p != NM_gc_curr; p++){
+  for (curr = NM_gc; curr != NULL; curr = next){
+    next = curr->next;
+
     /* free the value associated with the object */
     /* unless it's a OT_CHAR (where the pointer is the actual value) */
-    if (p->type->primitive != OT_CHAR)
-      nfree(p->ptr);
-  }
+    if (curr->nob.type->primitive != OT_CHAR)
+      nfree(curr->nob.ptr);
 
-  /* free the whole pool */
-  nfree(NM_gc);
+    /* free the list's element itself */
+    nfree(curr);
+  }
 }
 
 /*
@@ -138,19 +125,13 @@ void gc_finish(void)
  */
 static Nob *push_nob(Nob *nob)
 {
-  Nob *save = NM_gc_curr;
-  ptrdiff_t offset = NM_gc_curr - NM_gc;
+  struct gc_pool *new = nmalloc(sizeof(struct gc_pool));
 
-  /* handle overflow */
-  if (offset >= (signed)NM_gc_size){
-    NM_gc_size *= 1.5;
-    NM_gc = nrealloc(NM_gc, sizeof(struct nob_type) * NM_gc_size);
-    NM_gc_curr = NM_gc + offset;
-  }
+  new->nob  = *nob;
+  new->next = NM_gc;
+  NM_gc     = new;
 
-  *(NM_gc_curr++) = *nob;
-
-  return save;
+  return &new->nob;
 }
 /* }}} */
 
@@ -161,6 +142,7 @@ Nob *new_nob(struct nob_type *type, ...)
   va_list vl;
   Nob new;
 
+  assert(type);
   va_start(vl, type);
 
   /* set up the new object with some knowns */
@@ -211,13 +193,13 @@ Nob *new_nob(struct nob_type *type, ...)
  */
 struct nob_type *get_type_by_name(char *name)
 {
-  unsigned i = 0;
+  struct types_list *p;
 
-  for (; i < NM_types_curr - NM_types; i++)
+  for (p = NM_types; p != NULL; p = p->next)
     /* don't compare with anonymous types */
-    if (NM_types[i]->name)
-      if (!strcmp(NM_types[i]->name, name))
-        return NM_types[i];
+    if (p->type->name)
+      if (!strcmp(p->type->name, name))
+        return p->type;
 
   return NULL;
 }
@@ -429,11 +411,11 @@ const char *nob_type_to_s(enum nob_primitive_type type)
 void dump_types(void)
 {
   /* meh, that's quite a mess */
-  unsigned i = 0; /* the counter */
+  struct types_list *p;
 
   printf("\n## Types Dump:\n\n");
-  for (; i < NM_types_curr - NM_types; i++){
-    struct nob_type *type = NM_types[i];
+  for (p = NM_types; p != NULL; p = p->next){
+    struct nob_type *type = p->type;
     printf("   %p", (void *)type);
     if (type->name != NULL)
       printf(" \"%s\"", type->name);

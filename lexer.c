@@ -165,14 +165,16 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
         break;
       }
     }
+
     /* see if it's a type name (only if it's not a keyword already) */
     if (!keyword_found){
       unsigned i = 0;
+      struct types_list *q;
 
-      for (; i < NM_types_curr - NM_types; i++){
+      for (q = NM_types; q != NULL; q = q->next){
         /* don't check anonymous types */
-        if (NM_types[i]->name != NULL){
-          if (!strcmp(NM_types[i]->name, tmp_arr)){
+        if (q->type->name != NULL){
+          if (!strcmp(q->type->name, tmp_arr)){
             typename_found = true;
             break;
           }
