@@ -18,6 +18,25 @@
 #include "ast.h"
 #include "nob.h"
 
+/* forward declaration */
+struct scope;
+
+/* stuff related to 'accumulators' */
+/* each scope gets a list of accumulators */
+struct accs_list {
+  unsigned id; /* eg. id 5 would correspond to '%5' */
+  struct node *node;
+  struct accs_list *next;
+};
+
+struct accs_list *accs_new_list(void);
+void accs_finish(struct accs_list *list);
+
+void         acc_set_value(struct scope *, unsigned id, struct node *node);
+struct node *acc_get_value(struct scope *, unsigned id);
+
+
+/* stuff related to variables and scopes */
 struct var {
   char *name;
   uint8_t flags;
@@ -32,8 +51,9 @@ struct vars_list {
 
 struct scope {
   char *name; /* can be null */
-  struct scope *parent;
-  struct vars_list *vars;
+  struct scope *parent; /* can be null */
+  struct vars_list *vars; /* head of the variables list */
+  struct accs_list *accs; /* head of the accumulators list */
 };
 
 struct scopes_list {

@@ -29,6 +29,8 @@ enum token_type {
   TOK_NAME,           /*                */
   TOK_KEYWORD,        /*                */
   TOK_TYPE,           /*                */
+  /* meh, that's probably not the best name for it */
+  TOK_ACCUMULATOR,    /*  %[0-9]+       */
   TOK_OPT,            /*  -[a-zA-Z]     */
   TOK_EQ,             /*  "="           */
   TOK_SEMICOLON,      /*  ";"           */

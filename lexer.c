@@ -279,6 +279,23 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     ret.value.sp = tmp_str;
     /* }}} */
   }
+  else if (*p == '%'){
+    if (isdigit(*(p + 1))){
+      unsigned i = 0;
+      p++;
+
+      while (isdigit(*p) && i < MAX_NAME_LENGTH)
+        tmp_arr[i++] = *p++;
+
+      lex->col += i;
+      strcpy(ret.value.s, tmp_arr);
+      ret.type = TOK_ACCUMULATOR;
+    } else {
+      lex->col++;
+      ret.type = TOK_PERCENT;
+      ret.value.c = *p++;
+    }
+  }
   else switch (*p){
     /* {{{ OTHER (SINGLE CHAR) */
     case '=': ret.value.c = *p; lex->col++; p++; ret.type = TOK_EQ; break;
@@ -288,7 +305,6 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     case '-': ret.value.c = *p; lex->col++; p++; ret.type = TOK_MINUS; break;
     case '+': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PLUS; break;
     case '*': ret.value.c = *p; lex->col++; p++; ret.type = TOK_TIMES; break;
-    case '%': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PERCENT; break;
     case '/': ret.value.c = *p; lex->col++; p++; ret.type = TOK_SLASH; break;
     case '(': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LPAREN; break;
     case ')': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RPAREN; break;
@@ -348,6 +364,11 @@ static void debug_print_token(struct token tok)
     case TOK_NAME:
       /* {{{ */
       fprintf(stderr, "name \"%s\"", tok.value.s);
+      /* }}} */
+      break;
+    case TOK_ACCUMULATOR:
+      /* {{{ */
+      fprintf(stderr, "accumulator \"%%%s\"", tok.value.s);
       /* }}} */
       break;
     case TOK_KEYWORD:
@@ -533,35 +554,36 @@ const char *tok_to_s(enum token_type type)
 {
   /* {{{ */
   switch (type){
-    case TOK_INTEGER:   return "integer";
-    case TOK_FLOAT:     return "float";
-    case TOK_STRING:    return "string";
-    case TOK_CHAR:      return "character";
-    case TOK_NAME:      return "name";
-    case TOK_KEYWORD:   return "keyword";
-    case TOK_TYPE:      return "type name";
-    case TOK_OPT:       return "option";
-    case TOK_EQ:        return "'='";
-    case TOK_SEMICOLON: return "';'";
-    case TOK_COMMA:     return "','";
-    case TOK_MINUS:     return "'-'";
-    case TOK_PLUS:      return "'+'";
-    case TOK_TIMES:     return "'*'";
-    case TOK_PERCENT:   return "'%'";
-    case TOK_SLASH:     return "'/'";
-    case TOK_LPAREN:    return "'('";
-    case TOK_RPAREN:    return "')'";
-    case TOK_LMUSTASHE: return "'{'";
-    case TOK_RMUSTASHE: return "'}'";
-    case TOK_LBRACKET:  return "'['";
-    case TOK_RBRACKET:  return "']'";
-    case TOK_LCHEVRON:  return "'<'";
-    case TOK_RCHEVRON:  return "'>'";
-    case TOK_BANG:      return "'!'";
-    case TOK_COLON:     return "':'";
-    case TOK_QUESTION:  return "'?'";
-    case TOK_EOS:       return "<EOS>";
-    default:            return "##unknown##tok_to_s##";
+    case TOK_INTEGER:      return "integer";
+    case TOK_FLOAT:        return "float";
+    case TOK_STRING:       return "string";
+    case TOK_CHAR:         return "character";
+    case TOK_NAME:         return "name";
+    case TOK_ACCUMULATOR:  return "accumulator";
+    case TOK_KEYWORD:      return "keyword";
+    case TOK_TYPE:         return "type name";
+    case TOK_OPT:          return "option";
+    case TOK_EQ:           return "'='";
+    case TOK_SEMICOLON:    return "';'";
+    case TOK_COMMA:        return "','";
+    case TOK_MINUS:        return "'-'";
+    case TOK_PLUS:         return "'+'";
+    case TOK_TIMES:        return "'*'";
+    case TOK_PERCENT:      return "'%'";
+    case TOK_SLASH:        return "'/'";
+    case TOK_LPAREN:       return "'('";
+    case TOK_RPAREN:       return "')'";
+    case TOK_LMUSTASHE:    return "'{'";
+    case TOK_RMUSTASHE:    return "'}'";
+    case TOK_LBRACKET:     return "'['";
+    case TOK_RBRACKET:     return "']'";
+    case TOK_LCHEVRON:     return "'<'";
+    case TOK_RCHEVRON:     return "'>'";
+    case TOK_BANG:         return "'!'";
+    case TOK_COLON:        return "':'";
+    case TOK_QUESTION:     return "'?'";
+    case TOK_EOS:          return "<EOS>";
+    default:               return "##unknown##tok_to_s##";
   }
   /* }}} */
 }

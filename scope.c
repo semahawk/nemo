@@ -33,6 +33,7 @@ struct scope *new_scope(char *name, struct scope *parent)
 
   scope->parent = parent;
   scope->vars   = NULL;
+  scope->accs   = accs_new_list();
 
   list->scope = scope;
   /* append to the `NM_scopes' list */
@@ -59,6 +60,9 @@ void free_scope(struct scope *scope)
      * somewhere else */
     /* same goes for the objects the variables hold, actualy */
   }
+
+  /* free the accumulators */
+  accs_finish(scope->accs);
 }
 
 void scopes_finish(void)
@@ -104,6 +108,68 @@ struct var *var_lookup(char *name, struct scope *scope)
     for (v = s->vars; v != NULL; v = v->next)
       if (!strcmp(v->var->name, name))
         return v->var;
+
+  return NULL;
+}
+
+struct accs_list *accs_new_list(void)
+{
+  struct accs_list *head = NULL;
+  unsigned i;
+
+  /* create 2 'startup' accumulators by default */
+  for (i = 0; i < 2; i++){
+    struct accs_list *acc = nmalloc(sizeof(struct accs_list));
+    /* set up */
+    acc->id = i;
+    acc->node = NULL; /* hmm.. */
+    /* append */
+    acc->next = head;
+    head = acc;
+  }
+
+  return head;
+}
+
+void accs_finish(struct accs_list *accs)
+{
+  struct accs_list *curr, *next;
+
+  for (curr = accs; curr != NULL; curr = next){
+    next = curr->next;
+
+    /* don't free curr->node */
+    nfree(curr);
+  }
+}
+
+void acc_set_value(struct scope *scope, unsigned id, struct node *node)
+{
+  bool found = false;
+
+  for (; scope != NULL; scope = scope->parent)
+    for (struct accs_list *p = scope->accs; p != NULL; p = p->next)
+      if (p->id == id)
+        p->node = node, found = true;
+
+  if (!found){
+    /* if the accumulator was not found - let's create it */
+    struct accs_list *new = nmalloc(sizeof(struct accs_list));
+    /* setup */
+    new->id = id;
+    new->node = node;
+    /* append */
+    new->next = scope->accs;
+    scope->accs = new;
+  }
+}
+
+struct node *acc_get_value(struct scope *scope, unsigned id)
+{
+  for (; scope != NULL; scope = scope->parent)
+    for (struct accs_list *p = scope->accs; p != NULL; p = p->next)
+      if (p->id == id)
+        return p->node;
 
   return NULL;
 }

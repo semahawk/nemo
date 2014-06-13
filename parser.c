@@ -277,6 +277,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   struct node *ret = NULL;
 
   if (accept(parser, lex, TOK_LPAREN)){
+    /* {{{ */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("(\n");
 
@@ -286,8 +287,9 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(")\n");
-  } else if (accept(parser, lex, TOK_LMUSTASHE)){ /* a function */
-    /* {{{ */
+    /* }}} */
+  } else if (accept(parser, lex, TOK_LMUSTASHE)){
+    /* {{{ A FUNCTION */
     struct scope *prev_scope;
     struct node *body;
 
@@ -314,6 +316,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false; /* hmm.. */
     /* }}} */
   } else if (accept(parser, lex, TOK_INTEGER)){
+    /* {{{ INTEGER */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)){
       infnum_print(lex->curr_tok.value.i, stdout);
       putchar(' ');
@@ -321,25 +324,33 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 
     ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->lvalue = false;
+    /* }}} */
   } else if (accept(parser, lex, TOK_FLOAT)){
+    /* {{{ FLOAT */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%f=16 ", lex->curr_tok.value.f);
 
     ret = new_int(parser, lex, infnum_from_byte(16));
     ret->lvalue = false;
+    /* }}} */
   } else if (accept(parser, lex, TOK_STRING)){
+    /* {{{ STRING */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("\"%s\"=32 ", lex->curr_tok.value.sp);
 
     ret = new_int(parser, lex, infnum_from_byte(32));
     ret->lvalue = false;
+    /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
+    /* {{{ CHARACTER */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("'%c' ", lex->curr_tok.value.c);
 
     ret = new_char(parser, lex, lex->curr_tok.value.c);
     ret->lvalue = false;
+    /* }}} */
   } else if (accept(parser, lex, TOK_NAME)){
+    /* {{{ NAME */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", lex->curr_tok.value.s /* meh */);
 
@@ -350,6 +361,24 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 
     ret = new_name(parser, lex, lex->curr_tok.value.s);
     ret->lvalue = true;
+    /* }}} */
+  } else if (accept(parser, lex, TOK_ACCUMULATOR)){
+    /* {{{ AN ACCUMULATOR */
+    struct node *accs_value = acc_get_value(parser->curr_scope,
+        (unsigned)atoi(lex->curr_tok.value.s));
+
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%%%s ", lex->curr_tok.value.s);
+
+    /* see if the accumulator is 'defined' */
+    if (accs_value == NULL){
+      err(parser, lex, "accumulator no.%s is undefined", lex->curr_tok.value.s);
+      return NULL;
+    }
+
+    ret = accs_value;
+    ret->lvalue = true;
+    /* }}} */
   }
 
   return ret;
