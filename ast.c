@@ -203,6 +203,20 @@ void dump_const(struct node *nd)
     printf("+ (#%u) const\n", nd->id);
 }
 
+void dump_list(struct node *nd)
+{
+  printf("+ (#%u) list\n", NDID(nd));
+
+  for (struct nodes_list *p = nd->in.list.elems; p != NULL; p = p->next){
+    INDENT();
+    DUMPP("- elem:");
+    INDENT();
+    DUMP(p->node);
+    DEDENT();
+    DEDENT();
+  }
+}
+
 void dump_name(struct node *nd)
 {
   printf("+ (#%u) name (%s)\n", NDID(nd), nd->in.s);
@@ -382,6 +396,27 @@ struct node *exec_const(struct node *nd)
 
   RETURN_NEXT;
   /* }}} */
+}
+
+struct node *exec_list(struct node *nd)
+{
+  struct nobs_list *nobs = NULL;
+  struct nodes_list *nodes;
+  struct nobs_list *el;
+
+  /* transform the nodes_list into nobs_list */
+  for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
+    el = nmalloc(sizeof(struct nobs_list));
+
+    EXEC(nodes->node);
+    el->nob = POP();
+    el->next = nobs;
+    nobs = el;
+  }
+
+  PUSH(new_nob(new_type(NULL, OT_LIST, nd->in.list.type), nobs));
+
+  RETURN_NEXT;
 }
 
 struct node *exec_name(struct node *nd)
@@ -581,12 +616,21 @@ struct node *exec_print(struct node *nd)
       case OT_CHAR:
         printf("%lc", NOB_GET_CHAR(value));
         break;
+      case OT_LIST:
+        for (struct nobs_list *p = (struct nobs_list *)value->ptr; p != NULL; p = p->next){
+          /* TODO write some print_nob-like function */
+          /*      (development purposes only) */
+          printf("nob@%p", (void *)p->nob);
+
+          if (p->next != NULL)
+            printf(", ");
+        }
+        break;
 
       /* fall through */
       case OT_REAL:
       case OT_STRING:
       case OT_TUPLE:
-      case OT_LIST:
       case OT_FUN:
       case OT_ANY:
         break;
@@ -652,6 +696,26 @@ struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
 
   return nd;
   /* }}} */
+}
+
+struct node *new_list(struct parser *parser, struct lexer *lex,
+    struct nodes_list *elems)
+{
+  struct node *nd = new_node(parser, lex);
+
+  nd->type = NT_LIST;
+  nd->execf = exec_list;
+  /* FIXME */
+  nd->in.list.type = T_INT;
+  /*nd->in.list.type = infer_type(elems->node);*/
+  nd->in.list.elems = elems;
+#if DEBUG
+  nd->dumpf = dump_list;
+#endif
+
+  debug_ast_new(nd, "list");
+
+  return nd;
 }
 
 struct node *new_name(struct parser *parser, struct lexer *lex, char *name)

@@ -44,6 +44,7 @@
 /* forward declarations */
 struct node *expr_list(struct parser *, struct lexer *);
 static struct node *expr(struct parser *, struct lexer *);
+static struct node *no_comma_expr(struct parser *, struct lexer *);
 static struct node *primary_expr(struct parser *, struct lexer *);
 
 /*
@@ -315,8 +316,65 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
         true /* execute right away */);
     ret->lvalue = false; /* hmm.. */
     /* }}} */
+  } else if (accept(parser, lex, TOK_LBRACKET)){
+    /* {{{ A LIST LITERAL */
+    /* one single, primary_expr, ie. list's one element */
+    struct node *elem;
+    /* the head of the singly linked list of list's elements */
+    struct nodes_list *elems;
+    /* to be appended to `elems` (this one is going to contain `elem`) */
+    struct nodes_list *new;
+    /* used to reverse `elems` */
+    struct nodes_list *curr, *prev, *next;
+
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("[ ");
+
+    if ((elem = no_comma_expr(parser, lex)) != NULL){
+      new = nmalloc(sizeof(struct nodes_list));
+      new->node = elem;
+      new->next = elems;
+      elems = new;
+
+      while (accept(parser, lex, TOK_COMMA)){
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(", ");
+
+        elem = no_comma_expr(parser, lex);
+
+        new = nmalloc(sizeof(struct nodes_list));
+        new->node = elem;
+        new->next = elems;
+        elems = new;
+      }
+
+      /* reverse the list */
+      prev = NULL;
+      curr = elems;
+
+      while (curr != NULL){
+        next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+      }
+
+      elems = prev;
+    } else {
+      /* empty list */
+      elems = NULL;
+    }
+
+    force(parser, lex, TOK_RBRACKET);
+
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("]");
+
+    ret = new_list(parser, lex, elems);
+    ret->lvalue = false;
+    /* }}} */
   } else if (accept(parser, lex, TOK_INTEGER)){
-    /* {{{ INTEGER */
+    /* {{{ INTEGER LITERAL */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)){
       infnum_print(lex->curr_tok.value.i, stdout);
       putchar(' ');
@@ -326,7 +384,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_FLOAT)){
-    /* {{{ FLOAT */
+    /* {{{ FLOAT LITERAL */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%f=16 ", lex->curr_tok.value.f);
 
@@ -334,7 +392,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_STRING)){
-    /* {{{ STRING */
+    /* {{{ STRING LITERAL */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("\"%s\"=32 ", lex->curr_tok.value.sp);
 
@@ -342,7 +400,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
-    /* {{{ CHARACTER */
+    /* {{{ CHARACTER LITERAL */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("'%c' ", lex->curr_tok.value.c);
 

@@ -108,6 +108,12 @@ typedef struct nob {
   void *ptr;
 } Nob;
 
+/* a singly-linked list of <struct nob>s */
+struct nobs_list {
+  struct nob *nob;
+  struct nobs_list *next;
+};
+
 void types_init(void);
 void types_finish(void);
 void gc_finish(void);

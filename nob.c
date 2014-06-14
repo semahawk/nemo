@@ -172,6 +172,15 @@ Nob *new_nob(struct nob_type *type, ...)
       /* }}} */
       break;
     }
+    case OT_LIST:
+    {
+      /* {{{ */
+      /* the list's elements themselves */
+      struct nobs_list *elems = va_arg(vl, struct nobs_list *);
+
+      new.ptr = elems;
+      /* }}} */
+    }
 
     /* suspress warnings */
     case OT_REAL:

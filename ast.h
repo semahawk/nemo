@@ -32,6 +32,7 @@ enum node_type {
   NT_FLOAT,
   NT_STRING,
   NT_CHAR,
+  NT_LIST,
   NT_NAME,
   NT_UNOP,
   NT_BINOP,
@@ -104,10 +105,15 @@ struct node {
   bool lvalue;
   /* values specific to a certain kind of a node */
   union {
-    struct infnum i;   /* NT_INTEGER */
+    struct infnum i; /* NT_INTEGER */
     float   f; /* NT_FLOAT */
     char   *s; /* NT_STRING */
     nchar_t c; /* NT_CHAR */
+
+    struct { /* NT_LIST */
+      struct nob_type *type;
+      struct nodes_list *elems;
+    } list;
 
     struct { /* NT_UNOP */
       enum unop_type type;
@@ -172,22 +178,27 @@ struct nodes_list {
 };
 
 struct node *new_nop(struct parser *parser, struct lexer *lex);
-struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum value);
+struct node *new_int(struct parser *parser, struct lexer *lex,
+    struct infnum value);
 struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value);
-struct node *new_decl(struct parser *parser, struct lexer *lex, char *name, uint8_t flags,
-    struct node *value, struct scope *scope);
+struct node *new_list(struct parser *parser, struct lexer *lex,
+    struct nodes_list *elems);
+struct node *new_decl(struct parser *parser, struct lexer *lex, char *name,
+    uint8_t flags, struct node *value, struct scope *scope);
 struct node *new_name(struct parser *parser, struct lexer *lex, char *name);
-struct node *new_unop(struct parser *parser, struct lexer *lex, enum unop_type type,
-    struct node *target);
-struct node *new_binop(struct parser *parser, struct lexer *lex, enum binop_type type,
-    struct node *left, struct node *right);
-struct node *new_ternop(struct parser *parser, struct lexer *lex, struct node *predicate,
-    struct node *yes, struct node *no);
-struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard, struct node *body,
-    struct node *elsee);
-struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struct nob_type *ret_type,
-    struct nob_type **params, struct node *body, char *opts, bool execute);
-struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_list *exprs);
+struct node *new_unop(struct parser *parser, struct lexer *lex,
+    enum unop_type type, struct node *target);
+struct node *new_binop(struct parser *parser, struct lexer *lex,
+    enum binop_type type, struct node *left, struct node *right);
+struct node *new_ternop(struct parser *parser, struct lexer *lex,
+    struct node *predicate, struct node *yes, struct node *no);
+struct node *new_if(struct parser *parser, struct lexer *lex,
+    struct node *guard, struct node *body, struct node *elsee);
+struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
+    struct nob_type *ret_type, struct nob_type **params, struct node *body,
+    char *opts, bool execute);
+struct node *new_print(struct parser *parser, struct lexer *lex,
+    struct nodes_list *exprs);
 
 void exec_nodes(struct node *node);
 
