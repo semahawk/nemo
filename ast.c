@@ -400,9 +400,10 @@ struct node *exec_const(struct node *nd)
 
 struct node *exec_list(struct node *nd)
 {
+  /* {{{ */
   struct nobs_list *nobs = NULL;
   struct nodes_list *nodes;
-  struct nobs_list *el;
+  struct nobs_list *el, *curr, *prev, *next;
 
   /* transform the nodes_list into nobs_list */
   for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
@@ -414,9 +415,23 @@ struct node *exec_list(struct node *nd)
     nobs = el;
   }
 
+  /* reverse the list */
+  prev = NULL;
+  curr = nobs;
+
+  while (curr != NULL){
+    next = curr->next;
+    curr->next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  nobs = prev;
+
   PUSH(new_nob(new_type(NULL, OT_LIST, nd->in.list.type), nobs));
 
   RETURN_NEXT;
+  /* }}} */
 }
 
 struct node *exec_name(struct node *nd)
@@ -597,44 +612,55 @@ struct node *exec_fun(struct node *nd)
   /* }}} */
 }
 
+/*
+ * Prints a single <ob> to stdout.
+ *
+ * It's kind of for development purposes only.
+ */
+void print_nob(Nob *ob)
+{
+  /* {{{ */
+  switch (ob->type->primitive){
+    case OT_INTEGER:
+      infnum_print(NOB_GET_INTEGER(ob), stdout);
+      break;
+    case OT_CHAR:
+      printf("%lc", NOB_GET_CHAR(ob));
+      break;
+    case OT_LIST:
+      printf("[");
+
+      for (struct nobs_list *p = (struct nobs_list *)ob->ptr; p != NULL; p = p->next){
+        print_nob(p->nob);
+
+        if (p->next != NULL)
+          printf(", ");
+      }
+
+      printf("]");
+      break;
+
+    /* fall through */
+    case OT_REAL:
+    case OT_STRING:
+    case OT_TUPLE:
+    case OT_FUN:
+    case OT_ANY:
+      break;
+  }
+  /* }}} */
+}
+
 struct node *exec_print(struct node *nd)
 {
   /* {{{ */
   struct nodes_list *expr;
-  Nob *value;
 
   debug_ast_exec(nd, "print");
 
   for (expr = nd->in.print.exprs; expr != NULL; expr = expr->next){
     EXEC(expr->node);
-    value = POP();
-
-    switch (value->type->primitive){
-      case OT_INTEGER:
-        infnum_print(NOB_GET_INTEGER(value), stdout);
-        break;
-      case OT_CHAR:
-        printf("%lc", NOB_GET_CHAR(value));
-        break;
-      case OT_LIST:
-        for (struct nobs_list *p = (struct nobs_list *)value->ptr; p != NULL; p = p->next){
-          /* TODO write some print_nob-like function */
-          /*      (development purposes only) */
-          printf("nob@%p", (void *)p->nob);
-
-          if (p->next != NULL)
-            printf(", ");
-        }
-        break;
-
-      /* fall through */
-      case OT_REAL:
-      case OT_STRING:
-      case OT_TUPLE:
-      case OT_FUN:
-      case OT_ANY:
-        break;
-    }
+    print_nob(POP());
   }
 
   PUSH(new_nob(T_INT, infnum_from_dword(1)));
