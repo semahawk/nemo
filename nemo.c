@@ -181,6 +181,7 @@ end:
  * Coroner, Carach Angren
  * Qntal, Helium Vola
  * Mourning Beloveth, Doom:VS, Draconian
+ * Lascaille's Shroud
  *
  * Johann Strauss
  *

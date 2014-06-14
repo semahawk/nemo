@@ -393,10 +393,34 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_STRING)){
     /* {{{ STRING LITERAL */
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("\"%s\"=32 ", lex->curr_tok.value.sp);
+    struct nodes_list *chars = NULL;
+    struct nodes_list *new, *curr, *next, *prev;
+    char *p = lex->curr_tok.value.sp;
 
-    ret = new_int(parser, lex, infnum_from_byte(32));
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("\"%s\" ", lex->curr_tok.value.sp);
+
+    while (*p){
+      new = nmalloc(sizeof(struct nodes_list));
+      new->node = new_char(parser, lex, u8_fetch_char(&p));
+      new->next = chars;
+      chars = new;
+    }
+
+    /* reverse the list */
+    prev = NULL;
+    curr = chars;
+
+    while (curr != NULL){
+      next = curr->next;
+      curr->next = prev;
+      prev = curr;
+      curr = next;
+    }
+
+    chars = prev;
+
+    ret = new_list(parser, lex, chars);
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
