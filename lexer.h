@@ -20,6 +20,7 @@
 #include "infnum.h"
 #include "nemo.h"
 #include "parser.h"
+#include "utf8.h"
 
 enum token_type {
   TOK_INTEGER,        /*                */
@@ -61,7 +62,7 @@ struct token {
     double  f;
     char    s[MAX_NAME_LENGTH];
     char  *sp;
-    wchar_t c;
+    nchar_t c;
   } value;
 };
 

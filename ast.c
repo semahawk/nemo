@@ -22,6 +22,7 @@
 #include "nob.h"
 #include "lexer.h"
 #include "util.h"
+#include "utf8.h"
 
 /* one handy macro */
 #define EXEC(node) ((node)->execf(node))
@@ -578,7 +579,7 @@ struct node *exec_print(struct node *nd)
         infnum_print(NOB_GET_INTEGER(value), stdout);
         break;
       case OT_CHAR:
-        printf("%c", NOB_GET_CHAR(value));
+        printf("%lc", NOB_GET_CHAR(value));
         break;
 
       /* fall through */
@@ -635,7 +636,7 @@ struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum val
   /* }}} */
 }
 
-struct node *new_char(struct parser *parser, struct lexer *lex, wchar_t value)
+struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex);

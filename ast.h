@@ -20,6 +20,7 @@
 #include "infnum.h"
 #include "lexer.h"
 #include "scope.h"
+#include "utf8.h"
 
 /* forward */
 struct lexer;
@@ -106,7 +107,7 @@ struct node {
     struct infnum i;   /* NT_INTEGER */
     float   f; /* NT_FLOAT */
     char   *s; /* NT_STRING */
-    wchar_t c; /* NT_CHAR */
+    nchar_t c; /* NT_CHAR */
 
     struct { /* NT_UNOP */
       enum unop_type type;
@@ -172,7 +173,7 @@ struct nodes_list {
 
 struct node *new_nop(struct parser *parser, struct lexer *lex);
 struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum value);
-struct node *new_char(struct parser *parser, struct lexer *lex, wchar_t value);
+struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value);
 struct node *new_decl(struct parser *parser, struct lexer *lex, char *name, uint8_t flags,
     struct node *value, struct scope *scope);
 struct node *new_name(struct parser *parser, struct lexer *lex, char *name);

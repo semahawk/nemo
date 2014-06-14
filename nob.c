@@ -23,6 +23,7 @@
 #include "nob.h"
 #include "infnum.h"
 #include "util.h"
+#include "utf8.h"
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
@@ -163,7 +164,7 @@ Nob *new_nob(struct nob_type *type, ...)
     case OT_CHAR:
     {
       /* {{{ */
-      wchar_t value = va_arg(vl, wchar_t);
+      nchar_t value = va_arg(vl, nchar_t);
 
       /* the pointer is the actual value */
       new.ptr = (void *)(uintptr_t)value;

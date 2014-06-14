@@ -26,6 +26,7 @@
 #include "mem.h"
 #include "lexer.h"
 #include "util.h"
+#include "utf8.h"
 
 /* is `c' valid to begin a name with? */
 #define name_beg(c) (isalpha(c) || c == '_' || (unsigned char)c >= 0xC0)
@@ -240,12 +241,18 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
   }
   else if (*p == '\''){
     /* {{{ CHAR */
-    wchar_t value = *(++p);
+    nchar_t value;
 
-    if (*(p + 1) != '\'')
+    /* skip over the opening "'" */
+    p++;
+    /* fetch the (possibly multibyte) character */
+    value = u8_fetch_char(&p);
+
+    if (*p != '\'')
       err(parser, lex, "unterminated character");
 
-    p += 2;
+    /* skip over the closing "'" */
+    p++;
 
     ret.type = TOK_CHAR;
     ret.value.c = value;
