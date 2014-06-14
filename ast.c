@@ -198,7 +198,7 @@ void dump_const(struct node *nd)
     infnum_print(nd->in.i, stdout);
     printf(")\n");
   } else if (nd->type == NT_CHAR)
-    printf("+ (#%u) const (char %c)\n", nd->id, nd->in.c);
+    printf("+ (#%u) const (char %lc)\n", nd->id, nd->in.c);
   else
     printf("+ (#%u) const\n", nd->id);
 }
@@ -390,7 +390,7 @@ struct node *exec_const(struct node *nd)
     /* FIXME */
     PUSH(new_nob(T_BYTE, (int)nd->in.f));
   } else if (nd->type == NT_CHAR){
-    debug_ast_exec(nd, "char (%c)", nd->in.c);
+    debug_ast_exec(nd, "char (%lc)", nd->in.c);
     PUSH(new_nob(T_CHAR, nd->in.c));
   }
 
@@ -718,7 +718,7 @@ struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
   nd->dumpf = dump_const;
 #endif
 
-  debug_ast_new(nd, "char (%c) ", value);
+  debug_ast_new(nd, "char (%lc) ", value);
 
   return nd;
   /* }}} */
