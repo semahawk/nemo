@@ -29,7 +29,7 @@ struct nodes_list;
 enum node_type {
   NT_NOP,
   NT_INTEGER,
-  NT_FLOAT,
+  NT_REAL,
   NT_STRING,
   NT_CHAR,
   NT_LIST,
@@ -106,7 +106,7 @@ struct node {
   /* values specific to a certain kind of a node */
   union {
     struct infnum i; /* NT_INTEGER */
-    float   f; /* NT_FLOAT */
+    double  f; /* NT_REAL */
     char   *s; /* NT_STRING */
     nchar_t c; /* NT_CHAR */
 
@@ -181,6 +181,7 @@ struct node *new_nop(struct parser *parser, struct lexer *lex);
 struct node *new_int(struct parser *parser, struct lexer *lex,
     struct infnum value);
 struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value);
+struct node *new_real(struct parser *parser, struct lexer *lex, double value);
 struct node *new_list(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems);
 struct node *new_decl(struct parser *parser, struct lexer *lex, char *name,

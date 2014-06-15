@@ -34,6 +34,7 @@ struct nob_type *T_WORD;
 struct nob_type *T_DWORD;
 struct nob_type *T_QWORD;
 struct nob_type *T_CHAR;
+struct nob_type *T_REAL;
 struct nob_type *T_STRING;
 
 /* the head of a singly-linked list of <struct types_list> */
@@ -61,6 +62,7 @@ void types_init(void)
   T_DWORD  = new_type("dword",  OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
   T_QWORD  = new_type("qword",  OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
   T_CHAR   = new_type("char",   OT_CHAR);
+  T_REAL   = new_type("real",   OT_REAL);
   T_STRING = new_type("string", OT_LIST, T_CHAR);
 }
 
@@ -149,6 +151,7 @@ Nob *new_nob(struct nob_type *type, ...)
   /* set up the new object with some knowns */
   new.type = type;
   new.ptr = NULL;
+  new.mark = 0;
 
   switch (type->primitive){
     case OT_INTEGER:
@@ -172,6 +175,16 @@ Nob *new_nob(struct nob_type *type, ...)
       /* }}} */
       break;
     }
+    case OT_REAL:
+    {
+      /* {{{ */
+      double value = va_arg(vl, double);
+
+      new.ptr = nmalloc(sizeof(double));
+      *(double *)new.ptr = value;
+      /* }}} */
+      break;
+    }
     case OT_LIST:
     {
       /* {{{ */
@@ -180,10 +193,10 @@ Nob *new_nob(struct nob_type *type, ...)
 
       new.ptr = elems;
       /* }}} */
+      break;
     }
 
     /* suspress warnings */
-    case OT_REAL:
     case OT_STRING:
     case OT_TUPLE:
     case OT_FUN:
@@ -245,10 +258,13 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
     case OT_ANY:
-      /* nothing */
+      /* nop */
       break;
     case OT_CHAR:
-      /* nothing */
+      /* nop */
+      break;
+    case OT_REAL:
+      /* nop */
       break;
     case OT_INTEGER:
     {
@@ -311,7 +327,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     }
 
     /* suspress warnings */
-    case OT_REAL:
     case OT_STRING:
       break;
     default:

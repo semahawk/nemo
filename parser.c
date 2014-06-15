@@ -383,12 +383,12 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->lvalue = false;
     /* }}} */
-  } else if (accept(parser, lex, TOK_FLOAT)){
+  } else if (accept(parser, lex, TOK_REAL)){
     /* {{{ FLOAT LITERAL */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("%f=16 ", lex->curr_tok.value.f);
+      printf("%g ", lex->curr_tok.value.f);
 
-    ret = new_int(parser, lex, infnum_from_byte(16));
+    ret = new_real(parser, lex, lex->curr_tok.value.f);
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_STRING)){

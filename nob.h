@@ -24,8 +24,10 @@
 #define NOB_FLAG_GET(ob) ((ob) & (flag))
 
 /* few handy macros, to help retrieving values from certain kinds of Nob */
+/* <ob> is of course of type { struct nob } */
 #define NOB_GET_INTEGER(ob) (*(struct infnum *)(ob)->ptr)
 #define NOB_GET_CHAR(ob) ((nchar_t)(uintptr_t)(ob)->ptr)
+#define NOB_GET_REAL(ob) (*(double *)(ob)->ptr)
 
 enum nob_primitive_type {
   /* that's kind of a draft only */
@@ -136,6 +138,7 @@ extern struct nob_type *T_WORD;
 extern struct nob_type *T_DWORD;
 extern struct nob_type *T_QWORD;
 extern struct nob_type *T_CHAR;
+extern struct nob_type *T_REAL;
 extern struct nob_type *T_STRING;
 /* lexer, for instance, could use this */
 extern struct types_list *NM_types;

@@ -385,10 +385,9 @@ struct node *exec_const(struct node *nd)
   if (nd->type == NT_INTEGER){
     debug_ast_exec(nd, "integer");
     PUSH(new_nob(T_INT, nd->in.i));
-  } else if (nd->type == NT_FLOAT){
-    debug_ast_exec(nd, "float (%f)", nd->in.f);
-    /* FIXME */
-    PUSH(new_nob(T_BYTE, (int)nd->in.f));
+  } else if (nd->type == NT_REAL){
+    debug_ast_exec(nd, "real (%g)", nd->in.f);
+    PUSH(new_nob(T_REAL, nd->in.f));
   } else if (nd->type == NT_CHAR){
     debug_ast_exec(nd, "char (%lc)", nd->in.c);
     PUSH(new_nob(T_CHAR, nd->in.c));
@@ -627,6 +626,9 @@ void print_nob(Nob *ob)
     case OT_CHAR:
       printf("%lc", NOB_GET_CHAR(ob));
       break;
+    case OT_REAL:
+      printf("%g", NOB_GET_REAL(ob));
+      break;
     case OT_LIST:
       printf("[");
 
@@ -641,7 +643,6 @@ void print_nob(Nob *ob)
       break;
 
     /* fall through */
-    case OT_REAL:
     case OT_STRING:
     case OT_TUPLE:
     case OT_FUN:
@@ -719,6 +720,24 @@ struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
 #endif
 
   debug_ast_new(nd, "char (%lc) ", value);
+
+  return nd;
+  /* }}} */
+}
+
+struct node *new_real(struct parser *parser, struct lexer *lex, double value)
+{
+  /* {{{ */
+  struct node *nd = new_node(parser, lex);
+
+  nd->type = NT_REAL;
+  nd->in.f = value;
+  nd->execf = exec_const;
+#if DEBUG
+  nd->dumpf = dump_const;
+#endif
+
+  debug_ast_new(nd, "real (%g) ", value);
 
   return nd;
   /* }}} */

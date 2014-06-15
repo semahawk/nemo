@@ -220,13 +220,13 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
           p++; i++;
         }
         tmp_arr[i2] = '\0';
-        ret.type = TOK_FLOAT;
-        ret.value.f = atof(tmp_arr);
+        ret.type = TOK_REAL;
+        ret.value.f = strtod(tmp_arr, NULL);
       } else {
         /* it's something like 2. */
         tmp_arr[i] = '\0';
-        ret.type = TOK_FLOAT;
-        ret.value.f = atof(tmp_arr);
+        ret.type = TOK_REAL;
+        ret.value.f = strtod(tmp_arr, NULL);
       }
       /* }}} */
     } else {
@@ -288,6 +288,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
   }
   else if (*p == '%'){
     if (isdigit(*(p + 1))){
+      /* {{{ ACCUMULATOR */
       unsigned i = 0;
       p++;
 
@@ -297,10 +298,13 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
       lex->col += i;
       strcpy(ret.value.s, tmp_arr);
       ret.type = TOK_ACCUMULATOR;
+      /* }}} */
     } else {
+      /* {{{ PERCENT SIGN */
       lex->col++;
       ret.type = TOK_PERCENT;
       ret.value.c = *p++;
+      /* }}} */
     }
   }
   else switch (*p){
@@ -348,9 +352,9 @@ static void debug_print_token(struct token tok)
       infnum_print(tok.value.i, stderr);
       /* }}} */
       break;
-    case TOK_FLOAT:
+    case TOK_REAL:
       /* {{{ */
-      fprintf(stderr, "float %f", tok.value.f);
+      fprintf(stderr, "real %f", tok.value.f);
       /* }}} */
       break;
     case TOK_STRING:
@@ -562,7 +566,7 @@ const char *tok_to_s(enum token_type type)
   /* {{{ */
   switch (type){
     case TOK_INTEGER:      return "integer";
-    case TOK_FLOAT:        return "float";
+    case TOK_REAL:         return "real";
     case TOK_STRING:       return "string";
     case TOK_CHAR:         return "character";
     case TOK_NAME:         return "name";
