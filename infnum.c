@@ -140,15 +140,19 @@ struct infnum infnum_from_str(char *s)
 
 void infnum_print(struct infnum num, FILE *fp)
 {
-  int i;
+  int i = num.nmemb - 1;
 
   if (num.sign == INFNUM_SIGN_NEG && !infnum_is_zero(num))
     fprintf(fp, "-");
 
   fprintf(fp, "0x");
 
+  /* skip over the leading zeroes */
+  while (num.digits[i] == 0)
+    i--;
+
   /* the 'digits' are stored in reverse order */
-  for (i = num.nmemb - 1; i >= 0; i--)
+  for (; i >= 0; i--)
     fprintf(fp, "%x", num.digits[i]);
 }
 
