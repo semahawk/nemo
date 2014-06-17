@@ -148,7 +148,7 @@ void infnum_print(struct infnum num, FILE *fp)
   fprintf(fp, "0x");
 
   /* skip over the leading zeroes */
-  while (num.digits[i] == 0)
+  while (num.digits[i] == 0 && i > 0)
     i--;
 
   /* the 'digits' are stored in reverse order */
@@ -546,6 +546,108 @@ void infnum_mul_by_small_inline(struct infnum a, infnum_digit_t b, struct infnum
   for (; i < result.nmemb; i++)
     result.digits[i] = 0;
 
+  /* }}} */
+}
+
+struct infnum infnum_div_by_small(struct infnum a, infnum_digit_t b)
+{
+  /* {{{ */
+  struct infnum quot;
+  unsigned i;
+  infnum_double_digit_t dividend = 0;
+
+  quot.nmemb = a.nmemb + 1; /* hmm.. */
+  quot.digits = nmalloc(sizeof(infnum_digit_t) * quot.nmemb);
+  quot.sign = INFNUM_SIGN_POS; /* FIXME */
+
+  for (i = 0; i < quot.nmemb; i++){
+#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
+
+    dividend |= digit(a);
+    quot.digits[i] = dividend / b;
+    dividend = (dividend % b) << INFNUM_DIGIT_BITS;
+
+#undef digit
+  }
+
+  return quot;
+  /* }}} */
+}
+
+struct infnum infnum_mod(struct infnum a, struct infnum b)
+{
+  /* {{{ */
+  struct infnum rem = infnum_raw(b.nmemb);
+  struct infnum twos_power = infnum_raw(b.nmemb + 1);
+  unsigned i, bit;
+
+  twos_power.digits[0] = 1;
+
+  for (i = 0; i < a.nmemb; i++){
+    for (bit = 0; bit < INFNUM_DIGIT_BITS; bit++){
+      if ((a.digits[i] & (1 << bit)) != 0){
+        infnum_add_inline(rem, twos_power, rem);
+
+        if (infnum_cmp(rem, b) & (INFNUM_CMP_GT | INFNUM_CMP_EQ)){
+          infnum_sub_inline(rem, b, rem);
+        }
+      }
+
+      infnum_shl_by_one_inline(twos_power);
+
+      if (infnum_cmp(twos_power, b) & (INFNUM_CMP_GT | INFNUM_CMP_EQ)){
+        infnum_sub_inline(twos_power, b, twos_power);
+      }
+    }
+  }
+
+  free_infnum(twos_power);
+
+  return rem;
+  /* }}} */
+}
+
+infnum_digit_t infnum_mod_by_small(struct infnum a, infnum_digit_t b)
+{
+  /* {{{ */
+  infnum_double_digit_t twos_power = 1;
+  infnum_double_digit_t rem = 0;
+  unsigned i, bit;
+
+  for (i = 0; i < a.nmemb; i++){
+    for (bit = 0; bit < INFNUM_DIGIT_BITS; bit++){
+      if ((a.digits[i] & (1 << bit)) != 0){
+        rem += twos_power;
+
+        if (rem >= b){
+          rem -= b;
+        }
+      }
+
+      twos_power <<= 1;
+
+      if (twos_power >= b){
+        twos_power -= b;
+      }
+    }
+  }
+
+  return (infnum_digit_t)rem;
+  /* }}} */
+}
+
+void infnum_shl_by_one_inline(struct infnum a)
+{
+  /* {{{ */
+  int i;
+
+  /* TODO make room for the MSB */
+  a.digits[a.nmemb - 1] <<= 1;
+
+  for (i = (signed)a.nmemb - 2; i >= 0; i--){
+    a.digits[i + 1] |= a.digits[i] >> (INFNUM_DIGIT_BITS - 1);
+    a.digits[i] <<= 1;
+  }
   /* }}} */
 }
 

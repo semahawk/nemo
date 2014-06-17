@@ -514,6 +514,12 @@ struct node *exec_binop(struct node *nd)
     case BINARY_MUL:
       PUSH(new_nob(T_INT, infnum_mul(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;
+    case BINARY_DIV:
+      PUSH(new_nob(T_INT, infnum_div_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
+      break;
+    case BINARY_MOD:
+      PUSH(new_nob(T_INT, infnum_mod(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
+      break;
 
     /* fall through */
     case BINARY_GT:
@@ -522,8 +528,6 @@ struct node *exec_binop(struct node *nd)
     case BINARY_LE:
     case BINARY_EQ:
     case BINARY_NE:
-    case BINARY_DIV:
-    case BINARY_MOD:
     case BINARY_ASSIGN:
     case BINARY_ASSIGN_ADD:
     case BINARY_ASSIGN_SUB:

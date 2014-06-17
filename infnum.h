@@ -66,15 +66,19 @@ void infnum_print(struct infnum, FILE *);
 enum infnum_cmp infnum_cmp(struct infnum, struct infnum);
 bool infnum_is_zero(struct infnum);
 
-struct infnum infnum_add(struct infnum, struct infnum);
-struct infnum infnum_sub(struct infnum, struct infnum);
-struct infnum infnum_mul(struct infnum, struct infnum);
-struct infnum infnum_mul_by_small(struct infnum, infnum_digit_t);
+struct infnum  infnum_add(struct infnum, struct infnum);
+struct infnum  infnum_sub(struct infnum, struct infnum);
+struct infnum  infnum_mul(struct infnum, struct infnum);
+struct infnum  infnum_mul_by_small(struct infnum, infnum_digit_t);
+struct infnum  infnum_div_by_small(struct infnum, infnum_digit_t);
+struct infnum  infnum_mod(struct infnum, struct infnum);
+infnum_digit_t infnum_mod_by_small(struct infnum, infnum_digit_t);
 
 void infnum_add_inline(struct infnum, struct infnum, struct infnum);
 void infnum_sub_inline(struct infnum, struct infnum, struct infnum);
 void infnum_mul_inline(struct infnum, struct infnum, struct infnum);
 void infnum_mul_by_small_inline(struct infnum, infnum_digit_t, struct infnum);
+void infnum_shl_by_one_inline(struct infnum);
 
 void free_infnum(struct infnum);
 
