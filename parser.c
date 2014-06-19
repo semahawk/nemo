@@ -555,7 +555,7 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
         printf("prefix(!) ");
       target = postfix_expr(parser, lex);
       target->lvalue = false;
-      type = UNARY_NEGATE;
+      type = UNARY_LOGNEG;
     }
 
     ret = new_unop(parser, lex, type, target);
@@ -784,12 +784,41 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
+static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
+{
+  /* {{{ */
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = eq_expr(parser, lex);
+
+  while (accept(parser, lex, TOK_PIPE)){
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("| ");
+
+    type = BINARY_BITOR;
+    right = eq_expr(parser, lex);
+
+    if (!right){
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
+      return NULL;
+    }
+
+    ret = new_binop(parser, lex, type, left, right);
+    ret->lvalue = false;
+    left = ret;
+  }
+
+  return ret;
+  /* }}} */
+}
+
 static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *predicate, *yes, *no, *ret;
 
-  predicate = ret = eq_expr(parser, lex);
+  predicate = ret = bitor_expr(parser, lex);
 
   if (accept(parser, lex, TOK_QUESTION)){
     if (predicate == NULL){

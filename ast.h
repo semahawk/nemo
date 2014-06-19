@@ -50,7 +50,8 @@ enum node_type {
 enum unop_type {
   UNARY_PLUS,
   UNARY_MINUS,
-  UNARY_NEGATE,
+  UNARY_LOGNEG, /* logic negation */
+  UNARY_BITNEG, /* bitwise negation */
   UNARY_PREINC,
   UNARY_PREDEC,
   UNARY_POSTINC,
@@ -71,6 +72,9 @@ enum binop_type {
   BINARY_MOD,
   BINARY_SHL,
   BINARY_SHR,
+  BINARY_BITAND,
+  BINARY_BITXOR,
+  BINARY_BITOR,
   BINARY_ASSIGN,
   BINARY_ASSIGN_ADD,
   BINARY_ASSIGN_SUB,

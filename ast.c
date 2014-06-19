@@ -248,8 +248,11 @@ void dump_unop(struct node *nd)
     case UNARY_MINUS:
       printf("'-'");
       break;
-    case UNARY_NEGATE:
+    case UNARY_LOGNEG:
       printf("'!'");
+      break;
+    case UNARY_BITNEG:
+      printf("'~'");
       break;
     case UNARY_PREINC:
       printf("prefix '++'");
@@ -525,6 +528,9 @@ struct node *exec_binop(struct node *nd)
       break;
     case BINARY_SHR:
       PUSH(new_nob(T_INT, infnum_shr_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
+      break;
+    case BINARY_BITOR:
+      PUSH(new_nob(T_INT, infnum_or(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;
 
     /* fall through */
@@ -966,6 +972,7 @@ const char *binop_to_s(enum binop_type type)
     case BINARY_MOD:        return "%";
     case BINARY_SHL:        return "<<";
     case BINARY_SHR:        return ">>";
+    case BINARY_BITOR:      return "|";
     case BINARY_ASSIGN:     return "=";
     case BINARY_ASSIGN_ADD: return "+=";
     case BINARY_ASSIGN_SUB: return "-=";
