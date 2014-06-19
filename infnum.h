@@ -73,6 +73,8 @@ struct infnum  infnum_mul_by_small(struct infnum, infnum_digit_t);
 struct infnum  infnum_div_by_small(struct infnum, infnum_digit_t);
 struct infnum  infnum_mod(struct infnum, struct infnum);
 infnum_digit_t infnum_mod_by_small(struct infnum, infnum_digit_t);
+struct infnum  infnum_shl_by_small(struct infnum, infnum_digit_t);
+struct infnum  infnum_shr_by_small(struct infnum, infnum_digit_t);
 
 void infnum_add_inline(struct infnum, struct infnum, struct infnum);
 void infnum_sub_inline(struct infnum, struct infnum, struct infnum);

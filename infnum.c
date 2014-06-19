@@ -153,7 +153,10 @@ void infnum_print(struct infnum num, FILE *fp)
 
   /* the 'digits' are stored in reverse order */
   for (; i >= 0; i--)
-    fprintf(fp, "%x", num.digits[i]);
+    if (num.digits[i] == 0)
+      fprintf(fp, "%08x", num.digits[i]);
+    else
+      fprintf(fp, "%x", num.digits[i]);
 }
 
 uint8_t infnum_to_byte(struct infnum num)
@@ -636,6 +639,35 @@ infnum_digit_t infnum_mod_by_small(struct infnum a, infnum_digit_t b)
   /* }}} */
 }
 
+struct infnum infnum_shl_by_small(struct infnum a, infnum_digit_t b)
+{
+  /* {{{ */
+  struct infnum res;
+  unsigned i;
+  infnum_double_digit_t mask;
+
+  if (b == 0)
+    return a;
+
+  /* calculate the number of digits the result will have to have */
+  res = infnum_raw(a.nmemb + (floor((b - 1) / INFNUM_DIGIT_BITS) + 1));
+  res.sign = a.sign;
+
+  for (i = 0; i < a.nmemb; i++){
+    /* res_digit holds where the low 'half' of a digit <n> will end up (ie.
+     * in which digit of the resulting number); the high 'half' will end up in
+     * res_digit + 1 */
+    unsigned res_digit_idx = floor(b / INFNUM_DIGIT_BITS) + i;
+
+    mask = (infnum_double_digit_t)a.digits[i] << (b % INFNUM_DIGIT_BITS);
+    res.digits[res_digit_idx] |= mask & INFNUM_MAX_DIGIT_VALUE;
+    res.digits[res_digit_idx + 1] |= mask >> INFNUM_DIGIT_BITS;
+  }
+
+  return res;
+  /* }}} */
+}
+
 void infnum_shl_by_one_inline(struct infnum a)
 {
   /* {{{ */
@@ -648,6 +680,41 @@ void infnum_shl_by_one_inline(struct infnum a)
     a.digits[i + 1] |= a.digits[i] >> (INFNUM_DIGIT_BITS - 1);
     a.digits[i] <<= 1;
   }
+  /* }}} */
+}
+
+struct infnum infnum_shr_by_small(struct infnum a, infnum_digit_t b)
+{
+  /* {{{ */
+  struct infnum res;
+  unsigned i;
+  infnum_double_digit_t mask;
+
+  if (b == 0)
+    return a;
+
+  /* calculate the number of digits the result will have to have */
+  res = infnum_raw(a.nmemb - floor(b / INFNUM_DIGIT_BITS));
+  res.sign = a.sign;
+
+  for (i = 0; i < res.nmemb; i++){
+    /*
+     * <a_digit_idx> holds where in a.digits is (part of) the digit that will
+     * end up in res.digits[i]
+     */
+    unsigned a_digit_idx = floor(b / INFNUM_DIGIT_BITS) + i;
+    infnum_double_digit_t mask_lowbits = a.digits[a_digit_idx];
+    /* high_a_digit is the digit right next to a.digits[a_digit_idx] unless
+     * there would be overflow, in which case it's simply zero */
+    infnum_double_digit_t mask_highbits = ((a_digit_idx + 1) < a.nmemb) ? a.digits[a_digit_idx + 1] : 0;
+
+    /* the mask consists of ORed a.digits[a_digit_idx] and the digit right next
+     * to it (or zero) */
+    mask = (mask_lowbits | (mask_highbits << INFNUM_DIGIT_BITS)) >> (b % INFNUM_DIGIT_BITS);
+    res.digits[i] |= mask & INFNUM_MAX_DIGIT_VALUE;
+  }
+
+  return res;
   /* }}} */
 }
 

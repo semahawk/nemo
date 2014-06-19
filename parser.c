@@ -641,13 +641,64 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
+static struct node *bitshift_expr(struct parser *parser, struct lexer *lex)
+{
+  /* {{{ */
+  struct node *left, *right, *ret;
+  enum binop_type type;
+  struct lexer save_lex;
+
+  left = ret = add_expr(parser, lex);
+  save_lex = *lex;
+
+  while (peek(parser, lex, TOK_LCHEVRON) || peek(parser, lex, TOK_RCHEVRON)){
+    if (accept(parser, lex, TOK_LCHEVRON)){
+      if (accept(parser, lex, TOK_LCHEVRON)){
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("<< ");
+
+        type = BINARY_SHL;
+      } else {
+        /* restore lexer's state */
+        *lex = save_lex;
+        return ret;
+      }
+    } else if (accept(parser, lex, TOK_RCHEVRON)){
+      if (accept(parser, lex, TOK_RCHEVRON)){
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(">> ");
+
+        type = BINARY_SHR;
+      } else {
+        /* restore lexer's state */
+        *lex = save_lex;
+        return ret;
+      }
+    }
+
+    right = add_expr(parser, lex);
+
+    if (!right){
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
+      return NULL;
+    }
+
+    ret = new_binop(parser, lex, type, left, right);
+    ret->lvalue = false;
+    left = ret;
+  }
+
+  return ret;
+  /* }}} */
+}
+
 static struct node *cond_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
 
-  left = ret = add_expr(parser, lex);
+  left = ret = bitshift_expr(parser, lex);
 
   if (peek(parser, lex, TOK_LCHEVRON) || peek(parser, lex, TOK_RCHEVRON)){
     if (accept(parser, lex, TOK_LCHEVRON)){
@@ -672,7 +723,7 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
       }
     }
 
-    right = add_expr(parser, lex);
+    right = bitshift_expr(parser, lex);
 
     if (!right){
       err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));

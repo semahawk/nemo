@@ -520,6 +520,12 @@ struct node *exec_binop(struct node *nd)
     case BINARY_MOD:
       PUSH(new_nob(T_INT, infnum_mod(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;
+    case BINARY_SHL:
+      PUSH(new_nob(T_INT, infnum_shl_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
+      break;
+    case BINARY_SHR:
+      PUSH(new_nob(T_INT, infnum_shr_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
+      break;
 
     /* fall through */
     case BINARY_GT:
@@ -958,6 +964,8 @@ const char *binop_to_s(enum binop_type type)
     case BINARY_MUL:        return "*";
     case BINARY_DIV:        return "/";
     case BINARY_MOD:        return "%";
+    case BINARY_SHL:        return "<<";
+    case BINARY_SHR:        return ">>";
     case BINARY_ASSIGN:     return "=";
     case BINARY_ASSIGN_ADD: return "+=";
     case BINARY_ASSIGN_SUB: return "-=";
