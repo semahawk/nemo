@@ -192,7 +192,10 @@ void infnum_print(struct infnum num, FILE *fp)
     buff[len - i - 1] = tmp;
   }
 
-  fprintf(fp, "%s", buff);
+  if (num.sign == INFNUM_SIGN_NEG)
+    fprintf(fp, "-%s", buff);
+  else
+    fprintf(fp,  "%s", buff);
 
   free(buff);
   free_infnum(ten);
