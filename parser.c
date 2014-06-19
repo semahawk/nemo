@@ -922,7 +922,7 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
 
   while (peek(parser, lex, TOK_EQ) /* TODO */){
     if (accept(parser, lex, TOK_EQ)){
-      if (left->lvalue == false){
+      if (left == NULL || left->lvalue == false){
         err(parser, lex, "expected an lvalue at the LHS of the binary '=' operation");
         return NULL;
       }
@@ -941,7 +941,7 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
 
     ret = new_binop(parser, lex, type, left, right);
     ret->lvalue = false;
-    left = ret;
+    right = ret;
   }
 
   return ret;

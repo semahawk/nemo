@@ -553,7 +553,8 @@ struct node *exec_binop(struct node *nd)
     case BINARY_ASSIGN_DIV:
     case BINARY_ASSIGN_MOD:
     case BINARY_COMMA:
-        break;
+      PUSH(new_nob(T_INT, infnum_from_dword(0)));
+      break;
     default: /* meh */;
   }
 
