@@ -30,6 +30,9 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+/* returns digit #<i> from struct infnum <n> or zero in case of an overflow */
+#define DIGIT(n, i) (((i) < (n).nmemb) ? (n).digits[i] : 0)
+
 struct infnum infnum_raw(unsigned nmemb)
 {
   struct infnum num;
@@ -254,14 +257,10 @@ enum infnum_cmp infnum_cmp(struct infnum a, struct infnum b)
   int i = MAX(a.nmemb - 1, b.nmemb - 1);
 
   for (; i >= 0; i--){
-#define digit(n) ((((unsigned)i) < (n).nmemb) ? (n).digits[i] : 0)
-
-    if (digit(a) < digit(b))
+    if (DIGIT(a, (unsigned)i) < DIGIT(b, (unsigned)i))
       return INFNUM_CMP_LT;
-    else if (digit(a) > digit(b))
+    else if (DIGIT(a, (unsigned)i) > DIGIT(b, (unsigned)i))
       return INFNUM_CMP_GT;
-
-#undef digit
   }
 
   return INFNUM_CMP_EQ;
@@ -294,12 +293,8 @@ struct infnum infnum_add(struct infnum a, struct infnum b)
   }
 
   for (carry = 0, i = 0; i < sum.nmemb; i++){
-#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
-
-    sum.digits[i] = (infnum_digit_t)(digit(a) + digit(b) + carry);
-    carry = ((infnum_double_digit_t)digit(a) + digit(b)) >> (INFNUM_DIGIT_BITS);
-
-#undef digit
+    sum.digits[i] = (infnum_digit_t)(DIGIT(a, i) + DIGIT(b, i) + carry);
+    carry = ((infnum_double_digit_t)DIGIT(a, i) + DIGIT(b, i)) >> (INFNUM_DIGIT_BITS);
   }
 
   return sum;
@@ -328,12 +323,8 @@ void infnum_add_inline(struct infnum a, struct infnum b, struct infnum result)
   }
 
   for (carry = 0, i = 0; i < result.nmemb; i++){
-#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
-
-    result.digits[i] = (infnum_digit_t)(digit(a) + digit(b) + carry);
-    carry = ((infnum_double_digit_t)digit(a) + digit(b)) >> (INFNUM_DIGIT_BITS);
-
-#undef digit
+    result.digits[i] = (infnum_digit_t)(DIGIT(a, i) + DIGIT(b, i) + carry);
+    carry = ((infnum_double_digit_t)DIGIT(a, i) + DIGIT(b, i)) >> (INFNUM_DIGIT_BITS);
   }
 
   return;
@@ -566,12 +557,8 @@ struct infnum infnum_mul_by_small(struct infnum a, infnum_digit_t b)
   prod.sign = INFNUM_SIGN_POS;
 
   for (carry = 0, i = 0; i < prod.nmemb; i++){
-#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
-
-    prod.digits[i] = digit(a) * b + carry;
-    carry = ((infnum_double_digit_t)digit(a) + b) >> INFNUM_DIGIT_BITS;
-
-#undef digit
+    prod.digits[i] = DIGIT(a, i) * b + carry;
+    carry = ((infnum_double_digit_t)DIGIT(a, i) + b) >> INFNUM_DIGIT_BITS;
   }
 
   return prod;
@@ -788,13 +775,8 @@ struct infnum infnum_and(struct infnum a, struct infnum b)
   res = infnum_raw(MAX(a.nmemb, b.nmemb));
   res.sign = INFNUM_SIGN_POS; /* possible FIXME */
 
-  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++){
-#define digit(n) (((i) < (n).nmemb) ? (n).digits[i] : 0)
-
-    res.digits[i] = digit(a) & digit(b);
-
-#undef digit
-  }
+  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++)
+    res.digits[i] = DIGIT(a, i) & DIGIT(b, i);
 
   return res;
   /* }}} */
@@ -809,13 +791,8 @@ struct infnum infnum_xor(struct infnum a, struct infnum b)
   res = infnum_raw(MAX(a.nmemb, b.nmemb));
   res.sign = INFNUM_SIGN_POS; /* possible FIXME */
 
-  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++){
-#define digit(n) (((i) < (n).nmemb) ? (n).digits[i] : 0)
-
-    res.digits[i] = digit(a) ^ digit(b);
-
-#undef digit
-  }
+  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++)
+    res.digits[i] = DIGIT(a, i) ^ DIGIT(b, i);
 
   return res;
   /* }}} */
@@ -830,13 +807,8 @@ struct infnum infnum_or(struct infnum a, struct infnum b)
   res = infnum_raw(MAX(a.nmemb, b.nmemb));
   res.sign = INFNUM_SIGN_POS; /* possible FIXME */
 
-  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++){
-#define digit(n) (((i) < (n).nmemb) ? (n).digits[i] : 0)
-
-    res.digits[i] = digit(a) | digit(b);
-
-#undef digit
-  }
+  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++)
+    res.digits[i] = DIGIT(a, i) | DIGIT(b, i);
 
   return res;
   /* }}} */
