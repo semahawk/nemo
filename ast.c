@@ -529,6 +529,9 @@ struct node *exec_binop(struct node *nd)
     case BINARY_SHR:
       PUSH(new_nob(T_INT, infnum_shr_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
       break;
+    case BINARY_BITAND:
+      PUSH(new_nob(T_INT, infnum_and(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
+      break;
     case BINARY_BITXOR:
       PUSH(new_nob(T_INT, infnum_xor(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
       break;

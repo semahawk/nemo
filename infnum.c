@@ -779,6 +779,27 @@ struct infnum infnum_shr_by_small(struct infnum a, infnum_digit_t b)
   /* }}} */
 }
 
+struct infnum infnum_and(struct infnum a, struct infnum b)
+{
+  /* {{{ */
+  struct infnum res;
+  unsigned i;
+
+  res = infnum_raw(MAX(a.nmemb, b.nmemb));
+  res.sign = INFNUM_SIGN_POS; /* possible FIXME */
+
+  for (i = 0; i < MAX(a.nmemb, b.nmemb); i++){
+#define digit(n) (((i) < (n).nmemb) ? (n).digits[i] : 0)
+
+    res.digits[i] = digit(a) & digit(b);
+
+#undef digit
+  }
+
+  return res;
+  /* }}} */
+}
+
 struct infnum infnum_xor(struct infnum a, struct infnum b)
 {
   /* {{{ */

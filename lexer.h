@@ -52,6 +52,7 @@ enum token_type {
   TOK_BANG,           /*  "!"           */
   TOK_COLON,          /*  ":"           */
   TOK_QUESTION,       /*  "?"           */
+  TOK_AMPERSAND,      /*  "&"           */
   TOK_CARET,          /*  "^"           */
   TOK_PIPE,           /*  "|"           */
   TOK_EOS             /*  end of script */
