@@ -33,8 +33,9 @@ typedef uint64_t infnum_double_digit_t;
 /* maximum value for a single 'digit' */
 #define INFNUM_MAX_DIGIT_VALUE ((infnum_digit_t)(-1))
 
-/* a one precomputed constant */
+/* two precomputed constants */
 #define LOG_2_10 3.3219280948873623478703194294894
+#define LOG_10_2 0.3010299956639811952137388947244
 
 struct infnum {
   /* stored in reverse order (least significant 'digit' first) */
@@ -62,9 +63,11 @@ uint16_t infnum_to_word (struct infnum);
 uint32_t infnum_to_dword(struct infnum);
 uint64_t infnum_to_qword(struct infnum);
 
+void infnum_print_hex(struct infnum, FILE *);
 void infnum_print(struct infnum, FILE *);
 enum infnum_cmp infnum_cmp(struct infnum, struct infnum);
 bool infnum_is_zero(struct infnum);
+struct infnum infnum_copy(struct infnum);
 
 struct infnum  infnum_add(struct infnum, struct infnum);
 struct infnum  infnum_sub(struct infnum, struct infnum);
@@ -80,6 +83,7 @@ void infnum_add_inline(struct infnum, struct infnum, struct infnum);
 void infnum_sub_inline(struct infnum, struct infnum, struct infnum);
 void infnum_mul_inline(struct infnum, struct infnum, struct infnum);
 void infnum_mul_by_small_inline(struct infnum, infnum_digit_t, struct infnum);
+void infnum_div_by_small_inline(struct infnum, infnum_digit_t, struct infnum);
 void infnum_shl_by_one_inline(struct infnum);
 
 void free_infnum(struct infnum);

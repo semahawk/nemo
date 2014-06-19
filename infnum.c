@@ -138,7 +138,7 @@ struct infnum infnum_from_str(char *s)
   return num;
 }
 
-void infnum_print(struct infnum num, FILE *fp)
+void infnum_print_hex(struct infnum num, FILE *fp)
 {
   int i = num.nmemb - 1;
 
@@ -157,6 +157,57 @@ void infnum_print(struct infnum num, FILE *fp)
       fprintf(fp, "%08x", num.digits[i]);
     else
       fprintf(fp, "%x", num.digits[i]);
+}
+
+void infnum_print(struct infnum num, FILE *fp)
+{
+  /* TODO make it more accurate (ideally to a one digit precision) */
+  int up = (int)(LOG_10_2 * INFNUM_DIGIT_BITS * num.nmemb + 1);
+  int i, len;
+  char *buff = nmalloc(sizeof(char) * up);
+  struct infnum copy = infnum_copy(num);
+  struct infnum ten  = infnum_from_dword(10);
+
+  if (infnum_is_zero(num)){
+    buff[0]= '0';
+    buff[1]= '\0';
+  } else {
+    for (i = 0; !infnum_is_zero(copy); i++){
+      buff[i] = (char)infnum_mod_by_small(copy, 10) + '0';
+      infnum_div_by_small_inline(copy, 10, copy);
+    }
+
+    buff[i] = '\0';
+  }
+
+  len = strlen(buff);
+  /* reverse the string */
+  for (i = 0; i < len / 2; i++){
+    char tmp = buff[i];
+
+    buff[i] = buff[len - i - 1];
+    buff[len - i - 1] = tmp;
+  }
+
+  fprintf(fp, "%s", buff);
+
+  free(buff);
+  free_infnum(ten);
+}
+
+struct infnum infnum_copy(struct infnum num)
+{
+  struct infnum new;
+
+  new.sign   = num.sign;
+  new.nmemb  = num.nmemb;
+  new.digits = nmalloc(sizeof(infnum_digit_t) * new.nmemb);
+
+  /* copy the digits */
+  for (unsigned i = 0; i < new.nmemb; i++)
+    new.digits[i] = num.digits[i];
+
+  return new;
 }
 
 uint8_t infnum_to_byte(struct infnum num)
@@ -556,24 +607,34 @@ struct infnum infnum_div_by_small(struct infnum a, infnum_digit_t b)
 {
   /* {{{ */
   struct infnum quot;
-  unsigned i;
+  int i;
   infnum_double_digit_t dividend = 0;
 
   quot.nmemb = a.nmemb + 1; /* hmm.. */
   quot.digits = nmalloc(sizeof(infnum_digit_t) * quot.nmemb);
   quot.sign = INFNUM_SIGN_POS; /* FIXME */
 
-  for (i = 0; i < quot.nmemb; i++){
-#define digit(n) (((i) >= (n).nmemb) ? 0 : (n).digits[i])
-
-    dividend |= digit(a);
+  for (i = (signed)a.nmemb - 1; i >= 0; i--){
+    dividend |= a.digits[i];
     quot.digits[i] = dividend / b;
     dividend = (dividend % b) << INFNUM_DIGIT_BITS;
-
-#undef digit
   }
 
   return quot;
+  /* }}} */
+}
+
+void infnum_div_by_small_inline(struct infnum a, infnum_digit_t b, struct infnum res)
+{
+  /* {{{ */
+  infnum_double_digit_t dividend = 0;
+  int i;
+
+  for (i = (signed)a.nmemb - 1; i >= 0; i--){
+    dividend |= a.digits[i];
+    res.digits[i] = dividend / b;
+    dividend = (dividend % b) << INFNUM_DIGIT_BITS;
+  }
   /* }}} */
 }
 
