@@ -1045,11 +1045,6 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
     save_lex = *lex;
 
     if (accept(parser, lex, TOK_EQ)){
-      if (left == NULL || left->lvalue == false){
-        err(parser, lex, "expected an lvalue at the LHS of the binary '=' operation");
-        return NULL;
-      }
-
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("= ");
 
@@ -1158,6 +1153,11 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
         *lex = save_lex;
         return ret;
       }
+    }
+
+    if (left == NULL || left->lvalue == false){
+      err(parser, lex, "expected an lvalue at the LHS of the binary '%s' operation", binop_to_s(type));
+      return NULL;
     }
 
     right = ternary_expr(parser, lex);
