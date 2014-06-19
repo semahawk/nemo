@@ -784,7 +784,7 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
-static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
+static struct node *bitxor_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *left, *right, *ret;
@@ -792,12 +792,41 @@ static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = eq_expr(parser, lex);
 
+  while (accept(parser, lex, TOK_CARET)){
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("^ ");
+
+    type = BINARY_BITXOR;
+    right = eq_expr(parser, lex);
+
+    if (!right){
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
+      return NULL;
+    }
+
+    ret = new_binop(parser, lex, type, left, right);
+    ret->lvalue = false;
+    left = ret;
+  }
+
+  return ret;
+  /* }}} */
+}
+
+static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
+{
+  /* {{{ */
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = bitxor_expr(parser, lex);
+
   while (accept(parser, lex, TOK_PIPE)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("| ");
 
     type = BINARY_BITOR;
-    right = eq_expr(parser, lex);
+    right = bitxor_expr(parser, lex);
 
     if (!right){
       err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));

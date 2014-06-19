@@ -328,6 +328,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     case '>': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RCHEVRON; break;
     case '!': ret.value.c = *p; lex->col++; p++; ret.type = TOK_BANG; break;
     case '?': ret.value.c = *p; lex->col++; p++; ret.type = TOK_QUESTION; break;
+    case '^': ret.value.c = *p; lex->col++; p++; ret.type = TOK_CARET; break;
     case '|': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PIPE; break;
     default:
       fprintf(stderr, "nemo: unknown character '%c' (0x%x) in %s"
