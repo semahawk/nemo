@@ -979,6 +979,7 @@ const char *binop_to_s(enum binop_type type)
     case BINARY_MOD:        return "%";
     case BINARY_SHL:        return "<<";
     case BINARY_SHR:        return ">>";
+    case BINARY_BITAND:     return "&";
     case BINARY_BITXOR:     return "^";
     case BINARY_BITOR:      return "|";
     case BINARY_ASSIGN:     return "=";
@@ -987,6 +988,11 @@ const char *binop_to_s(enum binop_type type)
     case BINARY_ASSIGN_MUL: return "*=";
     case BINARY_ASSIGN_DIV: return "/=";
     case BINARY_ASSIGN_MOD: return "%=";
+    case BINARY_ASSIGN_AND: return "&=";
+    case BINARY_ASSIGN_XOR: return "^=";
+    case BINARY_ASSIGN_OR:  return "|=";
+    case BINARY_ASSIGN_SHL: return "<<=";
+    case BINARY_ASSIGN_SHR: return ">>=";
     case BINARY_COMMA:      return ",";
     default: return "#unknown#binop_to_s#";
   }
