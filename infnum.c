@@ -198,6 +198,7 @@ void infnum_print(struct infnum num, FILE *fp)
     fprintf(fp,  "%s", buff);
 
   free(buff);
+  free_infnum(copy);
   free_infnum(ten);
 }
 
@@ -666,7 +667,7 @@ infnum_digit_t infnum_mod_by_small(struct infnum a, infnum_digit_t b)
   /* {{{ */
   infnum_double_digit_t twos_power = 1;
   infnum_double_digit_t rem = 0;
-  unsigned i, bit;
+  unsigned i, bit = 0;
 
   for (i = 0; i < a.nmemb; i++){
     for (bit = 0; bit < INFNUM_DIGIT_BITS; bit++){
@@ -712,7 +713,9 @@ struct infnum infnum_shl_by_small(struct infnum a, infnum_digit_t b)
 
     mask = (infnum_double_digit_t)a.digits[i] << (b % INFNUM_DIGIT_BITS);
     res.digits[res_digit_idx] |= mask & INFNUM_MAX_DIGIT_VALUE;
-    res.digits[res_digit_idx + 1] |= mask >> INFNUM_DIGIT_BITS;
+
+    if (res_digit_idx + 1 < res.nmemb)
+      res.digits[res_digit_idx + 1] |= mask >> INFNUM_DIGIT_BITS;
   }
 
   return res;

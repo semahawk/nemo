@@ -115,8 +115,13 @@ void gc_finish(void)
 
     /* free the value associated with the object */
     /* unless it's a OT_CHAR (where the pointer is the actual value) */
-    if (curr->nob.type->primitive != OT_CHAR)
+    if (curr->nob.type->primitive != OT_CHAR){
+      if (curr->nob.type->primitive == OT_INTEGER)
+        /* infnums need additional freeing */
+        free_infnum(*(struct infnum *)curr->nob.ptr);
+
       nfree(curr->nob.ptr);
+    }
 
     /* free the list's element itself */
     nfree(curr);
