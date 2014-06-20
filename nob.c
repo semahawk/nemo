@@ -361,6 +361,7 @@ void free_nob(Nob *ob)
   switch (ob->type->primitive){
     case OT_INTEGER:
       free_infnum(NOB_GET_INTEGER(ob));
+      nfree(ob->ptr);
       break;
     case OT_REAL:
       nfree(ob->ptr);
