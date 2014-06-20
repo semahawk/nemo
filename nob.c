@@ -113,15 +113,8 @@ void gc_finish(void)
   for (curr = NM_gc; curr != NULL; curr = next){
     next = curr->next;
 
-    /* free the value associated with the object */
-    /* unless it's a OT_CHAR (where the pointer is the actual value) */
-    if (curr->nob.type->primitive != OT_CHAR){
-      if (curr->nob.type->primitive == OT_INTEGER)
-        /* infnums need additional freeing */
-        free_infnum(*(struct infnum *)curr->nob.ptr);
-
-      nfree(curr->nob.ptr);
-    }
+    /* free everything that is associated with the current element's Nob */
+    free_nob(&curr->nob);
 
     /* free the list's element itself */
     nfree(curr);
@@ -351,6 +344,47 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 
   return new_type;
   /* }}} */
+}
+
+/*
+ * Free every 'freeable' data associated with the given <ob>.
+ *
+ * It does _not_ free the <ob> itself, as it was never really
+ * malloc'ed - `gc_finish` takes care of 'freeing' nobs.
+ */
+void free_nob(Nob *ob)
+{
+  if (!ob) return;
+
+  assert(ob->type);
+
+  switch (ob->type->primitive){
+    case OT_INTEGER:
+      free_infnum(NOB_GET_INTEGER(ob));
+      break;
+    case OT_REAL:
+      nfree(ob->ptr);
+      break;
+    case OT_LIST:
+    case OT_TUPLE: {
+      struct nobs_list *curr, *next;
+
+      for (curr = (struct nobs_list *)ob->ptr; curr != NULL; curr = next){
+        next = curr->next;
+
+        free_nob(curr->nob);
+      }
+      break;
+    }
+    case OT_ANY:
+    case OT_CHAR:
+      /* nothing additional to free */
+      break;
+    case OT_STRING:
+    case OT_FUN:
+      /* suspress warnings */
+      break;
+  }
 }
 
 /*

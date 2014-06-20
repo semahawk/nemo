@@ -129,6 +129,7 @@ void push_type(struct nob_type *type);
 const char *nob_type_to_s(enum nob_primitive_type);
 bool nob_is_true(Nob *ob);
 bool nob_types_are_equal(struct nob_type *, struct nob_type *);
+void free_nob(Nob *ob);
 
 /* make the variables visible */
 extern struct nob_type *T_ANY;
