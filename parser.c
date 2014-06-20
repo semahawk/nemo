@@ -282,7 +282,58 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("(\n");
 
-    ret = expr(parser, lex);
+    ret = no_comma_expr(parser, lex);
+
+    if (accept(parser, lex, TOK_COMMA)){
+      /* now, that's a tuple */
+      struct nodes_list *elems = NULL;
+      struct nodes_list *elem;
+      struct nodes_list *curr, *next, *prev;
+      struct node *node;
+
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(", ");
+
+      elem = nmalloc(sizeof(struct nodes_list));
+      elem->node = ret;
+      elem->next = elems;
+      elems = elem;
+
+      if ((node = no_comma_expr(parser, lex)) != NULL){
+        elem = nmalloc(sizeof(struct nodes_list));
+        elem->node = node;
+        elem->next = elems;
+        elems = elem;
+
+        while (accept(parser, lex, TOK_COMMA)){
+          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+            printf(", ");
+
+          node = no_comma_expr(parser, lex);
+          elem = nmalloc(sizeof(struct nodes_list));
+          elem->node = node;
+          elem->next = elems;
+          elems = elem;
+        }
+      }
+
+      /* reverse the list */
+      prev = NULL;
+      curr = elems;
+
+      while (curr != NULL){
+        next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+      }
+
+      elems = prev;
+      ret = new_tuple(parser, lex, elems);
+    }
+    /* else
+     *   it's just an expression grouping
+     */
 
     force(parser, lex, TOK_RPAREN);
 

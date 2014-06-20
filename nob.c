@@ -200,10 +200,19 @@ Nob *new_nob(struct nob_type *type, ...)
       /* }}} */
       break;
     }
+    case OT_TUPLE:
+    {
+      /* {{{ */
+      /* the list's elements themselves */
+      struct nobs_list *elems = va_arg(vl, struct nobs_list *);
+
+      new.ptr = elems;
+      /* }}} */
+      break;
+    }
 
     /* suspress warnings */
     case OT_STRING:
-    case OT_TUPLE:
     case OT_FUN:
       break;
     default:
@@ -287,15 +296,12 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     case OT_TUPLE:
     {
       /* {{{ */
-      struct field *fields;
+      struct field *fields = va_arg(vl, struct field *);
 
-      fields = va_arg(vl, struct field *);
       /* zero-out the tuple's info.tuple */
       memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
       memcpy(new_type->info.tuple.fields, fields, MAX_TUPLE_FIELDS * sizeof(struct field));
-
-      assert(fields);
       /* }}} */
       break;
     }

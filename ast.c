@@ -207,6 +207,20 @@ void dump_list(struct node *nd)
   }
 }
 
+void dump_tuple(struct node *nd)
+{
+  printf("+ (#%u) tuple\n", NDID(nd));
+
+  for (struct nodes_list *p = nd->in.list.elems; p != NULL; p = p->next){
+    INDENT();
+    DUMPP("- elem:");
+    INDENT();
+    DUMP(p->node);
+    DEDENT();
+    DEDENT();
+  }
+}
+
 void dump_name(struct node *nd)
 {
   printf("+ (#%u) name (%s)\n", NDID(nd), nd->in.s);
@@ -421,6 +435,43 @@ struct node *exec_list(struct node *nd)
   nobs = prev;
 
   PUSH(new_nob(new_type(NULL, OT_LIST, nd->in.list.type), nobs));
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *exec_tuple(struct node *nd)
+{
+  /* {{{ */
+  struct nobs_list *nobs = NULL;
+  struct nodes_list *nodes;
+  struct nobs_list *el, *curr, *prev, *next;
+
+  /* transform the nodes_list into nobs_list */
+  for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
+    el = nmalloc(sizeof(struct nobs_list));
+
+    EXEC(nodes->node);
+    el->nob = POP();
+    el->next = nobs;
+    nobs = el;
+  }
+
+  /* reverse the list */
+  prev = NULL;
+  curr = nobs;
+
+  while (curr != NULL){
+    next = curr->next;
+    curr->next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  nobs = prev;
+
+  /* TODO */
+  PUSH(new_nob(nd->in.tuple.type, nobs));
 
   RETURN_NEXT;
   /* }}} */
@@ -654,10 +705,21 @@ void print_nob(Nob *ob)
 
       printf("]");
       break;
+    case OT_TUPLE:
+      printf("(");
+
+      for (struct nobs_list *p = (struct nobs_list *)ob->ptr; p != NULL; p = p->next){
+        print_nob(p->nob);
+
+        if (p->next != NULL)
+          printf(", ");
+      }
+
+      printf(")");
+      break;
 
     /* fall through */
     case OT_STRING:
-    case OT_TUPLE:
     case OT_FUN:
     case OT_ANY:
       break;
@@ -759,6 +821,7 @@ struct node *new_real(struct parser *parser, struct lexer *lex, double value)
 struct node *new_list(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems)
 {
+  /* {{{ */
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_LIST;
@@ -774,6 +837,28 @@ struct node *new_list(struct parser *parser, struct lexer *lex,
   debug_ast_new(nd, "list");
 
   return nd;
+  /* }}} */
+}
+
+struct node *new_tuple(struct parser *parser, struct lexer *lex,
+    struct nodes_list *elems)
+{
+  /* {{{ */
+  struct node *nd = new_node(parser, lex);
+
+  nd->type = NT_TUPLE;
+  /* FIXME */
+  nd->in.list.type = new_type(NULL /* anonymous */, OT_TUPLE, (struct field[MAX_TUPLE_FIELDS]){ { NULL, NULL } });
+  nd->in.list.elems = elems;
+  nd->execf = exec_tuple;
+#if DEBUG
+  nd->dumpf = dump_tuple;
+#endif
+
+  debug_ast_new(nd, "tuple");
+
+  return nd;
+  /* }}} */
 }
 
 struct node *new_name(struct parser *parser, struct lexer *lex, char *name)
