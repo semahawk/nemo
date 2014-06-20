@@ -113,34 +113,24 @@ void arg_stack_dump(void)
 
 /* new_node
  *
- * Allocates a place for a new node, stores it's address in lex's `nds_gc', and
- * returns the new node.
+ * Create a new node and append it to the <lex>'s `nodes` list.
  *
  */
 static struct node *new_node(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
-  ptrdiff_t offset = lex->nds_gc.curr - lex->nds_gc.ptr;
+  struct nodes_list *el = nmalloc(sizeof(struct nodes_list));
   struct node *new = nmalloc(sizeof(struct node));
 
   /* set the node's default values */
   new->id = currid++;
   new->next = NULL;
   new->scope = parser->curr_scope;
-
-  /* handle overflow */
-  if (offset >= (signed)lex->nds_gc.size){
-    /* grow the stack to be twice as big as it was */
-    lex->nds_gc.size <<= 1;
-    lex->nds_gc.ptr = nrealloc(lex->nds_gc.ptr, sizeof(struct node *) * lex->nds_gc.size);
-    /* adjust the 'current' */
-    lex->nds_gc.curr = lex->nds_gc.ptr + offset;
-  }
-
-  /* set up the current 'cell' */
-  *lex->nds_gc.curr = new;
-  /* move on to the next 'cell' */
-  lex->nds_gc.curr++;
+  /* associate the node with the list's element */
+  el->node = new;
+  /* append to the lexer's list */
+  el->next = lex->nodes;
+  lex->nodes = el;
 
   return new;
   /* }}} */

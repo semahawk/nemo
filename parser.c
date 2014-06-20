@@ -1515,9 +1515,7 @@ struct node *parse_file(char *fname, struct scope *scope)
   lex.str_gc.size       = 16;
   lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
-  lex.nds_gc.size       = 32;
-  lex.nds_gc.ptr        = ncalloc(lex.nds_gc.size, sizeof(struct node *));
-  lex.nds_gc.curr       = lex.nds_gc.ptr;
+  lex.nodes             = NULL;
 
   /* start the parsing process */
   ret = expr_list(&parser, &lex);
@@ -1556,9 +1554,7 @@ struct node *parse_string(char *name, char *string, struct scope *scope)
   lex.str_gc.size       = 4;
   lex.str_gc.ptr        = ncalloc(lex.str_gc.size, sizeof(char *));
   lex.str_gc.curr       = lex.str_gc.ptr;
-  lex.nds_gc.size       = 8;
-  lex.nds_gc.ptr        = ncalloc(lex.nds_gc.size, sizeof(struct node *));
-  lex.nds_gc.curr       = lex.nds_gc.ptr;
+  lex.nodes             = NULL;
 
   /* start the parsing process */
   ret = expr_list(&parser, &lex);

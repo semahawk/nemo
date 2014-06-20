@@ -94,16 +94,10 @@ struct lexer {
     /* size of the array */
     size_t size;
   } str_gc;
-  /* save the nodes' locations so we can eventually free'em (should it be a
-   * singly linked list?) */
-  struct {
-    /* pointer to the malloced array of struct node pointers */
-    struct node **ptr;
-    /* pointer to the current `cell' in the above array */
-    struct node **curr;
-    /* size of the array */
-    size_t size;
-  } nds_gc;
+
+  /* head of a singly linked list of nodes to be freed upon not needing them */
+  /* ie. this list holds every node ever created within this lexer's instance */
+  struct nodes_list *nodes;
 };
 
 struct token force(struct parser *parser, struct lexer *lex,
