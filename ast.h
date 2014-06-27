@@ -240,6 +240,8 @@ Nob *arg_stack_top(void);
 
 const char *binop_to_s(enum binop_type);
 
+struct nodes_list *reverse_nodes_list(struct nodes_list *);
+
 #endif /* AST_H */
 
 /*

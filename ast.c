@@ -409,7 +409,7 @@ struct node *exec_list(struct node *nd)
   /* {{{ */
   struct nobs_list *nobs = NULL;
   struct nodes_list *nodes;
-  struct nobs_list *el, *curr, *prev, *next;
+  struct nobs_list *el;
 
   /* transform the nodes_list into nobs_list */
   for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
@@ -421,20 +421,7 @@ struct node *exec_list(struct node *nd)
     nobs = el;
   }
 
-  /* reverse the list */
-  prev = NULL;
-  curr = nobs;
-
-  while (curr != NULL){
-    next = curr->next;
-    curr->next = prev;
-    prev = curr;
-    curr = next;
-  }
-
-  nobs = prev;
-
-  PUSH(new_nob(new_type(NULL, OT_LIST, nd->in.list.type), nobs));
+  PUSH(new_nob(new_type(NULL, OT_LIST, nd->in.list.type), reverse_nodes_list(nobs)));
 
   RETURN_NEXT;
   /* }}} */
@@ -445,7 +432,7 @@ struct node *exec_tuple(struct node *nd)
   /* {{{ */
   struct nobs_list *nobs = NULL;
   struct nodes_list *nodes;
-  struct nobs_list *el, *curr, *prev, *next;
+  struct nobs_list *el;
 
   /* transform the nodes_list into nobs_list */
   for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
@@ -457,21 +444,8 @@ struct node *exec_tuple(struct node *nd)
     nobs = el;
   }
 
-  /* reverse the list */
-  prev = NULL;
-  curr = nobs;
-
-  while (curr != NULL){
-    next = curr->next;
-    curr->next = prev;
-    prev = curr;
-    curr = next;
-  }
-
-  nobs = prev;
-
   /* TODO */
-  PUSH(new_nob(nd->in.tuple.type, nobs));
+  PUSH(new_nob(nd->in.tuple.type, reverse_nodes_list(nobs)));
 
   RETURN_NEXT;
   /* }}} */
@@ -1037,6 +1011,30 @@ struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_li
   /* }}} */
 }
 /* }}} */
+
+/*
+ * Modifies a { struct nodes_list } in place by reversing it's order.
+ *
+ * The function returns the head of the (now modified) list, or NULL if <list>
+ * was already NULL.
+ */
+struct nodes_list *reverse_nodes_list(struct nodes_list *list)
+{
+  struct nodes_list *curr = list,
+                    *prev = NULL,
+                    *next;
+
+  while (curr != NULL){
+    next = curr->next;
+    curr->next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  list = prev;
+
+  return list;
+}
 
 const char *binop_to_s(enum binop_type type)
 {

@@ -288,7 +288,6 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       /* now, that's a tuple */
       struct nodes_list *elems = NULL;
       struct nodes_list *elem;
-      struct nodes_list *curr, *next, *prev;
       struct node *node;
 
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -317,19 +316,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
         }
       }
 
-      /* reverse the list */
-      prev = NULL;
-      curr = elems;
-
-      while (curr != NULL){
-        next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
-      }
-
-      elems = prev;
-      ret = new_tuple(parser, lex, elems);
+      ret = new_tuple(parser, lex, reverse_nodes_list(elems));
     }
     /* else
      *   it's just an expression grouping
@@ -375,8 +362,6 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     struct nodes_list *elems;
     /* to be appended to `elems` (this one is going to contain `elem`) */
     struct nodes_list *new;
-    /* used to reverse `elems` */
-    struct nodes_list *curr, *prev, *next;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("[ ");
@@ -398,19 +383,6 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
         new->next = elems;
         elems = new;
       }
-
-      /* reverse the list */
-      prev = NULL;
-      curr = elems;
-
-      while (curr != NULL){
-        next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
-      }
-
-      elems = prev;
     } else {
       /* empty list */
       elems = NULL;
@@ -421,7 +393,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("]");
 
-    ret = new_list(parser, lex, elems);
+    ret = new_list(parser, lex, reverse_nodes_list(elems));
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_INTEGER)){
@@ -445,7 +417,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   } else if (accept(parser, lex, TOK_STRING)){
     /* {{{ STRING LITERAL */
     struct nodes_list *chars = NULL;
-    struct nodes_list *new, *curr, *next, *prev;
+    struct nodes_list *new;
     char *p = lex->curr_tok.value.sp;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -458,20 +430,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       chars = new;
     }
 
-    /* reverse the list */
-    prev = NULL;
-    curr = chars;
-
-    while (curr != NULL){
-      next = curr->next;
-      curr->next = prev;
-      prev = curr;
-      curr = next;
-    }
-
-    chars = prev;
-
-    ret = new_list(parser, lex, chars);
+    ret = new_list(parser, lex, reverse_nodes_list(chars));
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
@@ -1383,7 +1342,6 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
   else if (accept_keyword(parser, lex, "print")){
     /* {{{ */
     struct nodes_list *exprs = NULL;
-    struct nodes_list *prev, *curr, *next;
     struct node *e;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -1410,20 +1368,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       }
     }
 
-    /* reverse the list */
-    prev = NULL;
-    curr = exprs;
-
-    while (curr != NULL){
-      next = curr->next;
-      curr->next = prev;
-      prev = curr;
-      curr = next;
-    }
-
-    exprs = prev;
-
-    ret = new_print(parser, lex, exprs);
+    ret = new_print(parser, lex, reverse_nodes_list(exprs));
     ret->lvalue = false;
     /* }}} */
   }
