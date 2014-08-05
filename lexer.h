@@ -34,13 +34,21 @@ enum token_type {
   TOK_ACCUMULATOR,    /*  %[0-9]+       */
   TOK_OPT,            /*  -[a-zA-Z]     */
   TOK_EQ,             /*  "="           */
+  TOK_EQ_2,           /*  "=="          */
   TOK_SEMICOLON,      /*  ";"           */
   TOK_COMMA,          /*  ","           */
   TOK_MINUS,          /*  "-"           */
+  TOK_MINUS_2,        /*  "--"          */
+  TOK_MINUS_EQ,       /*  "-="          */
   TOK_PLUS,           /*  "+"           */
+  TOK_PLUS_2,         /*  "++"          */
+  TOK_PLUS_EQ,        /*  "+="          */
   TOK_TIMES,          /*  "*"           */
+  TOK_TIMES_EQ,       /*  "*="          */
   TOK_PERCENT,        /*  "%"           */
+  TOK_PERCENT_EQ,     /*  "%="          */
   TOK_SLASH,          /*  "/"           */
+  TOK_SLASH_EQ,       /*  "/="          */
   TOK_LPAREN,         /*  "("           */
   TOK_RPAREN,         /*  ")"           */
   TOK_LMUSTASHE,      /*  "{"           */
@@ -48,13 +56,24 @@ enum token_type {
   TOK_LBRACKET,       /*  "["           */
   TOK_RBRACKET,       /*  "]"           */
   TOK_LCHEVRON,       /*  "<"           */
+  TOK_LCHEVRON_EQ,    /*  "<="          */
   TOK_RCHEVRON,       /*  ">"           */
+  TOK_RCHEVRON_EQ,    /*  ">="          */
+  TOK_LCHEVRON_2,     /*  "<<"          */
+  TOK_LCHEVRON_2_EQ,  /*  "<<="         */
+  TOK_RCHEVRON_2,     /*  ">>"          */
+  TOK_RCHEVRON_2_EQ,  /*  ">>="         */
   TOK_BANG,           /*  "!"           */
   TOK_COLON,          /*  ":"           */
   TOK_QUESTION,       /*  "?"           */
   TOK_AMPERSAND,      /*  "&"           */
+  TOK_AMPERSAND_EQ,   /*  "&="          */
+  TOK_AMPERSAND_2,    /*  "&&"          */
   TOK_CARET,          /*  "^"           */
+  TOK_CARET_EQ,       /*  "^="          */
   TOK_PIPE,           /*  "|"           */
+  TOK_PIPE_2,         /*  "||"          */
+  TOK_PIPE_EQ,        /*  "|="          */
   TOK_EOS             /*  end of script */
 };
 

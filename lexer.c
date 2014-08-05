@@ -301,44 +301,120 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
       /* }}} */
     } else {
       /* {{{ PERCENT SIGN */
-      lex->col++;
-      ret.type = TOK_PERCENT;
-      ret.value.c = *p++;
+      if (*(p + 1) == '='){
+        /* %= */
+        lex->col += 2;
+        p += 2;
+        ret.type = TOK_PERCENT_EQ;
+      } else {
+        /* % */
+        lex->col++;
+        p++;
+        ret.type = TOK_PERCENT;
+      }
       /* }}} */
     }
   }
   else switch (*p){
-    /* {{{ OTHER (SINGLE CHAR) */
-    /* now that's ugly */
-    case '=': ret.value.c = *p; lex->col++; p++; ret.type = TOK_EQ; break;
-    case ':': ret.value.c = *p; lex->col++; p++; ret.type = TOK_COLON; break;
-    case ';': ret.value.c = *p; lex->col++; p++; ret.type = TOK_SEMICOLON; break;
-    case ',': ret.value.c = *p; lex->col++; p++; ret.type = TOK_COMMA; break;
-    case '-': ret.value.c = *p; lex->col++; p++; ret.type = TOK_MINUS; break;
-    case '+': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PLUS; break;
-    case '*': ret.value.c = *p; lex->col++; p++; ret.type = TOK_TIMES; break;
-    case '/': ret.value.c = *p; lex->col++; p++; ret.type = TOK_SLASH; break;
-    case '(': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LPAREN; break;
-    case ')': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RPAREN; break;
-    case '{': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LMUSTASHE; break;
-    case '}': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RMUSTASHE; break;
-    case '[': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LBRACKET; break;
-    case ']': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RBRACKET; break;
-    case '<': ret.value.c = *p; lex->col++; p++; ret.type = TOK_LCHEVRON; break;
-    case '>': ret.value.c = *p; lex->col++; p++; ret.type = TOK_RCHEVRON; break;
-    case '!': ret.value.c = *p; lex->col++; p++; ret.type = TOK_BANG; break;
-    case '?': ret.value.c = *p; lex->col++; p++; ret.type = TOK_QUESTION; break;
-    case '&': ret.value.c = *p; lex->col++; p++; ret.type = TOK_AMPERSAND; break;
-    case '^': ret.value.c = *p; lex->col++; p++; ret.type = TOK_CARET; break;
-    case '|': ret.value.c = *p; lex->col++; p++; ret.type = TOK_PIPE; break;
+    /* {{{ OPERATOR */
+#define single(TYPE) {                       \
+      lex->col++;                            \
+      p++;                                   \
+      ret.type = TOK_##TYPE;                 \
+    }                                        \
+    break /* no semicolon */
+
+#define possibly_double(TYPE)                \
+    if (*(p + 1) == *p){                     \
+      lex->col += 2;                         \
+      p += 2;                                \
+      ret.type = TOK_##TYPE##_2;             \
+    } else                                   \
+      single(TYPE);
+    /* `single` already handles the `break` */
+
+#define possibly_eq(TYPE)                    \
+    if (*(p + 1) == '='){                    \
+      lex->col += 2;                         \
+      p += 2;                                \
+      ret.type = TOK_##TYPE##_EQ;            \
+    } else                                   \
+      single(TYPE);
+    /* `single` already handles the `break` */
+
+#define possibly_double_or_eq(TYPE)          \
+    if (*(p + 1) == *p){                     \
+      lex->col += 2;                         \
+      p += 2;                                \
+      ret.type = TOK_##TYPE##_2;             \
+    } else if (*(p + 1) == '='){             \
+      lex->col += 2;                         \
+      p += 2;                                \
+      ret.type = TOK_##TYPE##_EQ;            \
+    } else                                   \
+      single(TYPE);
+    /* `single` already handles the `break` */
+
+#define possibly_double_or_eq_or_both(TYPE)  \
+    if (*(p + 1) == *p){                     \
+      if (*(p + 2) == '='){                  \
+        /* double and eq */                  \
+        lex->col += 3;                       \
+        p += 3;                              \
+        ret.type = TOK_##TYPE##_2_EQ;        \
+      } else {                               \
+        /* double */                         \
+        lex->col += 2;                       \
+        p += 2;                              \
+        ret.type = TOK_##TYPE##_2;           \
+      }                                      \
+    } else if (*(p + 1) == '='){             \
+      /* single and eq */                    \
+      lex->col += 2;                         \
+      p += 2;                                \
+      ret.type = TOK_##TYPE##_EQ;            \
+    } else                                   \
+      single(TYPE);
+      /* `single` already handles the `break` */
+
+    case '=': possibly_double(EQ);
+    case ':': single(COLON);
+    case ';': single(SEMICOLON);
+    case ',': single(COMMA);
+    case '-': possibly_double_or_eq(MINUS);
+    case '+': possibly_double_or_eq(PLUS);
+    case '*': possibly_eq(TIMES);
+    case '/': possibly_eq(SLASH);
+    case '(': single(LPAREN);
+    case ')': single(RPAREN);
+    case '{': single(LMUSTASHE);
+    case '}': single(RMUSTASHE);
+    case '[': single(LBRACKET);
+    case ']': single(RBRACKET);
+    case '!': single(BANG);
+    case '?': single(QUESTION);
+    case '&': possibly_double_or_eq(AMPERSAND);
+    case '^': possibly_eq(CARET);
+    case '|': possibly_double_or_eq(PIPE);
+    case '<': possibly_double_or_eq_or_both(LCHEVRON);
+    case '>': possibly_double_or_eq_or_both(RCHEVRON);
+    /* no case for the percent sign - it was already covered by the
+     * 'accumulator' thingy */
+
     default:
       fprintf(stderr, "nemo: unknown character '%c' (0x%x) in %s"
           " at line %u column %u\n", *p, *p, lex->name, lex->line, lex->col);
+      /* FIXME don't exit here */
       exit(1);
     /* }}} */
   }
 
 #undef p
+#undef single
+#undef possibly_double
+#undef possibly_eq
+#undef possibly_double_or_eq
+#undef possibly_double_or_eq_or_both
 
   return ret;
   /* }}} */
@@ -391,14 +467,28 @@ static void debug_print_token(struct token tok)
       fprintf(stderr, "keyword \"%s\"", tok.value.s);
       /* }}} */
       break;
+    case TOK_OPT:
+      /* {{{ */
+      fprintf(stderr, "option \"%s\"", tok.value.s);
+      /* }}} */
+      break;
+    /* fall through */
     case TOK_EQ:
+    case TOK_EQ_2:
     case TOK_SEMICOLON:
     case TOK_COMMA:
     case TOK_MINUS:
+    case TOK_MINUS_2:
+    case TOK_MINUS_EQ:
     case TOK_PLUS:
+    case TOK_PLUS_2:
+    case TOK_PLUS_EQ:
     case TOK_TIMES:
+    case TOK_TIMES_EQ:
     case TOK_PERCENT:
+    case TOK_PERCENT_EQ:
     case TOK_SLASH:
+    case TOK_SLASH_EQ:
     case TOK_LPAREN:
     case TOK_RPAREN:
     case TOK_LMUSTASHE:
@@ -406,20 +496,35 @@ static void debug_print_token(struct token tok)
     case TOK_LBRACKET:
     case TOK_RBRACKET:
     case TOK_LCHEVRON:
+    case TOK_LCHEVRON_EQ:
+    case TOK_LCHEVRON_2:
+    case TOK_LCHEVRON_2_EQ:
     case TOK_RCHEVRON:
+    case TOK_RCHEVRON_EQ:
+    case TOK_RCHEVRON_2:
+    case TOK_RCHEVRON_2_EQ:
     case TOK_BANG:
     case TOK_COLON:
     case TOK_QUESTION:
+    case TOK_AMPERSAND:
+    case TOK_AMPERSAND_2:
+    case TOK_AMPERSAND_EQ:
+    case TOK_CARET:
+    case TOK_CARET_EQ:
+    case TOK_PIPE:
+    case TOK_PIPE_2:
+    case TOK_PIPE_EQ:
       /* {{{ */
-      fprintf(stderr, "'%c'", tok.value.c);
+      fprintf(stderr, "%s", tok_to_s(tok.type));
       /* }}} */
       break;
     case TOK_EOS:
       /* {{{ */
       fprintf(stderr, "<EOS>");
       /* }}} */
+      break;
     default:
-      fprintf(stderr, "unknown");
+      fprintf(stderr, "##unknown##debug_print_token##");
       break;
   }
   /* }}} */
@@ -569,36 +674,58 @@ const char *tok_to_s(enum token_type type)
 {
   /* {{{ */
   switch (type){
-    case TOK_INTEGER:      return "integer";
-    case TOK_REAL:         return "real";
-    case TOK_STRING:       return "string";
-    case TOK_CHAR:         return "character";
-    case TOK_NAME:         return "name";
-    case TOK_ACCUMULATOR:  return "accumulator";
-    case TOK_KEYWORD:      return "keyword";
-    case TOK_TYPE:         return "type name";
-    case TOK_OPT:          return "option";
-    case TOK_EQ:           return "'='";
-    case TOK_SEMICOLON:    return "';'";
-    case TOK_COMMA:        return "','";
-    case TOK_MINUS:        return "'-'";
-    case TOK_PLUS:         return "'+'";
-    case TOK_TIMES:        return "'*'";
-    case TOK_PERCENT:      return "'%'";
-    case TOK_SLASH:        return "'/'";
-    case TOK_LPAREN:       return "'('";
-    case TOK_RPAREN:       return "')'";
-    case TOK_LMUSTASHE:    return "'{'";
-    case TOK_RMUSTASHE:    return "'}'";
-    case TOK_LBRACKET:     return "'['";
-    case TOK_RBRACKET:     return "']'";
-    case TOK_LCHEVRON:     return "'<'";
-    case TOK_RCHEVRON:     return "'>'";
-    case TOK_BANG:         return "'!'";
-    case TOK_COLON:        return "':'";
-    case TOK_QUESTION:     return "'?'";
-    case TOK_EOS:          return "<EOS>";
-    default:               return "##unknown##tok_to_s##";
+    case TOK_INTEGER:       return "integer";
+    case TOK_REAL:          return "real";
+    case TOK_STRING:        return "string";
+    case TOK_CHAR:          return "character";
+    case TOK_NAME:          return "name";
+    case TOK_ACCUMULATOR:   return "accumulator";
+    case TOK_KEYWORD:       return "keyword";
+    case TOK_TYPE:          return "type name";
+    case TOK_OPT:           return "option";
+    case TOK_EQ:            return "'='";
+    case TOK_EQ_2:          return "'=='";
+    case TOK_SEMICOLON:     return "';'";
+    case TOK_COMMA:         return "','";
+    case TOK_MINUS:         return "'--'";
+    case TOK_MINUS_2:       return "'--'";
+    case TOK_MINUS_EQ:      return "'-='";
+    case TOK_PLUS:          return "'+'";
+    case TOK_PLUS_2:        return "'++'";
+    case TOK_PLUS_EQ:       return "'+='";
+    case TOK_TIMES:         return "'*'";
+    case TOK_TIMES_EQ:      return "'*='";
+    case TOK_PERCENT:       return "'%'";
+    case TOK_PERCENT_EQ:    return "'%='";
+    case TOK_SLASH:         return "'/'";
+    case TOK_SLASH_EQ:      return "'/='";
+    case TOK_LPAREN:        return "'('";
+    case TOK_RPAREN:        return "')'";
+    case TOK_LMUSTASHE:     return "'{'";
+    case TOK_RMUSTASHE:     return "'}'";
+    case TOK_LBRACKET:      return "'['";
+    case TOK_RBRACKET:      return "']'";
+    case TOK_LCHEVRON:      return "'<'";
+    case TOK_LCHEVRON_EQ:   return "'<='";
+    case TOK_LCHEVRON_2:    return "'<<'";
+    case TOK_LCHEVRON_2_EQ: return "'<<='";
+    case TOK_RCHEVRON:      return "'>'";
+    case TOK_RCHEVRON_EQ:   return "'>='";
+    case TOK_RCHEVRON_2:    return "'>>'";
+    case TOK_RCHEVRON_2_EQ: return "'>>='";
+    case TOK_BANG:          return "'!'";
+    case TOK_COLON:         return "':'";
+    case TOK_QUESTION:      return "'?'";
+    case TOK_AMPERSAND:     return "'&'";
+    case TOK_AMPERSAND_2:   return "'&&'";
+    case TOK_AMPERSAND_EQ:  return "'&='";
+    case TOK_CARET:         return "'^'";
+    case TOK_CARET_EQ:      return "'^='";
+    case TOK_PIPE:          return "'|'";
+    case TOK_PIPE_2:        return "'||'";
+    case TOK_PIPE_EQ:       return "'|='";
+    case TOK_EOS:           return "<EOS>";
+    default:                return "##unknown##tok_to_s##";
   }
   /* }}} */
 }
