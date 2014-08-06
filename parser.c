@@ -953,17 +953,17 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
 
   left = ret = ternary_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_EQ)           ||
-         peek(parser, lex, TOK_PLUS_EQ)      ||
-         peek(parser, lex, TOK_MINUS_EQ)     ||
-         peek(parser, lex, TOK_TIMES_EQ)     ||
-         peek(parser, lex, TOK_SLASH_EQ)     ||
-         peek(parser, lex, TOK_PERCENT_EQ)   ||
-         peek(parser, lex, TOK_AMPERSAND_EQ) ||
-         peek(parser, lex, TOK_CARET_EQ)     ||
-         peek(parser, lex, TOK_PIPE_EQ)      ||
-         peek(parser, lex, TOK_LCHEVRON_EQ)  ||
-         peek(parser, lex, TOK_RCHEVRON_EQ)){
+  while (peek(parser, lex, TOK_EQ)             ||
+         peek(parser, lex, TOK_PLUS_EQ)        ||
+         peek(parser, lex, TOK_MINUS_EQ)       ||
+         peek(parser, lex, TOK_TIMES_EQ)       ||
+         peek(parser, lex, TOK_SLASH_EQ)       ||
+         peek(parser, lex, TOK_PERCENT_EQ)     ||
+         peek(parser, lex, TOK_AMPERSAND_EQ)   ||
+         peek(parser, lex, TOK_CARET_EQ)       ||
+         peek(parser, lex, TOK_PIPE_EQ)        ||
+         peek(parser, lex, TOK_LCHEVRON_2_EQ)  ||
+         peek(parser, lex, TOK_RCHEVRON_2_EQ)){
     if (accept(parser, lex, TOK_EQ)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("= ");
@@ -1009,12 +1009,12 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
         printf("|= ");
 
       type = BINARY_ASSIGN_OR;
-    } else if (accept(parser, lex, TOK_LCHEVRON_EQ)){
+    } else if (accept(parser, lex, TOK_LCHEVRON_2_EQ)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("<<= ");
 
       type = BINARY_ASSIGN_SHL;
-    } else if (accept(parser, lex, TOK_RCHEVRON_EQ)){
+    } else if (accept(parser, lex, TOK_RCHEVRON_2_EQ)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(">>= ");
 
