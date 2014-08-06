@@ -64,6 +64,7 @@ enum token_type {
   TOK_RCHEVRON_2,     /*  ">>"          */
   TOK_RCHEVRON_2_EQ,  /*  ">>="         */
   TOK_BANG,           /*  "!"           */
+  TOK_BANG_EQ,        /*  "!="          */
   TOK_COLON,          /*  ":"           */
   TOK_QUESTION,       /*  "?"           */
   TOK_AMPERSAND,      /*  "&"           */

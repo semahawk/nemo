@@ -391,7 +391,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     case '}': single(RMUSTASHE);
     case '[': single(LBRACKET);
     case ']': single(RBRACKET);
-    case '!': single(BANG);
+    case '!': possibly_eq(BANG);
     case '?': single(QUESTION);
     case '&': possibly_double_or_eq(AMPERSAND);
     case '^': possibly_eq(CARET);

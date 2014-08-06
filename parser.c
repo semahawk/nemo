@@ -481,34 +481,24 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *target, *ret;
-  struct lexer save_lex;
 
   target = ret = primary_expr(parser, lex);
 
-  if (peek(parser, lex, TOK_PLUS) || peek(parser, lex, TOK_MINUS) || peek(parser, lex, TOK_LPAREN)){
-    /* save the lexer's state in case it's actually only one '+' or '-' */
-    save_lex = *lex;
-
-    if (accept(parser, lex, TOK_PLUS)){
-      if (accept(parser, lex, TOK_PLUS)){
-        /* target ++ */
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf(" postfix(++)");
-        ret = new_unop(parser, lex, UNARY_POSTINC, target);
-        ret->lvalue = false;
-      } else {
-        *lex = save_lex;
-      }
-    } else if (accept(parser, lex, TOK_MINUS)){
-      if (accept(parser, lex, TOK_MINUS)){
-        /* target -- */
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf(" postfix(--)");
-        ret = new_unop(parser, lex, UNARY_POSTDEC, target);
-        ret->lvalue = false;
-      } else {
-        *lex = save_lex;
-      }
+  if (peek(parser, lex, TOK_PLUS_2) ||
+      peek(parser, lex, TOK_MINUS_2) ||
+      peek(parser, lex, TOK_LPAREN)){
+    if (accept(parser, lex, TOK_PLUS_2)){
+      /* target ++ */
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(" postfix(++)");
+      ret = new_unop(parser, lex, UNARY_POSTINC, target);
+      ret->lvalue = false;
+    } else if (accept(parser, lex, TOK_MINUS_2)){
+      /* target -- */
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(" postfix(--)");
+      ret = new_unop(parser, lex, UNARY_POSTDEC, target);
+      ret->lvalue = false;
     } else if (accept(parser, lex, TOK_LPAREN)){
       force(parser, lex, TOK_RPAREN);
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -526,43 +516,30 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
   struct node *target, *ret;
   enum unop_type type;
 
-  if (peek(parser, lex, TOK_PLUS) || peek(parser, lex, TOK_MINUS) || peek(parser, lex, TOK_BANG)){
-    if (accept(parser, lex, TOK_PLUS)){
-      if (accept(parser, lex, TOK_PLUS)){
-        /* ++ target */
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("prefix(++) ");
-        target = postfix_expr(parser, lex);
-        target->lvalue = false;
-        type = UNARY_PREINC;
-      } else {
-        /*  + target */
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("prefix(+) ");
-        target = postfix_expr(parser, lex);
-        target->lvalue = false;
-        type = UNARY_PLUS;
-      }
-    } else if (accept(parser, lex, TOK_MINUS)){
-      if (accept(parser, lex, TOK_MINUS)){
-        /* -- target */
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("prefix(--) ");
-        target = postfix_expr(parser, lex);
-        target->lvalue = false;
-        type = UNARY_PREDEC;
-      } else {
-        /*  - target */
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("prefix(-) ");
-        target = postfix_expr(parser, lex);
-        target->lvalue = false;
-        type = UNARY_MINUS;
-      }
+  if (peek(parser, lex, TOK_PLUS_2) ||
+      peek(parser, lex, TOK_MINUS_2) ||
+      peek(parser, lex, TOK_BANG)){
+    if (accept(parser, lex, TOK_PLUS_2)){
+      /* ++ target */
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("prefix(++) ");
+
+      target = postfix_expr(parser, lex);
+      target->lvalue = false;
+      type = UNARY_PREINC;
+    } else if (accept(parser, lex, TOK_MINUS_2)){
+      /* -- target */
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("prefix(--) ");
+
+      target = postfix_expr(parser, lex);
+      target->lvalue = false;
+      type = UNARY_PREDEC;
     } else if (accept(parser, lex, TOK_BANG)){
       /*  ! target */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("prefix(!) ");
+
       target = postfix_expr(parser, lex);
       target->lvalue = false;
       type = UNARY_LOGNEG;
@@ -582,48 +559,27 @@ static struct node *mul_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = prefix_expr(parser, lex);
 
   while (peek(parser, lex, TOK_TIMES) ||
          peek(parser, lex, TOK_SLASH) ||
          peek(parser, lex, TOK_PERCENT)){
-    save_lex = *lex;
-
     if (accept(parser, lex, TOK_TIMES)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* *= */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("* ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("* ");
 
-        type = BINARY_MUL;
-      }
+      type = BINARY_MUL;
     } else if (accept(parser, lex, TOK_SLASH)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* /= */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("/ ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("/ ");
 
-        type = BINARY_DIV;
-      }
+      type = BINARY_DIV;
     } else if (accept(parser, lex, TOK_PERCENT)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* %= */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("%% ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("%% ");
 
-        type = BINARY_MOD;
-      }
+      type = BINARY_MOD;
     }
 
     right = prefix_expr(parser, lex);
@@ -647,35 +603,20 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = mul_expr(parser, lex);
 
   while (peek(parser, lex, TOK_PLUS) || peek(parser, lex, TOK_MINUS)){
-    save_lex = *lex;
-
     if (accept(parser, lex, TOK_PLUS)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* += */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("+ ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("+ ");
 
-        type = BINARY_ADD;
-      }
+      type = BINARY_ADD;
     } else if (accept(parser, lex, TOK_MINUS)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* -= */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("- ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("- ");
 
-        type = BINARY_SUB;
-      }
+      type = BINARY_SUB;
     }
 
     right = mul_expr(parser, lex);
@@ -699,49 +640,20 @@ static struct node *bitshift_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = add_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_LCHEVRON) || peek(parser, lex, TOK_RCHEVRON)){
-    save_lex = *lex;
+  while (peek(parser, lex, TOK_LCHEVRON_2) || peek(parser, lex, TOK_RCHEVRON_2)){
+    if (accept(parser, lex, TOK_LCHEVRON_2)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("<< ");
 
-    if (accept(parser, lex, TOK_LCHEVRON)){
-      if (accept(parser, lex, TOK_LCHEVRON)){
-        if (peek(parser, lex, TOK_EQ)){
-          /* <<= */
-          *lex = save_lex;
-          return ret;
-        } else {
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf("<< ");
+      type = BINARY_SHL;
+    } else if (accept(parser, lex, TOK_RCHEVRON_2)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(">> ");
 
-          type = BINARY_SHL;
-        }
-      } else {
-        /* only one < */
-        /* restore lexer's state */
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_RCHEVRON)){
-      if (accept(parser, lex, TOK_RCHEVRON)){
-        if (peek(parser, lex, TOK_EQ)){
-          /* >>= */
-          *lex = save_lex;
-          return ret;
-        } else {
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf(">> ");
-
-          type = BINARY_SHR;
-        }
-      } else {
-        /* only one > */
-        /* restore lexer's state */
-        *lex = save_lex;
-        return ret;
-      }
+      type = BINARY_SHR;
     }
 
     right = add_expr(parser, lex);
@@ -765,49 +677,33 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = bitshift_expr(parser, lex);
 
-  if (peek(parser, lex, TOK_LCHEVRON) || peek(parser, lex, TOK_RCHEVRON)){
-    save_lex = *lex;
-
+  if (peek(parser, lex, TOK_LCHEVRON) ||
+      peek(parser, lex, TOK_LCHEVRON_EQ) ||
+      peek(parser, lex, TOK_RCHEVRON) ||
+      peek(parser, lex, TOK_RCHEVRON_EQ)){
     if (accept(parser, lex, TOK_LCHEVRON)){
-      if (peek(parser, lex, TOK_LCHEVRON)){
-        /* << */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (accept(parser, lex, TOK_EQ)){
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf("<= ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("< ");
 
-          type = BINARY_LE;
-        } else {
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf("< ");
+      type = BINARY_LT;
+    } else if (accept(parser, lex, TOK_LCHEVRON_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("<= ");
 
-          type = BINARY_LT;
-        }
-      }
+      type = BINARY_LE;
     } else if (accept(parser, lex, TOK_RCHEVRON)){
-      if (peek(parser, lex, TOK_RCHEVRON)){
-        /* >> */
-        *lex = save_lex;
-        return ret;
-      } else {
-        if (accept(parser, lex, TOK_EQ)){
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf(">= ");
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("> ");
 
-          type = BINARY_GE;
-        } else {
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf("> ");
+      type = BINARY_GT;
+    } else if (accept(parser, lex, TOK_RCHEVRON_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(">= ");
 
-          type = BINARY_GT;
-        }
-      }
+      type = BINARY_GE;
     }
 
     right = bitshift_expr(parser, lex);
@@ -831,28 +727,20 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = cond_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_EQ) || peek(parser, lex, TOK_BANG)){
-    save_lex = *lex;
+  while (peek(parser, lex, TOK_EQ_2) || peek(parser, lex, TOK_BANG_EQ)){
+    if (accept(parser, lex, TOK_EQ_2)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("== ");
 
-    if (accept(parser, lex, TOK_EQ)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("== ");
-        type = BINARY_EQ;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_BANG)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("!= ");
-        type = BINARY_NE;
-      }
+      type = BINARY_EQ;
+    } else if (accept(parser, lex, TOK_BANG_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("!= ");
+
+      type = BINARY_NE;
     }
 
     right = cond_expr(parser, lex);
@@ -876,21 +764,10 @@ static struct node *bitand_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = eq_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_AMPERSAND)){
-    save_lex = *lex;
-
-    if (accept(parser, lex, TOK_AMPERSAND)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* &= */
-        *lex = save_lex;
-        return ret;
-      }
-    }
-
+  while (accept(parser, lex, TOK_AMPERSAND)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("& ");
 
@@ -916,21 +793,10 @@ static struct node *bitxor_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = bitand_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_CARET)){
-    save_lex = *lex;
-
-    if (accept(parser, lex, TOK_CARET)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* ^= */
-        *lex = save_lex;
-        return ret;
-      }
-    }
-
+  while (accept(parser, lex, TOK_CARET)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("^ ");
 
@@ -956,21 +822,10 @@ static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = bitxor_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_PIPE)){
-    save_lex = *lex;
-
-    if (accept(parser, lex, TOK_PIPE)){
-      if (peek(parser, lex, TOK_EQ)){
-        /* |= */
-        *lex = save_lex;
-        return ret;
-      }
-    }
-
+  while (accept(parser, lex, TOK_PIPE)){
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("| ");
 
@@ -1037,132 +892,75 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
   /* {{{ */
   struct node *left, *right, *ret;
   enum binop_type type;
-  struct lexer save_lex;
 
   left = ret = ternary_expr(parser, lex);
 
-  while (peek(parser, lex, TOK_EQ)        ||
-         peek(parser, lex, TOK_PLUS)      ||
-         peek(parser, lex, TOK_MINUS)     ||
-         peek(parser, lex, TOK_TIMES)     ||
-         peek(parser, lex, TOK_SLASH)     ||
-         peek(parser, lex, TOK_PERCENT)   ||
-         peek(parser, lex, TOK_AMPERSAND) ||
-         peek(parser, lex, TOK_CARET)     ||
-         peek(parser, lex, TOK_PIPE)      ||
-         peek(parser, lex, TOK_LCHEVRON)  ||
-         peek(parser, lex, TOK_RCHEVRON)){
-    save_lex = *lex;
-
+  while (peek(parser, lex, TOK_EQ)           ||
+         peek(parser, lex, TOK_PLUS_EQ)      ||
+         peek(parser, lex, TOK_MINUS_EQ)     ||
+         peek(parser, lex, TOK_TIMES_EQ)     ||
+         peek(parser, lex, TOK_SLASH_EQ)     ||
+         peek(parser, lex, TOK_PERCENT_EQ)   ||
+         peek(parser, lex, TOK_AMPERSAND_EQ) ||
+         peek(parser, lex, TOK_CARET_EQ)     ||
+         peek(parser, lex, TOK_PIPE_EQ)      ||
+         peek(parser, lex, TOK_LCHEVRON_EQ)  ||
+         peek(parser, lex, TOK_RCHEVRON_EQ)){
     if (accept(parser, lex, TOK_EQ)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("= ");
 
       type = BINARY_ASSIGN;
-    } else if (accept(parser, lex, TOK_PLUS)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("+= ");
+    } else if (accept(parser, lex, TOK_PLUS_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("+= ");
 
-        type = BINARY_ASSIGN_ADD;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_MINUS)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("-= ");
+      type = BINARY_ASSIGN_ADD;
+    } else if (accept(parser, lex, TOK_MINUS_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("-= ");
 
-        type = BINARY_ASSIGN_SUB;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_TIMES)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("*= ");
+      type = BINARY_ASSIGN_SUB;
+    } else if (accept(parser, lex, TOK_TIMES_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("*= ");
 
-        type = BINARY_ASSIGN_MUL;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_SLASH)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("/= ");
+      type = BINARY_ASSIGN_MUL;
+    } else if (accept(parser, lex, TOK_SLASH_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("/= ");
 
-        type = BINARY_ASSIGN_DIV;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_PERCENT)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("%%= ");
+      type = BINARY_ASSIGN_DIV;
+    } else if (accept(parser, lex, TOK_PERCENT_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("%%= ");
 
-        type = BINARY_ASSIGN_MOD;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_AMPERSAND)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("&= ");
+      type = BINARY_ASSIGN_MOD;
+    } else if (accept(parser, lex, TOK_AMPERSAND_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("&= ");
 
-        type = BINARY_ASSIGN_AND;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_CARET)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("^= ");
+      type = BINARY_ASSIGN_AND;
+    } else if (accept(parser, lex, TOK_CARET_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("^= ");
 
-        type = BINARY_ASSIGN_XOR;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_PIPE)){
-      if (accept(parser, lex, TOK_EQ)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("|= ");
+      type = BINARY_ASSIGN_XOR;
+    } else if (accept(parser, lex, TOK_PIPE_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("|= ");
 
-        type = BINARY_ASSIGN_OR;
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_LCHEVRON)){
-      if (accept(parser, lex, TOK_LCHEVRON)){
-        if (accept(parser, lex, TOK_EQ)){
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf("<<= ");
+      type = BINARY_ASSIGN_OR;
+    } else if (accept(parser, lex, TOK_LCHEVRON_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("<<= ");
 
-          type = BINARY_ASSIGN_SHL;
-        }
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
-    } else if (accept(parser, lex, TOK_RCHEVRON)){
-      if (accept(parser, lex, TOK_RCHEVRON)){
-        if (accept(parser, lex, TOK_EQ)){
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf(">>= ");
+      type = BINARY_ASSIGN_SHL;
+    } else if (accept(parser, lex, TOK_RCHEVRON_EQ)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(">>= ");
 
-          type = BINARY_ASSIGN_SHR;
-        }
-      } else {
-        *lex = save_lex;
-        return ret;
-      }
+      type = BINARY_ASSIGN_SHR;
     }
 
     if (left == NULL || left->lvalue == false){
