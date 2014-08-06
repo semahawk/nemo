@@ -846,12 +846,70 @@ static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
+static struct node *logand_expr(struct parser *parser, struct lexer *lex)
+{
+  /* {{{ */
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = bitor_expr(parser, lex);
+
+  while (accept(parser, lex, TOK_AMPERSAND_2)){
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("&& ");
+
+    type = BINARY_LOGAND;
+    right = bitor_expr(parser, lex);
+
+    if (!right){
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
+      return NULL;
+    }
+
+    ret = new_binop(parser, lex, type, left, right);
+    ret->lvalue = false;
+    left = ret;
+  }
+
+  return ret;
+  /* }}} */
+}
+
+static struct node *logor_expr(struct parser *parser, struct lexer *lex)
+{
+  /* {{{ */
+  struct node *left, *right, *ret;
+  enum binop_type type;
+
+  left = ret = logand_expr(parser, lex);
+
+  while (accept(parser, lex, TOK_PIPE_2)){
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("|| ");
+
+    type = BINARY_LOGOR;
+    right = logand_expr(parser, lex);
+
+    if (!right){
+      err(parser, lex, "expected an expression at the RHS of the binary '%s' operation", binop_to_s(type));
+      return NULL;
+    }
+
+    ret = new_binop(parser, lex, type, left, right);
+    ret->lvalue = false;
+    left = ret;
+  }
+
+  return ret;
+  /* }}} */
+}
+
 static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *predicate, *yes, *no, *ret;
 
-  predicate = ret = bitor_expr(parser, lex);
+  predicate = ret = logor_expr(parser, lex);
 
   if (accept(parser, lex, TOK_QUESTION)){
     if (predicate == NULL){
