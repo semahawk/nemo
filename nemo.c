@@ -42,14 +42,21 @@
 #include <string.h>
 #include <getopt.h>
 #include <locale.h>
+#include <unistd.h>
 
 #include "ast.h"
 #include "config.h"
 #include "debug.h"
+#include "mem.h"
 #include "parser.h"
 #include "version.h"
 #include "util.h"
 #include "nob.h"
+
+/* the output file in case we are compiling */
+FILE *outfile;
+/* and it's name */
+char outfilename[32];
 
 int main(int argc, char *argv[])
 {
@@ -62,6 +69,9 @@ int main(int argc, char *argv[])
   struct node *root;
   /* THE scope */
   struct scope *_main = new_scope("main", NULL);
+
+  /* are we compiling? */
+  bool compile = false;
 
   if (((locale = getenv("LC_ALL")) && *locale) ||
       ((locale = getenv("LC_CTYPE")) && *locale) ||
@@ -79,8 +89,11 @@ int main(int argc, char *argv[])
   /* initialize the types (which includes creating the standard types) and everything related */
   types_init();
 
-  while ((ch = getopt(argc, argv, "d:v")) != -1){
+  while ((ch = getopt(argc, argv, "cd:v")) != -1){
     switch (ch){
+      case 'c':
+        compile = true;
+        break;
       case 'd':
 #ifdef DEBUG
         switch (*optarg){
@@ -138,7 +151,35 @@ int main(int argc, char *argv[])
       goto end;
     }
 
-    exec_nodes(root);
+    if (compile){
+      char systemcall[128];
+      char *noextname = strdup(argv[0]);
+      char *p = strrchr(noextname, '.');
+      /* remove the extension from the file name */
+      if (p) *p = '\0';
+
+      snprintf(outfilename, sizeof(outfilename), "%s.asm", noextname);
+
+      if ((outfile = fopen(outfilename, "w")) == NULL){
+        perror("nemo: fopen");
+        exit(1);
+      }
+
+      /* compile the program (ie. write all the assembly out into <outfile>) */
+      comp_nodes(root);
+      /* close the assembly file so we can proceed and compile it */
+      fclose(outfile);
+
+      snprintf(systemcall, sizeof(systemcall), "nasm -f elf32 %s.asm -o %s.o", noextname, noextname);
+      system(systemcall);
+
+      snprintf(systemcall, sizeof(systemcall), "ld -o %s %s.o", noextname, noextname);
+      system(systemcall);
+
+      free(noextname);
+    } else
+      exec_nodes(root);
+
     /* TODO clean up after the parser, lexer, etc. */
   } else {
     /* interactive */
@@ -182,11 +223,12 @@ end:
  * Qntal, Helium Vola
  * Mourning Beloveth, Doom:VS, Draconian
  * Lascaille's Shroud
+ * Thy Light, Furia, Vinterland
  *
  * Johann Strauss
  *
  * Family Guy, The Office, Monty Python, The I.T. Crowd
- * Black Books
+ * Black Books, The Big Bang Theory
  *
  */
 

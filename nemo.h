@@ -13,6 +13,7 @@
 #ifndef NEMO_H
 #define NEMO_H
 
+#include <stdio.h>
 #include <stdint.h>
 
 #if HAVE_STDBOOL_H
@@ -25,6 +26,9 @@
 
 /* one small, quite handy, typedef */
 typedef unsigned char byte_t;
+
+/* the file into which all the assembly will go */
+extern FILE *outfile;
 
 #endif /* NEMO_H */
 

@@ -13,6 +13,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include "ast.h"
+#include "nemo.h"
 
 /*
  * A small little function to print a byte in it's binary form (4 bits long).
@@ -63,7 +68,19 @@ const char *itob64(int64_t num)
 }
 
 /*
+ * Write a line into the <currsect> buffer (defined in ast.c)
+ */
+void out(const char *fmt, ...)
+{
+  va_list vl;
+
+  va_start(vl, fmt);
+  currsect->pos += vsprintf(currsect->buffer + currsect->pos, fmt, vl);
+  currsect->pos +=  sprintf(currsect->buffer + currsect->pos, "\n");
+  va_end(vl);
+}
+
+/*
  * vi: ft=c:ts=2:sw=2:expandtab
  */
-
 

@@ -26,6 +26,14 @@
 struct lexer;
 struct nodes_list;
 
+/* assembly sections */
+struct section {
+  char buffer[1 << 20]; /* 1MiB (yeaah) */
+  unsigned pos; /* current position for when writing to the buffer */
+};
+
+extern struct section *currsect;
+
 enum node_type {
   NT_NOP,
   NT_INTEGER,
@@ -103,6 +111,8 @@ struct node {
   /* pointer to a function that is responsible for executing the node
    * and maintaining the stack (ie. pushing the node's result value onto it) */
   struct node *(*execf)(struct node *);
+  /* pointer to a function that is responsible for compiling the node */
+  struct node *(*compf)(struct node *);
   /* a scope in which the expression exists */
   /* this is where all the variables and alike where be searched for */
   /* (of cource, following `scope`s parent scopes) */
@@ -156,7 +166,8 @@ struct node {
 
     struct { /* NT_CALL (<name> [opts]()) */
       char *name;
-      char opts[26];
+      struct node *fun;
+      char *opts;
       struct node **args;
     } call;
 
@@ -183,6 +194,9 @@ struct node {
       /* that is, if it's `true', the function will be executed automatically */
       /* if `false' it has to be called explicitly */
       bool execute;
+      /* whether the body of the function has already been compiled (written)
+       * into the output assembly file */
+      bool compiled;
     } fun;
 
     struct { /* NT_PRINT */
@@ -219,10 +233,13 @@ struct node *new_if(struct parser *parser, struct lexer *lex,
 struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
     struct nob_type *ret_type, struct nob_type **params, struct node *body,
     char *opts, bool execute);
+struct node *new_call(struct parser *parser, struct lexer *lex, struct node *,
+    struct node **args, char *opts);
 struct node *new_print(struct parser *parser, struct lexer *lex,
     struct nodes_list *exprs);
 
 void exec_nodes(struct node *node);
+void comp_nodes(struct node *node);
 
 #if DEBUG
 void dump_nodes(struct node *node);

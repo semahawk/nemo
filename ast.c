@@ -24,8 +24,9 @@
 #include "util.h"
 #include "utf8.h"
 
-/* one handy macro */
+/* two handy macros */
 #define EXEC(node) ((node)->execf(node))
+#define COMP(node) ((node)->compf(node))
 /* few more */
 #define RETURN_NEXT return (NM_pc = nd->next, NM_pc)
 #define RETURN return (NM_pc)
@@ -42,6 +43,17 @@ static size_t NM_as_size = 16;
 
 /* the current node's id */
 static unsigned currid = 1;
+
+/* the current generic label id */
+static unsigned currlabelid = 0;
+
+/* buffers for the assembly sections (the `out` functions writes into them) */
+struct section text  = { { 0 }, 0 };
+struct section data  = { { 0 }, 0 };
+struct section bss   = { { 0 }, 0 };
+struct section funcs = { { 0 }, 0 };
+/* the current section we are writing to */
+struct section *currsect = &text;
 
 /* {{{ argument stack manipulation functions */
 void arg_stack_init(void)
@@ -348,6 +360,27 @@ void dump_fun(struct node *nd)
   DEDENT();
 }
 
+void dump_call(struct node *nd)
+{
+  printf("+ (#%u) call\n", nd->id);
+
+  INDENT();
+  DUMPP("- target function:");
+  INDENT();
+  SPACES();
+  if (nd->in.call.fun->in.fun.name)
+    printf("+ (#%u) fun (%s)\n", NDID(nd->in.call.fun), nd->in.call.fun->in.fun.name);
+  else
+    printf("+ (#%u) lambda\n", NDID(nd->in.call.fun));
+
+  DEDENT();
+  DUMPP("- args:");
+  INDENT();
+  DUMPP("(not yet implemented)");
+  DEDENT();
+  DEDENT();
+}
+
 void dump_print(struct node *nd)
 {
   struct nodes_list *expr;
@@ -649,6 +682,15 @@ struct node *exec_fun(struct node *nd)
   /* }}} */
 }
 
+struct node *exec_call(struct node *nd)
+{
+  /* {{{ */
+  debug_ast_exec(nd, "function call (not yet implemented)");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
 /*
  * Prints a single <ob> to stdout.
  *
@@ -719,6 +761,363 @@ struct node *exec_print(struct node *nd)
   /* }}} */
 }
 /* }}} */
+/* {{{ comp_nodes */
+void comp_nodes(struct node *node)
+{
+  NM_pc = node;
+
+  out("section .text");
+  out("_kernel:");
+  out("  int 0x80");
+  out("  ret\n");
+  out("global _start");
+  out("_start:");
+
+  if (NM_pc)
+    while (COMP(NM_pc))
+      ;
+
+  out("\n  push dword eax");
+  out("  mov eax, 1");
+  out("  call _kernel");
+
+  fprintf(outfile, "%s\n", text.buffer);
+  fprintf(outfile, "%s\n", funcs.buffer);
+  fprintf(outfile, "%s\n", bss.buffer);
+  fprintf(outfile, "%s\n", data.buffer);
+  /* suck it Emacs (: */
+  fprintf(outfile, "; vim: ft=nasm:ts=2:sw=2 expandtab\n\n");
+}
+
+struct node *comp_nop(struct node *nd)
+{
+  /* {{{ */
+  debug_ast_comp(nd, "nop");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_const(struct node *nd)
+{
+  /* {{{  */
+  if (nd->type == NT_INTEGER){
+    debug_ast_comp(nd, "integer");
+    out("  mov eax, %d", nd->in.i.digits[0]);
+    PUSH(new_nob(T_INT, nd->in.i));
+  } else if (nd->type == NT_REAL){
+    debug_ast_comp(nd, "real (%g)", nd->in.f);
+    /*PUSH(new_nob(T_REAL, nd->in.f));*/
+  } else if (nd->type == NT_CHAR){
+    debug_ast_comp(nd, "char (%lc)", nd->in.c);
+    out("  mov eax, %d", nd->in.c);
+    PUSH(new_nob(T_CHAR, nd->in.c));
+  }
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_list(struct node *nd)
+{
+  /* {{{ */
+  printf("lists not yet fully implemented\n");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_tuple(struct node *nd)
+{
+  /* {{{ */
+  printf("tuples not yet implemented\n");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_name(struct node *nd)
+{
+  /* {{{  */
+  struct var *var = var_lookup(nd->in.s, nd->scope);
+
+  if (var)
+    COMP(var->value);
+  else {
+    fprintf(stderr, "variable '%s' not found! compile time!\n", nd->in.s);
+    exit(1);
+  }
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_decl(struct node *nd)
+{
+  /* {{{ */
+  if (nd->in.decl.value)
+    debug_ast_comp(nd, "declaration (%s, 0x%02x, #%u)", nd->in.decl.name,
+        nd->in.decl.flags, nd->in.decl.value->id);
+  else
+    debug_ast_comp(nd, "declaration (%s, 0x%02x, #--)", nd->in.decl.name,
+        nd->in.decl.flags);
+
+  if (nd->in.decl.value)
+    COMP(nd->in.decl.value);
+
+  /* TODO associate the value with the variable */
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_unop(struct node *nd)
+{
+  /* {{{ */
+  COMP(nd->in.unop.target);
+
+  debug_ast_comp(nd, "unop ('op?', #%u)", NDID(nd->in.unop.target));
+
+  switch (nd->in.unop.type){
+    case UNARY_MINUS:
+      out("  neg eax");
+      break;
+    case UNARY_PREINC:
+    case UNARY_POSTINC: /* FIXME */
+      out("  inc eax");
+      break;
+    case UNARY_PREDEC:
+    case UNARY_POSTDEC: /* FIXME */
+      out("  dec eax");
+      break;
+    default: /* WIP */;
+  }
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_binop(struct node *nd)
+{
+  /* {{{ */
+  Nob *value;
+
+  debug_ast_comp(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
+      nd->in.binop.left->id, nd->in.binop.right->id);
+
+#define PRIMITIVE_BINOP(func)   \
+  out("  push ebx");            \
+  COMP(nd->in.binop.right);     \
+  out("  mov ebx, eax");        \
+  COMP(nd->in.binop.left);      \
+  out("  " func " eax, ebx");   \
+  out("  pop ebx\n");
+
+#define PRIMITIVE_COMPARE(func) \
+  out("  push ebx");            \
+  COMP(nd->in.binop.right);     \
+  out("  mov ebx, eax");        \
+  COMP(nd->in.binop.left);      \
+  out("  cmp eax, ebx");        \
+  out("  " func " al");         \
+  out("  movsx eax, al");       \
+  out("  pop ebx\n");
+
+  switch (nd->in.binop.type){
+    case BINARY_ADD:
+      PRIMITIVE_BINOP("add");
+      break;
+    case BINARY_SUB:
+      PRIMITIVE_BINOP("sub");
+      break;
+    case BINARY_MUL:
+      PRIMITIVE_BINOP("imul");
+      break;
+    case BINARY_DIV:
+      out("  push edx");
+      out("  xor edx, edx");
+      COMP(nd->in.binop.right);
+      out("  mov ebx, eax");
+      COMP(nd->in.binop.left);
+      out("  idiv ebx");
+      out("  pop edx\n");
+      break;
+    case BINARY_MOD:
+      out("  push edx");
+      out("  xor edx, edx");
+      COMP(nd->in.binop.right);
+      out("  mov ebx, eax");
+      COMP(nd->in.binop.left);
+      out("  idiv ebx");
+      out("  mov eax, edx");
+      out("  pop edx\n");
+      break;
+    case BINARY_BITAND:
+      PRIMITIVE_BINOP("and");
+      break;
+    case BINARY_BITXOR:
+      PRIMITIVE_BINOP("xor");
+      break;
+    case BINARY_BITOR:
+      PRIMITIVE_BINOP("or");
+      break;
+    case BINARY_EQ:
+      PRIMITIVE_COMPARE("sete");
+      break;
+    case BINARY_NE:
+      PRIMITIVE_COMPARE("setne");
+      break;
+    case BINARY_LT:
+      PRIMITIVE_COMPARE("setl");
+      break;
+    case BINARY_LE:
+      PRIMITIVE_COMPARE("setle");
+      break;
+    case BINARY_GT:
+      PRIMITIVE_COMPARE("setg");
+      break;
+    case BINARY_GE:
+      PRIMITIVE_COMPARE("setge");
+      break;
+    case BINARY_SHL:
+      COMP(nd->in.binop.right);
+      value = POP();
+      COMP(nd->in.binop.left);
+      /* MIN(255, ...) because `shl` and `shr` accept either the `cl` register
+       * or a __8-bit value__ */
+      out("  shl eax, %d", MIN(0xff, NOB_GET_INTEGER(value).digits[0]));
+      break;
+    case BINARY_SHR:
+      COMP(nd->in.binop.right);
+      value = POP();
+      COMP(nd->in.binop.left);
+      out("  shr eax, %d", MIN(0xff, NOB_GET_INTEGER(value).digits[0]));
+      break;
+
+    /* fall through */
+    case BINARY_ASSIGN:
+    case BINARY_ASSIGN_ADD:
+    case BINARY_ASSIGN_SUB:
+    case BINARY_ASSIGN_MUL:
+    case BINARY_ASSIGN_DIV:
+    case BINARY_ASSIGN_MOD:
+    case BINARY_COMMA:
+      printf("nop (not implemented yet)\n");
+      PUSH(new_nob(T_INT, infnum_from_dword(0)));
+      break;
+    default: /* meh */;
+  }
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_ternop(struct node *nd)
+{
+  /* {{{ */
+  debug_ast_comp(nd, "ternop (#%u, #%u, #%u)", nd->in.ternop.predicate->id,
+      nd->in.ternop.yes->id, nd->in.ternop.no->id);
+
+  printf("ternary ops not yet implemented\n");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_if(struct node *nd)
+{
+  /* {{{ */
+  debug_ast_comp(nd, "if (#%u, #%u, #%u)",
+    nd->in.iff.guard->id,
+    nd->in.iff.body->id,
+    nd->in.iff.elsee->id);
+
+  COMP(nd->in.iff.guard);
+
+  out("  test eax, eax");
+  out("  jz .l%d", currlabelid);
+  out("  ; the 'true' branch");
+  COMP(nd->in.iff.body);
+  out("  jmp .l%d", currlabelid + 1);
+  out(".l%d:", currlabelid);
+  out("  ; the 'false' branch");
+  COMP(nd->in.iff.elsee);
+
+  out(".l%d:", currlabelid + 1);
+
+  currlabelid++;
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_fun(struct node *nd)
+{
+  /* {{{ */
+  struct node *e;
+
+  debug_ast_comp(nd, "function");
+
+  if (!nd->in.fun.compiled){
+    currsect = &funcs;
+
+    if (nd->in.fun.name)
+      out("%s:", nd->in.fun.name);
+    else
+      out("_f%d:", NDID(nd));
+
+    for (e = nd->in.fun.body; e != NULL; e = e->next){
+      COMP(e);
+
+      /* leave only the last expression on the stack */
+      /* which effectively makes it the function's return value */
+      /* NOTE: hmmmm... is that right here? */
+      if (e->next != NULL)
+        POP();
+    }
+
+    out("  ret\n");
+
+    currsect = &text;
+    nd->in.fun.compiled = true;
+  }
+
+  if (nd->in.fun.name)
+    out("  mov eax, %s", nd->in.fun.name);
+  else
+    out("  mov eax, _f%d", NDID(nd));
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_call(struct node *nd)
+{
+  /* {{{ */
+  debug_ast_comp(nd, "compiling a function call");
+
+  assert(nd->in.call.fun);
+
+  /* make sure the function is actually defined in the assembly file */
+  COMP(nd->in.call.fun);
+
+  out("  call eax");
+
+  RETURN_NEXT;
+  /* }}} */
+}
+
+struct node *comp_print(struct node *nd)
+{
+  /* {{{ */
+  debug_ast_comp(nd, "print");
+
+  PUSH(new_nob(T_INT, infnum_from_dword(1)));
+
+  RETURN_NEXT;
+  /* }}} */
+}
+/* }}} */
 /* {{{ new_nodes */
 struct node *new_nop(struct parser *parser, struct lexer *lex)
 {
@@ -727,6 +1126,7 @@ struct node *new_nop(struct parser *parser, struct lexer *lex)
 
   nd->type = NT_NOP;
   nd->execf = exec_nop;
+  nd->compf = comp_nop;
 #if DEBUG
   nd->dumpf = dump_nop;
 #endif
@@ -745,6 +1145,7 @@ struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum val
   nd->type = NT_INTEGER;
   nd->in.i = value;
   nd->execf = exec_const;
+  nd->compf = comp_const;
 #if DEBUG
   nd->dumpf = dump_const;
 #endif
@@ -764,6 +1165,7 @@ struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
   nd->type = NT_CHAR;
   nd->in.c = value;
   nd->execf = exec_const;
+  nd->compf = comp_const;
 #if DEBUG
   nd->dumpf = dump_const;
 #endif
@@ -782,6 +1184,7 @@ struct node *new_real(struct parser *parser, struct lexer *lex, double value)
   nd->type = NT_REAL;
   nd->in.f = value;
   nd->execf = exec_const;
+  nd->compf = comp_const;
 #if DEBUG
   nd->dumpf = dump_const;
 #endif
@@ -800,6 +1203,7 @@ struct node *new_list(struct parser *parser, struct lexer *lex,
 
   nd->type = NT_LIST;
   nd->execf = exec_list;
+  nd->compf = comp_list;
   /* FIXME */
   nd->in.list.type = T_INT;
   /*nd->in.list.type = infer_type(elems->node);*/
@@ -825,6 +1229,7 @@ struct node *new_tuple(struct parser *parser, struct lexer *lex,
   nd->in.list.type = new_type(NULL /* anonymous */, OT_TUPLE, (struct field[MAX_TUPLE_FIELDS]){ { NULL, NULL } });
   nd->in.list.elems = elems;
   nd->execf = exec_tuple;
+  nd->compf = comp_tuple;
 #if DEBUG
   nd->dumpf = dump_tuple;
 #endif
@@ -843,6 +1248,7 @@ struct node *new_name(struct parser *parser, struct lexer *lex, char *name)
   nd->type = NT_NAME;
   nd->in.s = strdup(name);
   nd->execf = exec_name;
+  nd->compf = comp_name;
 #if DEBUG
   nd->dumpf = dump_name;
 #endif
@@ -864,6 +1270,7 @@ struct node *new_decl(struct parser *parser, struct lexer *lex, char *name,
   nd->in.decl.flags = flags;
   nd->in.decl.value = value;
   nd->execf = exec_decl;
+  nd->compf = comp_decl;
 #if DEBUG
   nd->dumpf = dump_decl;
 #endif
@@ -890,6 +1297,7 @@ struct node *new_unop(struct parser *parser, struct lexer *lex, enum unop_type t
   nd->in.unop.type = type;
   nd->in.unop.target = target;
   nd->execf = exec_unop;
+  nd->compf = comp_unop;
 #if DEBUG
   nd->dumpf = dump_unop;
 #endif
@@ -911,6 +1319,7 @@ struct node *new_binop(struct parser *parser, struct lexer *lex, enum binop_type
   nd->in.binop.left = left;
   nd->in.binop.right = right;
   nd->execf = exec_binop;
+  nd->compf = comp_binop;
 #if DEBUG
   nd->dumpf = dump_binop;
 #endif
@@ -933,6 +1342,7 @@ struct node *new_ternop(struct parser *parser, struct lexer *lex, struct node *p
   nd->in.ternop.yes = yes;
   nd->in.ternop.no = no;
   nd->execf = exec_ternop;
+  nd->compf = comp_ternop;
 #if DEBUG
   nd->dumpf = dump_ternop;
 #endif
@@ -956,6 +1366,7 @@ struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard
   nd->in.iff.elsee = elsee;
   nd->in.iff.unless = false;
   nd->execf = exec_if;
+  nd->compf = comp_if;
 #if DEBUG
   nd->dumpf = dump_if;
 #endif
@@ -979,7 +1390,9 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struc
   nd->in.fun.opts = opts;
   nd->in.fun.params = params;
   nd->in.fun.execute = execute;
+  nd->in.fun.compiled = false;
   nd->execf = exec_fun;
+  nd->compf = comp_fun;
 #if DEBUG
   nd->dumpf = dump_fun;
 #endif
@@ -993,6 +1406,28 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struc
   /* }}} */
 }
 
+struct node *new_call(struct parser *parser, struct lexer *lex, struct node *fun,
+    struct node **args, char *opts)
+{
+  /* {{{ */
+  struct node *nd = new_node(parser, lex);
+
+  nd->type = NT_CALL;
+  nd->in.call.fun  = fun;
+  nd->in.call.args = args;
+  nd->in.call.opts = opts;
+  nd->execf = exec_call;
+  nd->compf = comp_call;
+#if DEBUG
+  nd->dumpf = dump_call;
+#endif
+
+  debug_ast_new(nd, "call (#%d)", NDID(fun));
+
+  return nd;
+  /* }}} */
+}
+
 struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_list *exprs)
 {
   /* {{{ */
@@ -1001,6 +1436,7 @@ struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_li
   nd->type = NT_PRINT;
   nd->in.print.exprs = exprs;
   nd->execf = exec_print;
+  nd->compf = comp_print;
 #if DEBUG
   nd->dumpf = dump_print;
 #endif

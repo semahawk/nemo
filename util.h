@@ -18,7 +18,11 @@
 #include <string.h>
 #include <errno.h>
 
+#include "ast.h"
 #include "config.h"
+
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 #ifndef HAVE_STRDUP
 #define strdup(p) strdup_(p, __FILE__, __LINE__)
@@ -38,6 +42,8 @@ char *strdup(const char *);
 const char *itob4(int number);
 const char *itob8(int number);
 const char *itob64(int64_t number);
+
+void out(const char *fmt, ...);
 
 #endif /* UTIL_H */
 

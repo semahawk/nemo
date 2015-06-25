@@ -33,6 +33,7 @@ extern uint32_t NM_debug_flags;
 
 void debug_ast_new (struct node *node, const char *fmt, ...);
 void debug_ast_exec(struct node *node, const char *fmt, ...);
+void debug_ast_comp(struct node *node, const char *fmt, ...);
 
 #endif /* DEBUG_H */
 

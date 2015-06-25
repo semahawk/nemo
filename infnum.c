@@ -27,9 +27,6 @@
  * [1] http://en.literateprograms.org/Arbitrary-precision_integer_arithmetic_(C)
  */
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 /* returns digit #<i> from struct infnum <n> or zero in case of an overflow */
 #define DIGIT(n, i) (((i) < (n).nmemb) ? (n).digits[i] : 0)
 

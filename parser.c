@@ -501,8 +501,15 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       ret->lvalue = false;
     } else if (accept(parser, lex, TOK_LPAREN)){
       force(parser, lex, TOK_RPAREN);
+      /* target () */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("(function call)");
+
+      if (target->type == NT_NAME || target->type == NT_FUN){
+        ret = new_call(parser, lex, target, NULL, NULL);
+        ret->lvalue = false; /* hmm.. */
+      } else
+        /* hmmm */;
     }
   }
 
@@ -1122,6 +1129,50 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
+    /* we turn these into calls so that the user isn't forced to do this every
+     * time he wants to branch out:
+     *
+     *   if (...){
+     *     ...
+     *   }() else {
+     *     ...
+     *   }();
+     *
+     * this feature is actually open to conversation as it strikes a bit against
+     * consistency, observe:
+     *
+     *   my function = { ... };
+     *
+     *   if (...)
+     *     function();
+     *   else
+     *     ...;
+     *
+     * in this example the 'true' branch would return the result of the
+     * function, and not the function itself, like here:
+     *
+     *   my function = { ... };
+     *
+     *   if (...)
+     *     function;
+     *   else
+     *     ...;
+     *
+     * in order to actually return an anonymous function using brackets, the
+     * user would have to do this:
+     *
+     *   if (...){
+     *     { ... }
+     *   } else {
+     *     { ... }
+     *   };
+     */
+    if (body->type == NT_FUN)
+      body = new_call(parser, lex, body, NULL, NULL);
+
+    if (elsee->type == NT_FUN)
+      elsee = new_call(parser, lex, elsee, NULL, NULL);
+
     ret = new_if(parser, lex, guard, body, elsee);
     ret->lvalue = false;
     /* }}} */
@@ -1193,6 +1244,14 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     ret = new_decl(parser, lex, name, flags, value, parser->curr_scope);
     ret->lvalue = false; /* hmm.. */
+
+    if (value)
+      /* see if the assigned value is a function */
+      if (value->type == NT_FUN)
+        /* we make the assignment so that the function knows the name it was
+         * given during the declaration (necessary for the assembly so the
+         * functions don't have cryptic names) */
+        value->in.fun.name = name;
     /* }}} */
   }
   else if (accept_keyword(parser, lex, "print")){

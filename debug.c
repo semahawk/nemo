@@ -48,6 +48,19 @@ void debug_ast_exec(struct node *nd, const char *fmt, ...)
   }
 }
 
+void debug_ast_comp(struct node *nd, const char *fmt, ...)
+{
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_AST)){
+    va_list vl;
+
+    va_start(vl, fmt);
+    fprintf(stderr, "%p: (#%u) compile node: ", (void *)nd, nd->id);
+    vfprintf(stderr, fmt, vl);
+    fprintf(stderr, "\n");
+    va_end(vl);
+  }
+}
+
 /*
  * vi: ft=c:ts=2:sw=2:expandtab
  */
