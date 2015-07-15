@@ -41,7 +41,9 @@ struct var {
   char *name;
   uint8_t flags;
   struct node *value;
+  struct node *decl; /* reference to the declaration that did the variable */
   struct nob_type *type;
+  unsigned offset; /* the var's place on the stack */
 };
 
 struct vars_list {
@@ -50,10 +52,18 @@ struct vars_list {
 };
 
 struct scope {
-  char *name; /* can be null */
-  struct scope *parent; /* can be null */
-  struct vars_list *vars; /* head of the variables list */
-  struct accs_list *accs; /* head of the accumulators list */
+  /* can be null */
+  char *name;
+  /* can be null */
+  struct scope *parent;
+  /* head of the variables list */
+  struct vars_list *vars;
+  /* base offset the variables are from (increases along with "nestiness") */
+  unsigned base_offset;
+  /* offset the next variable will get */
+  unsigned curr_var_offset;
+  /* head of the accumulators list */
+  struct accs_list *accs;
 };
 
 struct scopes_list {
@@ -69,6 +79,8 @@ struct var *new_var(char *name, uint8_t flags, struct node *value,
     struct nob_type *type, struct scope *scope);
 
 struct var *var_lookup(char *name, struct scope *scope);
+
+unsigned size_of_vars(struct scope *scope);
 
 /* a list of global scopes */
 extern struct scopes_list *NM_scopes;

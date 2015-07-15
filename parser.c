@@ -317,6 +317,8 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       }
 
       ret = new_tuple(parser, lex, reverse_nodes_list(elems));
+      /* FIXME */
+      ret->result_type = T_INT;
     }
     /* else
      *   it's just an expression grouping
@@ -329,15 +331,17 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_LMUSTASHE)){
     /* {{{ A FUNCTION */
-    struct scope *prev_scope;
+    struct scope *prev_scope, *functions_scope;
     struct node *body;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("{\n");
 
+    unsigned line = lex->line;
+
     /* create a new scope for the function */
     prev_scope = parser->curr_scope;
-    parser->curr_scope = new_scope(NULL, parser->curr_scope);
+    parser->curr_scope = functions_scope = new_scope(NULL, parser->curr_scope);
 
     /* all the expressions here will 'use' the new scope */
     body = expr_list(parser, lex);
@@ -352,7 +356,12 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     ret = new_fun(parser, lex, NULL /* anonymous */, T_INT /* wait for inference */,
         NULL /* no params */, body, NULL /* no opts */,
         true /* execute right away */);
+    ret->scope = functions_scope;
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false; /* hmm.. */
+
+    printf("function _f%d on line %u\n", ret->id, line);
     /* }}} */
   } else if (accept(parser, lex, TOK_LBRACKET)){
     /* {{{ A LIST LITERAL */
@@ -404,6 +413,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_int(parser, lex, lex->curr_tok.value.i);
+    ret->result_type = T_INT;
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_REAL)){
@@ -412,6 +422,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       printf("%g ", lex->curr_tok.value.f);
 
     ret = new_real(parser, lex, lex->curr_tok.value.f);
+    ret->result_type = T_REAL;
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_STRING)){
@@ -431,6 +442,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_list(parser, lex, reverse_nodes_list(chars));
+    ret->result_type = T_STRING;
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
@@ -439,19 +451,23 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       printf("'%c' ", lex->curr_tok.value.c);
 
     ret = new_char(parser, lex, lex->curr_tok.value.c);
+    ret->result_type = T_CHAR;
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_NAME)){
     /* {{{ NAME */
+    struct var *var;
+
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", lex->curr_tok.value.s /* meh */);
 
-    if (!var_lookup(lex->curr_tok.value.s, parser->curr_scope)){
+    if (!(var = var_lookup(lex->curr_tok.value.s, parser->curr_scope))){
       err(parser, lex, "variable '%s' not found", lex->curr_tok.value.s);
       return NULL;
     }
 
     ret = new_name(parser, lex, lex->curr_tok.value.s);
+    ret->result_type = var->type;
     ret->lvalue = true;
     /* }}} */
   } else if (accept(parser, lex, TOK_ACCUMULATOR)){
@@ -469,6 +485,8 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = accs_value;
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = true;
     /* }}} */
   }
@@ -492,12 +510,16 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(" postfix(++)");
       ret = new_unop(parser, lex, UNARY_POSTINC, target);
+      /* FIXME */
+      ret->result_type = T_INT;
       ret->lvalue = false;
     } else if (accept(parser, lex, TOK_MINUS_2)){
       /* target -- */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(" postfix(--)");
       ret = new_unop(parser, lex, UNARY_POSTDEC, target);
+      /* FIXME */
+      ret->result_type = T_INT;
       ret->lvalue = false;
     } else if (accept(parser, lex, TOK_LPAREN)){
       force(parser, lex, TOK_RPAREN);
@@ -507,6 +529,8 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
 
       if (target->type == NT_NAME || target->type == NT_FUN){
         ret = new_call(parser, lex, target, NULL, NULL);
+        /* FIXME */
+        ret->result_type = T_INT;
         ret->lvalue = false; /* hmm.. */
       } else
         /* hmmm */;
@@ -553,6 +577,9 @@ static struct node *prefix_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_unop(parser, lex, type, target);
+    /* FIXME */
+    ret->result_type = T_INT;
+    ret->lvalue = false;
   } else {
     ret = postfix_expr(parser, lex);
   }
@@ -597,6 +624,8 @@ static struct node *mul_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -634,6 +663,8 @@ static struct node *add_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -671,6 +702,8 @@ static struct node *bitshift_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -721,6 +754,8 @@ static struct node *cond_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -758,6 +793,8 @@ static struct node *eq_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -787,6 +824,8 @@ static struct node *bitand_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -816,6 +855,8 @@ static struct node *bitxor_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -845,6 +886,8 @@ static struct node *bitor_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -874,6 +917,8 @@ static struct node *logand_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -903,6 +948,8 @@ static struct node *logor_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     left = ret;
   }
@@ -946,6 +993,9 @@ static struct node *ternary_expr(struct parser *parser, struct lexer *lex)
       printf(")");
 
     ret = new_ternop(parser, lex, predicate, yes, no);
+    /* FIXME */
+    ret->result_type = T_INT;
+    ret->lvalue = true; /* hmmm... */
   }
 
   return ret;
@@ -1041,6 +1091,8 @@ static struct node *assign_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, type, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     right = ret;
   }
@@ -1076,6 +1128,8 @@ static struct node *comma_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_binop(parser, lex, BINARY_COMMA, left, right);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false; /* hmm.. */
     left = ret;
   }
@@ -1174,6 +1228,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       elsee = new_call(parser, lex, elsee, NULL, NULL);
 
     ret = new_if(parser, lex, guard, body, elsee);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     /* }}} */
   }
@@ -1242,7 +1298,12 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    ret = new_decl(parser, lex, name, flags, value, parser->curr_scope);
+    /* declare the variable in the current scope */
+    struct var *var = new_var(name, flags, value, value->result_type, parser->curr_scope);
+    ret = new_decl(parser, lex, var);
+    var->decl = ret;
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false; /* hmm.. */
 
     if (value)
@@ -1284,6 +1345,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_print(parser, lex, reverse_nodes_list(exprs));
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     /* }}} */
   }
@@ -1331,6 +1394,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_nop(parser, lex);
+    /* FIXME */
+    ret->result_type = T_INT;
     ret->lvalue = false;
     /* }}} */
   }

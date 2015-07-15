@@ -75,6 +75,7 @@ void out(const char *fmt, ...)
   va_list vl;
 
   va_start(vl, fmt);
+  /*printf("writing to %p: %s\n", (void*)currsect, fmt);*/
   currsect->pos += vsprintf(currsect->buffer + currsect->pos, fmt, vl);
   currsect->pos +=  sprintf(currsect->buffer + currsect->pos, "\n");
   va_end(vl);

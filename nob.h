@@ -55,7 +55,8 @@ struct field {
 };
 
 struct nob_type {
-  char *name;  /* optional name of the type, like "word" */
+  char *name; /* optional name of the type, like "word" */
+  unsigned size; /* the type's size, in bytes */
   enum nob_primitive_type primitive;
   /* additional info about the given type */
   union {

@@ -159,9 +159,7 @@ struct node {
     } ternop;
 
     struct { /* NT_DECL (my [flags] <name> [= <value>]) */
-      char *name;
-      uint8_t flags;
-      struct node *value;
+      struct var *var;
     } decl;
 
     struct { /* NT_CALL (<name> [opts]()) */
@@ -219,8 +217,7 @@ struct node *new_list(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems);
 struct node *new_tuple(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems);
-struct node *new_decl(struct parser *parser, struct lexer *lex, char *name,
-    uint8_t flags, struct node *value, struct scope *scope);
+struct node *new_decl(struct parser *parser, struct lexer *lex, struct var *v);
 struct node *new_name(struct parser *parser, struct lexer *lex, char *name);
 struct node *new_unop(struct parser *parser, struct lexer *lex,
     enum unop_type type, struct node *target);

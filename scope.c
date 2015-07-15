@@ -25,6 +25,7 @@ struct scope *new_scope(char *name, struct scope *parent)
 {
   struct scope *scope = nmalloc(sizeof(struct scope));
   struct scopes_list *list = nmalloc(sizeof(struct scopes_list));
+  struct scope *p;
 
   if (name != NULL)
     scope->name = strdup(name);
@@ -34,6 +35,14 @@ struct scope *new_scope(char *name, struct scope *parent)
   scope->parent = parent;
   scope->vars   = NULL;
   scope->accs   = accs_new_list();
+  scope->curr_var_offset = 4;
+  scope->base_offset = 0;
+
+  for (p = scope; p != NULL; p = p->parent){
+    scope->base_offset += size_of_vars(p);
+  }
+
+  printf("scope %p base offset %u\n", (void*)scope, scope->base_offset);
 
   list->scope = scope;
   /* append to the `NM_scopes' list */
@@ -89,6 +98,10 @@ struct var *new_var(char *name, uint8_t flags, struct node *value,
 
   assert(scope);
 
+  /* assembly stuff */
+  var->offset = scope->curr_var_offset;
+  scope->curr_var_offset += type->size;
+
   list->var = var;
   /* append the new element into the `scope`s `vars` list */
   list->next = scope->vars;
@@ -110,6 +123,21 @@ struct var *var_lookup(char *name, struct scope *scope)
         return v->var;
 
   return NULL;
+}
+
+unsigned size_of_vars(struct scope *scope)
+{
+  struct vars_list *v;
+  unsigned size = 0;
+
+  assert(scope);
+
+  for (v = scope->vars; v != NULL; v = v->next){
+    assert(v->var->type);
+    size += v->var->type->size;
+  }
+
+  return size;
 }
 
 struct accs_list *accs_new_list(void)

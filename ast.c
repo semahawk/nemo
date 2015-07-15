@@ -240,14 +240,14 @@ void dump_name(struct node *nd)
 
 void dump_decl(struct node *nd)
 {
-  printf("+ (#%u) declaration (%s, 0x%02x)\n", nd->id, nd->in.decl.name,
-      nd->in.decl.flags);
+  printf("+ (#%u) declaration (%s, 0x%02x)\n", nd->id, nd->in.decl.var->name,
+      nd->in.decl.var->flags);
 
-  if (nd->in.decl.value){
+  if (nd->in.decl.var->value){
     INDENT();
     DUMPP("- value:");
     INDENT();
-    DUMP(nd->in.decl.value);
+    DUMP(nd->in.decl.var->value);
     DEDENT();
     DEDENT();
   }
@@ -503,15 +503,15 @@ struct node *exec_name(struct node *nd)
 struct node *exec_decl(struct node *nd)
 {
   /* {{{ */
-  if (nd->in.decl.value)
-    debug_ast_exec(nd, "declaration (%s, 0x%02x, #%u)", nd->in.decl.name,
-        nd->in.decl.flags, nd->in.decl.value->id);
+  if (nd->in.decl.var->value)
+    debug_ast_exec(nd, "declaration (%s, 0x%02x, #%u)", nd->in.decl.var->name,
+        nd->in.decl.var->flags, nd->in.decl.var->value->id);
   else
-    debug_ast_exec(nd, "declaration (%s, 0x%02x, #--)", nd->in.decl.name,
-        nd->in.decl.flags);
+    debug_ast_exec(nd, "declaration (%s, 0x%02x, #--)", nd->in.decl.var->name,
+        nd->in.decl.var->flags);
 
-  if (nd->in.decl.value)
-    EXEC(nd->in.decl.value);
+  if (nd->in.decl.var->value)
+    EXEC(nd->in.decl.var->value);
 
   /* TODO associate the value with the variable */
 
@@ -764,6 +764,9 @@ struct node *exec_print(struct node *nd)
 /* {{{ comp_nodes */
 void comp_nodes(struct node *node)
 {
+  struct node **func;
+  unsigned vars_size = size_of_vars(node->scope);
+
   NM_pc = node;
 
   out("section .text");
@@ -773,18 +776,28 @@ void comp_nodes(struct node *node)
   out("global _start");
   out("_start:");
 
+  if (vars_size > 0){
+    out("  push ebp");
+    out("  mov ebp, esp");
+    out("  sub esp, %d", vars_size);
+  }
+
   if (NM_pc)
     while (COMP(NM_pc))
       ;
 
-  out("\n  push dword eax");
-  out("  mov eax, 1");
-  out("  call _kernel");
+  if (vars_size > 0)
+    out("  leave", vars_size);
 
-  fprintf(outfile, "%s\n", text.buffer);
-  fprintf(outfile, "%s\n", funcs.buffer);
-  fprintf(outfile, "%s\n", bss.buffer);
-  fprintf(outfile, "%s\n", data.buffer);
+  out("  push dword eax");
+  out("  mov eax, 1");
+  out("  call _kernel\n");
+
+  fprintf(outfile, "%s", text.buffer);
+  fprintf(outfile, "%s", funcs.buffer);
+  fprintf(outfile, "%s", bss.buffer);
+  fprintf(outfile, "%s", data.buffer);
+
   /* suck it Emacs (: */
   fprintf(outfile, "; vim: ft=nasm:ts=2:sw=2 expandtab\n\n");
 }
@@ -840,13 +853,23 @@ struct node *comp_name(struct node *nd)
 {
   /* {{{  */
   struct var *var = var_lookup(nd->in.s, nd->scope);
+  char *base;
 
-  if (var)
-    COMP(var->value);
-  else {
+  if (!var){
     fprintf(stderr, "variable '%s' not found! compile time!\n", nd->in.s);
     exit(1);
   }
+
+  if (nd->scope != var->decl->scope){
+    base = "ecx";
+  } else {
+    base = "ebp";
+  }
+
+  if (var->offset == 0)
+    out("  mov eax, [%s] ; loading %s", base, var->name);
+  else
+    out("  mov eax, [%s - %d] ; loading %s", base, var->offset, var->name);
 
   RETURN_NEXT;
   /* }}} */
@@ -855,17 +878,22 @@ struct node *comp_name(struct node *nd)
 struct node *comp_decl(struct node *nd)
 {
   /* {{{ */
-  if (nd->in.decl.value)
-    debug_ast_comp(nd, "declaration (%s, 0x%02x, #%u)", nd->in.decl.name,
-        nd->in.decl.flags, nd->in.decl.value->id);
+  if (nd->in.decl.var->value)
+    debug_ast_comp(nd, "declaration (%s, 0x%02x, #%u)", nd->in.decl.var->name,
+        nd->in.decl.var->flags, nd->in.decl.var->value->id);
   else
-    debug_ast_comp(nd, "declaration (%s, 0x%02x, #--)", nd->in.decl.name,
-        nd->in.decl.flags);
+    debug_ast_comp(nd, "declaration (%s, 0x%02x, #--)", nd->in.decl.var->name,
+        nd->in.decl.var->flags);
 
-  if (nd->in.decl.value)
-    COMP(nd->in.decl.value);
+  /*printf("var's offset: %u\n", nd->in.decl.var->offset);*/
 
-  /* TODO associate the value with the variable */
+  if (nd->in.decl.var->value)
+    COMP(nd->in.decl.var->value);
+
+  if (nd->in.decl.var->offset == 0)
+    out("  mov [ebp], eax ; declaring %s", nd->in.decl.var->name);
+  else
+    out("  mov [ebp - %d], eax ; declaring %s", nd->in.decl.var->offset, nd->in.decl.var->name);
 
   RETURN_NEXT;
   /* }}} */
@@ -1054,38 +1082,85 @@ struct node *comp_if(struct node *nd)
 struct node *comp_fun(struct node *nd)
 {
   /* {{{ */
-  struct node *e;
+  struct node *expr;
+  unsigned vars_size = size_of_vars(nd->scope);
 
   debug_ast_comp(nd, "function");
 
+  /* a buffer for the functions */
+  struct node *functions[64] = { NULL };
+  struct node **currfun = functions;
+  struct node **fun;
+
+  /*if (nd->in.fun.name)*/
+    /*printf("function's %s scope is %s, %p\n", nd->in.fun.name, nd->scope->name, (void*)nd->scope);*/
+  /*else*/
+    /*printf("function's _f%d scope is %s, %p\n", NDID(nd), nd->scope->name, (void*)nd->scope);*/
+
+  /*printf("size of vars: %u\n", vars_size);*/
+
   if (!nd->in.fun.compiled){
     currsect = &funcs;
+    nd->in.fun.compiled = true;
 
+    /* print out the function's name (or a generated handle for anonymous) */
     if (nd->in.fun.name)
       out("%s:", nd->in.fun.name);
     else
       out("_f%d:", NDID(nd));
 
-    for (e = nd->in.fun.body; e != NULL; e = e->next){
-      COMP(e);
+    /* set up the stack frame for the function */
+    out("  push ebp");
+    out("  mov ebp, esp");
 
-      /* leave only the last expression on the stack */
-      /* which effectively makes it the function's return value */
-      /* NOTE: hmmmm... is that right here? */
-      if (e->next != NULL)
-        POP();
+    if (vars_size > 0){
+      out("  sub esp, %d", vars_size);
     }
 
+    for (expr = nd->in.fun.body; expr != NULL; expr = expr->next){
+      /* if the expression in the function's body is also a function we have to
+       * wait with it a bit and write it to the assembly file after with dealt
+       * with the current function */
+      if (expr->type == NT_FUN){
+        /* TODO: FIXME: check for overflow */
+        *(currfun++) = expr;
+      } else if (expr->type == NT_CALL){
+        /* TODO: FIXME: check for overflow */
+        *(currfun++) = expr->in.call.fun;
+        /* set this to true so that the body of the function doesn't get
+         * written in the midway */
+        expr->in.call.fun->in.fun.compiled = true;
+        /* we call this because we need the `call` to the function */
+        COMP(expr);
+        /* set this to false again so at the end of this function the body gets
+         * generated */
+        expr->in.call.fun->in.fun.compiled = false;
+      } else {
+        COMP(expr);
+
+        /* leave only the last expression on the stack */
+        /* which effectively makes it the function's return value */
+        /* NOTE: hmmmm... is that right here? */
+        if (expr->next != NULL)
+          POP();
+      }
+    }
+
+    out("  leave");
     out("  ret\n");
 
     currsect = &text;
-    nd->in.fun.compiled = true;
   }
 
   if (nd->in.fun.name)
     out("  mov eax, %s", nd->in.fun.name);
   else
     out("  mov eax, _f%d", NDID(nd));
+
+  /* compile all the functions that were defined/declared inside of the current
+   * one */
+  for (fun = functions; *fun != NULL; fun++)
+    COMP(*fun);
 
   RETURN_NEXT;
   /* }}} */
@@ -1094,14 +1169,34 @@ struct node *comp_fun(struct node *nd)
 struct node *comp_call(struct node *nd)
 {
   /* {{{ */
-  debug_ast_comp(nd, "compiling a function call");
+  unsigned vars_size;
 
   assert(nd->in.call.fun);
 
-  /* make sure the function is actually defined in the assembly file */
-  COMP(nd->in.call.fun);
+  debug_ast_comp(nd, "compiling a function call (#%u)", NDID(nd->in.call.fun));
 
+  /* calculate how many variables the function we're about to call has (well,
+   * not how many but rather how much of them there is) */
+  vars_size = size_of_vars(nd->in.call.fun->scope);
+
+  /* make sure the function is actually defined in the assembly file */
+  /* and that eax is loaded with the function's address */
+  if (!nd->in.call.fun->in.fun.compiled)
+    COMP(nd->in.call.fun);
+
+  /* TODO: push the arguments onto the stack */
+
+  /* store the current stack frame for the function to use */
+  /* if the function has a parent it means it's a nested function */
+  if (nd->in.call.fun->scope->parent)
+    out("  lea ecx, [ebp]");
+
+  /* make the call */
   out("  call eax");
+
+  /* adjust the stack */
+  if (vars_size > 0)
+    out("  add esp, %d", vars_size);
 
   RETURN_NEXT;
   /* }}} */
@@ -1259,29 +1354,20 @@ struct node *new_name(struct parser *parser, struct lexer *lex, char *name)
   /* }}} */
 }
 
-struct node *new_decl(struct parser *parser, struct lexer *lex, char *name,
-    uint8_t flags, struct node *value, struct scope *scope)
+struct node *new_decl(struct parser *parser, struct lexer *lex, struct var *var)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_DECL;
-  nd->in.decl.name = name;
-  nd->in.decl.flags = flags;
-  nd->in.decl.value = value;
+  nd->in.decl.var = var;
   nd->execf = exec_decl;
   nd->compf = comp_decl;
 #if DEBUG
   nd->dumpf = dump_decl;
 #endif
 
-  /* declare the variable in the given <scope> */
-  if (value)
-    new_var(name, flags, value, value->result_type, scope);
-  else
-    new_var(name, flags, value, NULL,               scope);
-
-  debug_ast_new(nd, "declaration (#%u, 0x%02x) ", NDID(value), flags);
+  debug_ast_new(nd, "declaration (#%u, 0x%02x) ", NDID(var->value), var->flags);
 
   return nd;
   /* }}} */

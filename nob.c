@@ -269,9 +269,11 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       break;
     case OT_CHAR:
       /* nop */
+      new_type->size = 4;
       break;
     case OT_REAL:
       /* nop */
+      new_type->size = 8;
       break;
     case OT_INTEGER:
     {
@@ -283,6 +285,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       new_type->info.integer.limitless = limitless; /* no limits by default */
       new_type->info.integer.limit_lower = limit_lower;
       new_type->info.integer.limit_upper = limit_upper;
+
+      new_type->size = 4;
       /* }}} */
       break;
     }
@@ -295,6 +299,9 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
       memcpy(new_type->info.tuple.fields, fields, MAX_TUPLE_FIELDS * sizeof(struct field));
+
+      /* FIXME */
+      new_type->size = 0;
       /* }}} */
       break;
     }
@@ -304,6 +311,8 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       struct nob_type *type = va_arg(vl, struct nob_type *);
 
       new_type->info.list.type = type;
+      /* FIXME */
+      new_type->size = 0;
       /* }}} */
       break;
     }
@@ -326,12 +335,16 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       }
 
       new_type->info.func.return_type = return_type;
+      /* hmm, FIXME? so far we're 32-bits only so that's probably ok */
+      new_type->size = 4;
       /* }}} */
       break;
     }
 
     /* suspress warnings */
     case OT_STRING:
+      /* FIXME */
+      new_type->size = 0;
       break;
     default:
       break;

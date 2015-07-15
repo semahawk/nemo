@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
       /* close the assembly file so we can proceed and compile it */
       fclose(outfile);
 
-      snprintf(systemcall, sizeof(systemcall), "nasm -f elf32 %s.asm -o %s.o", noextname, noextname);
+      snprintf(systemcall, sizeof(systemcall), "nasm -g -f elf32 %s.asm -o %s.o", noextname, noextname);
       system(systemcall);
 
       snprintf(systemcall, sizeof(systemcall), "ld -o %s %s.o", noextname, noextname);
