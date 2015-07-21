@@ -35,14 +35,13 @@ struct scope *new_scope(char *name, struct scope *parent)
   scope->parent = parent;
   scope->vars   = NULL;
   scope->accs   = accs_new_list();
-  scope->curr_var_offset = 4;
+  scope->curr_var_offset = -4;
+  scope->curr_param_offset = 8;
   scope->base_offset = 0;
 
   for (p = scope; p != NULL; p = p->parent){
     scope->base_offset += size_of_vars(p);
   }
-
-  printf("scope %p base offset %u\n", (void*)scope, scope->base_offset);
 
   list->scope = scope;
   /* append to the `NM_scopes' list */
@@ -86,7 +85,7 @@ void scopes_finish(void)
 }
 
 struct var *new_var(char *name, uint8_t flags, struct node *value,
-    struct nob_type *type, struct scope *scope)
+    struct nob_type *type, struct scope *scope, bool param, int offset)
 {
   struct var *var = nmalloc(sizeof(struct var));
   struct vars_list *list = nmalloc(sizeof(struct vars_list));
@@ -95,12 +94,33 @@ struct var *new_var(char *name, uint8_t flags, struct node *value,
   var->flags = flags;
   var->value = value;
   var->type = type;
+  var->param = param;
 
   assert(scope);
 
   /* assembly stuff */
-  var->offset = scope->curr_var_offset;
-  scope->curr_var_offset += type->size;
+  if (param){
+    if (offset != 0)
+      var->offset = offset + 8;
+    else {
+      var->offset = scope->curr_param_offset;
+
+      if (type)
+        scope->curr_param_offset += type->size;
+      else /* FIXME FIXME */
+        scope->curr_param_offset += 4;
+    }
+  } else {
+    if (offset != 0)
+      var->offset = offset - 4;
+    else {
+      var->offset = scope->curr_var_offset;
+
+      scope->curr_var_offset -= type->size;
+    }
+  }
+
+  printf("created new variable (%d) called %s at offset %d (orig %d)\n", param, name, var->offset, offset);
 
   list->var = var;
   /* append the new element into the `scope`s `vars` list */
@@ -133,8 +153,14 @@ unsigned size_of_vars(struct scope *scope)
   assert(scope);
 
   for (v = scope->vars; v != NULL; v = v->next){
-    assert(v->var->type);
-    size += v->var->type->size;
+    if (v->var->param)
+      continue;
+
+    /* FIXME FIXME */
+    if (v->var->type)
+      size += v->var->type->size;
+    else
+      size += 4;
   }
 
   return size;

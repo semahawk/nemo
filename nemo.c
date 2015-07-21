@@ -186,14 +186,24 @@ int main(int argc, char *argv[])
     char input[512];
 
     for (;;){
+      extern bool type_inferencer_verbose;
+
       printf("N: ");
       fgets(input, 512, stdin);
 
       if (!strcmp(input, "q\n"))
         break;
 
+      if (!strncmp(input, ".t ", 3)){
+        type_inferencer_verbose = true;
+        input += 3;
+      }
+
       if ((root = parse_string("stdin", input, _main)) != NULL)
-        exec_nodes(root);
+        if (type_inferencer_verbose)
+          infer_node_type(root);
+        else
+          exec_nodes(root);
         /* TODO clean up after the parser, lexer, etc. */
     }
   }

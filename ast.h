@@ -166,7 +166,7 @@ struct node {
       char *name;
       struct node *fun;
       char *opts;
-      struct node **args;
+      struct nodes_list *args;
     } call;
 
     struct { /* NT_IF */
@@ -231,7 +231,7 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
     struct nob_type *ret_type, struct nob_type **params, struct node *body,
     char *opts, bool execute);
 struct node *new_call(struct parser *parser, struct lexer *lex, struct node *,
-    struct node **args, char *opts);
+    struct nodes_list *args, char *opts);
 struct node *new_print(struct parser *parser, struct lexer *lex,
     struct nodes_list *exprs);
 

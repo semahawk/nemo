@@ -332,12 +332,10 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
   } else if (accept(parser, lex, TOK_LMUSTASHE)){
     /* {{{ A FUNCTION */
     struct scope *prev_scope, *functions_scope;
-    struct node *body;
+    struct node *body, *expr;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("{\n");
-
-    unsigned line = lex->line;
 
     /* create a new scope for the function */
     prev_scope = parser->curr_scope;
@@ -353,6 +351,10 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("}\n");
 
+    for (expr = body; expr != NULL; expr = expr->next){
+      printf("expr in body %p\n", (void*)expr);
+    }
+
     ret = new_fun(parser, lex, NULL /* anonymous */, T_INT /* wait for inference */,
         NULL /* no params */, body, NULL /* no opts */,
         true /* execute right away */);
@@ -360,8 +362,6 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* FIXME */
     ret->result_type = T_INT;
     ret->lvalue = false; /* hmm.. */
-
-    printf("function _f%d on line %u\n", ret->id, line);
     /* }}} */
   } else if (accept(parser, lex, TOK_LBRACKET)){
     /* {{{ A LIST LITERAL */
@@ -472,19 +472,27 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_ACCUMULATOR)){
     /* {{{ AN ACCUMULATOR */
-    struct node *accs_value = acc_get_value(parser->curr_scope,
-        (unsigned)atoi(lex->curr_tok.value.s));
+    /*struct node *accs_value = acc_get_value(parser->curr_scope,*/
+        /*(unsigned)atoi(lex->curr_tok.value.s));*/
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%%%s ", lex->curr_tok.value.s);
 
     /* see if the accumulator is 'defined' */
-    if (accs_value == NULL){
-      err(parser, lex, "accumulator no.%s is undefined", lex->curr_tok.value.s);
-      return NULL;
-    }
+    /*if (accs_value == NULL){*/
+      /*err(parser, lex, "accumulator no.%s is undefined", lex->curr_tok.value.s);*/
+      /*return NULL;*/
+    /*}*/
 
-    ret = accs_value;
+    /* fetch the numerical value after the % sign */
+    int num = atoi(lex->curr_tok.value.s + 1);
+
+    /* right now it's assumed that every param is sizeof 4 bytes, which is
+     * prooobably wrong */
+    struct var *var = new_var(lex->curr_tok.value.s, 0x0 /* TODO */, NULL, NULL,
+        parser->curr_scope, true /* a param */, (num - 1) * 4 /* FIXME */);
+
+    ret = new_name(parser, lex, lex->curr_tok.value.s);
     /* FIXME */
     ret->result_type = T_INT;
     ret->lvalue = true;
@@ -522,18 +530,56 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       ret->result_type = T_INT;
       ret->lvalue = false;
     } else if (accept(parser, lex, TOK_LPAREN)){
-      force(parser, lex, TOK_RPAREN);
       /* target () */
+      struct nodes_list *args = NULL;
+      struct nodes_list *arg;
+      struct node *node;
+
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("(function call)");
 
+      node = no_comma_expr(parser, lex);
+
+      /* some arguments were supplied */
+      /* if there weren't we'll just pass NULL to `new_call` */
+      if (node){
+        arg = nmalloc(sizeof(struct nodes_list));
+        arg->node = node;
+        arg->next = args;
+        args = arg;
+
+        while (accept(parser, lex, TOK_COMMA)){
+          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+            printf(", ");
+
+          if ((node = no_comma_expr(parser, lex)) == NULL){
+            err(parser, lex, "expected an expression after the comma");
+            return NULL;
+          }
+
+          arg = nmalloc(sizeof(struct nodes_list));
+          arg->node = node;
+          arg->next = args;
+          args = arg;
+        }
+
+        args = reverse_nodes_list(args);
+      }
+
+      force(parser, lex, TOK_RPAREN);
+
+      /* TODO: check whether the number (and types) of supplied arguments match
+       * the target function's prototype */
+
       if (target->type == NT_NAME || target->type == NT_FUN){
-        ret = new_call(parser, lex, target, NULL, NULL);
+        ret = new_call(parser, lex, target, args, NULL);
         /* FIXME */
         ret->result_type = T_INT;
         ret->lvalue = false; /* hmm.. */
-      } else
-        /* hmmm */;
+      } else {
+        err(parser, lex, "trying to apply a function call on a non-function");
+        return NULL;
+      }
     }
   }
 
@@ -1299,7 +1345,8 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     }
 
     /* declare the variable in the current scope */
-    struct var *var = new_var(name, flags, value, value->result_type, parser->curr_scope);
+    struct var *var = new_var(name, flags, value, value->result_type,
+        parser->curr_scope, false /* not a param */, 0);
     ret = new_decl(parser, lex, var);
     var->decl = ret;
     /* FIXME */

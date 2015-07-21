@@ -290,6 +290,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     if (isdigit(*(p + 1))){
       /* {{{ ACCUMULATOR */
       unsigned i = 0;
+      tmp_arr[i++] = '%';
       p++;
 
       while (isdigit(*p) && i < MAX_NAME_LENGTH)

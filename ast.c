@@ -860,7 +860,7 @@ struct node *comp_name(struct node *nd)
     exit(1);
   }
 
-  if (nd->scope != var->decl->scope){
+  if (var->decl != NULL && nd->scope != var->decl->scope){
     base = "ecx";
   } else {
     base = "ebp";
@@ -869,7 +869,7 @@ struct node *comp_name(struct node *nd)
   if (var->offset == 0)
     out("  mov eax, [%s] ; loading %s", base, var->name);
   else
-    out("  mov eax, [%s - %d] ; loading %s", base, var->offset, var->name);
+    out("  mov eax, [%s %+d] ; loading %s", base, var->offset, var->name);
 
   RETURN_NEXT;
   /* }}} */
@@ -893,7 +893,7 @@ struct node *comp_decl(struct node *nd)
   if (nd->in.decl.var->offset == 0)
     out("  mov [ebp], eax ; declaring %s", nd->in.decl.var->name);
   else
-    out("  mov [ebp - %d], eax ; declaring %s", nd->in.decl.var->offset, nd->in.decl.var->name);
+    out("  mov [ebp %+d], eax ; declaring %s", nd->in.decl.var->offset, nd->in.decl.var->name);
 
   RETURN_NEXT;
   /* }}} */
@@ -1169,7 +1169,7 @@ struct node *comp_fun(struct node *nd)
 struct node *comp_call(struct node *nd)
 {
   /* {{{ */
-  unsigned vars_size;
+  unsigned args_size = 0;
 
   assert(nd->in.call.fun);
 
@@ -1177,26 +1177,30 @@ struct node *comp_call(struct node *nd)
 
   /* calculate how many variables the function we're about to call has (well,
    * not how many but rather how much of them there is) */
-  vars_size = size_of_vars(nd->in.call.fun->scope);
+  /*vars_size = size_of_vars(nd->in.call.fun->scope);*/
+
+  for (struct nodes_list *p = nd->in.call.args; p != NULL; p = p->next){
+    args_size += p->node->result_type->size;
+    COMP(p->node);
+    out("  push eax");
+  }
 
   /* make sure the function is actually defined in the assembly file */
   /* and that eax is loaded with the function's address */
   if (!nd->in.call.fun->in.fun.compiled)
     COMP(nd->in.call.fun);
 
-  /* TODO: push the arguments onto the stack */
-
   /* store the current stack frame for the function to use */
   /* if the function has a parent it means it's a nested function */
-  if (nd->in.call.fun->scope->parent)
+  /*if (nd->in.call.fun->scope->parent)*/
     out("  lea ecx, [ebp]");
 
   /* make the call */
   out("  call eax");
 
-  /* adjust the stack */
-  if (vars_size > 0)
-    out("  add esp, %d", vars_size);
+  /* remove arguments from the frame */
+  if (args_size > 0)
+    out("  add esp, %d", args_size);
 
   RETURN_NEXT;
   /* }}} */
@@ -1493,7 +1497,7 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struc
 }
 
 struct node *new_call(struct parser *parser, struct lexer *lex, struct node *fun,
-    struct node **args, char *opts)
+    struct nodes_list *args, char *opts)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex);
