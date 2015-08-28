@@ -483,7 +483,7 @@ struct node *exec_list(struct node *nd)
     nobs = el;
   }
 
-  PUSH(new_nob(new_type(NULL, OT_LIST, /* FIXME  */ T_INT), reverse_nodes_list(nobs)));
+  PUSH(new_nob(new_type(NULL, OT_LIST, /* FIXME  */ T_INT), reverse_nobs_list(nobs)));
 
   RETURN_NEXT;
   /* }}} */
@@ -507,7 +507,7 @@ struct node *exec_tuple(struct node *nd)
   }
 
   /* TODO */
-  PUSH(new_nob(/* FIXME */ T_INT, reverse_nodes_list(nobs)));
+  PUSH(new_nob(/* FIXME */ T_INT, reverse_nobs_list(nobs)));
 
   RETURN_NEXT;
   /* }}} */
@@ -776,7 +776,6 @@ struct node *exec_print(struct node *nd)
 /* {{{ comp_nodes */
 void comp_nodes(struct node *node)
 {
-  struct node **func;
   unsigned vars_size = size_of_vars(node->scope);
 
   NM_pc = node;
@@ -1411,6 +1410,7 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
 
   nd->in.fun.name = name;
   nd->in.fun.body = body;
+  nd->in.fun.opts = opts;
   nd->in.fun.execute = execute;
   nd->in.fun.compiled = false;
 
@@ -1465,6 +1465,28 @@ struct nodes_list *reverse_nodes_list(struct nodes_list *list)
   struct nodes_list *curr = list,
                     *prev = NULL,
                     *next;
+
+  while (curr != NULL){
+    next = curr->next;
+    curr->next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  list = prev;
+
+  return list;
+}
+
+/*
+ * *Exactly* the same as above, but on a different type. Thanks C for the type
+ * system!
+ */
+struct nobs_list *reverse_nobs_list(struct nobs_list *list)
+{
+  struct nobs_list *curr = list,
+                   *prev = NULL,
+                   *next;
 
   while (curr != NULL){
     next = curr->next;

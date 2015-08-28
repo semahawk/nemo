@@ -25,14 +25,14 @@ void *nmalloc_(size_t size, const char *file, unsigned line)
   void *ptr;
 
   if ((ptr = malloc(size)) == NULL){
-    fprintf(stderr, "malloc couldn't allocate %lu bytes in %s line %u\n", size, file, line);
+    fprintf(stderr, "malloc couldn't allocate %zu bytes in %s line %u\n", size, file, line);
     exit(1);
   }
 
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "%p: (%05u) malloc %lu bytes (%s:%u)\n", ptr, counter, size, file, line);
+    fprintf(stderr, "%p: (%05u) malloc %zu bytes (%s:%u)\n", ptr, counter, size, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */
@@ -49,14 +49,14 @@ void *ncalloc_(size_t number, size_t size, const char *file, unsigned line)
   void *ptr;
 
   if ((ptr = calloc(number, size)) == NULL){
-    fprintf(stderr, "calloc failed to allocate %lu (%lux%lu) bytes in %s line %u\n", number * size, number, size, file, line);
+    fprintf(stderr, "calloc failed to allocate %zu (%zux%zu) bytes in %s line %u\n", number * size, number, size, file, line);
     exit(1);
   }
 
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "%p: (%05u) calloc %lu (%lux%lu) bytes (%s:%u)\n", ptr, counter, number * size, number, size, file, line);
+    fprintf(stderr, "%p: (%05u) calloc %zu (%zux%zu) bytes (%s:%u)\n", ptr, counter, number * size, number, size, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */
@@ -73,14 +73,14 @@ void *nrealloc_(void *ptr, size_t size, const char *file, unsigned line)
   void *p;
 
   if ((p = realloc(ptr, size)) == NULL){
-    fprintf(stderr, "realloc couldn't reallocate %lu bytes in %s line %u\n", size, file, line);
+    fprintf(stderr, "realloc couldn't reallocate %zu bytes in %s line %u\n", size, file, line);
     exit(1);
   }
 
 #if DEBUG
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_MEM)){
     counter++;
-    fprintf(stderr, "%p: (%05u) realloc %lu bytes (%s:%u)\n", ptr, counter, size, file, line);
+    fprintf(stderr, "%p: (%05u) realloc %zu bytes (%s:%u)\n", ptr, counter, size, file, line);
   }
 #else /* DEBUG */
   /* suspress warnings */

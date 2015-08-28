@@ -336,7 +336,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* {{{ */
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
       struct types_list *params = va_arg(vl, struct types_list *);
-      struct nob_type **p;
 
       new_type->info.func.return_type = return_type;
       new_type->info.func.params = params;
@@ -433,6 +432,7 @@ bool nob_is_true(Nob *ob)
     case OT_TUPLE:
     case OT_LIST:
     case OT_FUN:
+    case OT_TYPE_VARIABLE:
       return false;
   }
 
@@ -497,9 +497,9 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_TUPLE:   return "tuple";
     case OT_LIST:    return "list";
     case OT_FUN:     return "function";
+    default:
+      return "##unknown_type##nob_type_to_s##";
   }
-
-  return "##unknown_type##nob_type_to_s##";
 }
 
 /*

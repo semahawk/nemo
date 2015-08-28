@@ -84,8 +84,6 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   struct nob_type *return_type = NULL;
   struct nob_type *param_type;
   struct types_list *params, *param;
-  /* 'pointer' to the current parameter */
-  unsigned curr_param = 0;
 
   if (accept(parser, lex, TOK_TYPE)){
     /* {{{ a single worded type */
@@ -243,7 +241,7 @@ static struct node *function(struct parser *parser, struct lexer *lex, struct no
   ret->scope = functions_scope;
   /* FIXME */
   /*ret->result_type = prototype ?: infer_node_type(ret);*/
-  ret->result_type = /* FIXME FIXME inference coming soon */ T_INT;
+  ret->result_type = /* FIXME FIXME inference coming soon */ prototype;
   ret->lvalue = false; /* hmm.. */
 
   return ret;

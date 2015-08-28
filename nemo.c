@@ -52,7 +52,6 @@
 #include "version.h"
 #include "util.h"
 #include "nob.h"
-#include "types.h"
 
 /* the output file in case we are compiling */
 FILE *outfile;

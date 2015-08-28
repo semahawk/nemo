@@ -185,6 +185,8 @@ struct node {
     struct { /* NT_FUN (function) */
       char *name;
       struct node *body;
+      /* the options the function can take */
+      char *opts;
       /* `true' in case of 'blocks', `false' in case of a 'normal' function */
       /* that is, if it's `true', the function will be executed automatically */
       /* if `false' it has to be called explicitly (unused when compiling) */
@@ -252,6 +254,7 @@ Nob *arg_stack_top(void);
 const char *binop_to_s(enum binop_type);
 
 struct nodes_list *reverse_nodes_list(struct nodes_list *);
+struct nobs_list  *reverse_nobs_list(struct nobs_list *);
 
 /* defined in ast.c */
 extern struct section *currsect;
