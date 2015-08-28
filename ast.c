@@ -559,7 +559,7 @@ struct node *exec_unop(struct node *nd)
     case UNARY_MINUS:
       /* simply set the top argument's sign to 'minus' */
       /* untested */
-      PUSH(NOB_GET_INT(POP()) * -1);
+      PUSH(new_nob(T_INT, NOB_GET_INT(POP()) * -1));
       break;
     default: /* WIP */;
   }

@@ -62,12 +62,6 @@ struct nob_type {
   /* additional info about the given type */
   union {
     struct {
-      int limitless;
-      int64_t limit_lower;
-      int64_t limit_upper;
-    } integer;
-
-    struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */
       /* there probably shouldn't be any limit */
       struct field fields[32];

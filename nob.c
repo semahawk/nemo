@@ -295,14 +295,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     case OT_INT:
     {
       /* {{{ */
-      int64_t limitless   = va_arg(vl, int64_t);
-      int64_t limit_lower = va_arg(vl, int64_t);
-      int64_t limit_upper = va_arg(vl, int64_t);
-
-      new_type->info.integer.limitless = limitless; /* no limits by default */
-      new_type->info.integer.limit_lower = limit_lower;
-      new_type->info.integer.limit_upper = limit_upper;
-
       new_type->size = 4;
       /* }}} */
       break;
@@ -528,15 +520,7 @@ void dump_types(void)
     printf("   - type: %s\n", nob_type_to_s(type->primitive));
 
     /* print additional info about some certain types */
-    if (type->primitive == OT_INFNUM){
-      /* {{{ */
-      if (!type->info.integer.limitless){
-        printf("   - lim %ld, %ld\n", type->info.integer.limit_lower, type->info.integer.limit_upper);
-      } else {
-        printf("   - limitless\n");
-      }
-      /* }}} */
-    } else if (type->primitive == OT_TUPLE){
+    if (type->primitive == OT_TUPLE){
       /* {{{ */
       unsigned j = 0; /* additional counter */
 
