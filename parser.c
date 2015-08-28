@@ -189,24 +189,6 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf(")");
     /* }}} */
-  } else if (accept(parser, lex, TOK_LBRACKET)){
-    /* {{{ a list */
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("[");
-
-    return_type = type(parser, lex);
-    /* it's not a return type, just reusing the variable */
-    if (!return_type){
-      err(parser, lex, "expected a type for the list");
-      return ret;
-    }
-
-    ret = new_type(NULL /* no name */, OT_LIST, return_type);
-
-    force(parser, lex, TOK_RBRACKET);
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("]");
-    /* }}} */
   }
 
   return ret;
@@ -348,48 +330,6 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* as adversited */
     ret = function(parser, lex, NULL);
     /* }}} */
-  } else if (accept(parser, lex, TOK_LBRACKET)){
-    /* {{{ A LIST LITERAL */
-    /* one single, primary_expr, ie. list's one element */
-    struct node *elem;
-    /* the head of the singly linked list of list's elements */
-    struct nodes_list *elems;
-    /* to be appended to `elems` (this one is going to contain `elem`) */
-    struct nodes_list *new;
-
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("[ ");
-
-    if ((elem = no_comma_expr(parser, lex)) != NULL){
-      new = nmalloc(sizeof(struct nodes_list));
-      new->node = elem;
-      new->next = elems;
-      elems = new;
-
-      while (accept(parser, lex, TOK_COMMA)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf(", ");
-
-        elem = no_comma_expr(parser, lex);
-
-        new = nmalloc(sizeof(struct nodes_list));
-        new->node = elem;
-        new->next = elems;
-        elems = new;
-      }
-    } else {
-      /* empty list */
-      elems = NULL;
-    }
-
-    force(parser, lex, TOK_RBRACKET);
-
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("]");
-
-    ret = new_list(parser, lex, reverse_nodes_list(elems));
-    ret->lvalue = false;
-    /* }}} */
   } else if (accept(parser, lex, TOK_INTEGER)){
     /* {{{ INTEGER LITERAL */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -424,9 +364,8 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       chars = new;
     }
 
-    ret = new_list(parser, lex, reverse_nodes_list(chars));
-    ret->result_type = new_type(NULL /* no name */, OT_LIST, T_CHAR);
-    ret->lvalue = false;
+    /* TODO create that list of chars */
+    ret = new_int(parser, lex, 789456 /* that's kind of magic, greppable */);
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
     /* {{{ CHARACTER LITERAL */

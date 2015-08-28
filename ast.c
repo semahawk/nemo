@@ -217,25 +217,11 @@ void dump_const(struct node *nd)
     printf("+ (#%u) const\n", nd->id);
 }
 
-void dump_list(struct node *nd)
-{
-  printf("+ (#%u) list\n", NDID(nd));
-
-  for (struct nodes_list *p = nd->in.list.elems; p != NULL; p = p->next){
-    INDENT();
-    DUMPP("- elem:");
-    INDENT();
-    DUMP(p->node);
-    DEDENT();
-    DEDENT();
-  }
-}
-
 void dump_tuple(struct node *nd)
 {
   printf("+ (#%u) tuple\n", NDID(nd));
 
-  for (struct nodes_list *p = nd->in.list.elems; p != NULL; p = p->next){
+  for (struct nodes_list *p = nd->in.tuple.elems; p != NULL; p = p->next){
     INDENT();
     DUMPP("- elem:");
     INDENT();
@@ -466,29 +452,6 @@ struct node *exec_const(struct node *nd)
   /* }}} */
 }
 
-struct node *exec_list(struct node *nd)
-{
-  /* {{{ */
-  struct nobs_list *nobs = NULL;
-  struct nodes_list *nodes;
-  struct nobs_list *el;
-
-  /* transform the nodes_list into nobs_list */
-  for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
-    el = nmalloc(sizeof(struct nobs_list));
-
-    EXEC(nodes->node);
-    el->nob = POP();
-    el->next = nobs;
-    nobs = el;
-  }
-
-  PUSH(new_nob(new_type(NULL, OT_LIST, /* FIXME  */ T_INT), reverse_nobs_list(nobs)));
-
-  RETURN_NEXT;
-  /* }}} */
-}
-
 struct node *exec_tuple(struct node *nd)
 {
   /* {{{ */
@@ -497,7 +460,7 @@ struct node *exec_tuple(struct node *nd)
   struct nobs_list *el;
 
   /* transform the nodes_list into nobs_list */
-  for (nodes = nd->in.list.elems; nodes != NULL; nodes = nodes->next){
+  for (nodes = nd->in.tuple.elems; nodes != NULL; nodes = nodes->next){
     el = nmalloc(sizeof(struct nobs_list));
 
     EXEC(nodes->node);
@@ -721,18 +684,6 @@ void print_nob(Nob *ob)
     case OT_REAL:
       printf("%g", NOB_GET_REAL(ob));
       break;
-    case OT_LIST:
-      printf("[");
-
-      for (struct nobs_list *p = (struct nobs_list *)ob->ptr; p != NULL; p = p->next){
-        print_nob(p->nob);
-
-        if (p->next != NULL)
-          printf(", ");
-      }
-
-      printf("]");
-      break;
     case OT_TUPLE:
       printf("(");
 
@@ -837,15 +788,6 @@ struct node *comp_const(struct node *nd)
     out("  mov eax, %d", nd->in.c);
     PUSH(new_nob(T_CHAR, nd->in.c));
   }
-
-  RETURN_NEXT;
-  /* }}} */
-}
-
-struct node *comp_list(struct node *nd)
-{
-  /* {{{ */
-  printf("lists not yet fully implemented\n");
 
   RETURN_NEXT;
   /* }}} */
@@ -1282,27 +1224,13 @@ struct node *new_real(struct parser *parser, struct lexer *lex, double value)
   /* }}} */
 }
 
-struct node *new_list(struct parser *parser, struct lexer *lex,
-    struct nodes_list *elems)
-{
-  /* {{{ */
-  struct node *nd = new_node(parser, lex, NT_LIST, list);
-
-  nd->in.list.elems = elems;
-
-  debug_ast_new(nd, "list");
-
-  return nd;
-  /* }}} */
-}
-
 struct node *new_tuple(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex, NT_TUPLE, tuple);
 
-  nd->in.list.elems = elems;
+  nd->in.tuple.elems = elems;
 
   debug_ast_new(nd, "tuple");
 

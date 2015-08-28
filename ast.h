@@ -39,7 +39,6 @@ enum node_type {
   NT_REAL,
   NT_STRING,
   NT_CHAR,
-  NT_LIST,
   NT_TUPLE,
   NT_NAME,
   NT_UNOP,
@@ -137,10 +136,6 @@ struct node {
     char   *s; /* NT_STRING */
     nchar_t c; /* NT_CHAR */
 
-    struct { /* NT_LIST */
-      struct nodes_list *elems;
-    } list;
-
     struct { /* NT_TUPLE */
       struct nodes_list *elems;
     } tuple;
@@ -211,8 +206,6 @@ struct node *new_nop(struct parser *parser, struct lexer *lex);
 struct node *new_int(struct parser *parser, struct lexer *lex, int value);
 struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value);
 struct node *new_real(struct parser *parser, struct lexer *lex, double value);
-struct node *new_list(struct parser *parser, struct lexer *lex,
-    struct nodes_list *elems);
 struct node *new_tuple(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems);
 struct node *new_decl(struct parser *parser, struct lexer *lex, struct var *v);

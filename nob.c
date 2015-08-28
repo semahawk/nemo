@@ -63,7 +63,6 @@ void types_init(void)
   T_QWORD  = new_type("qword",  OT_INT, 0, (int64_t)LONG_MIN, LONG_MAX);
   T_CHAR   = new_type("char",   OT_CHAR);
   T_REAL   = new_type("real",   OT_REAL);
-  T_STRING = new_type("string", OT_LIST, T_CHAR);
 }
 
 void types_finish(void)
@@ -194,16 +193,6 @@ Nob *new_nob(struct nob_type *type, ...)
       /* }}} */
       break;
     }
-    case OT_LIST:
-    {
-      /* {{{ */
-      /* the list's elements themselves */
-      struct nobs_list *elems = va_arg(vl, struct nobs_list *);
-
-      new.ptr = elems;
-      /* }}} */
-      break;
-    }
     case OT_TUPLE:
     {
       /* {{{ */
@@ -320,17 +309,6 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* }}} */
       break;
     }
-    case OT_LIST:
-    {
-      /* {{{ */
-      struct nob_type *type = va_arg(vl, struct nob_type *);
-
-      new_type->info.list.type = type;
-      /* FIXME */
-      new_type->size = 0;
-      /* }}} */
-      break;
-    }
     case OT_FUN:
     {
       /* {{{ */
@@ -383,7 +361,6 @@ void free_nob(Nob *ob)
     case OT_REAL:
       nfree(ob->ptr);
       break;
-    case OT_LIST:
     case OT_TUPLE: {
       struct nobs_list *curr, *next;
 
@@ -430,7 +407,6 @@ bool nob_is_true(Nob *ob)
     case OT_CHAR:
     case OT_STRING:
     case OT_TUPLE:
-    case OT_LIST:
     case OT_FUN:
     case OT_TYPE_VARIABLE:
       return false;
@@ -452,10 +428,7 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
   if (a->primitive != b->primitive)
     return false;
 
-  if (a->primitive == OT_LIST){
-    /* lists are equal if their underlying types are equal */
-    return nob_types_are_equal(a->info.list.type, b->info.list.type);
-  } else if (a->primitive == OT_TUPLE){
+  if (a->primitive == OT_TUPLE){
     /* tuples are equal if each of their respective fields' types are equal */
     unsigned i;
 
@@ -495,7 +468,6 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_CHAR:    return "char";
     case OT_STRING:  return "string";
     case OT_TUPLE:   return "tuple";
-    case OT_LIST:    return "list";
     case OT_FUN:     return "function";
     default:
       return "##unknown_type##nob_type_to_s##";
@@ -533,19 +505,6 @@ void dump_types(void)
             printf(" \"%s\"", field.type->name);
           printf("\n");
         }
-      }
-      /* }}} */
-    } else if (type->primitive == OT_LIST){
-      /* {{{ */
-      struct nob_type *t = type->info.list.type;
-
-      printf("   - type %p", (void *)t);
-      if (t == NULL){
-        printf(" polymorphic ");
-      } else {
-        if (t->name != NULL)
-          printf(" \"%s\"", t->name);
-        printf("\n");
       }
       /* }}} */
     } else if (type->primitive == OT_FUN){

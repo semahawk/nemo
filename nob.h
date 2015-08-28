@@ -38,7 +38,6 @@ enum nob_primitive_type {
   OT_STRING,
   OT_INFNUM,
   OT_TUPLE,
-  OT_LIST,
   OT_FUN,
   OT_TYPE_VARIABLE,
 };
@@ -68,13 +67,6 @@ struct nob_type {
     } tuple;
 
     struct {
-      /* number of elements (although, I'm not so sure about that...) */
-      size_t nmemb;
-      /* type of the elements */
-      struct nob_type *type;
-    } list;
-
-    struct {
       /* the return type, d'oh */
       struct nob_type *return_type;
       /* the parameters the function can take */
@@ -93,7 +85,6 @@ struct nob_type {
 };
 
 /* a singly-linked list of <struct nob_type>s */
-/* all the ever-created types are stored using this struct */
 struct types_list {
   struct nob_type *type;
   struct types_list *next;
