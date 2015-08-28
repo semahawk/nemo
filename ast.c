@@ -128,7 +128,8 @@ void arg_stack_dump(void)
  * Create a new node and append it to the <lex>'s `nodes` list.
  *
  */
-static struct node *new_node(struct parser *parser, struct lexer *lex)
+static struct node *new_node_internal(struct parser *parser, struct lexer *lex,
+    enum node_type type, execf_t execf, compf_t compf, dumpf_t dumpf)
 {
   /* {{{ */
   struct nodes_list *el = nmalloc(sizeof(struct nodes_list));
@@ -137,8 +138,17 @@ static struct node *new_node(struct parser *parser, struct lexer *lex)
   /* set the node's default values */
   new->id = currid++;
   new->next = NULL;
-  new->result_type = NULL;
   new->scope = parser->curr_scope;
+  /* set the node's non-default values */
+  new->type = type;
+  new->result_type = NULL;
+  new->execf = execf;
+  new->compf = compf;
+
+#if DEBUG
+  new->dumpf = dumpf;
+#endif
+
   /* associate the node with the list's element */
   el->node = new;
   /* append to the lexer's list */
@@ -148,6 +158,9 @@ static struct node *new_node(struct parser *parser, struct lexer *lex)
   return new;
   /* }}} */
 }
+
+#define new_node(parser,lex,type,funsuffix) \
+  new_node_internal(parser, lex, type, exec_## funsuffix, comp_## funsuffix, dump_## funsuffix)
 
 #if DEBUG
 /* {{{ dump macros */
@@ -1239,14 +1252,7 @@ struct node *comp_print(struct node *nd)
 struct node *new_nop(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
-
-  nd->type = NT_NOP;
-  nd->execf = exec_nop;
-  nd->compf = comp_nop;
-#if DEBUG
-  nd->dumpf = dump_nop;
-#endif
+  struct node *nd = new_node(parser, lex, NT_NOP, nop);
 
   debug_ast_new(nd, "nop");
 
@@ -1257,16 +1263,9 @@ struct node *new_nop(struct parser *parser, struct lexer *lex)
 struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum value)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_INTEGER, const);
 
-  nd->type = NT_INTEGER;
-  nd->result_type = T_INT;
   nd->in.i = value;
-  nd->execf = exec_const;
-  nd->compf = comp_const;
-#if DEBUG
-  nd->dumpf = dump_const;
-#endif
   nd->result_type = T_INT;
 
   debug_ast_new(nd, "integer");
@@ -1278,16 +1277,10 @@ struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum val
 struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_CHAR, const);
 
-  nd->type = NT_CHAR;
-  nd->result_type = T_CHAR;
   nd->in.c = value;
-  nd->execf = exec_const;
-  nd->compf = comp_const;
-#if DEBUG
-  nd->dumpf = dump_const;
-#endif
+  nd->result_type = T_CHAR;
 
   debug_ast_new(nd, "char (%lc) ", value);
 
@@ -1298,16 +1291,10 @@ struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
 struct node *new_real(struct parser *parser, struct lexer *lex, double value)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_REAL, const);
 
-  nd->type = NT_REAL;
-  nd->result_type = T_REAL;
   nd->in.f = value;
-  nd->execf = exec_const;
-  nd->compf = comp_const;
-#if DEBUG
-  nd->dumpf = dump_const;
-#endif
+  nd->result_type = T_REAL;
 
   debug_ast_new(nd, "real (%g) ", value);
 
@@ -1319,15 +1306,9 @@ struct node *new_list(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_LIST, list);
 
-  nd->type = NT_LIST;
-  nd->execf = exec_list;
-  nd->compf = comp_list;
   nd->in.list.elems = elems;
-#if DEBUG
-  nd->dumpf = dump_list;
-#endif
 
   debug_ast_new(nd, "list");
 
@@ -1339,15 +1320,9 @@ struct node *new_tuple(struct parser *parser, struct lexer *lex,
     struct nodes_list *elems)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_TUPLE, tuple);
 
-  nd->type = NT_TUPLE;
   nd->in.list.elems = elems;
-  nd->execf = exec_tuple;
-  nd->compf = comp_tuple;
-#if DEBUG
-  nd->dumpf = dump_tuple;
-#endif
 
   debug_ast_new(nd, "tuple");
 
@@ -1358,15 +1333,9 @@ struct node *new_tuple(struct parser *parser, struct lexer *lex,
 struct node *new_name(struct parser *parser, struct lexer *lex, char *name)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_NAME, name);
 
-  nd->type = NT_NAME;
   nd->in.s = strdup(name);
-  nd->execf = exec_name;
-  nd->compf = comp_name;
-#if DEBUG
-  nd->dumpf = dump_name;
-#endif
 
   debug_ast_new(nd, "name (%s)", name);
 
@@ -1377,15 +1346,9 @@ struct node *new_name(struct parser *parser, struct lexer *lex, char *name)
 struct node *new_decl(struct parser *parser, struct lexer *lex, struct var *var)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_DECL, decl);
 
-  nd->type = NT_DECL;
   nd->in.decl.var = var;
-  nd->execf = exec_decl;
-  nd->compf = comp_decl;
-#if DEBUG
-  nd->dumpf = dump_decl;
-#endif
 
   debug_ast_new(nd, "declaration (#%u, 0x%02x) ", NDID(var->value), var->flags);
 
@@ -1397,16 +1360,10 @@ struct node *new_unop(struct parser *parser, struct lexer *lex, enum unop_type t
     struct node *target)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_UNOP, unop);
 
-  nd->type = NT_UNOP;
   nd->in.unop.type = type;
   nd->in.unop.target = target;
-  nd->execf = exec_unop;
-  nd->compf = comp_unop;
-#if DEBUG
-  nd->dumpf = dump_unop;
-#endif
 
   debug_ast_new(nd, "unop ('op?', #%u)", NDID(nd->in.unop.target));
 
@@ -1418,17 +1375,11 @@ struct node *new_binop(struct parser *parser, struct lexer *lex, enum binop_type
     struct node *left, struct node *right)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_BINOP, binop);
 
-  nd->type = NT_BINOP;
   nd->in.binop.type = type;
   nd->in.binop.left = left;
   nd->in.binop.right = right;
-  nd->execf = exec_binop;
-  nd->compf = comp_binop;
-#if DEBUG
-  nd->dumpf = dump_binop;
-#endif
 
   debug_ast_new(nd, "binop ('%s', #%u, #%u)", binop_to_s(nd->in.binop.type),
       NDID(nd->in.binop.left), NDID(nd->in.binop.right));
@@ -1441,17 +1392,11 @@ struct node *new_ternop(struct parser *parser, struct lexer *lex, struct node *p
     struct node *yes, struct node *no)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_TERNOP, ternop);
 
-  nd->type = NT_TERNOP;
   nd->in.ternop.predicate = predicate;
   nd->in.ternop.yes = yes;
   nd->in.ternop.no = no;
-  nd->execf = exec_ternop;
-  nd->compf = comp_ternop;
-#if DEBUG
-  nd->dumpf = dump_ternop;
-#endif
 
   debug_ast_new(nd, "ternop (#%u, #%u, #%u)", NDID(nd->in.ternop.predicate),
       NDID(nd->in.ternop.yes), NDID(nd->in.ternop.no));
@@ -1464,18 +1409,12 @@ struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard
     struct node *elsee)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_IF, if);
 
-  nd->type = NT_IF;
   nd->in.iff.guard = guard;
   nd->in.iff.body  = body;
   nd->in.iff.elsee = elsee;
   nd->in.iff.unless = false;
-  nd->execf = exec_if;
-  nd->compf = comp_if;
-#if DEBUG
-  nd->dumpf = dump_if;
-#endif
 
   debug_ast_new(nd, "if (#%u, #%u, #%u)", NDID(guard), NDID(body), NDID(elsee));
 
@@ -1487,18 +1426,12 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
     struct node *body, char *opts, bool execute)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_FUN, fun);
 
-  nd->type = NT_FUN;
   nd->in.fun.name = name;
   nd->in.fun.body = body;
   nd->in.fun.execute = execute;
   nd->in.fun.compiled = false;
-  nd->execf = exec_fun;
-  nd->compf = comp_fun;
-#if DEBUG
-  nd->dumpf = dump_fun;
-#endif
 
   if (name)
     debug_ast_new(nd, "fun (%s, #%u, %d)", name, NDID(body), execute);
@@ -1513,17 +1446,11 @@ struct node *new_call(struct parser *parser, struct lexer *lex, struct node *fun
     struct nodes_list *args, char *opts)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_CALL, call);
 
-  nd->type = NT_CALL;
   nd->in.call.fun  = fun;
   nd->in.call.args = args;
   nd->in.call.opts = opts;
-  nd->execf = exec_call;
-  nd->compf = comp_call;
-#if DEBUG
-  nd->dumpf = dump_call;
-#endif
 
   debug_ast_new(nd, "call (#%d)", NDID(fun));
 
@@ -1534,16 +1461,10 @@ struct node *new_call(struct parser *parser, struct lexer *lex, struct node *fun
 struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_list *exprs)
 {
   /* {{{ */
-  struct node *nd = new_node(parser, lex);
+  struct node *nd = new_node(parser, lex, NT_PRINT, print);
 
-  nd->type = NT_PRINT;
   nd->result_type = T_INT;
   nd->in.print.exprs = exprs;
-  nd->execf = exec_print;
-  nd->compf = comp_print;
-#if DEBUG
-  nd->dumpf = dump_print;
-#endif
 
   debug_ast_new(nd, "print");
 

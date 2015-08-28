@@ -24,6 +24,7 @@
 
 /* forward */
 struct lexer;
+struct node;
 struct nodes_list;
 
 /* assembly sections */
@@ -98,6 +99,10 @@ enum binop_type {
   BINARY_COMMA
 };
 
+typedef struct node *(*execf_t)(struct node *);
+typedef struct node *(*compf_t)(struct node *);
+typedef void         (*dumpf_t)(struct node *);
+
 struct node {
   /* d'uh */
   enum node_type type;
@@ -108,9 +113,9 @@ struct node {
   struct node *next;
   /* pointer to a function that is responsible for executing the node
    * and maintaining the stack (ie. pushing the node's result value onto it) */
-  struct node *(*execf)(struct node *);
+  execf_t execf;
   /* pointer to a function that is responsible for compiling the node */
-  struct node *(*compf)(struct node *);
+  compf_t compf;
   /* a scope in which the expression exists */
   /* this is where all the variables and alike where be searched for */
   /* (of cource, following `scope`s parent scopes) */
@@ -121,7 +126,7 @@ struct node {
   unsigned id;
 #if DEBUG
   /* function which dumps the node (option `-da`) */
-  void (*dumpf)(struct node *);
+  dumpf_t dumpf;
 #endif
   /* is it an lvalue? if not, it's only a rvalue */
   bool lvalue;
