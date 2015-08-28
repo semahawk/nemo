@@ -93,40 +93,6 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       printf("%s", lex->curr_tok.value.s);
 
     ret = get_type_by_name(lex->curr_tok.value.s);
-
-    if (ret)
-      if (ret->primitive == OT_INTEGER)
-        if (accept_keyword(parser, lex, "lim")){
-          struct nob_type *new_type = nmalloc(sizeof(struct nob_type));
-          struct node *lower, *upper;
-
-          new_type->name = NULL;
-          new_type->primitive = OT_INTEGER;
-
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf(" lim ");
-
-          lower = primary_expr(parser, lex);
-          force(parser, lex, TOK_COMMA);
-
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf(", ");
-
-          upper = primary_expr(parser, lex);
-
-          if (infnum_cmp(lower->in.i, upper->in.i) & (INFNUM_CMP_GT | INFNUM_CMP_EQ)){
-            err(parser, lex, "invalid values for `lim', the upper limit must be larger than the lower limit");
-            return ret;
-          }
-
-          new_type->info.integer.limitless = 0;
-          new_type->info.integer.limit_lower = infnum_to_qword(lower->in.i);
-          new_type->info.integer.limit_upper = infnum_to_qword(upper->in.i);
-
-          /* 'register' the new type */
-          push_type(new_type);
-          /* TODO: see if there already exists such type */
-        }
     /* }}} */
   } else if (accept(parser, lex, TOK_LMUSTASHE)){
     /* {{{ a function */
@@ -428,10 +394,8 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_INTEGER)){
     /* {{{ INTEGER LITERAL */
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)){
-      infnum_print(lex->curr_tok.value.i, stdout);
-      putchar(' ');
-    }
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("%d ", lex->curr_tok.value.i);
 
     ret = new_int(parser, lex, lex->curr_tok.value.i);
     ret->result_type = T_INT;

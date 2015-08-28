@@ -25,16 +25,18 @@
 
 /* few handy macros, to help retrieving values from certain kinds of Nob */
 /* <ob> is of course of type { struct nob } */
-#define NOB_GET_INTEGER(ob) (*(struct infnum *)(ob)->ptr)
+#define NOB_GET_INFNUM(ob) (*(struct infnum *)(ob)->ptr)
+#define NOB_GET_INT(ob) ((int)(uintptr_t)(ob)->ptr)
 #define NOB_GET_CHAR(ob) ((nchar_t)(uintptr_t)(ob)->ptr)
 #define NOB_GET_REAL(ob) (*(double *)(ob)->ptr)
 
 enum nob_primitive_type {
   /* that's kind of a draft only */
-  OT_INTEGER,
+  OT_INT,
   OT_REAL,
   OT_CHAR,
   OT_STRING,
+  OT_INFNUM,
   OT_TUPLE,
   OT_LIST,
   OT_FUN,
@@ -134,8 +136,8 @@ bool nob_types_are_equal(struct nob_type *, struct nob_type *);
 void free_nob(Nob *ob);
 
 /* make the variables visible */
-extern struct nob_type *T_ANY;
 extern struct nob_type *T_INT;
+extern struct nob_type *T_INFNUM;
 extern struct nob_type *T_BYTE;
 extern struct nob_type *T_WORD;
 extern struct nob_type *T_DWORD;

@@ -232,7 +232,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     } else {
       /* {{{ DECIMAL */
       ret.type = TOK_INTEGER;
-      ret.value.i = infnum_from_str(tmp_arr);
+      ret.value.i = strtol(tmp_arr, NULL, 10);
       /* }}} */
     }
 
@@ -429,8 +429,7 @@ static void debug_print_token(struct token tok)
   switch (tok.type){
     case TOK_INTEGER:
       /* {{{ */
-      fprintf(stderr, "integer ");
-      infnum_print(tok.value.i, stderr);
+      fprintf(stderr, "integer %d", tok.value.i);
       /* }}} */
       break;
     case TOK_REAL:

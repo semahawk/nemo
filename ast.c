@@ -111,9 +111,9 @@ void arg_stack_dump(void)
   printf("\n## Stack dump:\n");
   for (; i < NM_as_curr - NM_as; i++){
     printf("  %x - %p (%s)", i, (void *)NM_as[i], nob_type_to_s(NM_as[i]->type->primitive));
-    if (NM_as[i]->type->primitive == OT_INTEGER){
+    if (NM_as[i]->type->primitive == OT_INFNUM){
       putchar(' ');
-      infnum_print(NOB_GET_INTEGER(NM_as[i]), stdout);
+      infnum_print(NOB_GET_INFNUM(NM_as[i]), stdout);
     }
     if (&NM_as[i] == NM_as_curr)
       printf(" <<<");
@@ -210,9 +210,7 @@ void dump_nop(struct node *nd)
 void dump_const(struct node *nd)
 {
   if (nd->type == NT_INTEGER){
-    printf("+ (#%u) const (integer ", nd->id);
-    infnum_print(nd->in.i, stdout);
-    printf(")\n");
+    printf("+ (#%u) const (integer %d)", nd->id, nd->in.i);
   } else if (nd->type == NT_CHAR)
     printf("+ (#%u) const (char %lc)\n", nd->id, nd->in.c);
   else
@@ -560,7 +558,8 @@ struct node *exec_unop(struct node *nd)
   switch (nd->in.unop.type){
     case UNARY_MINUS:
       /* simply set the top argument's sign to 'minus' */
-      NOB_GET_INTEGER(TOP()).sign = INFNUM_SIGN_NEG;
+      /* untested */
+      PUSH(NOB_GET_INT(POP()) * -1);
       break;
     default: /* WIP */;
   }
@@ -587,38 +586,17 @@ struct node *exec_binop(struct node *nd)
   assert(right->ptr != NULL);
 
   switch (nd->in.binop.type){
-    case BINARY_ADD:
-      PUSH(new_nob(T_INT, infnum_add(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-    case BINARY_SUB:
-      PUSH(new_nob(T_INT, infnum_sub(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-    case BINARY_MUL:
-      PUSH(new_nob(T_INT, infnum_mul(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-    case BINARY_DIV:
-      PUSH(new_nob(T_INT, infnum_div_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
-      break;
-    case BINARY_MOD:
-      PUSH(new_nob(T_INT, infnum_mod(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-    case BINARY_SHL:
-      PUSH(new_nob(T_INT, infnum_shl_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
-      break;
-    case BINARY_SHR:
-      PUSH(new_nob(T_INT, infnum_shr_by_small(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right).digits[0])));
-      break;
-    case BINARY_BITAND:
-      PUSH(new_nob(T_INT, infnum_and(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-    case BINARY_BITXOR:
-      PUSH(new_nob(T_INT, infnum_xor(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-    case BINARY_BITOR:
-      PUSH(new_nob(T_INT, infnum_or(NOB_GET_INTEGER(left), NOB_GET_INTEGER(right))));
-      break;
-
     /* fall through */
+    case BINARY_ADD:
+    case BINARY_SUB:
+    case BINARY_MUL:
+    case BINARY_DIV:
+    case BINARY_MOD:
+    case BINARY_SHL:
+    case BINARY_SHR:
+    case BINARY_BITAND:
+    case BINARY_BITXOR:
+    case BINARY_BITOR:
     case BINARY_GT:
     case BINARY_LT:
     case BINARY_GE:
@@ -632,7 +610,7 @@ struct node *exec_binop(struct node *nd)
     case BINARY_ASSIGN_DIV:
     case BINARY_ASSIGN_MOD:
     case BINARY_COMMA:
-      PUSH(new_nob(T_INT, infnum_from_dword(0)));
+      PUSH(new_nob(T_INT, 0));
       break;
     default: /* meh */;
   }
@@ -731,8 +709,11 @@ void print_nob(Nob *ob)
 {
   /* {{{ */
   switch (ob->type->primitive){
-    case OT_INTEGER:
-      infnum_print(NOB_GET_INTEGER(ob), stdout);
+    case OT_INT:
+      printf("%d", NOB_GET_INT(ob));
+      break;
+    case OT_INFNUM:
+      infnum_print(NOB_GET_INFNUM(ob), stdout);
       break;
     case OT_CHAR:
       printf("%lc", NOB_GET_CHAR(ob));
@@ -786,7 +767,7 @@ struct node *exec_print(struct node *nd)
     print_nob(POP());
   }
 
-  PUSH(new_nob(T_INT, infnum_from_dword(1)));
+  PUSH(new_nob(T_INT, 1));
 
   RETURN_NEXT;
   /* }}} */
@@ -847,7 +828,7 @@ struct node *comp_const(struct node *nd)
   /* {{{  */
   if (nd->type == NT_INTEGER){
     debug_ast_comp(nd, "integer");
-    out("  mov eax, %d", nd->in.i.digits[0]);
+    out("  mov eax, %d", nd->in.i);
     PUSH(new_nob(T_INT, nd->in.i));
   } else if (nd->type == NT_REAL){
     debug_ast_comp(nd, "real (%g)", nd->in.f);
@@ -1044,13 +1025,13 @@ struct node *comp_binop(struct node *nd)
       COMP(nd->in.binop.left);
       /* MIN(255, ...) because `shl` and `shr` accept either the `cl` register
        * or a __8-bit value__ */
-      out("  shl eax, %d", MIN(0xff, NOB_GET_INTEGER(value).digits[0]));
+      out("  shl eax, %d", MIN(0xff, NOB_GET_INT(value)));
       break;
     case BINARY_SHR:
       COMP(nd->in.binop.right);
       value = POP();
       COMP(nd->in.binop.left);
-      out("  shr eax, %d", MIN(0xff, NOB_GET_INTEGER(value).digits[0]));
+      out("  shr eax, %d", MIN(0xff, NOB_GET_INT(value)));
       break;
 
     /* fall through */
@@ -1062,7 +1043,7 @@ struct node *comp_binop(struct node *nd)
     case BINARY_ASSIGN_MOD:
     case BINARY_COMMA:
       printf("nop (not implemented yet)\n");
-      PUSH(new_nob(T_INT, infnum_from_dword(0)));
+      PUSH(new_nob(T_INT, 0));
       break;
     default: /* meh */;
   }
@@ -1242,7 +1223,7 @@ struct node *comp_print(struct node *nd)
   /* {{{ */
   debug_ast_comp(nd, "print");
 
-  PUSH(new_nob(T_INT, infnum_from_dword(1)));
+  PUSH(new_nob(T_INT, 1));
 
   RETURN_NEXT;
   /* }}} */
@@ -1260,7 +1241,7 @@ struct node *new_nop(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
-struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum value)
+struct node *new_int(struct parser *parser, struct lexer *lex, int value)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex, NT_INTEGER, const);

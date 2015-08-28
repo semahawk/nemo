@@ -81,7 +81,7 @@ enum token_type {
 struct token {
   enum token_type type;
   union {
-    struct infnum i;
+    int     i;
     double  f;
     char    s[MAX_NAME_LENGTH];
     char  *sp;

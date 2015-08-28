@@ -28,6 +28,7 @@
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
 struct nob_type *T_INT;
+struct nob_type *T_INFNUM;
 struct nob_type *T_BYTE;
 struct nob_type *T_WORD;
 struct nob_type *T_DWORD;
@@ -54,11 +55,12 @@ struct gc_pool *NM_gc;
 void types_init(void)
 {
   /* create the standard types */
-  T_INT    = new_type("int",    OT_INTEGER, 1, 0, 0);
-  T_BYTE   = new_type("byte",   OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
-  T_WORD   = new_type("word",   OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
-  T_DWORD  = new_type("dword",  OT_INTEGER, 0, (int64_t)INT_MIN,  INT_MAX);
-  T_QWORD  = new_type("qword",  OT_INTEGER, 0, (int64_t)LONG_MIN, LONG_MAX);
+  T_INT    = new_type("int",    OT_INT, 1, 0, 0);
+  T_INFNUM = new_type("infnum", OT_INFNUM, 1, 0, 0);
+  T_BYTE   = new_type("byte",   OT_INT, 0, (int64_t)CHAR_MIN, CHAR_MAX);
+  T_WORD   = new_type("word",   OT_INT, 0, (int64_t)SHRT_MIN, SHRT_MAX);
+  T_DWORD  = new_type("dword",  OT_INT, 0, (int64_t)INT_MIN,  INT_MAX);
+  T_QWORD  = new_type("qword",  OT_INT, 0, (int64_t)LONG_MIN, LONG_MAX);
   T_CHAR   = new_type("char",   OT_CHAR);
   T_REAL   = new_type("real",   OT_REAL);
   T_STRING = new_type("string", OT_LIST, T_CHAR);
@@ -150,7 +152,18 @@ Nob *new_nob(struct nob_type *type, ...)
   new.mark = 0;
 
   switch (type->primitive){
-    case OT_INTEGER:
+    case OT_INT:
+    {
+      /* {{{ */
+      int32_t value = va_arg(vl, int32_t);
+
+      /* the pointer is the actual value */
+      new.ptr = (void *)(uintptr_t)value;
+      /* this approach most likely needs serious help */
+      /* }}} */
+      break;
+    }
+    case OT_INFNUM:
     {
       /* {{{ */
       struct infnum value = va_arg(vl, struct infnum);
@@ -279,7 +292,7 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
       /* nop */
       new_type->size = 8;
       break;
-    case OT_INTEGER:
+    case OT_INT:
     {
       /* {{{ */
       int64_t limitless   = va_arg(vl, int64_t);
@@ -292,6 +305,12 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 
       new_type->size = 4;
       /* }}} */
+      break;
+    }
+    case OT_INFNUM:
+    {
+      /* FIXME? */
+      new_type->size = 4;
       break;
     }
     case OT_TUPLE:
@@ -366,8 +385,8 @@ void free_nob(Nob *ob)
   assert(ob->type);
 
   switch (ob->type->primitive){
-    case OT_INTEGER:
-      free_infnum(NOB_GET_INTEGER(ob));
+    case OT_INFNUM:
+      free_infnum(NOB_GET_INFNUM(ob));
       nfree(ob->ptr);
       break;
     case OT_REAL:
@@ -384,6 +403,9 @@ void free_nob(Nob *ob)
       }
       break;
     }
+
+    /* fall through */
+    case OT_INT:
     case OT_CHAR:
       /* nothing additional to free */
       break;
@@ -403,12 +425,15 @@ bool nob_is_true(Nob *ob)
   assert(ob);
 
   switch (ob->type->primitive){
-    case OT_INTEGER:
-      if (infnum_is_zero(NOB_GET_INTEGER(ob)))
+    case OT_INT:
+      return NOB_GET_INT(ob) != 0;
+    case OT_INFNUM:
+      if (infnum_is_zero(NOB_GET_INFNUM(ob)))
         return false;
       else
         return true;
 
+    /* FIXME */
     /* fall through */
     case OT_REAL:
     case OT_CHAR:
@@ -472,7 +497,8 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
 const char *nob_type_to_s(enum nob_primitive_type type)
 {
   switch (type){
-    case OT_INTEGER: return "integer";
+    case OT_INT:     return "int";
+    case OT_INFNUM:  return "infnum";
     case OT_REAL:    return "real";
     case OT_CHAR:    return "char";
     case OT_STRING:  return "string";
@@ -502,7 +528,7 @@ void dump_types(void)
     printf("   - type: %s\n", nob_type_to_s(type->primitive));
 
     /* print additional info about some certain types */
-    if (type->primitive == OT_INTEGER){
+    if (type->primitive == OT_INFNUM){
       /* {{{ */
       if (!type->info.integer.limitless){
         printf("   - lim %ld, %ld\n", type->info.integer.limit_lower, type->info.integer.limit_upper);
