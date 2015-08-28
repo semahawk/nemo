@@ -137,6 +137,7 @@ static struct node *new_node(struct parser *parser, struct lexer *lex)
   /* set the node's default values */
   new->id = currid++;
   new->next = NULL;
+  new->result_type = NULL;
   new->scope = parser->curr_scope;
   /* associate the node with the list's element */
   el->node = new;
@@ -342,6 +343,7 @@ void dump_if(struct node *nd)
 void dump_fun(struct node *nd)
 {
   struct node *d = nd->in.fun.body;
+  struct types_list *p = nd->result_type->info.func.params;
 
   if (nd->in.fun.name)
     printf("+ (#%u) fun (%s)\n", nd->id, nd->in.fun.name);
@@ -355,6 +357,22 @@ void dump_fun(struct node *nd)
   do {
     DUMP(d);
   } while ((d = d->next) != NULL);
+
+  DEDENT();
+
+  if (p){
+    DUMPP("- params:");
+    INDENT();
+
+    while (p != NULL){
+      SPACES();
+      /*print_type(p->type);*/
+      printf("\n");
+      p = p->next;
+    }
+  } else {
+    DUMPP("- no params");
+  }
 
   DEDENT();
   DEDENT();
@@ -454,7 +472,7 @@ struct node *exec_list(struct node *nd)
     nobs = el;
   }
 
-  PUSH(new_nob(new_type(NULL, OT_LIST, nd->in.list.type), reverse_nodes_list(nobs)));
+  PUSH(new_nob(new_type(NULL, OT_LIST, /* FIXME  */ T_INT), reverse_nodes_list(nobs)));
 
   RETURN_NEXT;
   /* }}} */
@@ -478,7 +496,7 @@ struct node *exec_tuple(struct node *nd)
   }
 
   /* TODO */
-  PUSH(new_nob(nd->in.tuple.type, reverse_nodes_list(nobs)));
+  PUSH(new_nob(/* FIXME */ T_INT, reverse_nodes_list(nobs)));
 
   RETURN_NEXT;
   /* }}} */
@@ -737,7 +755,7 @@ void print_nob(Nob *ob)
     /* fall through */
     case OT_STRING:
     case OT_FUN:
-    case OT_ANY:
+    case OT_TYPE_VARIABLE:
       break;
   }
   /* }}} */
@@ -1187,7 +1205,7 @@ struct node *comp_call(struct node *nd)
 
   /* make sure the function is actually defined in the assembly file */
   /* and that eax is loaded with the function's address */
-  if (!nd->in.call.fun->in.fun.compiled)
+  /*if (!nd->in.call.fun->in.fun.compiled)*/
     COMP(nd->in.call.fun);
 
   /* store the current stack frame for the function to use */
@@ -1242,6 +1260,7 @@ struct node *new_int(struct parser *parser, struct lexer *lex, struct infnum val
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_INTEGER;
+  nd->result_type = T_INT;
   nd->in.i = value;
   nd->execf = exec_const;
   nd->compf = comp_const;
@@ -1262,6 +1281,7 @@ struct node *new_char(struct parser *parser, struct lexer *lex, nchar_t value)
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_CHAR;
+  nd->result_type = T_CHAR;
   nd->in.c = value;
   nd->execf = exec_const;
   nd->compf = comp_const;
@@ -1281,6 +1301,7 @@ struct node *new_real(struct parser *parser, struct lexer *lex, double value)
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_REAL;
+  nd->result_type = T_REAL;
   nd->in.f = value;
   nd->execf = exec_const;
   nd->compf = comp_const;
@@ -1303,9 +1324,6 @@ struct node *new_list(struct parser *parser, struct lexer *lex,
   nd->type = NT_LIST;
   nd->execf = exec_list;
   nd->compf = comp_list;
-  /* FIXME */
-  nd->in.list.type = T_INT;
-  /*nd->in.list.type = infer_type(elems->node);*/
   nd->in.list.elems = elems;
 #if DEBUG
   nd->dumpf = dump_list;
@@ -1324,8 +1342,6 @@ struct node *new_tuple(struct parser *parser, struct lexer *lex,
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_TUPLE;
-  /* FIXME */
-  nd->in.list.type = new_type(NULL /* anonymous */, OT_TUPLE, (struct field[MAX_TUPLE_FIELDS]){ { NULL, NULL } });
   nd->in.list.elems = elems;
   nd->execf = exec_tuple;
   nd->compf = comp_tuple;
@@ -1467,8 +1483,8 @@ struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard
   /* }}} */
 }
 
-struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struct nob_type *return_type,
-    struct nob_type **params, struct node *body, char *opts, bool execute)
+struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
+    struct node *body, char *opts, bool execute)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex);
@@ -1476,9 +1492,6 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name, struc
   nd->type = NT_FUN;
   nd->in.fun.name = name;
   nd->in.fun.body = body;
-  nd->in.fun.return_type = return_type;
-  nd->in.fun.opts = opts;
-  nd->in.fun.params = params;
   nd->in.fun.execute = execute;
   nd->in.fun.compiled = false;
   nd->execf = exec_fun;
@@ -1524,6 +1537,7 @@ struct node *new_print(struct parser *parser, struct lexer *lex, struct nodes_li
   struct node *nd = new_node(parser, lex);
 
   nd->type = NT_PRINT;
+  nd->result_type = T_INT;
   nd->in.print.exprs = exprs;
   nd->execf = exec_print;
   nd->compf = comp_print;

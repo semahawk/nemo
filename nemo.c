@@ -52,6 +52,7 @@
 #include "version.h"
 #include "util.h"
 #include "nob.h"
+#include "types.h"
 
 /* the output file in case we are compiling */
 FILE *outfile;
@@ -183,28 +184,35 @@ int main(int argc, char *argv[])
     /* TODO clean up after the parser, lexer, etc. */
   } else {
     /* interactive */
-    char input[512];
+    char input_buffer[512];
+    char *input;
+    bool show_type;
 
     for (;;){
-      extern bool type_inferencer_verbose;
+      input = input_buffer;
+      show_type = false;
 
       printf("N: ");
-      fgets(input, 512, stdin);
+      fgets(input_buffer, 512, stdin);
 
       if (!strcmp(input, "q\n"))
         break;
 
       if (!strncmp(input, ".t ", 3)){
-        type_inferencer_verbose = true;
+        show_type = true;
         input += 3;
       }
 
-      if ((root = parse_string("stdin", input, _main)) != NULL)
-        if (type_inferencer_verbose)
-          infer_node_type(root);
-        else
+      if ((root = parse_string("stdin", input, _main)) != NULL){
+        /* coming soon... */
+        /*if (show_type){*/
+          /*print_type(infer_node_type(root));*/
+          /*printf("\n");*/
+        /*} else {*/
           exec_nodes(root);
         /* TODO clean up after the parser, lexer, etc. */
+        /*}*/
+      }
     }
   }
 

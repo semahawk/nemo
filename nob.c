@@ -27,7 +27,6 @@
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
-struct nob_type *T_ANY;
 struct nob_type *T_INT;
 struct nob_type *T_BYTE;
 struct nob_type *T_WORD;
@@ -55,7 +54,6 @@ struct gc_pool *NM_gc;
 void types_init(void)
 {
   /* create the standard types */
-  T_ANY    = new_type("*",      OT_ANY);
   T_INT    = new_type("int",    OT_INTEGER, 1, 0, 0);
   T_BYTE   = new_type("byte",   OT_INTEGER, 0, (int64_t)CHAR_MIN, CHAR_MAX);
   T_WORD   = new_type("word",   OT_INTEGER, 0, (int64_t)SHRT_MIN, SHRT_MAX);
@@ -264,9 +262,15 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
 
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
-    case OT_ANY:
-      /* nop */
+    case OT_TYPE_VARIABLE:
+    {
+      /* {{{ */
+      new_type->name = '\0';
+      /* FIXME? */
+      new_type->size = 0;
+      /* }}} */
       break;
+    }
     case OT_CHAR:
       /* nop */
       new_type->size = 4;
@@ -320,21 +324,11 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     {
       /* {{{ */
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
-      struct nob_type **params = va_arg(vl, struct nob_type **);
+      struct types_list *params = va_arg(vl, struct types_list *);
       struct nob_type **p;
-      unsigned i = 0;
-
-      /* if params is NULL then that means the function doesn't take any
-       * parameters */
-      if (params != NULL){
-        for (p = params; *p != NULL; p++){
-          new_type->info.func.params[i++] = *p;
-        }
-      } else {
-        /*new_type->info.func.params = (struct nob_type **)NULL;*/
-      }
 
       new_type->info.func.return_type = return_type;
+      new_type->info.func.params = params;
       /* hmm, FIXME? so far we're 32-bits only so that's probably ok */
       new_type->size = 4;
       /* }}} */
@@ -390,12 +384,12 @@ void free_nob(Nob *ob)
       }
       break;
     }
-    case OT_ANY:
     case OT_CHAR:
       /* nothing additional to free */
       break;
     case OT_STRING:
     case OT_FUN:
+    case OT_TYPE_VARIABLE:
       /* suspress warnings */
       break;
   }
@@ -422,7 +416,6 @@ bool nob_is_true(Nob *ob)
     case OT_TUPLE:
     case OT_LIST:
     case OT_FUN:
-    case OT_ANY:
       return false;
   }
 
@@ -455,13 +448,16 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
 
     return true;
   } else if (a->primitive == OT_FUN){
-    unsigned i;
+    struct types_list *p, *q;
 
     if (!nob_types_are_equal(a->info.func.return_type, b->info.func.return_type))
       return false;
 
-    for (i = 0; i < MAX_FUN_PARAMS; i++)
-      if (!nob_types_are_equal(a->info.func.params[i], b->info.func.params[i]))
+    /* hmrrr, FIXME? */
+    for (p = a->info.func.params, q = b->info.func.params;
+         p != NULL && q != NULL;
+         p = p->next, q = q->next)
+      if (!nob_types_are_equal(p->type, q->type))
         return false;
 
     return true;
@@ -483,7 +479,6 @@ const char *nob_type_to_s(enum nob_primitive_type type)
     case OT_TUPLE:   return "tuple";
     case OT_LIST:    return "list";
     case OT_FUN:     return "function";
-    case OT_ANY:     return "any (*)";
   }
 
   return "##unknown_type##nob_type_to_s##";
@@ -546,8 +541,8 @@ void dump_types(void)
     } else if (type->primitive == OT_FUN){
       /* {{{ */
       struct nob_type *ret = type->info.func.return_type;
-      struct nob_type **params = type->info.func.params;
-      struct nob_type **p;
+      struct types_list *params = type->info.func.params;
+      struct types_list *p;
 
       printf("   - return type:\n");
       if (ret == NULL){
@@ -559,12 +554,12 @@ void dump_types(void)
         printf("\n");
       }
 
-      if (params != NULL && *params != NULL){
+      if (params != NULL){
         printf("   - parameters:\n");
-        for (p = params; *p != NULL; p++){
-          printf("     + %p", (void *)(*p));
-          if ((*p)->name != NULL)
-            printf(" \"%s\"", (*p)->name);
+        for (p = params; p != NULL; p = p->next){
+          printf("     + %p", (void *)(p->type));
+          if (p->type->name != NULL)
+            printf(" \"%s\"", p->type->name);
           printf("\n");
         }
       } else {

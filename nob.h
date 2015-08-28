@@ -38,8 +38,7 @@ enum nob_primitive_type {
   OT_TUPLE,
   OT_LIST,
   OT_FUN,
-
-  OT_ANY
+  OT_TYPE_VARIABLE,
 };
 
 /* forward declaration (`struct field' needs it, but `struct nob_type' needs
@@ -83,15 +82,17 @@ struct nob_type {
       /* the return type, d'oh */
       struct nob_type *return_type;
       /* the parameters the function can take */
-      /* as you can see, the limit is 16 */
-      struct nob_type *params[16];
+      struct types_list *params;
       /* the options the function can take */
       /* the limit is, well.. 52, the two alphabets, upper- and lowercase (maybe
        * I'll add numbers later) */
       char *opts;
-      /* the function's code */
-      struct node *body;
     } func;
+
+    struct {
+      /* a type variable */
+      char name;
+    } variable;
   } info;
 };
 

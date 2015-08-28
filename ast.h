@@ -32,8 +32,6 @@ struct section {
   unsigned pos; /* current position for when writing to the buffer */
 };
 
-extern struct section *currsect;
-
 enum node_type {
   NT_NOP,
   NT_INTEGER,
@@ -135,12 +133,10 @@ struct node {
     nchar_t c; /* NT_CHAR */
 
     struct { /* NT_LIST */
-      struct nob_type *type;
       struct nodes_list *elems;
     } list;
 
     struct { /* NT_TUPLE */
-      struct nob_type *type;
       struct nodes_list *elems;
     } tuple;
 
@@ -184,16 +180,12 @@ struct node {
     struct { /* NT_FUN (function) */
       char *name;
       struct node *body;
-      struct nob_type *return_type;
-      struct nob_type **params;
-      unsigned paramc, optc; /* number of params/options the function can take */
-      char *opts;
       /* `true' in case of 'blocks', `false' in case of a 'normal' function */
       /* that is, if it's `true', the function will be executed automatically */
-      /* if `false' it has to be called explicitly */
+      /* if `false' it has to be called explicitly (unused when compiling) */
       bool execute;
       /* whether the body of the function has already been compiled (written)
-       * into the output assembly file */
+       * into the output assembly file (unused when interpreting) */
       bool compiled;
     } fun;
 
@@ -228,8 +220,7 @@ struct node *new_ternop(struct parser *parser, struct lexer *lex,
 struct node *new_if(struct parser *parser, struct lexer *lex,
     struct node *guard, struct node *body, struct node *elsee);
 struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
-    struct nob_type *ret_type, struct nob_type **params, struct node *body,
-    char *opts, bool execute);
+    struct node *body, char *opts, bool execute);
 struct node *new_call(struct parser *parser, struct lexer *lex, struct node *,
     struct nodes_list *args, char *opts);
 struct node *new_print(struct parser *parser, struct lexer *lex,
@@ -257,6 +248,9 @@ Nob *arg_stack_top(void);
 const char *binop_to_s(enum binop_type);
 
 struct nodes_list *reverse_nodes_list(struct nodes_list *);
+
+/* defined in ast.c */
+extern struct section *currsect;
 
 #endif /* AST_H */
 

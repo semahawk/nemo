@@ -120,7 +120,7 @@ struct var *new_var(char *name, uint8_t flags, struct node *value,
     }
   }
 
-  printf("created new variable (%d) called %s at offset %d (orig %d)\n", param, name, var->offset, offset);
+  /*printf("created new variable (%d) called %s at offset %d (orig %d)\n", param, name, var->offset, offset);*/
 
   list->var = var;
   /* append the new element into the `scope`s `vars` list */

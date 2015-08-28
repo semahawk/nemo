@@ -82,18 +82,12 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   unsigned curr_field = 0;
   /* function's return type; to be passed to `new_type' */
   struct nob_type *return_type = NULL;
-  /* function's parameters, to be passed to `new_type' */
-  struct nob_type *params[MAX_FUN_PARAMS + 1] = { 0 };
+  struct nob_type *param_type;
+  struct types_list *params, *param;
   /* 'pointer' to the current parameter */
   unsigned curr_param = 0;
 
-  if (accept(parser, lex, TOK_TIMES)){
-    /* {{{ a polymorphic type (any) */
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("* ");
-    ret = T_ANY;
-    /* }}} */
-  } else if (accept(parser, lex, TOK_TYPE)){
+  if (accept(parser, lex, TOK_TYPE)){
     /* {{{ a single worded type */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s", lex->curr_tok.value.s);
@@ -140,9 +134,10 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       printf("{ ");
 
     if (accept(parser, lex, TOK_TIMES)){
-      /* {{{ a polymorphic function {*} */
+      /* {{{ a polymorphic function {*}... WHAT DE FECK IS THIS POLYMORPHIC FUNCTION? */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("*");
+
       ret = new_type(NULL /* no name */, OT_FUN, NULL, NULL /* hmm.. */);
       /* }}} */
     } else {
@@ -160,29 +155,22 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
         if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
           printf("; ");
 
-        /* {{{ { return type; ... } */
-        if ((params[curr_param++] = type(parser, lex)) != NULL){
-          /* a function with at least one parameter */
-          while (accept(parser, lex, TOK_COMMA) && curr_param < MAX_FUN_PARAMS){
-            /* a function with more parameters */
-            if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-              printf(", ");
-
-            if ((params[curr_param++] = type(parser, lex)) == NULL){
-              fprintf(stderr, "note: expected a type after the comma\n");
-            }
+        do {
+          if ((param_type = type(parser, lex)) == NULL){
+            err(parser, lex, "expected a type for the function's parameter");
+            return NULL;
           }
 
-          ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
-        } else {
-          /* the function takes no parameters */
-          ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
-        }
-        /* }}} */
-      } else {
-        /* the function takes no parameters */
-        ret = new_type(NULL /* no name */, OT_FUN, return_type, NULL);
+          param = nmalloc(sizeof(struct types_list));
+          param->type = param_type;
+
+          param->next = params;
+          params = param;
+          /* ... */
+        } while (accept(parser, lex, TOK_COMMA));
       }
+
+      ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
       /* }}} */
     }
 
@@ -272,20 +260,92 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   /* }}} */
 }
 
+static struct node *function(struct parser *parser, struct lexer *lex, struct nob_type *prototype)
+{
+  /* {{{ */
+  struct scope *prev_scope, *functions_scope;
+  struct node *ret, *body;
+
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+    printf("{\n");
+
+  /* create a new scope for the function */
+  prev_scope = parser->curr_scope;
+  parser->curr_scope = functions_scope = new_scope(NULL, parser->curr_scope);
+
+  /* all the expressions here will 'use' the new scope */
+  body = expr_list(parser, lex);
+
+  /* restore the parser's former scope */
+  parser->curr_scope = prev_scope;
+
+  force(parser, lex, TOK_RMUSTASHE);
+  if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+    printf("}\n");
+
+  ret = new_fun(parser, lex, NULL /* anonymous */, body,
+      NULL /* no opts */, false /* don't execute right away */);
+  ret->scope = functions_scope;
+  /* FIXME */
+  /*ret->result_type = prototype ?: infer_node_type(ret);*/
+  ret->result_type = /* FIXME FIXME inference coming soon */ T_INT;
+  ret->lvalue = false; /* hmm.. */
+
+  return ret;
+  /* }}} */
+}
+
 static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *ret = NULL;
+  struct nob_type *func_return_type, *param_type;
+  struct nob_type *prototype = NULL;
+  struct types_list *params = NULL, *param;
 
   if (accept(parser, lex, TOK_LPAREN)){
     /* {{{ */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("(\n");
+      printf("(");
 
     ret = no_comma_expr(parser, lex);
 
-    if (accept(parser, lex, TOK_COMMA)){
-      /* now, that's a tuple */
+    if (!ret && ((func_return_type = type(parser, lex)) != NULL)){
+      /* {{{ function */
+      force(parser, lex, TOK_SEMICOLON);
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("; ");
+
+      do {
+        if ((param_type = type(parser, lex)) == NULL){
+          err(parser, lex, "expected a type for the function's parameter");
+          return NULL;
+        }
+
+        param = nmalloc(sizeof(struct types_list));
+        param->type = param_type;
+        /* append to the `params` list */
+        param->next = params;
+        params = param;
+      } while (accept(parser, lex, TOK_COMMA));
+
+      force(parser, lex, TOK_RPAREN);
+
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(") ");
+
+      force(parser, lex, TOK_LMUSTASHE);
+
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("{\n");
+
+      /*prototype = new_type(NULL, OT_FUN, func_return_type, reverse_types_list(params));*/
+      prototype = /* FIXME FIXME */ T_INT;
+
+      return function(parser, lex, prototype);
+      /* }}} */
+    } else if (accept(parser, lex, TOK_COMMA)){
+      /* {{{ now, that's a tuple */
       struct nodes_list *elems = NULL;
       struct nodes_list *elem;
       struct node *node;
@@ -319,6 +379,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       ret = new_tuple(parser, lex, reverse_nodes_list(elems));
       /* FIXME */
       ret->result_type = T_INT;
+      /* }}} */
     }
     /* else
      *   it's just an expression grouping
@@ -331,37 +392,8 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_LMUSTASHE)){
     /* {{{ A FUNCTION */
-    struct scope *prev_scope, *functions_scope;
-    struct node *body, *expr;
-
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("{\n");
-
-    /* create a new scope for the function */
-    prev_scope = parser->curr_scope;
-    parser->curr_scope = functions_scope = new_scope(NULL, parser->curr_scope);
-
-    /* all the expressions here will 'use' the new scope */
-    body = expr_list(parser, lex);
-
-    /* restore the parser's former scope */
-    parser->curr_scope = prev_scope;
-
-    force(parser, lex, TOK_RMUSTASHE);
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("}\n");
-
-    for (expr = body; expr != NULL; expr = expr->next){
-      printf("expr in body %p\n", (void*)expr);
-    }
-
-    ret = new_fun(parser, lex, NULL /* anonymous */, T_INT /* wait for inference */,
-        NULL /* no params */, body, NULL /* no opts */,
-        true /* execute right away */);
-    ret->scope = functions_scope;
-    /* FIXME */
-    ret->result_type = T_INT;
-    ret->lvalue = false; /* hmm.. */
+    /* as adversited */
+    ret = function(parser, lex, NULL);
     /* }}} */
   } else if (accept(parser, lex, TOK_LBRACKET)){
     /* {{{ A LIST LITERAL */
@@ -442,7 +474,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     }
 
     ret = new_list(parser, lex, reverse_nodes_list(chars));
-    ret->result_type = T_STRING;
+    ret->result_type = new_type(NULL /* no name */, OT_LIST, T_CHAR);
     ret->lvalue = false;
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
@@ -489,7 +521,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 
     /* right now it's assumed that every param is sizeof 4 bytes, which is
      * prooobably wrong */
-    struct var *var = new_var(lex->curr_tok.value.s, 0x0 /* TODO */, NULL, NULL,
+    new_var(lex->curr_tok.value.s, 0x0 /* TODO */, NULL, NULL,
         parser->curr_scope, true /* a param */, (num - 1) * 4 /* FIXME */);
 
     ret = new_name(parser, lex, lex->curr_tok.value.s);
@@ -534,9 +566,6 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       struct nodes_list *args = NULL;
       struct nodes_list *arg;
       struct node *node;
-
-      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-        printf("(function call)");
 
       node = no_comma_expr(parser, lex);
 
@@ -1284,7 +1313,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     char *name;
     uint8_t flags = 0x0;
     struct node *value = NULL;
-    struct nob_type *var_type;
+    struct nob_type *var_type, *val_type;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("my ");
@@ -1344,9 +1373,14 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
+    val_type = /* infer_node_type(value) */ T_INT;
+
+    /* TODO check whether the val_type and var_type are equal, and shout if
+     * they're not */
+
     /* declare the variable in the current scope */
-    struct var *var = new_var(name, flags, value, value->result_type,
-        parser->curr_scope, false /* not a param */, 0);
+    struct var *var = new_var(name, flags, value, val_type, parser->curr_scope,
+        false /* not a param */, 0);
     ret = new_decl(parser, lex, var);
     var->decl = ret;
     /* FIXME */
@@ -1355,11 +1389,12 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     if (value)
       /* see if the assigned value is a function */
-      if (value->type == NT_FUN)
+      if (value->type == NT_FUN){
         /* we make the assignment so that the function knows the name it was
          * given during the declaration (necessary for the assembly so the
          * functions don't have cryptic names) */
         value->in.fun.name = name;
+      }
     /* }}} */
   }
   else if (accept_keyword(parser, lex, "print")){
