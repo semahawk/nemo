@@ -133,46 +133,35 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("{ ");
 
-    if (accept(parser, lex, TOK_TIMES)){
-      /* {{{ a polymorphic function {*}... WHAT DE FECK IS THIS POLYMORPHIC FUNCTION? */
-      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-        printf("*");
+    /* fetch the return type */
+    return_type = type(parser, lex);
 
-      ret = new_type(NULL /* no name */, OT_FUN, NULL, NULL /* hmm.. */);
-      /* }}} */
-    } else {
-      /* {{{ a function's 'proper' prototype { return type... } */
-      /* fetch the return type */
-      return_type = type(parser, lex);
-
-      if (!return_type){
-        err(parser, lex, "expected a return type in the function's prototype");
-        return ret;
-      }
-
-      /* fetch the optional params types */
-      if (accept(parser, lex, TOK_SEMICOLON)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("; ");
-
-        do {
-          if ((param_type = type(parser, lex)) == NULL){
-            err(parser, lex, "expected a type for the function's parameter");
-            return NULL;
-          }
-
-          param = nmalloc(sizeof(struct types_list));
-          param->type = param_type;
-
-          param->next = params;
-          params = param;
-          /* ... */
-        } while (accept(parser, lex, TOK_COMMA));
-      }
-
-      ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
-      /* }}} */
+    if (!return_type){
+      err(parser, lex, "expected a return type in the function's prototype");
+      return ret;
     }
+
+    /* fetch the optional params types */
+    if (accept(parser, lex, TOK_SEMICOLON)){
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf("; ");
+
+      do {
+        if ((param_type = type(parser, lex)) == NULL){
+          err(parser, lex, "expected a type for the function's parameter");
+          return NULL;
+        }
+
+        param = nmalloc(sizeof(struct types_list));
+        param->type = param_type;
+
+        param->next = params;
+        params = param;
+        /* ... */
+      } while (accept(parser, lex, TOK_COMMA));
+    }
+
+    ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
 
     force(parser, lex, TOK_RMUSTASHE);
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
