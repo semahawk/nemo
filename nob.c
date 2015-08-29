@@ -261,7 +261,7 @@ struct nob_type *new_type(enum nob_primitive_type type, ...)
 
       /* FIXME? */
       new_type->size = 0;
-      new_type->info.custom.name = name;
+      new_type->info.custom.name = strdup(name);
       new_type->info.custom.var  = var;
     }
     case OT_INT:

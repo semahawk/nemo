@@ -1313,50 +1313,50 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
   }
   else if (accept_keyword(parser, lex, "typedef")){
     /* {{{ */
-    struct nob_type *new_type;
-
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("typedef ");
-
-    new_type = type(parser, lex);
-    /* ouch, it's not really a type! */
-    if (!new_type){
-      err(parser, lex, "expected a type");
-      return NULL;
-    }
-    /* get the name for the type */
-    if (accept(parser, lex, TOK_TYPE)){
-      err(parser, lex, "cannot redefine the type '%s'", lex->curr_tok.value.s);
-      return NULL;
-    }
+    struct nob_type *custom_type;
+    struct nob_type *gen_type = NULL;
+    struct node *fun;
+    struct types_list *param = NULL;
+    char *ctor_name;
 
     force(parser, lex, TOK_NAME);
 
-    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf(" %s", lex->curr_tok.value.s);
+    custom_type = new_type(OT_CUSTOM, lex->curr_tok.value.s, NULL);
 
-    /* if the type's name is NULL, then it's an anonymous type, which means
-     * that simply setting it's name would do the thing just perfectly */
-    if (new_type->name == NULL){
-      new_type->name = strdup(lex->curr_tok.value.s);
-    } else {
-      /* if the type has already been named, then we need to copy the type,
-       * with a proper name */
-      /* a FIXME/TODO here is not to create a whole new type if we're, kind
-       * of, aliasing a type */
-      struct nob_type *newer_type = nmalloc(sizeof(struct nob_type));
-      /* copy the contents */
-      memcpy(newer_type, new_type, sizeof(struct nob_type));
-      /* set up the name */
-      newer_type->name = strdup(lex->curr_tok.value.s);
+    if (accept_keyword(parser, lex, "of")){
+      if ((gen_type = type(parser, lex)) == NULL){
+        err(parser, lex, "expected a type after 'of'");
+        return NULL;
+      }
 
-      /* 'register' the type */
-      push_type(newer_type);
+      custom_type->info.custom.var = gen_type;
     }
 
-    ret = new_nop(parser, lex);
-    /* FIXME */
-    ret->result_type = T_INT;
+    if (accept(parser, lex, TOK_LMUSTASHE)){
+      while (accept(parser, lex, TOK_NAME)){
+        ctor_name = strdup(lex->curr_tok.value.s);
+        fun = new_fun(parser, lex, ctor_name, NULL, NULL, false);
+
+        if (accept_keyword(parser, lex, "of")){
+          gen_type = type(parser, lex);
+          param = nmalloc(sizeof(struct types_list));
+          param->type = gen_type;
+          param->next = NULL;
+        }
+
+        fun->result_type = new_type(OT_FUN, custom_type, param);
+
+        new_var(ctor_name, 0x0, new_fun(parser, lex, NULL, NULL, NULL, false),
+            fun->result_type, parser->curr_scope, 0, 0);
+
+        force(parser, lex, TOK_SEMICOLON);
+      }
+
+      force(parser, lex, TOK_RMUSTASHE);
+    }
+
+    /* FIXME? */
+    ret = new_int(parser, lex, 1);
     ret->lvalue = false;
     /* }}} */
   }
