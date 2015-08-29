@@ -162,6 +162,7 @@ static struct node *function(struct parser *parser, struct lexer *lex, struct no
   /* {{{ */
   struct scope *prev_scope, *functions_scope;
   struct node *ret, *body;
+  struct nob_type *inferred_type;
 
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
     printf("{\n");
@@ -183,7 +184,19 @@ static struct node *function(struct parser *parser, struct lexer *lex, struct no
   ret = new_fun(parser, lex, NULL /* anonymous */, body,
       NULL /* no opts */, false /* don't execute right away */);
   ret->scope = functions_scope;
-  ret->result_type = prototype;
+
+  inferred_type = infer_node_type(parser->curr_scope, ret);
+
+  if (prototype){
+    /* unify does a longjmp into `infer_node_type` which is probably not ideal */
+    /* but for now it suffices */
+    unify(prototype, inferred_type);
+
+    ret->result_type = prototype;
+  } else {
+    ret->result_type = inferred_type;
+  }
+
   ret->lvalue = false; /* hmm.. */
 
   return ret;
@@ -203,26 +216,25 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("(");
 
-    ret = no_comma_expr(parser, lex);
-
-    if (!ret && ((func_return_type = type(parser, lex)) != NULL)){
+    if ((func_return_type = type(parser, lex)) != NULL){
       /* {{{ function */
-      force(parser, lex, TOK_SEMICOLON);
-      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-        printf("; ");
+      if (accept(parser, lex, TOK_SEMICOLON)){
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf("; ");
 
-      do {
-        if ((param_type = type(parser, lex)) == NULL){
-          err(parser, lex, "expected a type for the function's parameter");
-          return NULL;
-        }
+        do {
+          if ((param_type = type(parser, lex)) == NULL){
+            err(parser, lex, "expected a type for the function's parameter");
+            return NULL;
+          }
 
-        param = nmalloc(sizeof(struct types_list));
-        param->type = param_type;
-        /* append to the `params` list */
-        param->next = params;
-        params = param;
-      } while (accept(parser, lex, TOK_COMMA));
+          param = nmalloc(sizeof(struct types_list));
+          param->type = param_type;
+          /* append to the `params` list */
+          param->next = params;
+          params = param;
+        } while (accept(parser, lex, TOK_COMMA));
+      }
 
       force(parser, lex, TOK_RPAREN);
 
@@ -243,6 +255,8 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       struct nodes_list *elems = NULL;
       struct nodes_list *elem;
       struct node *node;
+
+      ret = no_comma_expr(parser, lex);
 
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(", ");

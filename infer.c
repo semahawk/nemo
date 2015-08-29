@@ -29,7 +29,6 @@ static bool types_are_equal(struct nob_type *one, struct nob_type *two);
 static bool occurs_in_type(struct nob_type *v, struct nob_type *type2);
 static bool occurs_in(struct nob_type *v, struct nob_type *type2);
 static struct nob_type *prune(struct nob_type *type);
-static void unify(struct nob_type *one, struct nob_type *two);
 
 typedef struct {
   struct nob_type *from;
@@ -200,7 +199,7 @@ static struct nob_type *prune(struct nob_type *type)
   return type;
 }
 
-static void unify(struct nob_type *type1, struct nob_type *type2)
+void unify(struct nob_type *type1, struct nob_type *type2)
 {
   assert(type1 != NULL);
   assert(type2 != NULL);
@@ -222,7 +221,7 @@ static void unify(struct nob_type *type1, struct nob_type *type2)
   } else if (is_type_operator(a) && is_type_variable(b)){
     unify(b, a);
   } else if (is_type_operator(a) && is_type_operator(b)){
-    if ((a->primitive != b->primitive) || (types_list_length(a->types) != types_list_length(b->types))){
+    if (!nob_types_are_equal(a, b)){
       printf("type mismatch: ");
       nob_print_type(a);
       printf(" != ");

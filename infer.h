@@ -28,6 +28,7 @@ struct ng {
 
 struct nob_type *infer_node_type(struct scope *scope, struct node *node);
 struct nob_type *fresh(struct nob_type *type, struct ng *non_generic);
+void unify(struct nob_type *type1, struct nob_type *type2);
 
 struct ng *new_nongen(void);
 struct ng *copy_nongen(struct ng *non_generic);

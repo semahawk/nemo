@@ -53,10 +53,10 @@ struct gc_pool *NM_gc;
 void types_init(void)
 {
   /* create the standard types */
-  T_INT    = new_type(OT_INT);
-  T_INFNUM = new_type(OT_INFNUM);
-  T_CHAR   = new_type(OT_CHAR);
-  T_REAL   = new_type(OT_REAL);
+  T_INT    = new_type(OT_INT);    T_INT->name    = strdup("int");
+  T_INFNUM = new_type(OT_INFNUM); T_INFNUM->name = strdup("infnum");
+  T_CHAR   = new_type(OT_CHAR);   T_CHAR->name   = strdup("char");
+  T_REAL   = new_type(OT_REAL);   T_REAL->name   = strdup("real");
 
   T_LIST   = new_type(OT_CUSTOM, "list", new_type(OT_TYPE_VARIABLE));
   /* strings are lists of characters */

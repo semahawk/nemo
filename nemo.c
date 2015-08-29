@@ -210,7 +210,6 @@ int main(int argc, char *argv[])
 
       if ((root = parse_string("stdin", input, _main)) != NULL){
         if (show_type){
-
           printf("%s : ", input);
 
           if ((inferred_type = infer_node_type(_main, root)) != NULL)
