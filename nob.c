@@ -500,7 +500,7 @@ void nob_print_type(struct nob_type *type)
         if (!type->info.var.name)
           type->info.var.name = next_type_var_name++;
 
-        printf("*%lc", type->info.var.name);
+        printf("'%lc", type->info.var.name);
       }
       break;
     case OT_CUSTOM:

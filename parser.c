@@ -97,7 +97,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     bool found = false;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-      printf("*%c", lex->curr_tok.value.c);
+      printf("'%lc", lex->curr_tok.value.c);
 
     /* let's see if such a type var was already mentioned */
     for (type_var = parser->type_vars; type_var != NULL; type_var = type_var->next){

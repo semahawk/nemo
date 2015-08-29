@@ -239,7 +239,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     lex->col += i;
     /* }}} */
   }
-  else if (*p == '\''){
+  else if (*p == '`'){
     /* {{{ CHAR */
     nchar_t value;
 
@@ -248,7 +248,7 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     /* fetch the (possibly multibyte) character */
     value = u8_fetch_char(&p);
 
-    if (*p != '\'')
+    if (*p != '`')
       err(parser, lex, "unterminated character");
 
     /* skip over the closing "'" */
@@ -286,9 +286,9 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     ret.value.sp = tmp_str;
     /* }}} */
   }
-  else if (*p == '*'){
+  else if (*p == '\''){
     /* {{{ TYPE VARIABLE */
-    /* skip over the '*' */
+    /* skip over the ' */
     p++;
 
     ret.type = TOK_TYPE_VARIABLE;
