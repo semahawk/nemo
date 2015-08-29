@@ -18,8 +18,9 @@
 #include "ast.h"
 #include "nob.h"
 
-/* forward declaration */
+/* forward declarations */
 struct scope;
+struct ng;
 
 /* stuff related to 'accumulators' */
 /* each scope gets a list of accumulators */
@@ -34,8 +35,6 @@ void accs_finish(struct accs_list *list);
 
 void         acc_set_value(struct scope *, unsigned id, struct node *node);
 struct node *acc_get_value(struct scope *, unsigned id);
-
-#define VAR_FLAG_
 
 /* stuff related to variables and scopes */
 struct var {
@@ -83,6 +82,7 @@ struct var *new_var(char *name, uint8_t flags, struct node *value,
     struct nob_type *type, struct scope *scope, bool param, int offset);
 
 struct var *var_lookup(char *name, struct scope *scope);
+struct nob_type *vars_type_lookup(char *name, struct scope *scope, struct ng *nongen);
 
 unsigned size_of_vars(struct scope *scope);
 

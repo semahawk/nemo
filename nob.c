@@ -25,17 +25,16 @@
 #include "util.h"
 #include "utf8.h"
 
+char next_type_var_name = 'a';
+
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
 struct nob_type *T_INT;
 struct nob_type *T_INFNUM;
-struct nob_type *T_BYTE;
-struct nob_type *T_WORD;
-struct nob_type *T_DWORD;
-struct nob_type *T_QWORD;
 struct nob_type *T_CHAR;
 struct nob_type *T_REAL;
 struct nob_type *T_STRING;
+struct nob_type *T_LIST;
 
 /* the head of a singly-linked list of <struct types_list> */
 struct types_list *NM_types;
@@ -51,18 +50,17 @@ struct gc_pool {
 /* (the head of a singly linked list of <struct gc_pool>s) */
 struct gc_pool *NM_gc;
 
-/* {{{ Functions related with types (init, finish, etc) */
 void types_init(void)
 {
   /* create the standard types */
-  T_INT    = new_type("int",    OT_INT, 1, 0, 0);
-  T_INFNUM = new_type("infnum", OT_INFNUM, 1, 0, 0);
-  T_BYTE   = new_type("byte",   OT_INT, 0, (int64_t)CHAR_MIN, CHAR_MAX);
-  T_WORD   = new_type("word",   OT_INT, 0, (int64_t)SHRT_MIN, SHRT_MAX);
-  T_DWORD  = new_type("dword",  OT_INT, 0, (int64_t)INT_MIN,  INT_MAX);
-  T_QWORD  = new_type("qword",  OT_INT, 0, (int64_t)LONG_MIN, LONG_MAX);
-  T_CHAR   = new_type("char",   OT_CHAR);
-  T_REAL   = new_type("real",   OT_REAL);
+  T_INT    = new_type(OT_INT);
+  T_INFNUM = new_type(OT_INFNUM);
+  T_CHAR   = new_type(OT_CHAR);
+  T_REAL   = new_type(OT_REAL);
+
+  T_LIST   = new_type(OT_CUSTOM, "list", new_type(OT_TYPE_VARIABLE));
+  /* strings are lists of characters */
+  T_STRING = new_type(OT_CUSTOM, "list", T_CHAR);
 }
 
 void types_finish(void)
@@ -103,7 +101,7 @@ void push_type(struct nob_type *type)
   new->next = NM_types;
   NM_types  = new;
 }
-/* }}} */
+
 /* {{{ Functions related with Garbage Collector (init, finish, etc) */
 void gc_finish(void)
 {
@@ -241,7 +239,7 @@ struct nob_type *get_type_by_name(char *name)
  * The <type> determines how the additional/optional `stdarg' options would be
  * processed/interpreteted.
  */
-struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
+struct nob_type *new_type(enum nob_primitive_type type, ...)
 {
   /* {{{ */
   /* the new type */
@@ -254,56 +252,52 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
   /* zero-out the whole type */
   memset(new_type, 0x0, sizeof(struct nob_type));
 
-  /* set up the type with some knowns */
-  if (name == NULL) /* no name means anonymous type */
-    new_type->name = NULL;
-  else
-    new_type->name = strdup(name);
-
   new_type->primitive = type;
 
   /* see what the <type> is, so we know how to process the stdargs */
   switch (type){
     case OT_TYPE_VARIABLE:
-    {
-      /* {{{ */
+      new_type->size = 0;
       new_type->name = '\0';
+      new_type->info.var.name = 0;
+      new_type->info.var.instance = NULL;
+      break;
+    case OT_CUSTOM:
+    {
+      char *name = va_arg(vl, char *);
+      struct nob_type *var = va_arg(vl, struct nob_type *);
+
       /* FIXME? */
       new_type->size = 0;
-      /* }}} */
-      break;
+      new_type->info.custom.name = name;
+      new_type->info.custom.var  = var;
     }
+    case OT_INT:
+      new_type->size = 4;
+      break;
     case OT_CHAR:
-      /* nop */
       new_type->size = 4;
       break;
     case OT_REAL:
-      /* nop */
       new_type->size = 8;
       break;
-    case OT_INT:
-    {
-      /* {{{ */
-      new_type->size = 4;
-      /* }}} */
-      break;
-    }
     case OT_INFNUM:
-    {
       /* FIXME? */
       new_type->size = 4;
       break;
-    }
     case OT_TUPLE:
     {
       /* {{{ */
       struct field *fields = va_arg(vl, struct field *);
+      struct types_list *types = va_arg(vl, struct types_list *);
 
       /* zero-out the tuple's info.tuple */
+      /* TODO 'fields' are to be removed */
       memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
 
       memcpy(new_type->info.tuple.fields, fields, MAX_TUPLE_FIELDS * sizeof(struct field));
 
+      new_type->types = types;
       /* FIXME */
       new_type->size = 0;
       /* }}} */
@@ -311,15 +305,14 @@ struct nob_type *new_type(char *name, enum nob_primitive_type type, ...)
     }
     case OT_FUN:
     {
-      /* {{{ */
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
       struct types_list *params = va_arg(vl, struct types_list *);
 
+      new_type->types = params;
       new_type->info.func.return_type = return_type;
       new_type->info.func.params = params;
       /* hmm, FIXME? so far we're 32-bits only so that's probably ok */
       new_type->size = 4;
-      /* }}} */
       break;
     }
 
@@ -380,6 +373,7 @@ void free_nob(Nob *ob)
     case OT_STRING:
     case OT_FUN:
     case OT_TYPE_VARIABLE:
+    case OT_CUSTOM:
       /* suspress warnings */
       break;
   }
@@ -409,6 +403,7 @@ bool nob_is_true(Nob *ob)
     case OT_TUPLE:
     case OT_FUN:
     case OT_TYPE_VARIABLE:
+    case OT_CUSTOM:
       return false;
   }
 
@@ -456,21 +451,93 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
   }
 }
 
-/*
- * Return the primitive type as a string.
- */
-const char *nob_type_to_s(enum nob_primitive_type type)
+bool is_type_variable(struct nob_type *type)
 {
-  switch (type){
-    case OT_INT:     return "int";
-    case OT_INFNUM:  return "infnum";
-    case OT_REAL:    return "real";
-    case OT_CHAR:    return "char";
-    case OT_STRING:  return "string";
-    case OT_TUPLE:   return "tuple";
-    case OT_FUN:     return "function";
+  assert(type);
+
+  if (type->primitive == OT_TYPE_VARIABLE)
+    return true;
+
+  return false;
+}
+
+bool is_type_operator(struct nob_type *type)
+{
+  assert(type);
+
+  if (type->primitive == OT_TYPE_VARIABLE)
+    return false;
+
+  return true;
+}
+
+/*
+ * Modifies a { struct types_list } in place by reversing it's order.
+ *
+ * The function returns the head of the (now modified) list, or NULL if <list>
+ * was already NULL.
+ */
+struct types_list *reverse_types_list(struct types_list *list)
+{
+  struct types_list *curr = list,
+                    *prev = NULL,
+                    *next;
+
+  while (curr != NULL){
+    next = curr->next;
+    curr->next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  list = prev;
+
+  return list;
+}
+
+unsigned types_list_length(struct types_list *list)
+{
+  unsigned length = 0;
+
+  for (; list != NULL; list = list->next, length++)
+    ;
+
+  return length;
+}
+
+void nob_print_type(struct nob_type *type)
+{
+  switch (type->primitive){
+    case OT_TYPE_VARIABLE:
+      if (type->info.var.instance){
+        nob_print_type(type->info.var.instance);
+      } else {
+        if (!type->info.var.name)
+          type->info.var.name = next_type_var_name++;
+
+        printf("'%c", type->info.var.name);
+      }
+      break;
+    case OT_CUSTOM:
+      printf("%s", type->info.custom.name);
+
+      if (type->info.custom.var){
+        printf(" of ");
+        nob_print_type(type->info.custom.var);
+      }
+      break;
+    case OT_INT:
+      printf("int");
+      break;
+    case OT_CHAR:
+      printf("char");
+      break;
+    case OT_REAL:
+      printf("real");
+      break;
     default:
-      return "##unknown_type##nob_type_to_s##";
+      printf("#unknown#nob_print_type#");
+      break;
   }
 }
 
@@ -489,7 +556,9 @@ void dump_types(void)
     if (type->name != NULL)
       printf(" \"%s\"", type->name);
     printf("\n");
-    printf("   - type: %s\n", nob_type_to_s(type->primitive));
+    printf("   - type: ");
+    nob_print_type(type);
+    printf("\n");
 
     /* print additional info about some certain types */
     if (type->primitive == OT_TUPLE){

@@ -125,7 +125,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       } while (accept(parser, lex, TOK_COMMA));
     }
 
-    ret = new_type(NULL /* no name */, OT_FUN, return_type, params);
+    ret = new_type(OT_FUN, return_type, params);
 
     force(parser, lex, TOK_RMUSTASHE);
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -181,7 +181,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     /* NOTE: there's really no need to NULL-terminate the array, because it was
      * initialized to zeros, and && curr_field < MAX_TUPLE_FIELDS guards against
      * writing to the last element */
-    ret = new_type(NULL /* no name */, OT_TUPLE, fields);
+    ret = new_type(OT_TUPLE, fields);
     /* bye! */
 #undef fetch_name
 
@@ -274,7 +274,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("{\n");
 
-      /*prototype = new_type(NULL, OT_FUN, func_return_type, reverse_types_list(params));*/
+      /*prototype = new_type(OT_FUN, func_return_type, reverse_types_list(params));*/
       prototype = /* FIXME FIXME */ T_INT;
 
       return function(parser, lex, prototype);
@@ -366,6 +366,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 
     /* TODO create that list of chars */
     ret = new_int(parser, lex, 789456 /* that's kind of magic, greppable */);
+    ret->result_type = T_STRING;
     /* }}} */
   } else if (accept(parser, lex, TOK_CHAR)){
     /* {{{ CHARACTER LITERAL */

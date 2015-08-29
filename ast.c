@@ -110,7 +110,9 @@ void arg_stack_dump(void)
 
   printf("\n## Stack dump:\n");
   for (; i < NM_as_curr - NM_as; i++){
-    printf("  %x - %p (%s)", i, (void *)NM_as[i], nob_type_to_s(NM_as[i]->type->primitive));
+    printf("  %x - %p (", i, (void *)NM_as[i]);
+    nob_print_type(NM_as[i]->type);
+    printf(")");
     if (NM_as[i]->type->primitive == OT_INFNUM){
       putchar(' ');
       infnum_print(NOB_GET_INFNUM(NM_as[i]), stdout);
@@ -701,6 +703,7 @@ void print_nob(Nob *ob)
     case OT_STRING:
     case OT_FUN:
     case OT_TYPE_VARIABLE:
+    case OT_CUSTOM:
       break;
   }
   /* }}} */

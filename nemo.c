@@ -47,6 +47,7 @@
 #include "ast.h"
 #include "config.h"
 #include "debug.h"
+#include "infer.h"
 #include "mem.h"
 #include "parser.h"
 #include "version.h"
@@ -186,6 +187,7 @@ int main(int argc, char *argv[])
     char input_buffer[512];
     char *input;
     bool show_type;
+    struct nob_type *inferred_type;
 
     for (;;){
       input = input_buffer;
@@ -194,7 +196,11 @@ int main(int argc, char *argv[])
       printf("N: ");
       fgets(input_buffer, 512, stdin);
 
-      if (!strcmp(input, "q\n"))
+      /* chomp input */
+      char *p = strrchr(input, '\n');
+      if (p) *p = '\0';
+
+      if (!strcmp(input, ".q"))
         break;
 
       if (!strncmp(input, ".t ", 3)){
@@ -203,14 +209,18 @@ int main(int argc, char *argv[])
       }
 
       if ((root = parse_string("stdin", input, _main)) != NULL){
-        /* coming soon... */
-        /*if (show_type){*/
-          /*print_type(infer_node_type(root));*/
-          /*printf("\n");*/
-        /*} else {*/
+        if (show_type){
+
+          printf("%s : ", input);
+
+          if ((inferred_type = infer_node_type(_main, root)) != NULL)
+            nob_print_type(inferred_type);
+
+          printf("\n");
+        } else {
           exec_nodes(root);
         /* TODO clean up after the parser, lexer, etc. */
-        /*}*/
+        }
       }
     }
   }

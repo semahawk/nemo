@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "mem.h"
+#include "infer.h"
 #include "scope.h"
 #include "util.h"
 
@@ -141,6 +142,21 @@ struct var *var_lookup(char *name, struct scope *scope)
     for (v = s->vars; v != NULL; v = v->next)
       if (!strcmp(v->var->name, name))
         return v->var;
+
+  return NULL;
+}
+
+struct nob_type *vars_type_lookup(char *name, struct scope *scope, struct ng *nongen)
+{
+  struct scope *s;
+  struct vars_list *v;
+
+  assert(scope);
+
+  for (s = scope; s != NULL; s = s->parent)
+    for (v = s->vars; v != NULL; v = v->next)
+      if (!strcmp(v->var->name, name))
+        return fresh(v->var->type, nongen);
 
   return NULL;
 }

@@ -58,6 +58,7 @@ set(libsrc
   ast.c
   debug.c
   lexer.c
+  infer.c
   infnum.c
   mem.c
   nob.c

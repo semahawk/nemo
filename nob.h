@@ -40,11 +40,22 @@ enum nob_primitive_type {
   OT_TUPLE,
   OT_FUN,
   OT_TYPE_VARIABLE,
+  /* custom as in 'user defined' */
+  OT_CUSTOM
 };
 
 /* forward declaration (`struct field' needs it, but `struct nob_type' needs
  * `struct field') */
 struct nob_type;
+
+typedef struct nob {
+  /* GC mark */
+  unsigned char mark;
+  /* the object's type, d'oh */
+  struct nob_type *type;
+  /* pointer to the object's actual value */
+  void *ptr;
+} Nob;
 
 /* (for now) to be passed from the parser to `new_nob' */
 struct field {
@@ -55,15 +66,37 @@ struct field {
 };
 
 struct nob_type {
-  char *name; /* optional name of the type, like "word" */
-  unsigned size; /* the type's size, in bytes */
   enum nob_primitive_type primitive;
+  /* the type's size, in bytes */
+  unsigned size;
+  /* the type's optional name */
+  char *name;
+  /* for easier implementation of the type inference algorithm this field is
+   * accessible to every 'type' */
+  struct types_list *types;
   /* additional info about the given type */
   union {
     struct {
+      /* a type variable */
+      char name;
+      struct nob_type *instance;
+    } var;
+
+    struct {
+      char *name;
+      /* optional (can be NULL); if so it means the type is generic over the type */
+      /* btw, I have *no* idea how to properly name this field */
+      /* to make it clear: type 'a list = Nil | Cons of 'a * 'a list */
+      /*    here the `var` is the 'a in the ML-like list type definition */
+      /* with `var` NULL it's like: type direction = North | West | South | East */
+      struct nob_type *var;
+    } custom;
+
+    struct {
       /* an array of the struct's/tuple's or unions or whatevers fields */
       /* there probably shouldn't be any limit */
-      struct field fields[32];
+      struct field fields[32]; /* TODO this is to be removed.. */
+      struct types_list *elems;
     } tuple;
 
     struct {
@@ -76,11 +109,6 @@ struct nob_type {
        * I'll add numbers later) */
       char *opts;
     } func;
-
-    struct {
-      /* a type variable */
-      char name;
-    } variable;
   } info;
 };
 
@@ -89,15 +117,6 @@ struct types_list {
   struct nob_type *type;
   struct types_list *next;
 };
-
-typedef struct nob {
-  /* GC mark */
-  unsigned char mark;
-  /* the object's type, d'oh */
-  struct nob_type *type;
-  /* pointer to the object's actual value */
-  void *ptr;
-} Nob;
 
 /* a singly-linked list of <struct nob>s */
 struct nobs_list {
@@ -110,28 +129,32 @@ void types_finish(void);
 void gc_finish(void);
 
 Nob *new_nob(struct nob_type *type, ...);
-struct nob_type *new_type(char *name, enum nob_primitive_type type, ...);
+struct nob_type *new_type(enum nob_primitive_type type, ...);
 struct nob_type *get_type_by_name(char *name);
+struct types_list *reverse_types_list(struct types_list *list);
+unsigned types_list_length(struct types_list *list);
 size_t sizeof_nob(Nob *ob);
 void dump_types(void);
 void push_type(struct nob_type *type);
-const char *nob_type_to_s(enum nob_primitive_type);
+void nob_print_type(struct nob_type *type);
 bool nob_is_true(Nob *ob);
+bool is_type_variable(struct nob_type *type);
+bool is_type_operator(struct nob_type *type);
 bool nob_types_are_equal(struct nob_type *, struct nob_type *);
 void free_nob(Nob *ob);
 
-/* make the variables visible */
+/* defined in nob.c */
 extern struct nob_type *T_INT;
 extern struct nob_type *T_INFNUM;
-extern struct nob_type *T_BYTE;
-extern struct nob_type *T_WORD;
-extern struct nob_type *T_DWORD;
-extern struct nob_type *T_QWORD;
 extern struct nob_type *T_CHAR;
 extern struct nob_type *T_REAL;
 extern struct nob_type *T_STRING;
+extern struct nob_type *T_LIST;
 /* lexer, for instance, could use this */
 extern struct types_list *NM_types;
+
+/* defined in nob.c */
+extern char next_type_var_name;
 
 #endif /* NOB_H */
 
