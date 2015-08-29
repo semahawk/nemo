@@ -65,7 +65,6 @@ void types_init(void)
 
 void types_finish(void)
 {
-  unsigned i;
   struct types_list *curr, *next;
 
   for (curr = NM_types; curr != NULL; curr = next){
@@ -78,13 +77,6 @@ void types_finish(void)
     /* I know that free(NULL) is practically a NOP, but, still */
     nfree(curr->type->name);
 
-    /* free some additional data associated with the type */
-    if (curr->type->primitive == OT_TUPLE){
-      /* free the tuple's fields' names */
-      for (i = 0; curr->type->info.tuple.fields[i].name != NULL; i++){
-        nfree(curr->type->info.tuple.fields[i].name);
-      }
-    }
     /* free the type itself */
     nfree(curr->type);
   }
@@ -287,20 +279,12 @@ struct nob_type *new_type(enum nob_primitive_type type, ...)
       break;
     case OT_TUPLE:
     {
-      /* {{{ */
-      struct field *fields = va_arg(vl, struct field *);
       struct types_list *types = va_arg(vl, struct types_list *);
 
-      /* zero-out the tuple's info.tuple */
-      /* TODO 'fields' are to be removed */
-      memset(new_type->info.tuple.fields, 0, MAX_TUPLE_FIELDS * sizeof(struct field));
-
-      memcpy(new_type->info.tuple.fields, fields, MAX_TUPLE_FIELDS * sizeof(struct field));
-
       new_type->types = types;
-      /* FIXME */
+      new_type->info.tuple.elems = types;
+      /* FIXME? */
       new_type->size = 0;
-      /* }}} */
       break;
     }
     case OT_FUN:
@@ -424,11 +408,12 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
     return false;
 
   if (a->primitive == OT_TUPLE){
-    /* tuples are equal if each of their respective fields' types are equal */
-    unsigned i;
+    struct types_list *p, *q;
 
-    for (i = 0; i < MAX_TUPLE_FIELDS; i++)
-      if (!nob_types_are_equal(a->info.tuple.fields[i].type, b->info.tuple.fields[i].type))
+    for (p = a->info.tuple.elems, q = b->info.tuple.elems;
+         p != NULL && q != NULL;
+         p = p->next, q = q->next)
+      if (!nob_types_are_equal(p->type, q->type))
         return false;
 
     return true;
@@ -561,22 +546,7 @@ void dump_types(void)
     printf("\n");
 
     /* print additional info about some certain types */
-    if (type->primitive == OT_TUPLE){
-      /* {{{ */
-      unsigned j = 0; /* additional counter */
-
-      if (type->info.tuple.fields != NULL){
-        printf("   - fields:\n");
-        for (; type->info.tuple.fields[j].name != NULL; j++){
-          struct field field = type->info.tuple.fields[j];
-          printf("     + %s: %p", field.name, (void *)field.type);
-          if (field.type->name != NULL)
-            printf(" \"%s\"", field.type->name);
-          printf("\n");
-        }
-      }
-      /* }}} */
-    } else if (type->primitive == OT_FUN){
+    if (type->primitive == OT_FUN){
       /* {{{ */
       struct nob_type *ret = type->info.func.return_type;
       struct types_list *params = type->info.func.params;

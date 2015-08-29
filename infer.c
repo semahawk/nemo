@@ -128,7 +128,7 @@ static struct nob_type *freshrec(struct nob_type *type, struct ng *nongen, mappi
       case OT_FUN:
         return new_type(OT_FUN, pruned->info.func.return_type, new_types_list);
       case OT_TUPLE:
-        return new_type(OT_TUPLE, pruned->info.tuple.fields, new_types_list);
+        return new_type(OT_TUPLE, new_types_list);
 
       /* silence warnings, we won't use these here */
       case OT_TYPE_VARIABLE:
@@ -272,7 +272,7 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
 
       new_types_list = reverse_types_list(new_types_list);
 
-      return new_type(OT_TUPLE, NULL /* fields, but there are to be removed */, new_types_list);
+      return new_type(OT_TUPLE, new_types_list);
     }
     /* TODO implement the rest of nodes */
     default:

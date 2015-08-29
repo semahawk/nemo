@@ -76,14 +76,12 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   /* {{{ */
   /* the nob_type to be returned */
   struct nob_type *ret = NULL;
-  /* the fields (names + associated types) used to be passed over to `new_type' to create a tuple type */
-  struct field fields[MAX_TUPLE_FIELDS + 1] = { { 0, 0 } };
-  /* 'pointer' to the current field */
-  unsigned curr_field = 0;
   /* function's return type; to be passed to `new_type' */
   struct nob_type *return_type = NULL;
   struct nob_type *param_type;
   struct types_list *params, *param;
+  /* used for tuples */
+  struct types_list *types_list, *type_elem;
 
   if (accept(parser, lex, TOK_TYPE)){
     /* {{{ a single worded type */
@@ -133,57 +131,20 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_LPAREN)){
     /* {{{ a tuple */
-    /* TODO there should be no polymorphic types inside a tuple */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("(");
-    fields[curr_field].type = type(parser, lex);
 
-    if (fields[curr_field].type == NULL){
-      err(parser, lex, "expected a type");
-      return ret;
-    }
+    do {
+      /* reusing `param_type` variable */
+      if ((param_type = type(parser, lex)) != NULL){
+        type_elem = nmalloc(sizeof(struct types_list));
+        type_elem->type = param_type;
+        type_elem->next = types_list;
+        types_list = type_elem;
+      }
+    } while (accept(parser, lex, TOK_COMMA));
 
-#define fetch_name(lex) \
-      /* {{{ fetch_name body */ \
-      do { \
-        /* see if the field was given a name, and if not, print a meaningful \
-         * message */ \
-        if (accept(parser, lex, TOK_NAME)){ \
-          struct field *p = fields; \
-          for (; p->name != NULL && p->type != NULL; p++){ \
-            if (!strcmp(p->name, lex->curr_tok.value.s)){ \
-              err(parser, lex, "duplicate field names ('%s') in a tuple", p->name); \
-              return ret; \
-            } \
-          } \
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER)) \
-            printf(" %s", lex->curr_tok.value.s); \
-          fields[curr_field].name = strdup(lex->curr_tok.value.s); \
-        } else { \
-          err(parser, lex, "the field is missing it's name"); \
-          return ret; \
-        } \
-      } while (0)
-      /* }}} */
-
-    fetch_name(lex);
-    curr_field++;
-
-    /* fetch more fields if present */
-    while (accept(parser, lex, TOK_COMMA) && curr_field < MAX_TUPLE_FIELDS){
-      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-        printf(", ");
-      fields[curr_field].type = type(parser, lex);
-      fetch_name(lex);
-      curr_field++;
-    }
-
-    /* NOTE: there's really no need to NULL-terminate the array, because it was
-     * initialized to zeros, and && curr_field < MAX_TUPLE_FIELDS guards against
-     * writing to the last element */
-    ret = new_type(OT_TUPLE, fields);
-    /* bye! */
-#undef fetch_name
+    ret = new_type(OT_TUPLE, types_list);
 
     force(parser, lex, TOK_RPAREN);
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))

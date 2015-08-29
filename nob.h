@@ -44,10 +44,6 @@ enum nob_primitive_type {
   OT_CUSTOM
 };
 
-/* forward declaration (`struct field' needs it, but `struct nob_type' needs
- * `struct field') */
-struct nob_type;
-
 typedef struct nob {
   /* GC mark */
   unsigned char mark;
@@ -56,14 +52,6 @@ typedef struct nob {
   /* pointer to the object's actual value */
   void *ptr;
 } Nob;
-
-/* (for now) to be passed from the parser to `new_nob' */
-struct field {
-  /* the fields name, obviously */
-  char *name;
-  /* and the type associated with the name */
-  struct nob_type *type;
-};
 
 struct nob_type {
   enum nob_primitive_type primitive;
@@ -93,9 +81,6 @@ struct nob_type {
     } custom;
 
     struct {
-      /* an array of the struct's/tuple's or unions or whatevers fields */
-      /* there probably shouldn't be any limit */
-      struct field fields[32]; /* TODO this is to be removed.. */
       struct types_list *elems;
     } tuple;
 

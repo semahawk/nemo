@@ -16,12 +16,6 @@
 #define MAX_NAME_LENGTH 128
 
 /*
- * Maximum number of fields in tuples and alike.
- * It's also to avoid calling malloc so much.
- */
-#define MAX_TUPLE_FIELDS 16
-
-/*
  * Maximum number of parameters a function can take.
  * Guess what, it's also to avoid calling malloc so much.
  */
