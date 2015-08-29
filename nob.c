@@ -511,6 +511,22 @@ void nob_print_type(struct nob_type *type)
         nob_print_type(type->info.custom.var);
       }
       break;
+    case OT_TUPLE:
+    {
+      struct types_list *lptr;
+
+      printf("(");
+
+      for (lptr = type->info.tuple.elems; lptr != NULL; lptr = lptr->next){
+        nob_print_type(lptr->type);
+
+        if (lptr->next)
+          printf(", ");
+      }
+
+      printf(")");
+      break;
+    }
     case OT_INT:
       printf("int");
       break;

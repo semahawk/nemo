@@ -273,8 +273,6 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       }
 
       ret = new_tuple(parser, lex, reverse_nodes_list(elems));
-      /* FIXME */
-      ret->result_type = T_INT;
       /* }}} */
     }
     /* else
