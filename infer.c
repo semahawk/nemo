@@ -247,17 +247,24 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
   assert(node);
 
   if (node->result_type)
+    /* same basic types have this set, so we don't have to infer anything */
     return node->result_type;
 
   if (nongen == NULL)
     nongen = new_nongen();
 
   switch (node->type){
-    case OT_INT:
+    /* just in case their result_type is not set */
+    case NT_INTEGER:
       return T_INT;
-    case OT_STRING:
+    case NT_REAL:
+      return T_REAL;
+    case NT_CHAR:
+      return T_CHAR;
+    case NT_STRING:
       return T_STRING;
-    case OT_TUPLE:
+
+    case NT_TUPLE:
     {
       struct types_list *new_types_list = NULL;
       struct types_list *new_type_elem;
@@ -274,6 +281,18 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
 
       return new_type(OT_TUPLE, new_types_list);
     }
+    case NT_NAME:
+    {
+      struct nob_type *type = vars_type_lookup(node->in.s, scope, nongen);
+
+      if (type == NULL){
+        printf("unknown symbol '%s'!!", node->in.s);
+        longjmp(infer_jmp_buf, 1);
+      }
+
+      return type;
+    }
+
     /* TODO implement the rest of nodes */
     default:
       printf("#unknown_node_type#infer_type_internal#");

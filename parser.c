@@ -22,6 +22,7 @@
 #include "debug.h"
 #include "mem.h"
 #include "nob.h"
+#include "infer.h"
 #include "infnum.h"
 #include "lexer.h"
 #include "parser.h"
@@ -338,18 +339,15 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_NAME)){
     /* {{{ NAME */
-    struct var *var;
-
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s ", lex->curr_tok.value.s /* meh */);
 
-    if (!(var = var_lookup(lex->curr_tok.value.s, parser->curr_scope))){
+    if (!var_lookup(lex->curr_tok.value.s, parser->curr_scope)){
       err(parser, lex, "variable '%s' not found", lex->curr_tok.value.s);
       return NULL;
     }
 
     ret = new_name(parser, lex, lex->curr_tok.value.s);
-    ret->result_type = var->type;
     ret->lvalue = true;
     /* }}} */
   } else if (accept(parser, lex, TOK_ACCUMULATOR)){
@@ -1223,7 +1221,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    val_type = /* infer_node_type(value) */ T_INT;
+    val_type = infer_node_type(parser->curr_scope, value);
 
     /* TODO check whether the val_type and var_type are equal, and shout if
      * they're not */
@@ -1233,8 +1231,6 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
         false /* not a param */, 0);
     ret = new_decl(parser, lex, var);
     var->decl = ret;
-    /* FIXME */
-    ret->result_type = T_INT;
     ret->lvalue = false; /* hmm.. */
 
     if (value)
