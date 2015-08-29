@@ -91,6 +91,32 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
     ret = get_type_by_name(lex->curr_tok.value.s);
     /* }}} */
+  } else if (accept(parser, lex, TOK_TYPE_VARIABLE)){
+    /* {{{ a type variable */
+    struct type_variables_list *type_var;
+    bool found = false;
+
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf("*%c", lex->curr_tok.value.c);
+
+    /* let's see if such a type var was already mentioned */
+    for (type_var = parser->type_vars; type_var != NULL; type_var = type_var->next){
+      if (type_var->name == lex->curr_tok.value.c){
+        found = true;
+        break;
+      }
+    }
+
+    if (!found){
+      type_var = nmalloc(sizeof(struct type_variables_list));
+      type_var->name = lex->curr_tok.value.c;
+      type_var->type = new_type(OT_TYPE_VARIABLE);
+      type_var->next = parser->type_vars;
+      parser->type_vars = type_var;
+    }
+
+    ret = type_var->type;
+    /* }}} */
   } else if (accept(parser, lex, TOK_LMUSTASHE)){
     /* {{{ a function */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -1411,6 +1437,7 @@ struct node *parse_file(char *fname, struct scope *scope)
   /* initialize the parser's state */
   parser.errorless      = true;
   parser.curr_scope     = scope;
+  parser.type_vars      = NULL;
   /* initialize the lexer's state */
   lex.fptr              = fptr;
   lex.name              = fname;
@@ -1450,6 +1477,7 @@ struct node *parse_string(char *name, char *string, struct scope *scope)
   /* initialize the parser's state */
   parser.errorless      = true;
   parser.curr_scope     = scope;
+  parser.type_vars      = NULL;
   /* initialize the lexer's state */
   lex.fptr              = NULL;
   lex.name              = name;

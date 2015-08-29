@@ -1,3 +1,0 @@
-my int meh = 2;
-
-print /* a /* nested */ comment */ meh + { 3 };

@@ -23,6 +23,10 @@ struct parser {
   bool errorless;
   /* the current scope the 'compilation control' is in */
   struct scope *curr_scope;
+  /* list of type variables currently 'in use' */
+  /* whenever a type variable is created with a certain name, we want to refer
+   * to the same underlaying structure, not a new one */
+  struct type_variables_list *type_vars;
 };
 
 struct node *parse_file(char *file_name, struct scope *scope);

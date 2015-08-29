@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "nemo.h"
+#include "utf8.h"
 
 /* object flags (eg. if it's mutable) */
 #define NOB_FLAG_MUTABLE (1 << 0)
@@ -109,6 +110,17 @@ struct nobs_list {
   struct nobs_list *next;
 };
 
+/*
+ * a list of type variables already seen in a scope (usually in a function) to
+ * reuse the associated <type> upon seeing a type variable with the same name
+ * multiple times
+ */
+struct type_variables_list {
+  nchar_t name;
+  struct nob_type *type;
+  struct type_variables_list *next;
+};
+
 void types_init(void);
 void types_finish(void);
 void gc_finish(void);
@@ -139,7 +151,7 @@ extern struct nob_type *T_LIST;
 extern struct types_list *NM_types;
 
 /* defined in nob.c */
-extern char next_type_var_name;
+extern nchar_t next_type_var_name;
 
 #endif /* NOB_H */
 

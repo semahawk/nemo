@@ -33,6 +33,7 @@ enum token_type {
   /* meh, that's probably not the best name for it */
   TOK_ACCUMULATOR,    /*  %[0-9]+       */
   TOK_OPT,            /*  -[a-zA-Z]     */
+  TOK_TYPE_VARIABLE,  /*  *[a-zA-Z]     */
   TOK_EQ,             /*  "="           */
   TOK_EQ_2,           /*  "=="          */
   TOK_SEMICOLON,      /*  ";"           */

@@ -286,6 +286,15 @@ static struct token fetch_token(struct parser *parser, struct lexer *lex)
     ret.value.sp = tmp_str;
     /* }}} */
   }
+  else if (*p == '*'){
+    /* {{{ TYPE VARIABLE */
+    /* skip over the '*' */
+    p++;
+
+    ret.type = TOK_TYPE_VARIABLE;
+    ret.value.c = u8_fetch_char(&p);
+    /* }}} */
+  }
   else if (*p == '%'){
     if (isdigit(*(p + 1))){
       /* {{{ ACCUMULATOR */
