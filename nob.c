@@ -527,6 +527,28 @@ void nob_print_type(struct nob_type *type)
       printf(")");
       break;
     }
+    case OT_FUN:
+    {
+      struct types_list *lptr;
+
+      printf("{ ");
+      nob_print_type(type->info.func.return_type);
+
+      if (type->info.func.params){
+        printf("; ");
+
+        for (lptr = type->info.func.params; lptr != NULL; lptr = lptr->next){
+          nob_print_type(lptr->type);
+
+          if (lptr->next)
+            printf(", ");
+        }
+      }
+
+      printf(" }");
+
+      break;
+    }
     case OT_INT:
       printf("int");
       break;

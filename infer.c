@@ -292,6 +292,38 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
 
       return type;
     }
+    case NT_FUN:
+    {
+      struct nob_type *result_type;
+      struct scope *new_env = new_scope(NULL, scope);
+      struct ng *new_nongen = copy_nongen(nongen);
+
+      struct types_list *params = NULL;
+      struct types_list *params_elem;
+      struct params_info pinfo = count_params(node, NULL);
+      unsigned idx = 0;
+      char param_name[8];
+
+      for (idx = 0; idx < 32; idx++){
+        if (pinfo.value & (1 << idx)){
+          params_elem = nmalloc(sizeof(struct types_list));
+          params_elem->type = new_type(OT_TYPE_VARIABLE);
+          params_elem->next = params;
+          params = params_elem;
+
+          snprintf(param_name, 8, "%%%d", idx + 1);
+
+          new_var(param_name, 0x0, NULL, params_elem->type,
+              new_env, true /* a param */, idx * 4 /* FIXME */);
+
+          add_to_nongen(new_nongen, params_elem->type);
+        }
+      }
+
+      result_type = infer_type_internal(new_env, node->in.fun.body, new_nongen);
+
+      return new_type(OT_FUN, result_type, params);
+    }
 
     /* TODO implement the rest of nodes */
     default:

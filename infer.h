@@ -17,6 +17,7 @@
 #include "nemo.h"
 #include "nob.h"
 #include "scope.h"
+#include "count_params.h"
 
 /* bleh.. */
 struct ng {
@@ -28,9 +29,9 @@ struct ng {
 struct nob_type *infer_node_type(struct scope *scope, struct node *node);
 struct nob_type *fresh(struct nob_type *type, struct ng *non_generic);
 
-struct ng *new_non_generic(void);
-struct ng *copy_non_generic(struct ng *non_generic);
-void add_to_non_generic(struct ng *non_generic, struct nob_type *type);
+struct ng *new_nongen(void);
+struct ng *copy_nongen(struct ng *non_generic);
+void add_to_nongen(struct ng *non_generic, struct nob_type *type);
 
 #endif /* INFER_H */
 

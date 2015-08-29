@@ -183,9 +183,7 @@ static struct node *function(struct parser *parser, struct lexer *lex, struct no
   ret = new_fun(parser, lex, NULL /* anonymous */, body,
       NULL /* no opts */, false /* don't execute right away */);
   ret->scope = functions_scope;
-  /* FIXME */
-  /*ret->result_type = prototype ?: infer_node_type(ret);*/
-  ret->result_type = /* FIXME FIXME inference coming soon */ prototype;
+  ret->result_type = prototype;
   ret->lvalue = false; /* hmm.. */
 
   return ret;
@@ -236,8 +234,7 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("{\n");
 
-      /*prototype = new_type(OT_FUN, func_return_type, reverse_types_list(params));*/
-      prototype = /* FIXME FIXME */ T_INT;
+      prototype = new_type(OT_FUN, func_return_type, reverse_types_list(params));
 
       return function(parser, lex, prototype);
       /* }}} */
@@ -352,29 +349,20 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
     /* }}} */
   } else if (accept(parser, lex, TOK_ACCUMULATOR)){
     /* {{{ AN ACCUMULATOR */
-    /*struct node *accs_value = acc_get_value(parser->curr_scope,*/
-        /*(unsigned)atoi(lex->curr_tok.value.s));*/
-
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%%%s ", lex->curr_tok.value.s);
 
-    /* see if the accumulator is 'defined' */
-    /*if (accs_value == NULL){*/
-      /*err(parser, lex, "accumulator no.%s is undefined", lex->curr_tok.value.s);*/
-      /*return NULL;*/
-    /*}*/
-
     /* fetch the numerical value after the % sign */
-    int num = atoi(lex->curr_tok.value.s + 1);
+    /*int num = atoi(lex->curr_tok.value.s + 1);*/
 
     /* right now it's assumed that every param is sizeof 4 bytes, which is
      * prooobably wrong */
+#if 0
     new_var(lex->curr_tok.value.s, 0x0 /* TODO */, NULL, NULL,
         parser->curr_scope, true /* a param */, (num - 1) * 4 /* FIXME */);
+#endif
 
     ret = new_name(parser, lex, lex->curr_tok.value.s);
-    /* FIXME */
-    ret->result_type = T_INT;
     ret->lvalue = true;
     /* }}} */
   }
@@ -1222,6 +1210,11 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     }
 
     val_type = infer_node_type(parser->curr_scope, value);
+
+    if (val_type == NULL){
+      err(parser, lex, "couldn't infer the type of the expression");
+      return NULL;
+    }
 
     /* TODO check whether the val_type and var_type are equal, and shout if
      * they're not */
