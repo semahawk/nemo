@@ -25,7 +25,7 @@
 #include "util.h"
 #include "utf8.h"
 
-nchar_t next_type_var_name = 'a';
+nchar_t next_type_var_name = L'α';
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
@@ -500,7 +500,7 @@ void nob_print_type(struct nob_type *type)
         if (!type->info.var.name)
           type->info.var.name = next_type_var_name++;
 
-        printf("*%c", type->info.var.name);
+        printf("*%lc", type->info.var.name);
       }
       break;
     case OT_CUSTOM:

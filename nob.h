@@ -67,7 +67,7 @@ struct nob_type {
   union {
     struct {
       /* a type variable */
-      char name;
+      nchar_t name;
       struct nob_type *instance;
     } var;
 

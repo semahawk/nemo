@@ -333,7 +333,7 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
 
 struct nob_type *infer_node_type(struct scope *scope, struct node *node)
 {
-  next_type_var_name = 'a';
+  next_type_var_name = L'α';
 
   if (!setjmp(infer_jmp_buf))
     return infer_type_internal(scope, node, NULL);
