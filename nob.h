@@ -88,8 +88,8 @@ struct nob_type {
     struct {
       /* the return type, d'oh */
       struct nob_type *return_type;
-      /* the parameters the function can take */
-      struct types_list *params;
+      /* the parameter type */
+      struct nob_type *param;
       /* the options the function can take */
       /* the limit is, well.. 52, the two alphabets, upper- and lowercase (maybe
        * I'll add numbers later) */
@@ -141,6 +141,7 @@ bool nob_types_are_equal(struct nob_type *, struct nob_type *);
 void free_nob(Nob *ob);
 
 /* defined in nob.c */
+extern struct nob_type *T_VOID;
 extern struct nob_type *T_INT;
 extern struct nob_type *T_INFNUM;
 extern struct nob_type *T_CHAR;

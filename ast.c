@@ -342,7 +342,7 @@ void dump_if(struct node *nd)
 void dump_fun(struct node *nd)
 {
   struct node *d = nd->in.fun.body;
-  struct types_list *p = nd->result_type->info.func.params;
+  struct nob_type *p = nd->result_type->info.func.param;
 
   if (nd->in.fun.name)
     printf("+ (#%u) fun (%s)\n", nd->id, nd->in.fun.name);
@@ -360,15 +360,9 @@ void dump_fun(struct node *nd)
   DEDENT();
 
   if (p){
-    DUMPP("- params:");
+    DUMPP("- param:");
     INDENT();
-
-    while (p != NULL){
-      SPACES();
-      /*print_type(p->type);*/
-      printf("\n");
-      p = p->next;
-    }
+    nob_print_type(p);
   } else {
     DUMPP("- no params");
   }
@@ -1135,11 +1129,10 @@ struct node *comp_call(struct node *nd)
    * not how many but rather how much of them there is) */
   /*vars_size = size_of_vars(nd->in.call.fun->scope);*/
 
-  for (struct nodes_list *p = nd->in.call.args; p != NULL; p = p->next){
-    args_size += p->node->result_type->size;
-    COMP(p->node);
-    out("  push eax");
-  }
+  args_size += nd->in.call.arg->result_type->size;
+
+  COMP(nd->in.call.arg);
+  out("  push eax");
 
   /* make sure the function is actually defined in the assembly file */
   /* and that eax is loaded with the function's address */
@@ -1334,12 +1327,13 @@ struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard
 }
 
 struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
-    struct node *body, char *opts, bool execute)
+    struct var *param, struct node *body, char *opts, bool execute)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex, NT_FUN, fun);
 
   nd->in.fun.name = name;
+  nd->in.fun.param = param;
   nd->in.fun.body = body;
   nd->in.fun.opts = opts;
   nd->in.fun.execute = execute;
@@ -1355,13 +1349,13 @@ struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
 }
 
 struct node *new_call(struct parser *parser, struct lexer *lex, struct node *fun,
-    struct nodes_list *args, char *opts)
+    struct node *arg, char *opts)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex, NT_CALL, call);
 
   nd->in.call.fun  = fun;
-  nd->in.call.args = args;
+  nd->in.call.arg  = arg;
   nd->in.call.opts = opts;
 
   debug_ast_new(nd, "call (#%d)", NDID(fun));

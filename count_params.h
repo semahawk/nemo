@@ -143,10 +143,11 @@ static inline void count_params_fun(struct node *node, struct params_info *info)
 
 static inline void count_params_call(struct node *node, struct params_info *info)
 {
-  struct nodes_list *arg;
+  /* supress warnings */
+  (void)node;
+  (void)info;
 
-  for (arg = node->in.call.args; arg != NULL; arg = arg->next)
-    count_params(arg->node, info);
+  count_params(node->in.call.arg, info);
 }
 
 static inline void count_params_use(struct node *node, struct params_info *info)

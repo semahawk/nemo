@@ -107,27 +107,29 @@ static struct nob_type *freshrec(struct nob_type *type, struct ng *nongen, mappi
       return pruned;
     }
   } else {
-    struct types_list *new_types_list = NULL;
-    struct types_list *in_pruned;
-    struct types_list *new_type_elem;
-
-    for (in_pruned = pruned->types; in_pruned != NULL; in_pruned = in_pruned->next){
-      new_type_elem = nmalloc(sizeof(struct types_list));
-      new_type_elem->type = freshrec(in_pruned->type, nongen, mappings, current_mapping, mappings_num);
-      /* append to the new types list */
-      new_type_elem->next = new_types_list;
-      new_types_list = new_type_elem;
-    }
-
-    new_types_list = reverse_types_list(new_types_list);
-
+    /* non-type-variable */
     switch (pruned->primitive){
       case OT_CUSTOM:
         return new_type(OT_CUSTOM, pruned->info.custom.name, pruned->info.custom.var);
       case OT_FUN:
-        return new_type(OT_FUN, pruned->info.func.return_type, new_types_list);
+        return new_type(OT_FUN, pruned->info.func.return_type,
+            freshrec(pruned->info.func.param, nongen, mappings, current_mapping, mappings_num));
       case OT_TUPLE:
-        return new_type(OT_TUPLE, new_types_list);
+      {
+        struct types_list *new_types_list = NULL;
+        struct types_list *in_pruned;
+        struct types_list *new_type_elem;
+
+        for (in_pruned = pruned->types; in_pruned != NULL; in_pruned = in_pruned->next){
+          new_type_elem = nmalloc(sizeof(struct types_list));
+          new_type_elem->type = freshrec(in_pruned->type, nongen, mappings, current_mapping, mappings_num);
+          /* append to the new types list */
+          new_type_elem->next = new_types_list;
+          new_types_list = new_type_elem;
+        }
+
+        return new_type(OT_TUPLE, reverse_types_list(new_types_list));
+      }
 
       /* silence warnings, we won't use these here */
       case OT_TYPE_VARIABLE:
@@ -294,34 +296,13 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
     case NT_FUN:
     {
       struct nob_type *result_type;
-      struct scope *new_env = new_scope(NULL, scope);
       struct ng *new_nongen = copy_nongen(nongen);
 
-      struct types_list *params = NULL;
-      struct types_list *params_elem;
-      struct params_info pinfo = count_params(node, NULL);
-      unsigned idx = 0;
-      char param_name[8];
+      add_to_nongen(new_nongen, node->in.fun.param->type);
 
-      for (idx = 0; idx < 32; idx++){
-        if (pinfo.value & (1 << idx)){
-          params_elem = nmalloc(sizeof(struct types_list));
-          params_elem->type = new_type(OT_TYPE_VARIABLE);
-          params_elem->next = params;
-          params = params_elem;
+      result_type = infer_type_internal(node->scope, node->in.fun.body, new_nongen);
 
-          snprintf(param_name, 8, "%%%d", idx + 1);
-
-          new_var(param_name, 0x0, NULL, params_elem->type,
-              new_env, true /* a param */, idx * 4 /* FIXME */);
-
-          add_to_nongen(new_nongen, params_elem->type);
-        }
-      }
-
-      result_type = infer_type_internal(new_env, node->in.fun.body, new_nongen);
-
-      return new_type(OT_FUN, result_type, params);
+      return new_type(OT_FUN, result_type, node->in.fun.param->type);
     }
 
     /* TODO implement the rest of nodes */

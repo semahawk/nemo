@@ -77,10 +77,9 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   /* {{{ */
   /* the nob_type to be returned */
   struct nob_type *ret = NULL;
-  /* function's return type; to be passed to `new_type' */
+  /* function's types; to be passed to `new_type' */
   struct nob_type *return_type = NULL;
-  struct nob_type *param_type;
-  struct types_list *params, *param;
+  struct nob_type *param_type = NULL;
   /* used for tuples */
   struct types_list *types_list, *type_elem;
 
@@ -123,34 +122,23 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
       printf("{ ");
 
     /* fetch the return type */
-    return_type = type(parser, lex);
-
-    if (!return_type){
+    if ((return_type = type(parser, lex)) == NULL){
       err(parser, lex, "expected a return type in the function's prototype");
       return ret;
     }
 
-    /* fetch the optional params types */
+    /* fetch the param type */
     if (accept(parser, lex, TOK_SEMICOLON)){
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("; ");
 
-      do {
-        if ((param_type = type(parser, lex)) == NULL){
-          err(parser, lex, "expected a type for the function's parameter");
-          return NULL;
-        }
-
-        param = nmalloc(sizeof(struct types_list));
-        param->type = param_type;
-
-        param->next = params;
-        params = param;
-        /* ... */
-      } while (accept(parser, lex, TOK_COMMA));
+      if ((param_type = type(parser, lex)) == NULL){
+        err(parser, lex, "expected a param type in the function's prototype");
+        return ret;
+      }
     }
 
-    ret = new_type(OT_FUN, return_type, params);
+    ret = new_type(OT_FUN, return_type, param_type);
 
     force(parser, lex, TOK_RMUSTASHE);
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -189,6 +177,7 @@ static struct node *function(struct parser *parser, struct lexer *lex, struct no
   struct scope *prev_scope, *functions_scope;
   struct node *ret, *body;
   struct nob_type *inferred_type;
+  struct var *param;
 
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
     printf("{\n");
@@ -207,7 +196,10 @@ static struct node *function(struct parser *parser, struct lexer *lex, struct no
   if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
     printf("}\n");
 
-  ret = new_fun(parser, lex, NULL /* anonymous */, body,
+  /* FIXME */
+  param = new_var("%1", 0, NULL, new_type(OT_TYPE_VARIABLE), functions_scope, true, 0);
+
+  ret = new_fun(parser, lex, NULL /* anonymous */, param, body,
       NULL /* no opts */, false /* don't execute right away */);
   ret->scope = functions_scope;
 
@@ -233,48 +225,35 @@ static struct node *primary_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *ret = NULL;
-  struct nob_type *func_return_type, *param_type;
-  struct nob_type *prototype = NULL;
-  struct types_list *params = NULL, *param;
+  struct nob_type *return_type;
 
   if (accept(parser, lex, TOK_LPAREN)){
     /* {{{ */
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("(");
 
-    if ((func_return_type = type(parser, lex)) != NULL){
+    if ((return_type = type(parser, lex)) != NULL){
       /* {{{ function */
-      if (accept(parser, lex, TOK_SEMICOLON)){
-        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-          printf("; ");
+      struct nob_type *param_type;
 
-        do {
-          if ((param_type = type(parser, lex)) == NULL){
-            err(parser, lex, "expected a type for the function's parameter");
-            return NULL;
-          }
+      force(parser, lex, TOK_RCHEVRON);
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(" > ");
 
-          param = nmalloc(sizeof(struct types_list));
-          param->type = param_type;
-          /* append to the `params` list */
-          param->next = params;
-          params = param;
-        } while (accept(parser, lex, TOK_COMMA));
+      if ((param_type = type(parser, lex)) == NULL){
+        err(parser, lex, "expected a param type for the function prototype");
+        return NULL;
       }
 
       force(parser, lex, TOK_RPAREN);
-
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf(") ");
 
       force(parser, lex, TOK_LMUSTASHE);
-
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
         printf("{\n");
 
-      prototype = new_type(OT_FUN, func_return_type, reverse_types_list(params));
-
-      return function(parser, lex, prototype);
+      return function(parser, lex, new_type(OT_FUN, return_type, param_type));
       /* }}} */
     } else if (accept(parser, lex, TOK_COMMA)){
       /* {{{ now, that's a tuple */
@@ -415,6 +394,7 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
 {
   /* {{{ */
   struct node *target, *ret;
+  struct node *arg = NULL;
 
   target = ret = primary_expr(parser, lex);
 
@@ -437,49 +417,14 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       /* FIXME */
       ret->result_type = T_INT;
       ret->lvalue = false;
-    } else if (accept(parser, lex, TOK_LPAREN)){
-      /* target () */
-      struct nodes_list *args = NULL;
-      struct nodes_list *arg;
-      struct node *node;
-
-      node = no_comma_expr(parser, lex);
-
-      /* some arguments were supplied */
-      /* if there weren't we'll just pass NULL to `new_call` */
-      if (node){
-        arg = nmalloc(sizeof(struct nodes_list));
-        arg->node = node;
-        arg->next = args;
-        args = arg;
-
-        while (accept(parser, lex, TOK_COMMA)){
-          if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-            printf(", ");
-
-          if ((node = no_comma_expr(parser, lex)) == NULL){
-            err(parser, lex, "expected an expression after the comma");
-            return NULL;
-          }
-
-          arg = nmalloc(sizeof(struct nodes_list));
-          arg->node = node;
-          arg->next = args;
-          args = arg;
-        }
-
-        args = reverse_nodes_list(args);
-      }
-
-      force(parser, lex, TOK_RPAREN);
-
-      /* TODO: check whether the number (and types) of supplied arguments match
+    } else if ((arg = primary_expr(parser, lex))){
+      /* function application */
+printf("function application\n");
+      /* TODO: check whether the type of supplied argument matches
        * the target function's prototype */
 
       if (target->type == NT_NAME || target->type == NT_FUN){
-        ret = new_call(parser, lex, target, args, NULL);
-        /* FIXME */
-        ret->result_type = T_INT;
+        ret = new_call(parser, lex, target, arg, NULL);
         ret->lvalue = false; /* hmm.. */
       } else {
         err(parser, lex, "trying to apply a function call on a non-function");
@@ -1316,7 +1261,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     struct nob_type *custom_type;
     struct nob_type *gen_type = NULL;
     struct node *fun;
-    struct types_list *param = NULL;
+    struct nob_type *param = NULL;
     char *ctor_name;
 
     force(parser, lex, TOK_NAME);
@@ -1335,19 +1280,21 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     if (accept(parser, lex, TOK_LMUSTASHE)){
       while (accept(parser, lex, TOK_NAME)){
         ctor_name = strdup(lex->curr_tok.value.s);
-        fun = new_fun(parser, lex, ctor_name, NULL, NULL, false);
+        /*fun = new_fun(parser, lex, ctor_name, "%1", NULL, NULL, false);*/
 
         if (accept_keyword(parser, lex, "of")){
           gen_type = type(parser, lex);
-          param = nmalloc(sizeof(struct types_list));
-          param->type = gen_type;
-          param->next = NULL;
+
+          if ((param = type(parser, lex)) == NULL){
+            err(parser, lex, "expected a type after 'of'");
+            return NULL;
+          }
         }
 
         fun->result_type = new_type(OT_FUN, custom_type, param);
 
-        new_var(ctor_name, 0x0, new_fun(parser, lex, NULL, NULL, NULL, false),
-            fun->result_type, parser->curr_scope, 0, 0);
+        /*new_var(ctor_name, 0x0, new_fun(parser, lex, NULL, "%1", NULL, NULL, false),*/
+            /*fun->result_type, parser->curr_scope, 0, 0);*/
 
         force(parser, lex, TOK_SEMICOLON);
       }

@@ -29,6 +29,7 @@ nchar_t next_type_var_name = L'α';
 
 /* global variables to make the life easier, and not to have to remember the
  * pointer values */
+struct nob_type *T_VOID;
 struct nob_type *T_INT;
 struct nob_type *T_INFNUM;
 struct nob_type *T_CHAR;
@@ -53,14 +54,16 @@ struct gc_pool *NM_gc;
 void types_init(void)
 {
   /* create the standard types */
-  T_INT    = new_type(OT_INT);    T_INT->name    = strdup("int");
-  T_INFNUM = new_type(OT_INFNUM); T_INFNUM->name = strdup("infnum");
-  T_CHAR   = new_type(OT_CHAR);   T_CHAR->name   = strdup("char");
-  T_REAL   = new_type(OT_REAL);   T_REAL->name   = strdup("real");
+  T_INT    = new_type(OT_INT);          T_INT->name    = strdup("int");
+  T_INFNUM = new_type(OT_INFNUM);       T_INFNUM->name = strdup("infnum");
+  T_CHAR   = new_type(OT_CHAR);         T_CHAR->name   = strdup("char");
+  T_REAL   = new_type(OT_REAL);         T_REAL->name   = strdup("real");
 
   T_LIST   = new_type(OT_CUSTOM, "list", new_type(OT_TYPE_VARIABLE));
   /* strings are lists of characters */
   T_STRING = new_type(OT_CUSTOM, "list", T_CHAR);
+
+  T_VOID   = new_type(OT_CUSTOM, "void", NULL);
 }
 
 void types_finish(void)
@@ -290,11 +293,12 @@ struct nob_type *new_type(enum nob_primitive_type type, ...)
     case OT_FUN:
     {
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
-      struct types_list *params = va_arg(vl, struct types_list *);
+      struct nob_type *param = va_arg(vl, struct nob_type *);
 
-      new_type->types = params;
+      /* FIXME? */
+      /*new_type->types = param;*/
       new_type->info.func.return_type = return_type;
-      new_type->info.func.params = params;
+      new_type->info.func.param = param;
       /* hmm, FIXME? so far we're 32-bits only so that's probably ok */
       new_type->size = 4;
       break;
@@ -418,17 +422,11 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
 
     return true;
   } else if (a->primitive == OT_FUN){
-    struct types_list *p, *q;
-
     if (!nob_types_are_equal(a->info.func.return_type, b->info.func.return_type))
       return false;
 
-    /* hmrrr, FIXME? */
-    for (p = a->info.func.params, q = b->info.func.params;
-         p != NULL && q != NULL;
-         p = p->next, q = q->next)
-      if (!nob_types_are_equal(p->type, q->type))
-        return false;
+    if (!nob_types_are_equal(a->info.func.param, b->info.func.param))
+      return false;
 
     return true;
   } else {
@@ -529,23 +527,9 @@ void nob_print_type(struct nob_type *type)
     }
     case OT_FUN:
     {
-      struct types_list *lptr;
-
-      printf("{ ");
+      nob_print_type(type->info.func.param);
+      printf(" -> ");
       nob_print_type(type->info.func.return_type);
-
-      if (type->info.func.params){
-        printf("; ");
-
-        for (lptr = type->info.func.params; lptr != NULL; lptr = lptr->next){
-          nob_print_type(lptr->type);
-
-          if (lptr->next)
-            printf(", ");
-        }
-      }
-
-      printf(" }");
 
       break;
     }
@@ -587,8 +571,7 @@ void dump_types(void)
     if (type->primitive == OT_FUN){
       /* {{{ */
       struct nob_type *ret = type->info.func.return_type;
-      struct types_list *params = type->info.func.params;
-      struct types_list *p;
+      struct nob_type *param = type->info.func.param;
 
       printf("   - return type:\n");
       if (ret == NULL){
@@ -600,14 +583,12 @@ void dump_types(void)
         printf("\n");
       }
 
-      if (params != NULL){
-        printf("   - parameters:\n");
-        for (p = params; p != NULL; p = p->next){
-          printf("     + %p", (void *)(p->type));
-          if (p->type->name != NULL)
-            printf(" \"%s\"", p->type->name);
+      if (param != NULL){
+        printf("   - param:\n");
+          printf("     + %p", (void *)(param));
+          if (param->name != NULL)
+            printf(" \"%s\"", param->name);
           printf("\n");
-        }
       } else {
         printf("     . no parameters\n");
       }
