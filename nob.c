@@ -408,6 +408,9 @@ bool nob_types_are_equal(struct nob_type *a, struct nob_type *b)
 
   assert(a != NULL && b != NULL);
 
+  if (a->primitive == OT_TYPE_VARIABLE || b->primitive == OT_TYPE_VARIABLE)
+    return true;
+
   if (a->primitive != b->primitive)
     return false;
 

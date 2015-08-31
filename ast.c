@@ -1327,7 +1327,7 @@ struct node *new_if(struct parser *parser, struct lexer *lex, struct node *guard
 }
 
 struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
-    struct var *param, struct node *body, char *opts, bool execute)
+    char *param, struct node *body, char *opts, bool execute)
 {
   /* {{{ */
   struct node *nd = new_node(parser, lex, NT_FUN, fun);

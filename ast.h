@@ -179,7 +179,7 @@ struct node {
 
     struct { /* NT_FUN (function) */
       char *name;
-      struct var *param;
+      char *param;
       struct node *body;
       /* the options the function can take */
       char *opts;
@@ -221,7 +221,7 @@ struct node *new_ternop(struct parser *parser, struct lexer *lex,
 struct node *new_if(struct parser *parser, struct lexer *lex,
     struct node *guard, struct node *body, struct node *elsee);
 struct node *new_fun(struct parser *parser, struct lexer *lex, char *name,
-    struct var *param, struct node *body, char *opts, bool execute);
+    char *param, struct node *body, char *opts, bool execute);
 struct node *new_call(struct parser *parser, struct lexer *lex,
     struct node *fun, struct node *arg, char *opts);
 struct node *new_print(struct parser *parser, struct lexer *lex,

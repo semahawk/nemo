@@ -21,6 +21,7 @@
 #include "infer.h"
 #include "ast.h"
 #include "nob.h"
+#include "count_params.h"
 
 static jmp_buf infer_jmp_buf;
 
@@ -112,7 +113,8 @@ static struct nob_type *freshrec(struct nob_type *type, struct ng *nongen, mappi
       case OT_CUSTOM:
         return new_type(OT_CUSTOM, pruned->info.custom.name, pruned->info.custom.var);
       case OT_FUN:
-        return new_type(OT_FUN, pruned->info.func.return_type,
+        return new_type(OT_FUN,
+            freshrec(pruned->info.func.return_type, nongen, mappings, current_mapping, mappings_num),
             freshrec(pruned->info.func.param, nongen, mappings, current_mapping, mappings_num));
       case OT_TUPLE:
       {
@@ -234,8 +236,16 @@ void unify(struct nob_type *type1, struct nob_type *type2)
       struct types_list *lptra = a->types,
                         *lptrb = b->types;
 
-      for (; lptra != NULL; lptra = lptra->next, lptrb = lptrb->next)
-        unify(lptra->type, lptrb->type);
+      if (a->primitive == OT_TUPLE){
+        for (; lptra != NULL; lptra = lptra->next, lptrb = lptrb->next){
+          unify(lptra->type, lptrb->type);
+        }
+      } else if (a->primitive == OT_FUN){
+        unify(a->info.func.return_type, b->info.func.return_type);
+        unify(a->info.func.param, b->info.func.param);
+      } else if (a->primitive == OT_CUSTOM){
+        unify(a->info.custom.var, b->info.custom.var);
+      }
     }
   } else {
     printf("couldn't unify the two types");
@@ -295,14 +305,34 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
     }
     case NT_FUN:
     {
+      struct nob_type *param_type;
       struct nob_type *result_type;
       struct ng *new_nongen = copy_nongen(nongen);
 
-      add_to_nongen(new_nongen, node->in.fun.param->type);
+      struct params_info pinfo = count_params(node->in.fun.body, NULL);
+
+      if (pinfo.value == 0)
+        /* "no param" */
+        param_type = T_VOID;
+      else
+        param_type = new_type(OT_TYPE_VARIABLE);
+
+      new_var(node->in.fun.param, 0, NULL, param_type, node->scope, true, 0);
+      add_to_nongen(new_nongen, param_type);
 
       result_type = infer_type_internal(node->scope, node->in.fun.body, new_nongen);
 
-      return new_type(OT_FUN, result_type, node->in.fun.param->type);
+      return new_type(OT_FUN, result_type, param_type);
+    }
+    case NT_CALL:
+    {
+      struct nob_type *fun_type = infer_type_internal(scope, node->in.call.fun, nongen);
+      struct nob_type *arg_type = infer_type_internal(scope, node->in.call.arg, nongen);
+      struct nob_type *result_type = new_type(OT_TYPE_VARIABLE);
+
+      unify(new_type(OT_FUN, result_type, arg_type), fun_type);
+
+      return result_type;
     }
 
     /* TODO implement the rest of nodes */
