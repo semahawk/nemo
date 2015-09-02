@@ -1247,7 +1247,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
      */
     struct nob_type *custom_type;
     struct nob_type *gen_type = NULL;
-    struct node *fun;
+    struct node *value;
     struct nob_type *param = T_VOID;
     char *ctor_name;
 
@@ -1267,7 +1267,6 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     if (accept(parser, lex, TOK_LMUSTASHE)){
       while (accept(parser, lex, TOK_NAME)){
         ctor_name = strdup(lex->curr_tok.value.s);
-        fun = new_fun(parser, lex, ctor_name, "%1", NULL, NULL, false);
 
         if (accept_keyword(parser, lex, "of")){
           if (gen_type == NULL){
@@ -1278,11 +1277,18 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
             err(parser, lex, "expected a type after '%s of'", ctor_name);
             return NULL;
           }
+
+          value = new_fun(parser, lex, ctor_name, "%1", NULL, NULL, false);
+          value->result_type = new_type(OT_FUN, custom_type, param);
+        } else {
+          /* hmr.. it probably doesn't matter what kind of node it actually is
+           * because this constructor isn't carrying any additional data */
+          value = new_nop(parser, lex);
+          /* oh this definitely matters */
+          value->result_type = custom_type;
         }
 
-        fun->result_type = new_type(OT_FUN, custom_type, param);
-
-        new_var(ctor_name, 0x0, fun, fun->result_type, parser->curr_scope, 0, 0);
+        new_var(ctor_name, 0x0, value, value->result_type, parser->curr_scope, 0, 0);
 
         force(parser, lex, TOK_SEMICOLON);
       }
