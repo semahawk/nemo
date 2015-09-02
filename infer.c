@@ -111,7 +111,12 @@ static struct nob_type *freshrec(struct nob_type *type, struct ng *nongen, mappi
     /* non-type-variable */
     switch (pruned->primitive){
       case OT_CUSTOM:
-        return new_type(OT_CUSTOM, pruned->info.custom.name, pruned->info.custom.var);
+        /* info.custom.var can be NULL so we have to be vigilant */
+        if (pruned->info.custom.var)
+          return new_type(OT_CUSTOM, pruned->info.custom.name,
+            freshrec(pruned->info.custom.var, nongen, mappings, current_mapping, mappings_num));
+        else
+          return new_type(OT_CUSTOM, pruned->info.custom.name, NULL);
       case OT_FUN:
         return new_type(OT_FUN,
             freshrec(pruned->info.func.return_type, nongen, mappings, current_mapping, mappings_num),

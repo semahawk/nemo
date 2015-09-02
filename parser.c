@@ -1233,10 +1233,22 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
   }
   else if (accept_keyword(parser, lex, "typedef")){
     /* {{{ */
+    /*
+     * given an example typedef:
+     *
+     *     typedef option of 'a {
+     *       :None;
+     *       :Some of 'a;
+     *     };
+     *
+     * `custom_type` is option of 'a (ie. the whole type)
+     * `gen_type`    is (just) the single 'a
+     * `param`       is the param a constructor will take
+     */
     struct nob_type *custom_type;
     struct nob_type *gen_type = NULL;
     struct node *fun;
-    struct nob_type *param = NULL;
+    struct nob_type *param = T_VOID;
     char *ctor_name;
 
     force(parser, lex, TOK_NAME);
@@ -1255,21 +1267,22 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     if (accept(parser, lex, TOK_LMUSTASHE)){
       while (accept(parser, lex, TOK_NAME)){
         ctor_name = strdup(lex->curr_tok.value.s);
-        /*fun = new_fun(parser, lex, ctor_name, "%1", NULL, NULL, false);*/
+        fun = new_fun(parser, lex, ctor_name, "%1", NULL, NULL, false);
 
         if (accept_keyword(parser, lex, "of")){
-          gen_type = type(parser, lex);
-
-          if ((param = type(parser, lex)) == NULL){
-            err(parser, lex, "expected a type after 'of'");
+          if (gen_type == NULL){
+            /* is "parametrized" the right word? */
+            err(parser, lex, "the data type isn't parametrized");
+            return NULL;
+          } else if ((param = type(parser, lex)) == NULL){
+            err(parser, lex, "expected a type after '%s of'", ctor_name);
             return NULL;
           }
         }
 
         fun->result_type = new_type(OT_FUN, custom_type, param);
 
-        /*new_var(ctor_name, 0x0, new_fun(parser, lex, NULL, "%1", NULL, NULL, false),*/
-            /*fun->result_type, parser->curr_scope, 0, 0);*/
+        new_var(ctor_name, 0x0, fun, fun->result_type, parser->curr_scope, 0, 0);
 
         force(parser, lex, TOK_SEMICOLON);
       }
