@@ -305,7 +305,7 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
         new_types_list = new_type_elem;
       }
 
-      return new_type(OT_TUPLE, new_types_list);
+      return new_type(OT_TUPLE, reverse_types_list(new_types_list));
     }
     case NT_NAME:
     {

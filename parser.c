@@ -423,7 +423,7 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
       ret = new_unop(parser, lex, UNARY_POSTDEC, target);
       ret->lvalue = false;
     }
-  } else if ((arg = primary_expr(parser, lex))){
+  } else while ((arg = primary_expr(parser, lex))){
     /* function application */
     if (target == NULL)
       return arg;
@@ -431,13 +431,15 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
     /* TODO: check whether the type of supplied argument matches
      * the target function's prototype */
 
-    if (target->type == NT_NAME || target->type == NT_FUN){
+    if (target->type == NT_NAME || target->type == NT_FUN || target->type == NT_CALL){
       ret = new_call(parser, lex, target, arg, NULL);
       ret->lvalue = false; /* hmm.. */
     } else {
       err(parser, lex, "trying to apply a function call on a non-function");
       return NULL;
     }
+
+    target = ret;
   }
 
   return ret;
