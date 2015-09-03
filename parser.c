@@ -90,6 +90,16 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
 
     ret = get_type_by_name(lex->curr_tok.value.s);
     /* }}} */
+  } else if (accept(parser, lex, TOK_NAME)){
+    /* {{{ CUSTOM TYPE (USER DEFINED) */
+    char *name = strdup(lex->curr_tok.value.s);
+    struct nob_type *t = NULL;
+
+    if (accept_keyword(parser, lex, "of"))
+      t = type(parser, lex);
+
+    ret = new_type(OT_CUSTOM, name, t);
+    /* }}} */
   } else if (accept(parser, lex, TOK_TYPE_VARIABLE)){
     /* {{{ a type variable */
     struct type_variables_list *type_var;
