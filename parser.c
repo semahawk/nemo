@@ -81,7 +81,7 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   struct nob_type *return_type = NULL;
   struct nob_type *param_type = NULL;
   /* used for tuples */
-  struct types_list *types_list, *type_elem;
+  struct types_list *types_list = NULL, *type_elem;
 
   if (accept(parser, lex, TOK_TYPE)){
     /* {{{ a single worded type */

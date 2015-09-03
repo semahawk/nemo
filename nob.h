@@ -60,9 +60,6 @@ struct nob_type {
   unsigned size;
   /* the type's optional name */
   char *name;
-  /* for easier implementation of the type inference algorithm this field is
-   * accessible to every 'type' */
-  struct types_list *types;
   /* additional info about the given type */
   union {
     struct {

@@ -127,7 +127,9 @@ static struct nob_type *freshrec(struct nob_type *type, struct ng *nongen, mappi
         struct types_list *in_pruned;
         struct types_list *new_type_elem;
 
-        for (in_pruned = pruned->types; in_pruned != NULL; in_pruned = in_pruned->next){
+        for (in_pruned = pruned->info.tuple.elems;
+             in_pruned != NULL && in_pruned->type != NULL;
+             in_pruned = in_pruned->next){
           new_type_elem = nmalloc(sizeof(struct types_list));
           new_type_elem->type = freshrec(in_pruned->type, nongen, mappings, current_mapping, mappings_num);
           /* append to the new types list */
@@ -135,7 +137,7 @@ static struct nob_type *freshrec(struct nob_type *type, struct ng *nongen, mappi
           new_types_list = new_type_elem;
         }
 
-        return new_type(OT_TUPLE, reverse_types_list(new_types_list));
+        return new_type(OT_TUPLE, new_types_list);
       }
 
       /* silence warnings, we won't use these here */
@@ -188,9 +190,19 @@ static bool occurs_in(struct nob_type *type1, struct nob_type *type2)
 
   struct types_list *lptr;
 
-  for (lptr = type2->types; lptr != NULL; lptr = lptr->next)
-    if (occurs_in_type(type1, lptr->type))
+  if (type2->primitive == OT_TUPLE){
+    for (lptr = type2->info.tuple.elems; lptr != NULL; lptr = lptr->next)
+      if (occurs_in_type(type1, lptr->type))
+        return true;
+  } else if (type2->primitive == OT_FUN){
+    if (occurs_in_type(type1, type2->info.func.return_type) ||
+        occurs_in_type(type1, type2->info.func.param))
       return true;
+  } else if (type2->primitive == OT_CUSTOM){
+    if (type2->info.custom.var)
+      if (occurs_in_type(type1, type2->info.custom.var))
+        return true;
+  }
 
   return false;
 }
@@ -238,11 +250,11 @@ void unify(struct nob_type *type1, struct nob_type *type2)
 
       longjmp(infer_jmp_buf, 1);
     } else {
-      struct types_list *lptra = a->types,
-                        *lptrb = b->types;
+      struct types_list *lptra = a->info.tuple.elems,
+                        *lptrb = b->info.tuple.elems;
 
       if (a->primitive == OT_TUPLE){
-        for (; lptra != NULL; lptra = lptra->next, lptrb = lptrb->next){
+        for (; lptra != NULL && lptrb != NULL; lptra = lptra->next, lptrb = lptrb->next){
           unify(lptra->type, lptrb->type);
         }
       } else if (a->primitive == OT_FUN){
@@ -292,8 +304,6 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
         new_type_elem->next = new_types_list;
         new_types_list = new_type_elem;
       }
-
-      new_types_list = reverse_types_list(new_types_list);
 
       return new_type(OT_TUPLE, new_types_list);
     }

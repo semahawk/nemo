@@ -284,7 +284,6 @@ struct nob_type *new_type(enum nob_primitive_type type, ...)
     {
       struct types_list *types = va_arg(vl, struct types_list *);
 
-      new_type->types = types;
       new_type->info.tuple.elems = types;
       /* FIXME? */
       new_type->size = 0;
@@ -295,8 +294,6 @@ struct nob_type *new_type(enum nob_primitive_type type, ...)
       struct nob_type *return_type = va_arg(vl, struct nob_type *);
       struct nob_type *param = va_arg(vl, struct nob_type *);
 
-      /* FIXME? */
-      /*new_type->types = param;*/
       new_type->info.func.return_type = return_type;
       new_type->info.func.param = param;
       /* hmm, FIXME? so far we're 32-bits only so that's probably ok */
@@ -546,7 +543,7 @@ void nob_print_type(struct nob_type *type)
       printf("real");
       break;
     default:
-      printf("#unknown#nob_print_type#");
+      printf("#unknown:%d#nob_print_type#", type->primitive);
       break;
   }
 }
