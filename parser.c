@@ -1159,39 +1159,22 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
 
     name = strdup(lex->curr_tok.value.s);
 
-    /*
-     * if the type was omitted, then the initialization should probably be
-     * obligatory.
-     *
-     * the point is to know the variable's type beforehand.
-     *
-     * but hey, we need type inference first..
-     */
-
-    if (peek(parser, lex, TOK_LMUSTASHE)){
-      value = expr(parser, lex);
-    } else if (accept(parser, lex, TOK_EQ)){
-      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
-        printf(" = ");
-      /* my [type] name = expr... */
-      /* the variable's initial value */
-      if ((value = expr(parser, lex)) == NULL){
-        err(parser, lex, "nothing was initialized");
-        return NULL;
-      }
-    } else {
-      /* see if a type was given */
-      if (!var_type){
-        err(parser, lex, "uninitialized variable lacks a type declaration");
-        return NULL;
-      }
-    }
+    force(parser, lex, TOK_EQ);
+    if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+      printf(" = ");
 
     /* see if the variable already exists */
     /* TODO there can be two different variables with the same name, but only
      *      when they are in two different modules */
     if (var_lookup(name, parser->curr_scope)){
       err(parser, lex, "variable '%s' already exists", name);
+      return NULL;
+    }
+
+    /* my [type] name = expr... */
+    /* the variable's initial value */
+    if ((value = expr(parser, lex)) == NULL){
+      err(parser, lex, "nothing was initialized");
       return NULL;
     }
 
