@@ -1135,7 +1135,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
     char *name;
     uint8_t flags = 0x0;
     struct node *value = NULL;
-    struct nob_type *var_type, *val_type;
+    struct nob_type *type_annotation, *inferred_type;
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("my ");
@@ -1147,7 +1147,7 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
         printf("mutable ");
     }
 
-    var_type = type(parser, lex);
+    type_annotation = type(parser, lex);
 
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       putchar(' ');
@@ -1178,18 +1178,18 @@ static struct node *expr(struct parser *parser, struct lexer *lex)
       return NULL;
     }
 
-    val_type = infer_node_type(parser->curr_scope, value);
+    inferred_type = infer_node_type(parser->curr_scope, value);
 
-    if (val_type == NULL){
+    if (inferred_type == NULL){
       err(parser, lex, "couldn't infer the type of the expression");
       return NULL;
     }
 
-    /* TODO check whether the val_type and var_type are equal, and shout if
-     * they're not */
+    if (type_annotation)
+      unify(inferred_type, type_annotation);
 
     /* declare the variable in the current scope */
-    struct var *var = new_var(name, flags, value, val_type, parser->curr_scope,
+    struct var *var = new_var(name, flags, value, inferred_type, parser->curr_scope,
         false /* not a param */, 0);
     ret = new_decl(parser, lex, var);
     var->decl = ret;
