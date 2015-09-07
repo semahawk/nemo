@@ -262,10 +262,14 @@ struct nob_type *new_type(enum nob_primitive_type type, ...)
       char *name = va_arg(vl, char *);
       struct nob_type *var = va_arg(vl, struct nob_type *);
 
-      /* FIXME? */
-      new_type->size = 0;
+      /* we're also assigning to ->name so that the lexer can recognise it as a
+       * TOK_TYPE */
+      new_type->name = strdup(name);
       new_type->info.custom.name = strdup(name);
       new_type->info.custom.var  = var;
+      /* FIXME? */
+      new_type->size = 0;
+      break;
     }
     case OT_INT:
       new_type->size = 4;

@@ -84,21 +84,33 @@ static struct nob_type *type(struct parser *parser, struct lexer *lex)
   struct types_list *types_list = NULL, *type_elem;
 
   if (accept(parser, lex, TOK_TYPE)){
-    /* {{{ a single worded type */
+    /* {{{ a name that we know is a type name */
+    struct nob_type *typ, *t;
+    char *name = lex->curr_tok.value.s;
+
     if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
       printf("%s", lex->curr_tok.value.s);
 
-    ret = get_type_by_name(lex->curr_tok.value.s);
-    /* }}} */
-  } else if (accept(parser, lex, TOK_NAME)){
-    /* {{{ CUSTOM TYPE (USER DEFINED) */
-    char *name = strdup(lex->curr_tok.value.s);
-    struct nob_type *t = NULL;
+    typ = get_type_by_name(name);
 
-    if (accept_keyword(parser, lex, "of"))
-      t = type(parser, lex);
-
-    ret = new_type(OT_CUSTOM, name, t);
+    if (typ->primitive == OT_CUSTOM){
+      if (typ->info.custom.var){
+        if (accept_keyword(parser, lex, "of")){
+          t = type(parser, lex);
+          ret = new_type(OT_CUSTOM, name, t);
+        } else {
+          /* if the type is parametric but the type wasn't provided we assume
+           * it's a type variable */
+          ret = new_type(OT_CUSTOM, name, new_type(OT_TYPE_VARIABLE));
+        }
+      } else {
+        /* the 'custom' type is unparametrized */
+        ret = typ;
+      }
+    } else {
+      /* it's just a "basic" type (like an int) */
+      ret = typ;
+    }
     /* }}} */
   } else if (accept(parser, lex, TOK_TYPE_VARIABLE)){
     /* {{{ a type variable */
