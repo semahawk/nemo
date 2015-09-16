@@ -272,6 +272,8 @@ void unify(struct nob_type *type1, struct nob_type *type2)
 
 static struct nob_type *infer_type_internal(struct scope *scope, struct node *node, struct ng *nongen)
 {
+  struct nob_type *ret = NULL;
+
   assert(node);
 
   if (node->result_type)
@@ -305,7 +307,8 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
         new_types_list = new_type_elem;
       }
 
-      return new_type(OT_TUPLE, reverse_types_list(new_types_list));
+      ret = new_type(OT_TUPLE, reverse_types_list(new_types_list));
+      break;
     }
     case NT_NAME:
     {
@@ -316,7 +319,8 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
         longjmp(infer_jmp_buf, 1);
       }
 
-      return type;
+      ret = type;
+      break;
     }
     case NT_FUN:
     {
@@ -337,7 +341,8 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
 
       result_type = infer_type_internal(node->scope, node->in.fun.body, new_nongen);
 
-      return new_type(OT_FUN, result_type, param_type);
+      ret = new_type(OT_FUN, result_type, param_type);
+      break;
     }
     case NT_CALL:
     {
@@ -347,14 +352,24 @@ static struct nob_type *infer_type_internal(struct scope *scope, struct node *no
 
       unify(new_type(OT_FUN, result_type, arg_type), fun_type);
 
-      return result_type;
+      ret = result_type;
+      break;
     }
+
+    /* FIXME */
+    case NT_BINOP:
+      return T_INT;
 
     /* TODO implement the rest of nodes */
     default:
       printf("#unknown_node_type#infer_type_internal#");
       longjmp(infer_jmp_buf, 1);
+      break;
   }
+
+  node->result_type = ret;
+
+  return ret;
 }
 
 struct nob_type *infer_node_type(struct scope *scope, struct node *node)
