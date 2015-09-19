@@ -1142,12 +1142,8 @@ struct node *comp_call(struct node *nd)
 
   COMP(nd->in.call.fun);
 
-  /* store the current stack frame for the function to use */
-  /* if the function has a parent at least two parents it means it's a nested
-   * function */
-  if (nd->in.call.fun->scope->parent)
-    if (nd->in.call.fun->scope->parent->parent)
-      out("  lea ecx, [ebp]");
+  /* store the current stack frame for the called function to use */
+  out("  lea ecx, [ebp]");
 
   /* make the call */
   out("  call eax");
