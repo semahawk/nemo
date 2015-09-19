@@ -1074,6 +1074,14 @@ struct node *comp_fun(struct node *nd)
       if (expr->type == NT_FUN){
         /* TODO: FIXME: check for overflow */
         *(currfun++) = expr;
+
+        /* emit the "mov eax, funname" without compiling the whole body right
+         * here */
+        expr->in.fun.compiled = true;
+        /* compile the body */
+        COMP(expr);
+        expr->in.fun.compiled = false;
+
       } else if (expr->type == NT_CALL){
         /* TODO: FIXME: check for overflow */
         *(currfun++) = expr->in.call.fun;
@@ -1102,15 +1110,15 @@ struct node *comp_fun(struct node *nd)
     currsect = &text;
   }
 
-  if (nd->in.fun.name)
-    out("  mov eax, %s", nd->in.fun.name);
-  else
-    out("  mov eax, _f%d", NDID(nd));
-
   /* compile all the functions that were defined/declared inside of the current
    * one */
   for (fun = functions; *fun != NULL; fun++)
     COMP(*fun);
+
+  if (nd->in.fun.name)
+    out("  mov eax, %s", nd->in.fun.name);
+  else
+    out("  mov eax, _f%d", NDID(nd));
 
   RETURN_NEXT;
   /* }}} */
