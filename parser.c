@@ -431,7 +431,8 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
   target = ret = primary_expr(parser, lex);
 
   if (peek(parser, lex, TOK_PLUS_2) ||
-      peek(parser, lex, TOK_MINUS_2)){
+      peek(parser, lex, TOK_MINUS_2) ||
+      peek(parser, lex, TOK_LPAREN)){
     if (accept(parser, lex, TOK_PLUS_2)){
       /* target ++ */
       if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
@@ -444,24 +445,37 @@ static struct node *postfix_expr(struct parser *parser, struct lexer *lex)
         printf(" postfix(--)");
       ret = new_unop(parser, lex, UNARY_POSTDEC, target);
       ret->lvalue = false;
+    } else if (accept(parser, lex, TOK_LPAREN)){
+      /* function application (call, basically) */
+
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(" fcall(");
+
+      do {
+        arg = no_comma_expr(parser, lex);
+
+        if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+          printf(", ");
+
+        /* TODO: check whether the type of supplied argument matches
+         * the target function's prototype */
+
+        /* yup, that's not the best way to test functionness */
+        if (target->type == NT_NAME || target->type == NT_FUN || target->type == NT_CALL){
+          ret = new_call(parser, lex, target, arg, NULL);
+          ret->lvalue = false; /* hmm.. */
+        } else {
+          err(parser, lex, "trying to apply a function call on a non-function");
+          return NULL;
+        }
+
+        target = ret;
+      } while (accept(parser, lex, TOK_COMMA));
+
+      force(parser, lex, TOK_RPAREN);
+      if (NM_DEBUG_GET_FLAG(NM_DEBUG_PARSER))
+        printf(") ");
     }
-  } else while ((arg = primary_expr(parser, lex))){
-    /* function application */
-    if (target == NULL)
-      return arg;
-
-    /* TODO: check whether the type of supplied argument matches
-     * the target function's prototype */
-
-    if (target->type == NT_NAME || target->type == NT_FUN || target->type == NT_CALL){
-      ret = new_call(parser, lex, target, arg, NULL);
-      ret->lvalue = false; /* hmm.. */
-    } else {
-      err(parser, lex, "trying to apply a function call on a non-function");
-      return NULL;
-    }
-
-    target = ret;
   }
 
   return ret;

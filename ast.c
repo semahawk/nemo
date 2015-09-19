@@ -379,10 +379,10 @@ void dump_call(struct node *nd)
   DUMPP("- target function:");
   INDENT();
   SPACES();
-  if (nd->in.call.fun->in.fun.name)
-    printf("+ (#%u) fun (%s)\n", NDID(nd->in.call.fun), nd->in.call.fun->in.fun.name);
-  else
-    printf("+ (#%u) lambda\n", NDID(nd->in.call.fun));
+  /*if (nd->in.call.fun->in.fun.name)*/
+    /*printf("+ (#%u) fun (%s)\n", NDID(nd->in.call.fun), nd->in.call.fun->in.fun.name);*/
+  /*else*/
+    /*printf("+ (#%u) lambda\n", NDID(nd->in.call.fun));*/
 
   DEDENT();
   DUMPP("- args:");
@@ -1125,24 +1125,21 @@ struct node *comp_call(struct node *nd)
 
   debug_ast_comp(nd, "compiling a function call (#%u)", NDID(nd->in.call.fun));
 
-  /* calculate how many variables the function we're about to call has (well,
-   * not how many but rather how much of them there is) */
-  /*vars_size = size_of_vars(nd->in.call.fun->scope);*/
+  if (nd->in.call.arg){
+    args_size += nd->in.call.arg->result_type->size;
 
-  args_size += nd->in.call.arg->result_type->size;
+    COMP(nd->in.call.arg);
+    out("  push eax");
+  }
 
-  COMP(nd->in.call.arg);
-  out("  push eax");
-
-  /* make sure the function is actually defined in the assembly file */
-  /* and that eax is loaded with the function's address */
-  /*if (!nd->in.call.fun->in.fun.compiled)*/
-    COMP(nd->in.call.fun);
+  COMP(nd->in.call.fun);
 
   /* store the current stack frame for the function to use */
-  /* if the function has a parent it means it's a nested function */
-  /*if (nd->in.call.fun->scope->parent)*/
-    out("  lea ecx, [ebp]");
+  /* if the function has a parent at least two parents it means it's a nested
+   * function */
+  if (nd->in.call.fun->scope->parent)
+    if (nd->in.call.fun->scope->parent->parent)
+      out("  lea ecx, [ebp]");
 
   /* make the call */
   out("  call eax");
