@@ -149,6 +149,9 @@ static struct node *new_node_internal(struct parser *parser, struct lexer *lex,
 
 #if DEBUG
   new->dumpf = dumpf;
+#else
+  /* supress the warning */
+  (void)dumpf;
 #endif
 
   /* associate the node with the list's element */
@@ -161,8 +164,13 @@ static struct node *new_node_internal(struct parser *parser, struct lexer *lex,
   /* }}} */
 }
 
+#if DEBUG
 #define new_node(parser,lex,type,funsuffix) \
   new_node_internal(parser, lex, type, exec_## funsuffix, comp_## funsuffix, dump_## funsuffix)
+#else
+#define new_node(parser,lex,type,funsuffix) \
+  new_node_internal(parser, lex, type, exec_## funsuffix, comp_## funsuffix, NULL)
+#endif
 
 #if DEBUG
 /* {{{ dump macros */
